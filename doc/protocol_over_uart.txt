@@ -1,0 +1,59 @@
+
+==============================================================================================
+1. MAIN MCU TO SECONDARY MCU COMMUNICATION  
+==============================================================================================
+General format is as below.
+-----------------------------------------------------------------------------
+Description |  Status0  Status1  GeneralData          CRC8
+Size        |  1 byte   1 byte   (2*NUM_RC_CHANNELS)  1 byte
+Offset      |  0        1        2                    2 + (2*NUM_RC_CHANNELS)
+-----------------------------------------------------------------------------
+No need for a preamble because the length is fixed and thus known in advance.
+
+Status0: 
+  bit0-2 RF power level
+  bit3   RF enabled
+  bit4   Write receiver config
+  bit5   Get receiver config
+  bit6   Get Telemetry
+  bit7   Enter bind mode
+  
+Status1:
+  bit0   Failsafe data
+  bit1   isMainReceiver
+  Other bits reserved
+  
+RC data:
+Each rc channel is sent as 2 bytes, with big endian ordering.
+
+Receiver configuration:
+Each rc channel's configuration is sent on a separate byte.
+
+==============================================================================================
+2. SECONDARY MCU TO MAIN MCU COMMUNICATION
+==============================================================================================
+General format is as below.
+---------------------------------------------------------------------------------------------
+Description | Status0  Tx pkt rate  Rx pkt rate  Telemetry/Rcvr config    CRC8
+Size        | 1 byte   1 byte       1 byte       NUM_RC_CHANNELS           1 byte
+Offset      | 0        1            2            3                         3 + NUM_RC_CHANNELS
+----------------------------------------------------------------------------------------------
+No need for a preamble because the length is fixed and thus known in advance.
+
+Status0:  
+  Bit 7-5   Reserved
+  Bit 4     Got receiver output configuration  
+  Bits 3,2  Receiver config status code
+  Bits 1,0  Bind status code
+
+Telemetry:
+Each telemetry field is formatted as: 
+  byte0     SensorID, OxFF if telemetry field is empty 
+  byte1     high byte of telemetry value
+  byte2     low byte of telemetry value
+If there is more telemetry than can fit in a single message, it is sent on the next message.
+
+Receiver configuration:
+Each rc channel's configuration is sent on a separate byte, where the lower nibble holds the
+present configuration, and the upper nibble holds the maximum configuration.
+

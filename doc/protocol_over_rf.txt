@@ -1,0 +1,93 @@
+
+==============================================================================================
+1. Format of packet
+==============================================================================================
+Packets are of fixed length, whether from transmitter or receiver. 
+The general format of a packet is as shown below.
+
+  ---------------------------------------------------------------------
+  Source ID   Dest ID   Packet ID   Payload                  Packet CRC
+  1 byte      1 byte    1 byte      (((n*10)+7)/8)+1 bytes   1 byte
+  ---------------------------------------------------------------------
+  
+where n is the number of rc channels. 
+e.g. for 20 channels, the payload size would be 26 bytes, making total packet length 30 bytes.
+
+1.1 Source ID and Destination ID 
+================================
+- If packet is originating from transmitter, then Source ID is the Transmitter ID. 
+  Similarly if packet is originating from the receiver, then Source ID is the Receiver ID. 
+- Allowed transmitter IDs range from 0x01 to 0xFF.  Transmitter ID 0x00 is reserved. 
+- Allowed receiver IDs range from 0x01 to 0xFF, Receiver ID 0X00 used when binding.
+
+1.2 Packet Identifier
+================================
+This uniquely identifies which kind of data we are sending. Below are some identifiers.
+- Bind
+- Acknowledge bind
+- RC data
+- Telemetry
+- Read receiver configuration
+- Set receiver configuration
+- Acknowledge receiver configuration
+
+1.3 Payload
+================================
+1.3.1 Bind data
+----------------
+  byte 0 to k  Hop channels, 1 byte per channel.
+  byte k+1     Flags, bit0 whether we are addressing the main or secondary receiver.
+  byte k+2     Receiver Id to use if binding as a secondary receiver.
+To acknowledge bind, the receiver simply returns its ID as the payload with packet identifier 
+as 'Acknowledge bind'.
+
+1.3.2 RC data
+--------------
+All rc channels are transmitted in a single packet.  
+Each channel is encoded with 10 bits, flags are transmitted in the next byte. 
+The flag byte is as follows: 
+  bits 0 to 2  RF power level.
+  bit 3        return telemetry.
+  bit 4        whether this is failsafe data.
+  
+1.3.3 Telemetry data from receiver
+-----------------------------------
+  byte 0       packet rate at receiver side.
+  byte 1 to k  custom telemetry fields.
+Each telemetry field is formatted as follows:-
+  byte 0       sensor ID, 0xFF if telemetry field is empty.
+  byte 1       high byte of telemetry value.
+  byte 2       low byte of telemetry value.
+  
+1.3.4 Receiver output configuration settings
+---------------------------------------------
+Reading from the receiver:
+Reading the configuration is initiated by the transmitter. The payload is as follows:-
+  byte 0       Flags, bit0 whether we are addressing the main or secondary receiver.
+The relevant receiver (main or secondary) then responds with the present configuration along 
+with the maximum supported configuration.
+Each channel's configuration is sent on a separate byte, where the lower nibble holds the 
+present configuration, and the upper nibble holds the maximum configuration.
+
+Writing to the receiver:
+The transmitter sends the configuration to the receiver as follows:-
+  byte 0 to k  the desired configuration, 1 byte per channel.
+  byte k+1     Flags, bit0 whether we are addressing the main or secondary receiver.
+To acknowledge the configuration sent by the transmitter, the relevant receiver returns an 
+empty payload with packet identifier as 'Acknowledge receiver configuration'.
+
+==============================================================================================
+2. Dual receiver setup
+==============================================================================================
+Basic rules:
+- Depending on the setup, the main receiver may handle one half of the rc channels,
+  while the secondary handles the other half. However the entire rc channels are always sent 
+  in a single transmission.
+- When binding to the main receiver, the transmitter generates a random transmitter ID 
+  and hop sequence. The main receiver then generates a random receiver ID and sends it.
+- When binding to a secondary receiver, the transmitter ID and receiver ID are maintained, as 
+  well as the Hop sequence. 
+- Only the main receiver can send telemetry, the secondary ignores the telemetry requests.
+- The transmitter requests and sends configuration settings to each receiver separately 
+  by way of a flag to distinguish the intended receiver from the other.
+
