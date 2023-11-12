@@ -1,0 +1,22 @@
+Model file TESTALL
+========================
+Performance metrics and comparison
+
+--------------------------------------------------------
+Compiler optimization |  Sketch size   |  Main loop time
+--------------------------------------------------------
+Optimazation -O1      |  164522bytes   |  52ms
+Optimazation -O2      |  180620bytes   |  50ms
+Optimazation -O3      |  250656bytes   |  49ms
+Optimazation -Ofast   |  250520bytes   |  49ms
+Optimazation -Os      |  143380 bytes  |  54ms
+Optimazation -O       |  164522 bytes  |  52ms
+
+I think -O2 gives the better result in terms of speed and sketch size in this case.
+
+This was just a worst case scenario test, and it is very highly unlikely in practice.
+
+System settings:
+Enabled 'No LCD interlace' debug flag.
+Enabled 'Simulate telemetry' debug flag.
+

@@ -1,0 +1,1861 @@
+##### Model configuration file #####
+ModelName: Cbcg
+ModelType: Airplane
+RudSrc: X1
+AilSrc: KnobA
+EleSrc: Y2
+ThrSrc: Y1
+# ------ Warnings ------
+CheckThrottle: true
+SwitchWarn: 
+  SwA: None
+  SwB: Down
+  SwC: Mid
+  SwD: None
+  SwE: Up
+  SwF: Up
+  SwG: Up
+  SwH: Up
+# ------ Telemetry ------
+Telemetry: 
+  No.: 1
+  Name: RSSI
+  UnitsName: 
+  Identifier: 127
+  Factor10: 0
+  Multiplier: 100
+  Offset: 0
+  AlarmCondition: None
+  AlarmThreshold: 0
+  ShowOnHome: true
+  RecordMaximum: true
+  RecordMinimum: true
+Telemetry: 
+  No.: 2
+  Name: ExtVolts
+  UnitsName: V
+  Identifier: 1
+  Factor10: -2
+  Multiplier: 100
+  Offset: 0
+  AlarmCondition: <Thresh
+  AlarmThreshold: 1420
+  ShowOnHome: true
+  RecordMaximum: true
+  RecordMinimum: true
+Telemetry: 
+  No.: 3
+  Name: RPM
+  UnitsName: 
+  Identifier: 126
+  Factor10: 0
+  Multiplier: 189
+  Offset: 29998
+  AlarmCondition: <Thresh
+  AlarmThreshold: -30000
+  ShowOnHome: true
+  RecordMaximum: true
+  RecordMinimum: true
+Telemetry: 
+  No.: 4
+  Name: ExtVolts
+  UnitsName: V
+  Identifier: 1
+  Factor10: -2
+  Multiplier: 100
+  Offset: 0
+  AlarmCondition: <Thresh
+  AlarmThreshold: 1420
+  ShowOnHome: true
+  RecordMaximum: true
+  RecordMinimum: true
+Telemetry: 
+  No.: 5
+  Name: RPM
+  UnitsName: 
+  Identifier: 126
+  Factor10: 0
+  Multiplier: 50
+  Offset: 0
+  AlarmCondition: None
+  AlarmThreshold: 0
+  ShowOnHome: true
+  RecordMaximum: true
+  RecordMinimum: true
+Telemetry: 
+  No.: 6
+  Name: ExtVolts
+  UnitsName: V
+  Identifier: 1
+  Factor10: -2
+  Multiplier: 100
+  Offset: 0
+  AlarmCondition: <Thresh
+  AlarmThreshold: 710
+  ShowOnHome: true
+  RecordMaximum: true
+  RecordMinimum: true
+Telemetry: 
+  No.: 7
+  Name: RSSI
+  UnitsName: 
+  Identifier: 127
+  Factor10: 0
+  Multiplier: 100
+  Offset: 0
+  AlarmCondition: None
+  AlarmThreshold: 0
+  ShowOnHome: true
+  RecordMaximum: true
+  RecordMinimum: true
+Telemetry: 
+  No.: 8
+  Name: RPM
+  UnitsName: 
+  Identifier: 126
+  Factor10: 0
+  Multiplier: 50
+  Offset: 0
+  AlarmCondition: None
+  AlarmThreshold: 0
+  ShowOnHome: true
+  RecordMaximum: true
+  RecordMinimum: true
+Telemetry: 
+  No.: 9
+  Name: Temp
+  UnitsName: øC
+  Identifier: 2
+  Factor10: 0
+  Multiplier: 100
+  Offset: 0
+  AlarmCondition: None
+  AlarmThreshold: 0
+  ShowOnHome: true
+  RecordMaximum: true
+  RecordMinimum: true
+Telemetry: 
+  No.: 10
+  Name: Temp
+  UnitsName: øC
+  Identifier: 2
+  Factor10: 0
+  Multiplier: 100
+  Offset: 0
+  AlarmCondition: None
+  AlarmThreshold: 0
+  ShowOnHome: true
+  RecordMaximum: true
+  RecordMinimum: true
+# ------ Timers ------
+Timer: 
+  No.: 1
+  Name: AB
+  Switch: SwG_Mid
+  Reset: SwH_Down
+  InitMin: 3
+Timer: 
+  No.: 2
+  Name: Bcab
+  Switch: SwB_Down
+  Reset: !L20
+  InitMin: 0
+# ------ Trims ------
+X1Trim: 
+  TrimState: FlightMode
+  CommonTrim: 2
+Y1Trim: 
+  TrimState: Common
+  CommonTrim: 2
+X2Trim: 
+  TrimState: FlightMode
+  CommonTrim: 2
+Y2Trim: 
+  TrimState: Common
+  CommonTrim: 1
+# ------ Rates and expo ------
+RudDualRate: 
+  Rate1: 100
+  Rate2: 100
+  Expo1: 0
+  Expo2: 0
+  Switch: None
+AilDualRate: 
+  Rate1: 98
+  Rate2: 95
+  Expo1: -2
+  Expo2: 5
+  Switch: SwA_Down
+EleDualRate: 
+  Rate1: 100
+  Rate2: 100
+  Expo1: 0
+  Expo2: 0
+  Switch: None
+# ------ Throttle curve ------
+ThrottleCurve: 
+  NumPoints: 15
+  XVal: 
+    0: -100
+    1: -86
+    2: -72
+    3: -58
+    4: -43
+    5: -29
+    6: -15
+    7: 0
+    8: 14
+    9: 28
+    10: 42
+    11: 57
+    12: 71
+    13: 85
+    14: 100
+  YVal: 
+    0: -100
+    1: -86
+    2: -72
+    3: -58
+    4: -43
+    5: -29
+    6: -15
+    7: 0
+    8: 14
+    9: 28
+    10: 42
+    11: 57
+    12: 71
+    13: 85
+    14: 100
+  Smooth: true
+# ------ Function generators ------
+Funcgen: 
+  No.: 1
+  Waveform: Square
+  PeriodMode: Variable
+  Period1: 1.2s
+  Period2: 2.2s
+  ModulatorSrc: Thr
+  ReverseModulator: true
+  PhaseMode: Auto
+  PhaseAngle: 0
+Funcgen: 
+  No.: 2
+  Waveform: Square
+  PeriodMode: Fixed
+  Period1: 1.0s
+  Period2: 2.0s
+  ModulatorSrc: None
+  ReverseModulator: false
+  PhaseMode: Fixed
+  PhaseAngle: 4
+Funcgen: 
+  No.: 3
+  Waveform: Sine
+  PeriodMode: Fixed
+  Period1: 1.0s
+  Period2: 2.0s
+  ModulatorSrc: None
+  ReverseModulator: false
+  PhaseMode: Auto
+  PhaseAngle: 0
+Funcgen: 
+  No.: 4
+  Waveform: Sine
+  PeriodMode: Fixed
+  Period1: 1.0s
+  Period2: 2.0s
+  ModulatorSrc: None
+  ReverseModulator: false
+  PhaseMode: Auto
+  PhaseAngle: 0
+Funcgen: 
+  No.: 5
+  Waveform: Sine
+  PeriodMode: Fixed
+  Period1: 1.0s
+  Period2: 2.0s
+  ModulatorSrc: None
+  ReverseModulator: false
+  PhaseMode: Auto
+  PhaseAngle: 0
+# ------ Mixer ------
+Mixer: 
+  No.: 1
+  Name: 
+  Output: Ch5
+  Switch: None
+  Operation: Add
+  Input: Ail
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 2
+  Name: 
+  Output: Virt2
+  Switch: !SwC_Down
+  Operation: Add
+  Input: SwC
+  Weight: -98
+  Offset: -2
+  CurveType: Diff
+  CurveVal: 3
+  TrimEnabled: true
+  FlightMode: 2,4,5,
+  DelayUp: 0.3s
+  DelayDown: 1.2s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 3
+  Name: 
+  Output: Virt3
+  Switch: L2
+  Operation: Multiply
+  Input: SwC
+  Weight: -96
+  Offset: -4
+  CurveType: Expo
+  CurveVal: 3
+  TrimEnabled: true
+  FlightMode: 1,2,4,5,
+  DelayUp: 0.4s
+  DelayDown: 1.4s
+  SlowUp: 0.3s
+  SlowDown: 0.2s
+Mixer: 
+  No.: 4
+  Name: 
+  Output: Ch2
+  Switch: None
+  Operation: Replace
+  Input: Rud
+  Weight: 100
+  Offset: 0
+  CurveType: Func
+  CurveVal: None
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 5
+  Name: 
+  Output: Ch2
+  Switch: None
+  Operation: Replace
+  Input: Ail
+  Weight: 100
+  Offset: 0
+  CurveType: Func
+  CurveVal: |X|
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 6
+  Name: 
+  Output: Ch3
+  Switch: None
+  Operation: Hold
+Mixer: 
+  No.: 7
+  Name: 
+  Output: Ch1
+  Switch: None
+  Operation: Add
+  Input: Ail
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 8
+  Name: 
+  Output: Ch2
+  Switch: None
+  Operation: Add
+  Input: Ele
+  Weight: -100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 9
+  Name: 
+  Output: Ch3
+  Switch: None
+  Operation: Add
+  Input: Thr
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 10
+  Name: 
+  Output: Ch4
+  Switch: None
+  Operation: Add
+  Input: Rud
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 11
+  Name: ElvonL
+  Output: Ch1
+  Switch: None
+  Operation: Add
+  Input: Ail
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 12
+  Name: ElvonL
+  Output: Ch1
+  Switch: None
+  Operation: Add
+  Input: Ele
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 13
+  Name: ElvonR
+  Output: Ch2
+  Switch: None
+  Operation: Add
+  Input: Ail
+  Weight: 50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 14
+  Name: ElvonR
+  Output: Ch2
+  Switch: None
+  Operation: Add
+  Input: Ele
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 15
+  Name: VtailL
+  Output: Ch4
+  Switch: None
+  Operation: Add
+  Input: Rud
+  Weight: 50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 16
+  Name: VtailL
+  Output: Ch4
+  Switch: None
+  Operation: Add
+  Input: Ele
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 17
+  Name: VtailR
+  Output: Ch2
+  Switch: None
+  Operation: Add
+  Input: Rud
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 18
+  Name: VtailR
+  Output: Ch2
+  Switch: None
+  Operation: Add
+  Input: Ele
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 19
+  Name: VtailL
+  Output: Ch4
+  Switch: None
+  Operation: Add
+  Input: Rud
+  Weight: 50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 20
+  Name: VtailL
+  Output: Ch4
+  Switch: None
+  Operation: Add
+  Input: Ele
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 21
+  Name: VtailR
+  Output: Ch2
+  Switch: None
+  Operation: Add
+  Input: Rud
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 22
+  Name: VtailR
+  Output: Ch2
+  Switch: None
+  Operation: Add
+  Input: Ele
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 23
+  Name: MotorL
+  Output: Ch3
+  Switch: None
+  Operation: Add
+  Input: Thr
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 24
+  Name: MotorL
+  Output: Ch3
+  Switch: None
+  Operation: Add
+  Input: X1
+  Weight: 40
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 25
+  Name: MotorR
+  Output: Ch6
+  Switch: None
+  Operation: Add
+  Input: Thr
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 26
+  Name: MotorR
+  Output: Ch6
+  Switch: None
+  Operation: Add
+  Input: X1
+  Weight: -40
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 27
+  Name: VtailL
+  Output: Ch4
+  Switch: None
+  Operation: Add
+  Input: Rud
+  Weight: 50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 28
+  Name: VtailL
+  Output: Ch4
+  Switch: None
+  Operation: Add
+  Input: Ele
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 29
+  Name: VtailR
+  Output: Ch2
+  Switch: None
+  Operation: Add
+  Input: Rud
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 30
+  Name: VtailR
+  Output: Ch2
+  Switch: None
+  Operation: Add
+  Input: Ele
+  Weight: -50
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 31
+  Name: MotorL
+  Output: Ch3
+  Switch: None
+  Operation: Add
+  Input: Thr
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 32
+  Name: MotorL
+  Output: Ch3
+  Switch: None
+  Operation: Add
+  Input: X1
+  Weight: 40
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 33
+  Name: MotorR
+  Output: Ch6
+  Switch: None
+  Operation: Add
+  Input: Thr
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 34
+  Name: MotorR
+  Output: Ch6
+  Switch: None
+  Operation: Add
+  Input: X1
+  Weight: -40
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 35
+  Name: 
+  Output: Ch1
+  Switch: None
+  Operation: Add
+  Input: Ail
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 36
+  Name: 
+  Output: Ch2
+  Switch: None
+  Operation: Add
+  Input: Ele
+  Weight: -100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 37
+  Name: 
+  Output: Ch3
+  Switch: None
+  Operation: Add
+  Input: Thr
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 38
+  Name: 
+  Output: Ch4
+  Switch: None
+  Operation: Add
+  Input: Rud
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 39
+  Name: 
+  Output: Virt5
+  Switch: None
+  Operation: Multiply
+  Input: Ele
+  Weight: 100
+  Offset: 0
+  CurveType: Func
+  CurveVal: X>0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.4s
+  DelayDown: 0.3s
+  SlowUp: 0.3s
+  SlowDown: 0.5s
+Mixer: 
+  No.: 40
+  Name: 
+  Output: Ch6
+  Switch: SwA_Up
+  Operation: Replace
+  Input: Ail
+  Weight: 100
+  Offset: -5
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+# ------ Custom curves ------
+CustomCurve: 
+  No.: 1
+  Name: AA  A
+  NumPoints: 7
+  XVal: 
+    0: -100
+    1: -67
+    2: -34
+    3: 0
+    4: 33
+    5: 66
+    6: 100
+  YVal: 
+    0: -100
+    1: -43
+    2: -34
+    3: 0
+    4: 33
+    5: 66
+    6: 100
+  Smooth: false
+CustomCurve: 
+  No.: 2
+  Name: 
+  NumPoints: 20
+  XVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  YVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  Smooth: false
+CustomCurve: 
+  No.: 3
+  Name: 
+  NumPoints: 20
+  XVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  YVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  Smooth: false
+CustomCurve: 
+  No.: 4
+  Name: 
+  NumPoints: 20
+  XVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  YVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  Smooth: false
+CustomCurve: 
+  No.: 5
+  Name: 
+  NumPoints: 20
+  XVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  YVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  Smooth: false
+CustomCurve: 
+  No.: 6
+  Name: 
+  NumPoints: 20
+  XVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  YVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  Smooth: false
+CustomCurve: 
+  No.: 7
+  Name: 
+  NumPoints: 20
+  XVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  YVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  Smooth: false
+CustomCurve: 
+  No.: 8
+  Name: 
+  NumPoints: 20
+  XVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  YVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  Smooth: false
+CustomCurve: 
+  No.: 9
+  Name: 
+  NumPoints: 20
+  XVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  YVal: 
+    0: -100
+    1: -90
+    2: -79
+    3: -69
+    4: -58
+    5: -48
+    6: -37
+    7: -27
+    8: -16
+    9: -6
+    10: 5
+    11: 15
+    12: 26
+    13: 36
+    14: 47
+    15: 57
+    16: 68
+    17: 78
+    18: 89
+    19: 100
+  Smooth: false
+CustomCurve: 
+  No.: 10
+  Name: 
+  NumPoints: 20
+  XVal: 
+    0: -100
+    1: -89
+    2: -78
+    3: -68
+    4: -57
+    5: -47
+    6: -36
+    7: -26
+    8: -15
+    9: -5
+    10: 6
+    11: 16
+    12: 27
+    13: 37
+    14: 48
+    15: 58
+    16: 69
+    17: 79
+    18: 90
+    19: 100
+  YVal: 
+    0: 100
+    1: 89
+    2: 78
+    3: 68
+    4: 57
+    5: 47
+    6: 36
+    7: 26
+    8: 15
+    9: 5
+    10: -6
+    11: -16
+    12: -27
+    13: -37
+    14: -48
+    15: -58
+    16: -69
+    17: -79
+    18: -90
+    19: -100
+  Smooth: false
+# ------ Logical switches ------
+LogicalSwitch: 
+  No.: 1
+  Func: A>X
+  Val1: Thr
+  Val2: 3
+  Val3: 0.3s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 2
+  Func: A>B
+  Val1: None
+  Val2: Thr
+  Val3: 0.2s
+  Val4: 0.3s
+LogicalSwitch: 
+  No.: 3
+  Func: XOR
+  Val1: SwA_Up
+  Val2: SwA_Down
+  Val3: 0.1s
+  Val4: 0.4s
+LogicalSwitch: 
+  No.: 4
+  Func: Toggle
+  Val1: SwC_Down
+  Val2: Dual
+  Val3: SwF_Down
+LogicalSwitch: 
+  No.: 5
+  Func: A>X
+  Val1: Thr
+  Val2: 3
+  Val3: 0.3s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 6
+  Func: A>X
+  Val1: Thr
+  Val2: 3
+  Val3: 0.3s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 7
+  Func: A>X
+  Val1: Thr
+  Val2: 3
+  Val3: 0.3s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 8
+  Func: |A|>=X
+  Val1: X1
+  Val2: 3
+  Val3: 0.3s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 9
+  Func: |A|>=X
+  Val1: X1
+  Val2: 3
+  Val3: 0.3s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 10
+  Func: |A|>=X
+  Val1: X1
+  Val2: 3
+  Val3: 0.3s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 11
+  Func: |A|>=X
+  Val1: X1
+  Val2: 3
+  Val3: 0.3s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 12
+  Func: |A|>=X
+  Val1: X1
+  Val2: 3
+  Val3: 0.3s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 13
+  Func: |A|>=X
+  Val1: X1
+  Val2: 3
+  Val3: 0.3s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 14
+  Func: |A|>=X
+  Val1: Y3
+  Val2: 6
+  Val3: 60.0s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 15
+  Func: |A|>=X
+  Val1: Y3
+  Val2: 6
+  Val3: 60.0s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 16
+  Func: |A|>=X
+  Val1: Y3
+  Val2: 6
+  Val3: 60.0s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 17
+  Func: |A|>=X
+  Val1: Y3
+  Val2: 6
+  Val3: 60.0s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 18
+  Func: |A|>=X
+  Val1: Y3
+  Val2: 6
+  Val3: 60.0s
+  Val4: 0.2s
+LogicalSwitch: 
+  No.: 19
+  Func: Pulse
+  Val1: 0.9s
+  Val2: 1.5s
+  Val3: 0.5s
+LogicalSwitch: 
+  No.: 20
+  Func: |A|>=X
+  Val1: Y3
+  Val2: 6
+  Val3: 60.0s
+  Val4: 0.2s
+# ------ Counters ------
+Counter: 
+  No.: 1
+  Clock: SwE_Down
+  Edge: Falling
+  Clear: SwD_Down
+  Modulus: 998
+  Direction: Down
+Counter: 
+  No.: 2
+  Clock: SwA_Down
+  Edge: Rising
+  Clear: None
+  Modulus: 1000
+  Direction: Up
+Counter: 
+  No.: 3
+  Clock: SwG_Up
+  Edge: Rising
+  Clear: None
+  Modulus: 1000
+  Direction: Up
+Counter: 
+  No.: 4
+  Clock: !L20
+  Edge: Rising
+  Clear: None
+  Modulus: 1000
+  Direction: Up
+Counter: 
+  No.: 5
+  Clock: SwC_Down
+  Edge: Falling
+  Clear: None
+  Modulus: 1000
+  Direction: Up
+# ------ Flight modes ------
+FlightMode: 
+  No.: 1
+  Name: Bb
+  Switch: None
+  X1Trim: 4
+  Y1Trim: 0
+  X2Trim: -3
+  Y2Trim: 0
+  TransitionTime: 1.2s
+FlightMode: 
+  No.: 2
+  Name: Cab
+  Switch: SwB_Down
+  X1Trim: 0
+  Y1Trim: 0
+  X2Trim: 0
+  Y2Trim: 0
+  TransitionTime: 0.9s
+FlightMode: 
+  No.: 3
+  Name: Cdf
+  Switch: SwA_Down
+  X1Trim: 0
+  Y1Trim: 0
+  X2Trim: 0
+  Y2Trim: 0
+  TransitionTime: 1.0s
+FlightMode: 
+  No.: 4
+  Name: Cccccg
+  Switch: SwC_Mid
+  X1Trim: 0
+  Y1Trim: 0
+  X2Trim: 0
+  Y2Trim: 0
+  TransitionTime: 1.6s
+FlightMode: 
+  No.: 5
+  Name: Fefe
+  Switch: SwH_Up
+  X1Trim: 0
+  Y1Trim: 0
+  X2Trim: 0
+  Y2Trim: 0
+  TransitionTime: 1.0s
+# ------ Output channels ------
+Channel: 
+  No.: 1
+  Name: BaAaaB
+  Curve: Crv3
+  Reverse: true
+  Subtrim: 2
+  OverrideSwitch: SwA_Down
+  OverrideVal: -98
+  Failsafe: NoPulse
+  EndpointL: -98
+  EndpointR: 98
+Channel: 
+  No.: 2
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 3
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 4
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 5
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 6
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 7
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 8
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 9
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 10
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 11
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 12
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 13
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 14
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 15
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 16
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 17
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 18
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 19
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 20
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+# ------ Widgets ------
+Widget: 
+  No.: 1
+  Type: Timers
+  Src: Timer2
+Widget: 
+  No.: 2
+  Type: Telemetry
+  Src: Auto
+Widget: 
+  No.: 3
+  Type: MixSources
+  Src: Ele
+  Disp: GaugeZeroCenter
+  GaugeMin: -97
+  GaugeMax: 97
+Widget: 
+  No.: 4
+  Type: Outputs
+  Src: Ch3
+  Disp: Gauge
+  GaugeMin: -100
+  GaugeMax: 100
