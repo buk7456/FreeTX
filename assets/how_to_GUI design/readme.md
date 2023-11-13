@@ -7,3 +7,5 @@ In GraphicsGale under new file,
 - When drawing text, set the font to "Bm437 Portfolio 6x8", size 8, pitch 0
 
 The rest is pretty straight forward.
+
+For converting icons or sprites bitmaps to byte arrays, i used the tool [image2cpp](http://javl.github.io/image2cpp/)
