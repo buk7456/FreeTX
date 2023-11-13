@@ -30,7 +30,7 @@ The code compiles on arduino ide 1.8.x or later. The code is self-contained so d
 ## Hardware and Schematics
 The transmiter and receiver schematics can be found in the'schematics' folder. 
 The major components are listed below.
-- 1x Atmega2560 microcntroller, 2x Atmega328p microcontrollers.
+- 1x Atmega2560 microcontroller, 2x Atmega328p microcontrollers.
 - 2x SX1276/77/78/79 or RFM95 based Lora modules. However any module can possibly be used.
 - 128x64 KS0108 based LCD. Any 128x64 LCD can however be used (provide own driver code).
 
