@@ -8,4 +8,4 @@ In GraphicsGale under new file,
 
 The rest is pretty straight forward.
 
-For converting icons or sprites bitmaps to byte arrays, i used the tool [image2cpp](http://javl.github.io/image2cpp/)
+For converting icons or sprites bitmaps to byte arrays, I used the tool [image2cpp](http://javl.github.io/image2cpp/)
