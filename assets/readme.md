@@ -1,4 +1,4 @@
-The screens in the UI have been designed with [GraphicsGale](https://graphicsgale.com/us/)
+The screens in the UI have been designed with [GraphicsGale](https://graphicsgale.com/us/) from scratch using primitives (pixels, lines, rectangles, text).
 - Install the GraphicsGale software
 - Install the font Bm437_Portfolio_6x8_modBUK.FON provided in this folder.
 
