@@ -810,7 +810,7 @@ void handleMainUI()
             if(!Model.Telemetry[i].showOnHome)
               continue;
             //skip "no data" sensors
-            if(receivedTelemetry[i] == TELEMETRY_NO_DATA) 
+            if(telemetryReceivedValue[i] == TELEMETRY_NO_DATA) 
               continue;
             //check if already assigned to a widget
             bool skip = false;
@@ -848,7 +848,7 @@ void handleMainUI()
               tlmCntr++;
             }
             uint8_t xpos = 14;
-            if(muteTelemetryAlarms && Model.Telemetry[idx].alarmCondition != TELEMETRY_ALARM_CONDITION_NONE)
+            if(telemetryMuteAlarms && Model.Telemetry[idx].alarmCondition != TELEMETRY_ALARM_CONDITION_NONE)
             {
               display.drawBitmap(12, ypos + 1, icon_mute_tiny, 6, 5, BLACK);
               xpos = 20;
@@ -856,8 +856,8 @@ void handleMainUI()
             display.setCursor(xpos, ypos);
             display.print(Model.Telemetry[idx].name);
             display.print(F(":"));
-            if(widget->disp == WIDGET_DISP_NUMERICAL || receivedTelemetry[idx] == TELEMETRY_NO_DATA)
-              drawTelemetryValue(73, ypos, idx, receivedTelemetry[idx], true);
+            if(widget->disp == WIDGET_DISP_NUMERICAL || telemetryReceivedValue[idx] == TELEMETRY_NO_DATA)
+              drawTelemetryValue(73, ypos, idx, telemetryReceivedValue[idx], true);
             else if(widget->disp == WIDGET_DISP_GAUGE)
             {
               bool show = true;
@@ -865,7 +865,7 @@ void handleMainUI()
                 show = false;
               if(show)
               {
-                int32_t tVal = ((int32_t) receivedTelemetry[idx] * Model.Telemetry[idx].multiplier) / 100;
+                int32_t tVal = ((int32_t) telemetryReceivedValue[idx] * Model.Telemetry[idx].multiplier) / 100;
                 tVal += Model.Telemetry[idx].offset;
                 drawHorizontalBarChart(73, ypos+1, 41, 4, BLACK, tVal, widget->gaugeMin, widget->gaugeMax);
               }
@@ -967,9 +967,9 @@ void handleMainUI()
         if(heldButton == KEY_DOWN && millis() - buttonStartTime > 1000UL)
         {
           killButtonEvents();
-          muteTelemetryAlarms = !muteTelemetryAlarms;
+          telemetryMuteAlarms = !telemetryMuteAlarms;
           audioToPlay = AUDIO_TELEM_MUTE_CHANGED;
-          makeToast(muteTelemetryAlarms ? PSTR("Telemetry muted") : PSTR("Telemetry unmuted") , 2000, 0);
+          makeToast(telemetryMuteAlarms ? PSTR("Telemetry muted") : PSTR("Telemetry unmuted") , 2000, 0);
         }
       }
       break;
@@ -5425,7 +5425,7 @@ void handleMainUI()
             display.setCursor(16, ypos);
             display.print(Model.Telemetry[idx].name);
             display.print(F(":"));
-            drawTelemetryValue(73, ypos, idx, receivedTelemetry[idx], true);
+            drawTelemetryValue(73, ypos, idx, telemetryReceivedValue[idx], true);
           }
         }
         //scroll bar
@@ -5560,74 +5560,173 @@ void handleMainUI()
         
         static uint8_t page = 0;
         static bool viewInitialised = false;
+        static uint8_t topItem = 1;
         if(!viewInitialised)
         {
           page = thisTelemIdx;
+          focusedItem = 1;
+          topItem = 1;
           viewInitialised = true;
         }
         
+        enum {
+          ITEM_MINIMUM_VAL,
+          ITEM_RESET_MINIMUM_VAL,
+          ITEM_MAXIMUM_VAL,
+          ITEM_RESET_MAXIMUM_VAL,
+          ITEM_LAST_RECEIVED_VAL,
+          ITEM_LAST_RECEIVED_TIME,
+          ITEM_RESET_LAST_RECEIVED_VAL,
+          
+          ITEM_COUNT
+        };
+        
+        uint8_t listItemIDs[ITEM_COUNT]; 
+        uint8_t listItemCount = 0;
+        //add items IDs to the list
+        for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
+        {
+          if(!Model.Telemetry[page].recordMaximum && (i == ITEM_MAXIMUM_VAL || i == ITEM_RESET_MAXIMUM_VAL))
+            continue;
+          if(!Model.Telemetry[page].recordMinimum && (i == ITEM_MINIMUM_VAL || i == ITEM_RESET_MINIMUM_VAL))
+            continue;
+          listItemIDs[listItemCount++] = i;
+        }
+        
+        //handle navigation
+        uint8_t numFocusable = listItemCount + 1; //+1 for title focus
+        changeFocusOnUpDown(numFocusable);
+        if(focusedItem == 1) //title focus
+          topItem = 1;
+        else if(focusedItem > 1)
+        {
+          if(focusedItem - 1 < topItem)
+            topItem = focusedItem - 1;
+          while(focusedItem - 1 >= topItem + 5)
+            topItem++;
+        }
+        
+        //show title
         display.setCursor(8, 9);
         display.print(Model.Telemetry[page].name);
         display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
+        
+        //show current val, right aligned.
+        //using a hack to measure the width of the text before printing to actual position on screen
+        drawTelemetryValue(0, 64, page, telemetryReceivedValue[page], false);
+        uint8_t len = display.getCursorX() / 6;
+        uint8_t xpos = 127 - len * 6;
+        drawTelemetryValue(xpos, 9, page, telemetryReceivedValue[page], true);
+        display.drawRect(xpos - 2, 7, len * 6 + 3, 11, BLACK);
 
-        display.setCursor(0, 20);
-        display.print(F("Val now:"));
-        drawTelemetryValue(60, 20, page, receivedTelemetry[page], true);
-        
-        //-- dynamically show or hide items --
-        uint8_t numItems = 2; 
-        uint8_t ypos = 20;
-        
-        if(Model.Telemetry[page].recordMaximum)
+        //fill list and edit items
+        for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
         {
-          ypos += 9;
-          numItems++;
-          display.setCursor(0, ypos);
-          display.print(F("Maximum:"));
-          drawTelemetryValue(60, ypos, page, maxTelemetryValue[page], false);
+          uint8_t ypos = 20 + line*9;
+          if(focusedItem > 1 && focusedItem - 1 == topItem + line)
+            drawCursor(58, ypos);
           
-          ypos += 9;
-          numItems++;
-          display.setCursor(60, ypos);
-          display.print(F("[Reset]"));
-          if(focusedItem == numItems && clickedButton == KEY_SELECT)
-            maxTelemetryValue[page] = receivedTelemetry[page]; //reset max
+          uint8_t itemID = listItemIDs[topItem - 1 + line];
+          bool isFocused = (itemID == listItemIDs[focusedItem - 2]) ? true : false;
+          
+          display.setCursor(0, ypos);
+          switch(itemID)
+          {
+            case ITEM_MAXIMUM_VAL:
+              {
+                display.print(F("Maximum:"));
+                drawTelemetryValue(66, ypos, page, telemetryMaxReceivedValue[page], false);
+              }
+              break;
+            
+            case ITEM_RESET_MAXIMUM_VAL:
+              {
+                display.setCursor(66, ypos);
+                display.print(F("[Reset]"));
+                if(isFocused && clickedButton == KEY_SELECT)
+                  telemetryMaxReceivedValue[page] = telemetryReceivedValue[page];
+              }
+              break;
+            
+            case ITEM_MINIMUM_VAL:
+              {
+                display.print(F("Minimum:"));
+                drawTelemetryValue(66, ypos, page, telemetryMinReceivedValue[page], false);
+              }
+              break;
+              
+            case ITEM_RESET_MINIMUM_VAL:
+              {
+                display.setCursor(66, ypos);
+                display.print(F("[Reset]"));
+                if(isFocused && clickedButton == KEY_SELECT)
+                  telemetryMinReceivedValue[page] = telemetryReceivedValue[page]; 
+              }
+              break;
+              
+            case ITEM_LAST_RECEIVED_VAL:
+              {
+                display.print(F("Last Val:"));
+                drawTelemetryValue(66, ypos, page, telemetryLastReceivedValue[page], false);
+              }
+              break;
+              
+            case ITEM_LAST_RECEIVED_TIME:
+              {
+                display.print(F("Time rcvd:"));
+                display.setCursor(66, ypos);
+                if(telemetryLastReceivedValue[page] == TELEMETRY_NO_DATA)
+                  display.print(F("No data"));
+                else
+                {
+                  uint32_t elapsedSeconds = (millis() - telemetryLastReceivedTime[page])/1000;
+                  if(elapsedSeconds >= 3600)
+                  {
+                    uint8_t hours = elapsedSeconds / 3600;
+                    display.print(hours);
+                    display.print(F("hr"));
+                  }
+                  else if(elapsedSeconds >= 60)
+                  {
+                    uint8_t minutes = elapsedSeconds / 60;
+                    display.print(minutes);
+                    display.print(F("min"));
+                  }
+                  else
+                  {
+                    display.print(elapsedSeconds);
+                    display.print(F("s"));
+                  }
+                  display.print(F(" ago"));
+                }
+              }
+              break;
+              
+            case ITEM_RESET_LAST_RECEIVED_VAL:
+              {
+                display.setCursor(66, ypos);
+                display.print(F("[Reset]"));
+                if(isFocused && clickedButton == KEY_SELECT)
+                  telemetryLastReceivedValue[page] = telemetryReceivedValue[page]; 
+              }
+              break;
+          }
         }
         
-        if(Model.Telemetry[page].recordMinimum)
-        {
-          ypos += 9;
-          numItems++;
-          display.setCursor(0, ypos);
-          display.print(F("Minimum:"));
-          drawTelemetryValue(60, ypos, page, minTelemetryValue[page], false);
-          
-          ypos += 9;
-          numItems++;
-          display.setCursor(60, ypos);
-          display.print(F("[Reset]"));
-          if(focusedItem == numItems && clickedButton == KEY_SELECT)
-            minTelemetryValue[page] = receivedTelemetry[page]; //reset min
-        }
-
-        do{
-          changeFocusOnUpDown(numItems);
-        } while(focusedItem == 2 || focusedItem == 3 || focusedItem == 5);
-
-        //draw cursor
-        if(focusedItem == 1) drawCursor(0, 9);
-        else drawCursor(52, (focusedItem * 9) + 2);
+        //scrollbar
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
         
-        //change page
-        if(focusedItem == 1) 
-        {
-          toggleEditModeOnSelectClicked();
+        //change to next sensor
+        if(focusedItem == 1)
+        { 
+          drawCursor(0, 9);
+          toggleEditModeOnSelectClicked();  
           if(isEditMode)
           {
             do {
               page = incDecOnUpDown(page, 0, NUM_CUSTOM_TELEMETRY - 1, INCDEC_WRAP, INCDEC_SLOW);
             } while(isEmptyStr(Model.Telemetry[page].name, sizeof(Model.Telemetry[0].name))); //skip empty
-          }
+          }          
         }
         
         //exit
@@ -6765,7 +6864,7 @@ void handleMainUI()
       {
         drawHeader(advancedMenu[ADVANCED_MENU_DEBUG]);
         
-        forceTelemetryRequest = true;
+        telemetryForceRequest = true;
 
         enum {
           ITEM_PACKET_RATE,
@@ -6971,7 +7070,7 @@ void handleMainUI()
           eeSaveSysConfig();
           changeToScreen(SCREEN_ADVANCED_MENU);
           viewInitialised = false;
-          forceTelemetryRequest = false;
+          telemetryForceRequest = false;
         }
       }
       break;
@@ -9059,9 +9158,9 @@ void telemetryAlarmHandler()
   for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
   {
     telemetryAlarmState[i] = 0;
-    if(receivedTelemetry[i] == TELEMETRY_NO_DATA || Model.Telemetry[i].alarmCondition == TELEMETRY_ALARM_CONDITION_NONE)
+    if(telemetryReceivedValue[i] == TELEMETRY_NO_DATA || Model.Telemetry[i].alarmCondition == TELEMETRY_ALARM_CONDITION_NONE)
       continue;
-    int32_t tVal = ((int32_t) receivedTelemetry[i] * Model.Telemetry[i].multiplier) / 100;
+    int32_t tVal = ((int32_t) telemetryReceivedValue[i] * Model.Telemetry[i].multiplier) / 100;
     tVal += Model.Telemetry[i].offset;
     switch(Model.Telemetry[i].alarmCondition)
     {
@@ -9118,7 +9217,7 @@ void telemetryAlarmHandler()
   }
   
   //sound the alarm, repeat every 5 seconds
-  if(hasWarning && ((thisLoopNum - lastLoopNum)%(5000/fixedLoopTime) == 0) && !muteTelemetryAlarms)
+  if(hasWarning && ((thisLoopNum - lastLoopNum)%(5000/fixedLoopTime) == 0) && !telemetryMuteAlarms)
     audioToPlay = AUDIO_TELEM_WARN;
 }
 
