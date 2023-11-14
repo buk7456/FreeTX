@@ -154,6 +154,8 @@ void doRfCommunication()
       {
         rcPacketCount++;
         lastRCPacketMillis = millis();
+
+        digitalWrite(PIN_LED, HIGH);
         
         //Decode the rc data
         uint16_t chTemp[NUM_RC_CHANNELS];
@@ -279,6 +281,10 @@ void doRfCommunication()
   //--- SET POWER LEVEL
   static uint8_t power_dBm[3] = {3, 10, 17}; //2mW, 10mW, 50mW
   setRfPower(power_dBm[idxRfPowerLevel]);
+
+  //--- TURN OFF LED TO INDICATE NO INCOMING RC DATA
+  if(millis() - lastRCPacketMillis > 100)
+    digitalWrite(PIN_LED, LOW);
 }
 
 //================================= HELPERS ========================================================
