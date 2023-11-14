@@ -33,10 +33,6 @@ however modify the firmware to support voice via an external serial mp3 module.
 Make sure the card is formatted with the FAT (FAT16 or FAT32) file system. Other file systems are not supported. Also try to keep
 the number of files on the card minimal.
 
-### I have discovered a bug or issue. 
+### I have discovered a bug or I have an issue. 
 Whereas I have done extensive testing for all features and fixed all known bugs and issues, I cannot guarantee total bug freeness. 
-In case you come across a bug or issue, you can file it here on GitHub and I will be happy to look into it and support.
-
-### I want to join this project. Can we collaborate?
-I would love to collaborate but unfortunately, I am busy with other stuff. Feel free to fork the
-project and make changes as you like.
+In case you come across a bug or have an issue, you can file it here on GitHub and I will be happy to look into it and support.
