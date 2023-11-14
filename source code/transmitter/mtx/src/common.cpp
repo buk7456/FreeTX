@@ -151,13 +151,14 @@ bool     isRequestingOutputChConfig = false;
 bool     isSendOutputChConfig = false;
 uint8_t  receiverConfigStatusCode = 0; 
 
-int16_t  receivedTelemetry[NUM_CUSTOM_TELEMETRY];
-int16_t  maxTelemetryValue[NUM_CUSTOM_TELEMETRY];
-int16_t  minTelemetryValue[NUM_CUSTOM_TELEMETRY];
-uint32_t telemetryLastReceiveTime[NUM_CUSTOM_TELEMETRY];
+int16_t  telemetryReceivedValue[NUM_CUSTOM_TELEMETRY];
+int16_t  telemetryMaxReceivedValue[NUM_CUSTOM_TELEMETRY];
+int16_t  telemetryMinReceivedValue[NUM_CUSTOM_TELEMETRY];
+uint32_t telemetryLastReceivedTime[NUM_CUSTOM_TELEMETRY];
+int16_t  telemetryLastReceivedValue[NUM_CUSTOM_TELEMETRY];
 uint8_t  telemetryAlarmState[NUM_CUSTOM_TELEMETRY];
-bool     muteTelemetryAlarms = false;
-bool     forceTelemetryRequest = false;
+bool     telemetryMuteAlarms = false;
+bool     telemetryForceRequest = false;
 
 int16_t  counterOut[NUM_COUNTERS];
 
@@ -561,10 +562,11 @@ void resetTelemParams(uint8_t idx)
   Model.Telemetry[idx].recordMinimum  = true; 
   
   //also reset received telemetry
-  telemetryLastReceiveTime[idx] = millis();
-  receivedTelemetry[idx] = TELEMETRY_NO_DATA;
-  maxTelemetryValue[idx] = TELEMETRY_NO_DATA;
-  minTelemetryValue[idx] = TELEMETRY_NO_DATA;
+  telemetryReceivedValue[idx] = TELEMETRY_NO_DATA;
+  telemetryLastReceivedValue[idx] = TELEMETRY_NO_DATA;
+  telemetryLastReceivedTime[idx] = millis();
+  telemetryMaxReceivedValue[idx] = TELEMETRY_NO_DATA;
+  telemetryMinReceivedValue[idx] = TELEMETRY_NO_DATA;
 }
 
 //--------------------------------------------------------------------------------------------------

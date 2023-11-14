@@ -475,11 +475,11 @@ void computeChannelOutputs()
           else //telemetry
           {
             uint8_t tlmIdx = ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS);
-            if(receivedTelemetry[tlmIdx] == TELEMETRY_NO_DATA)
+            if(telemetryReceivedValue[tlmIdx] == TELEMETRY_NO_DATA)
               break; 
             else
             {
-              _val1 = ((int32_t) receivedTelemetry[tlmIdx] * Model.Telemetry[tlmIdx].multiplier) / 100;
+              _val1 = ((int32_t) telemetryReceivedValue[tlmIdx] * Model.Telemetry[tlmIdx].multiplier) / 100;
               _val1 += Model.Telemetry[tlmIdx].offset;
               _val2 = ls->val2;
             }
