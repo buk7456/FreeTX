@@ -137,13 +137,15 @@ void loop()
   ///--- TELEMETRY
   if(Sys.DBG_simulateTelemetry)
   {
-    //check against configured Ids and copy to receivedTelemetry 
+    //check against configured Ids and copy to telemetryReceivedValue 
     for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++)
     {
       if(Model.Telemetry[idx].identifier == 0x30)
       {
-        receivedTelemetry[idx] = mixSources[SRC_VIRTUAL_FIRST] / 5;
-        telemetryLastReceiveTime[idx] = millis();
+        if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
+          telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
+        telemetryReceivedValue[idx] = mixSources[SRC_VIRTUAL_FIRST] / 5;
+        telemetryLastReceivedTime[idx] = millis();
       }
     }
   }
@@ -268,7 +270,7 @@ void doSerialCommunication()
   {
     //only request telemetry when necessary i.e. if there are configured sensors
     //or we are forcing telemetry request
-    if(forceTelemetryRequest)
+    if(telemetryForceRequest)
       status0 |= FLAG_GET_TELEMETRY;
     else
     {
@@ -406,13 +408,17 @@ void doSerialCommunication()
     {
       uint8_t buffIdx = 3 + (i * 3);
       uint8_t sensorID = tmpBuff[buffIdx];
-      //check against configured Ids and copy to receivedTelemetry 
+      //check against configured Ids and copy to telemetryReceivedValue 
       for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++)
       {
         if(sensorID == Model.Telemetry[idx].identifier)
         {
-          receivedTelemetry[idx] = joinBytes(tmpBuff[buffIdx + 1], tmpBuff[buffIdx + 2]);
-          telemetryLastReceiveTime[idx] = millis();
+          //store the last received value
+          if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
+            telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
+          //write the current value
+          telemetryReceivedValue[idx] = joinBytes(tmpBuff[buffIdx + 1], tmpBuff[buffIdx + 2]);
+          telemetryLastReceivedTime[idx] = millis();
         }
       }
     }
@@ -427,18 +433,18 @@ void handleTelemetry()
   for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
   {
     //-- get stats
-    if(receivedTelemetry[i] != TELEMETRY_NO_DATA)
+    if(telemetryReceivedValue[i] != TELEMETRY_NO_DATA)
     {
       //max
-      if(receivedTelemetry[i] > maxTelemetryValue[i] || maxTelemetryValue[i] == TELEMETRY_NO_DATA)   
-        maxTelemetryValue[i] = receivedTelemetry[i];
+      if(telemetryReceivedValue[i] > telemetryMaxReceivedValue[i] || telemetryMaxReceivedValue[i] == TELEMETRY_NO_DATA)   
+        telemetryMaxReceivedValue[i] = telemetryReceivedValue[i];
       //min
-      if(receivedTelemetry[i] < minTelemetryValue[i] || minTelemetryValue[i] == TELEMETRY_NO_DATA)   
-        minTelemetryValue[i] = receivedTelemetry[i];
+      if(telemetryReceivedValue[i] < telemetryMinReceivedValue[i] || telemetryMinReceivedValue[i] == TELEMETRY_NO_DATA)   
+        telemetryMinReceivedValue[i] = telemetryReceivedValue[i];
     }
     //-- reset received telemetry if timeout
-    if(millis() - telemetryLastReceiveTime[i] > 2000)
-      receivedTelemetry[i] = TELEMETRY_NO_DATA; 
+    if(millis() - telemetryLastReceivedTime[i] > 2000)
+      telemetryReceivedValue[i] = TELEMETRY_NO_DATA; 
   }
   
   //-- reset all telemetry on model change
@@ -448,10 +454,11 @@ void handleTelemetry()
     lastModelIdx = Sys.activeModelIdx;
     for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
     {
-      telemetryLastReceiveTime[i] = millis();
-      receivedTelemetry[i] = TELEMETRY_NO_DATA;
-      maxTelemetryValue[i] = TELEMETRY_NO_DATA;
-      minTelemetryValue[i] = TELEMETRY_NO_DATA;
+      telemetryLastReceivedTime[i] = millis();
+      telemetryLastReceivedValue[i] = TELEMETRY_NO_DATA;
+      telemetryReceivedValue[i] = TELEMETRY_NO_DATA;
+      telemetryMaxReceivedValue[i] = TELEMETRY_NO_DATA;
+      telemetryMinReceivedValue[i] = TELEMETRY_NO_DATA;
     }
   }
 }
