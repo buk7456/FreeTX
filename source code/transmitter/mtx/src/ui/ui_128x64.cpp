@@ -7565,10 +7565,10 @@ void handleMainUI()
                 birdX = 24.0;
                 birdY = 11.0;
                 velocity = 0.0;
-                bgX = 127;
+                bgX = 0.0;
                 score = 0;
                 hasScored = false;
-                pipeX = 127;
+                pipeX = 127.0;
                 pipeY = random(5 + pipeGap, 51);
                 pipeVariant = random() % PIPE_VARIANT_COUNT;
                 scrollVelocity = 0.65;
@@ -7684,15 +7684,15 @@ void handleMainUI()
               
               //draw the background
               uint8_t idx = bgX;
-              for(uint8_t cntr = 0; cntr < 128; cntr++, idx++)
+              for(uint8_t x = 0; x < 128; x++, idx++)
               {
-                if(idx == 128)
+                if(idx > 127)
                   idx = 0;
                 uint8_t val = pgm_read_byte(bgTerrain + idx);
                 for(uint8_t b = 0; b < 4; b++)
                 {
-                  if(val & 1 << b)
-                    display.drawPixel(cntr, 54 + b, BLACK);
+                  if(val & (1 << b))
+                    display.drawPixel(x, 54 + b, BLACK);
                 }
               }
               
