@@ -36,6 +36,8 @@ uint8_t getMaxOutputChConfig(int16_t pin);
 void setup()
 { 
   //--- setup pins
+  pinMode(PIN_LED, OUTPUT);
+  digitalWrite(PIN_LED, LOW);
   
   //--- use analog reference internal 1.1V
   analogReference(INTERNAL);
