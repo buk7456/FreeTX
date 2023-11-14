@@ -3,7 +3,6 @@
 
 //--- pins ---
 
-/* 
 #define PIN_CH1    A2
 #define PIN_CH2    2
 #define PIN_CH3    3
@@ -14,14 +13,13 @@
 #define PIN_CH8    8
 #define PIN_CH9    A1
 #define PIN_CH10   A0
-
 #define PIN_LORA_SS     10
 #define PIN_LORA_RESET  9
-
-#define PIN_EXTV_SENSE  A3  
-*/
+#define PIN_EXTV_SENSE  A6
+#define PIN_LED    A3  
 
 //### TEST MODE ###
+/*
 #define PIN_CH1    2
 #define PIN_CH2    5
 #define PIN_CH3    3
@@ -32,11 +30,10 @@
 #define PIN_CH8    A2
 #define PIN_CH9    A1
 #define PIN_CH10   A7 //intentional, not available on standard uno
-
 #define PIN_LORA_SS     10
 #define PIN_LORA_RESET  8
-
 #define PIN_EXTV_SENSE  A0
+*/
 
 //--- battery voltage
 const int16_t battVfactor = 1627;  //scaling factor
