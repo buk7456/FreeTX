@@ -178,13 +178,14 @@ extern uint8_t  receiverConfigStatusCode; //1 on success, 2 on fail
 
 #define NUM_CUSTOM_TELEMETRY  10
 
-extern int16_t  receivedTelemetry[NUM_CUSTOM_TELEMETRY]; //stores the raw received telemetry
-extern int16_t  maxTelemetryValue[NUM_CUSTOM_TELEMETRY]; //for stats
-extern int16_t  minTelemetryValue[NUM_CUSTOM_TELEMETRY]; //for stats
-extern uint32_t telemetryLastReceiveTime[NUM_CUSTOM_TELEMETRY]; //for time out
+extern int16_t  telemetryReceivedValue[NUM_CUSTOM_TELEMETRY]; //stores the raw received telemetry
+extern int16_t  telemetryMaxReceivedValue[NUM_CUSTOM_TELEMETRY]; //for stats
+extern int16_t  telemetryMinReceivedValue[NUM_CUSTOM_TELEMETRY]; //for stats
+extern int16_t  telemetryLastReceivedValue[NUM_CUSTOM_TELEMETRY];
+extern uint32_t telemetryLastReceivedTime[NUM_CUSTOM_TELEMETRY]; 
 extern uint8_t  telemetryAlarmState[NUM_CUSTOM_TELEMETRY];
-extern bool     muteTelemetryAlarms;
-extern bool     forceTelemetryRequest;
+extern bool     telemetryMuteAlarms;
+extern bool     telemetryForceRequest;
 
 #define TELEMETRY_NO_DATA  0x7FFF
 
