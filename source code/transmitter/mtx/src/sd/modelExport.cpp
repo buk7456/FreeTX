@@ -309,7 +309,6 @@ void exportModelData(File& file)
     if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
     {
       writeKey_helper(file, 1, key_FlightMode);
-      // file.print(mxr->flightMode, BIN);
       if(mxr->flightMode == 0xff)
         file.print(F("All"));
       else
@@ -427,9 +426,7 @@ void exportModelData(File& file)
 
     writeKeyValue_S32(file, 1, key_Modulus, counter->modulus);
     
-    writeKey_helper(file, 1, key_Direction);
-    file.print((counter->direction == 0) ? F("Up") : F("Down"));
-    file.println();
+    writeKeyValue_Char(file, 1, key_Direction, findStringInIdStr(enum_CounterDirection, counter->direction));
     
     writeKeyValue_bool(file, 1, key_IsPersistent, counter->isPersistent);
     writeKeyValue_S32(file, 1, key_PersistVal, counter->persistVal);
