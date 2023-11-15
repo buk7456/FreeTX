@@ -5,6 +5,7 @@
 #include "../templates.h"
 #include "../tonePlayer.h"
 #include "../lcd/GFX.h"
+#include "../sd/modelStrings.h"
 #include "bitmaps.h"
 #include "ui.h"
 
@@ -52,27 +53,6 @@ enum {
 };
 
 //----------------------------
-
-//Function generator waveform strings. Max 9 chars per string
-char const waveformStr[][10] PROGMEM = {  
-  "Sine", "Square", "Triangle", "Sawtooth", "Random"
-};
-
-//Mix curve type strings. Max 4 chars per string
-char const mixCurveTypeStr[][5] PROGMEM = {
-  "Diff", "Expo", "Func", "Cstm"
-};
-
-//Mix curve function strings. Max 4 chars per string
-char const mixCurveFuncStr[][5] PROGMEM = {
-  "--", "x>0", "x<0", "|x|"
-};
-
-//Logical switch func strings. Max 9 chars per string
-char const lsFuncStr[][10] PROGMEM = {
-  "--", "a>x", "a<x", "a==x", "a>=x", "a<=x", "|a|>x", "|a|<x", "|a|==x", "|a|>=x", "|a|<=x",
-  "a>b", "a<b", "a==b", "a>=b", "a<=b", "AND", "OR", "XOR", "Latch", "Toggle", "Pulse"
-};
 
 //RF power level strings. Max 9 chars per string
 char const rfPowerStr[][10] PROGMEM = {  
@@ -1113,11 +1093,7 @@ void handleMainUI()
         display.setCursor(0, 20);
         display.print(F("Type:"));
         display.setCursor(48, 20);
-        if(widget->type == WIDGET_TYPE_TELEMETRY) display.print(F("Telemetry"));
-        if(widget->type == WIDGET_TYPE_OUTPUTS) display.print(F("Outputs"));
-        if(widget->type == WIDGET_TYPE_MIXSOURCES) display.print(F("MixSrcs"));
-        if(widget->type == WIDGET_TYPE_TIMERS) display.print(F("Timers"));
-        if(widget->type == WIDGET_TYPE_COUNTERS) display.print(F("Counters"));
+        display.print(findStringInIdStr(enum_WidgetType, widget->type));
         
         //src
         numItems++;
@@ -1126,8 +1102,10 @@ void handleMainUI()
         display.setCursor(48, 29);
         if(widget->type == WIDGET_TYPE_TELEMETRY)
         {
-          if(widget->src == WIDGET_SRC_AUTO) display.print(F("Automatic"));
-          else display.print(Model.Telemetry[widget->src].name);
+          if(widget->src == WIDGET_SRC_AUTO) 
+            display.print(findStringInIdStr(enum_WidgetSource, WIDGET_SRC_AUTO));
+          else 
+            display.print(Model.Telemetry[widget->src].name);
         }
         else if(widget->type == WIDGET_TYPE_OUTPUTS)
         {
@@ -1179,17 +1157,14 @@ void handleMainUI()
           display.setCursor(0, 38);
           display.print(F("Disp:"));
           display.setCursor(48, 38);
-          if(widget->disp == WIDGET_DISP_NUMERICAL) display.print(F("Numerical"));
-          if(widget->disp == WIDGET_DISP_GAUGE) display.print(F("Gauge"));
-          if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED) display.print(F("CenterGauge"));
+          display.print(findStringInIdStr(enum_WidgetDisplay, widget->disp));
 
           //gaugeMin
           if(widget->disp == WIDGET_DISP_GAUGE || widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
           {
             numItems++;
             display.setCursor(0, 47);
-            if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED) display.print(F("Left:"));
-            else display.print(F("Min:"));
+            display.print((widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED) ? F("Left:") : F("Min:"));
             display.setCursor(48, 47);
             if(widget->type == WIDGET_TYPE_TELEMETRY)
             {
@@ -1201,8 +1176,7 @@ void handleMainUI()
             
             numItems++;
             display.setCursor(0, 56);
-            if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED) display.print(F("Right:"));
-            else display.print(F("Max:"));
+            display.print((widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED) ? F("Right:") : F("Max:"));
             display.setCursor(48, 56);
             if(widget->type == WIDGET_TYPE_TELEMETRY)
             {
@@ -1770,9 +1744,7 @@ void handleMainUI()
         display.setCursor(17, 18);
         display.print(F("Model type"));
         display.setCursor(29, 28);
-        if(mdlType == MODEL_TYPE_AIRPLANE) display.print(F("Airplane"));
-        if(mdlType == MODEL_TYPE_MULTICOPTER) display.print(F("Multicopter"));
-        if(mdlType == MODEL_TYPE_OTHER) display.print(F("Other"));
+        display.print(findStringInIdStr(enum_ModelType, mdlType));
         
         if(clickedButton == KEY_SELECT) //create the model
         {
@@ -2738,10 +2710,7 @@ void handleMainUI()
               {
                 display.print(F("Opertn:"));
                 display.setCursor(60, ypos);
-                if(mxr->operation == MIX_ADD) display.print(F("Add"));
-                if(mxr->operation == MIX_MULTIPLY) display.print(F("Mltply"));
-                if(mxr->operation == MIX_REPLACE) display.print(F("RplcW"));
-                if(mxr->operation == MIX_HOLD) display.print(F("Hold"));
+                display.print(findStringInIdStr(enum_MixerOperation, mxr->operation));
                 if(edit)
                   mxr->operation = incDecOnUpDown(mxr->operation, 0, MIX_OPERATOR_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               }
@@ -2789,8 +2758,7 @@ void handleMainUI()
               {
                 display.print(F("Curve :"));
                 display.setCursor(60, ypos);
-                strlcpy_P(txtBuff, mixCurveTypeStr[mxr->curveType], sizeof(txtBuff));
-                display.print(txtBuff);
+                display.print(findStringInIdStr(enum_MixerCurveType, mxr->curveType));
                 if(edit)
                 {
                   uint8_t prevCurveType = mxr->curveType;
@@ -2808,10 +2776,7 @@ void handleMainUI()
                 if(mxr->curveType == MIX_CURVE_TYPE_DIFF || mxr->curveType == MIX_CURVE_TYPE_EXPO)
                   display.print(mxr->curveVal);
                 else if(mxr->curveType == MIX_CURVE_TYPE_FUNCTION)
-                {
-                  strlcpy_P(txtBuff, mixCurveFuncStr[mxr->curveVal], sizeof(txtBuff));
-                  display.print(txtBuff);
-                }
+                  display.print(findStringInIdStr(enum_MixerCurveType_Func, mxr->curveVal));
                 else if(mxr->curveType == MIX_CURVE_TYPE_CUSTOM)
                 {
                   if(isEmptyStr(Model.CustomCurve[mxr->curveVal].name, sizeof(Model.CustomCurve[0].name)))
@@ -3476,7 +3441,7 @@ void handleMainUI()
         display.print(F("Curve:"));
         display.setCursor(62, 16);
         if(ch->curve == -1)
-          display.print(F("--"));
+          display.print(findStringInIdStr(enum_ChannelCurve, -1));
         else
         {
           if(isEmptyStr(Model.CustomCurve[ch->curve].name, sizeof(Model.CustomCurve[0].name)))
@@ -3509,9 +3474,10 @@ void handleMainUI()
         display.setCursor(0, 48);
         display.print(F("Failsafe:"));
         display.setCursor(62, 48);
-        if(ch->failsafe == -102) display.print(F("Hold"));
-        else if(ch->failsafe == -101) display.print(F("NoPulse"));
-        else display.print(ch->failsafe);
+        if(ch->failsafe < -100)
+          display.print(findStringInIdStr(enum_ChannelFailsafe, ch->failsafe));
+        else
+          display.print(ch->failsafe);
 
         display.setCursor(0, 56);
         display.print(F("Endpts:"));
@@ -4042,9 +4008,7 @@ void handleMainUI()
         display.setCursor(0, 20);
         display.print(F("Functn:"));
         display.setCursor(54, 20);
-        uint8_t _func = ls->func;
-        strlcpy_P(txtBuff, lsFuncStr[_func], sizeof(txtBuff));
-        display.print(txtBuff);
+        display.print(findStringInIdStr(enum_LogicalSwitch_Func, ls->func));
         
         //value 1
         display.setCursor(0, 29);
@@ -4165,9 +4129,7 @@ void handleMainUI()
               break;
             case LS_FUNC_TOGGLE:
               {
-                if(ls->val2 == 0) display.print(F("Rising"));
-                else if(ls->val2 == 1) display.print(F("Falling"));
-                else display.print(F("Dual"));
+                display.print(findStringInIdStr(enum_ClockEdge, ls->val2));
               }
               break;            
             case LS_FUNC_PULSE:
@@ -4551,8 +4513,7 @@ void handleMainUI()
               {
                 display.print(F("Waveform:"));
                 display.setCursor(78, ypos);
-                strlcpy_P(txtBuff, waveformStr[fgen->waveform], sizeof(txtBuff));
-                display.print(txtBuff);
+                display.print(findStringInIdStr(enum_FuncgenWaveform, fgen->waveform));
                 if(edit)
                   fgen->waveform = incDecOnUpDown(fgen->waveform, 0, FUNCGEN_WAVEFORM_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               }
@@ -4560,15 +4521,12 @@ void handleMainUI()
               
             case ITEM_PERIOD_MODE:
               {
-                if(fgen->waveform == FUNCGEN_WAVEFORM_RANDOM)
+                if(fgen->waveform == FUNCGEN_WAVEFORM_RANDOM) 
                   display.print(F("Intrvl mode:"));
-                else
+                else 
                   display.print(F("Period mode:"));
                 display.setCursor(78, ypos);
-                if(fgen->periodMode == FUNCGEN_PERIODMODE_FIXED)
-                  display.print(F("Fixed"));
-                else
-                  display.print(F("Variable"));
+                display.print(findStringInIdStr(enum_FuncgenPeriodMode, fgen->periodMode));
                 if(edit)
                   fgen->periodMode = incDecOnUpDown(fgen->periodMode, 0, FUNCGEN_PERIODMODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               }
@@ -4645,10 +4603,7 @@ void handleMainUI()
               {
                 display.print(F("Phase mode:"));
                 display.setCursor(78, ypos);
-                if(fgen->phaseMode == FUNCGEN_PHASEMODE_AUTO)
-                  display.print(F("Auto"));
-                else if(fgen->phaseMode == FUNCGEN_PHASEMODE_FIXED)
-                  display.print(F("Fixed"));
+                display.print(findStringInIdStr(enum_FuncgenPhaseMode, fgen->phaseMode));
                 if(edit)
                   fgen->phaseMode = incDecOnUpDown(fgen->phaseMode, 0, FUNCGEN_PHASEMODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               }
@@ -4901,9 +4856,7 @@ void handleMainUI()
               {
                 display.print(F("Edge:"));
                 display.setCursor(66, ypos);
-                if(counter->edge == 0)display.print(F("Rising"));
-                else if(counter->edge == 1)display.print(F("Falling"));
-                else display.print(F("Dual"));
+                display.print(findStringInIdStr(enum_ClockEdge, counter->edge));
                 if(edit)
                   counter->edge = incDecOnUpDown(counter->edge, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
               }
@@ -4923,8 +4876,7 @@ void handleMainUI()
               {
                 display.print(F("Direction:"));
                 display.setCursor(66, ypos);
-                if(counter->direction == 0) display.print(F("Up"));
-                else display.print(F("Down"));
+                display.print(findStringInIdStr(enum_CounterDirection, counter->direction));
                 if(edit)
                   counter->direction = incDecOnUpDown(counter->direction, 0, 1, INCDEC_WRAP, INCDEC_SLOW);
               }
@@ -5256,10 +5208,7 @@ void handleMainUI()
             display.write(65 + idx);
             display.print(F(":"));
             display.setCursor(72, ypos);
-            if(Model.switchWarn[idx] == -1) display.print(F("None"));
-            if(Model.switchWarn[idx] == SWUPPERPOS) display.print(F("Up"));
-            if(Model.switchWarn[idx] == SWLOWERPOS) display.print(F("Down"));
-            if(Model.switchWarn[idx] == SWMIDPOS)   display.print(F("Mid"));
+            display.print(findStringInIdStr(enum_SwitchWarn, Model.switchWarn[idx]));
             if(edit)
             {
               if(Sys.swType[idx] == SW_2POS)
@@ -5293,9 +5242,7 @@ void handleMainUI()
           display.print(txtBuff);
           display.print(F(" trim:"));
           display.setCursor(66, 9 + i * 9);
-          if(trim[i]->trimState == TRIM_DISABLED) display.print(F("Disabled"));
-          if(trim[i]->trimState == TRIM_COMMON) display.print(F("Common"));
-          if(trim[i]->trimState == TRIM_FLIGHT_MODE) display.print(F("F-Mode"));
+          display.print(findStringInIdStr(enum_TrimState, trim[i]->trimState));
         }
         
         changeFocusOnUpDown(4);
@@ -5780,7 +5727,11 @@ void handleMainUI()
         
         //add item Ids to the list of Ids
         for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
+        {
+          if(i == ITEM_TELEMETRY_ALARM_THRESHOLD && tlm->alarmCondition == TELEMETRY_ALARM_CONDITION_NONE)
+            continue;
           listItemIDs[listItemCount++] = i;
+        }
         
         //handle navigation
         changeFocusOnUpDown(listItemCount); 
@@ -5887,9 +5838,7 @@ void handleMainUI()
               {
                 display.print(F("Alerts:"));
                 display.setCursor(72, ypos);
-                if(tlm->alarmCondition == TELEMETRY_ALARM_CONDITION_NONE) display.print(F("Off"));
-                if(tlm->alarmCondition == TELEMETRY_ALARM_CONDITION_GREATER_THAN) display.print(F(">Thresh"));
-                if(tlm->alarmCondition == TELEMETRY_ALARM_CONDITION_LESS_THAN) display.print(F("<Thresh"));
+                display.print(findStringInIdStr(enum_TelemetryAlarmCondition, tlm->alarmCondition));
                 if(edit)
                   tlm->alarmCondition = incDecOnUpDown(tlm->alarmCondition, 0, TELEMETRY_ALARM_CONDITION_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               }
