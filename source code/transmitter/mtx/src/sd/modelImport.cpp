@@ -622,12 +622,7 @@ void extractConfig_Counters()
     else if(MATCH_P(keyBuff[1], key_Modulus))
       counter->modulus = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Direction))
-    {
-      if(MATCH_P(valueBuff, PSTR("Up")))
-        counter->direction = 0;
-      else if(MATCH_P(valueBuff, PSTR("Down")))
-        counter->direction = 1;
-    }
+      findIdInIdStr(enum_CounterDirection, valueBuff, counter->direction);
     else if(MATCH_P(keyBuff[1], key_IsPersistent))
       readValue_bool(valueBuff, &counter->isPersistent);
     else if(MATCH_P(keyBuff[1], key_PersistVal))
