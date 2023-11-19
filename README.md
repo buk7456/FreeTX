@@ -28,7 +28,7 @@ Three buttons are used for navigation; Up, Select, Down. Long press Select to go
 The code compiles on arduino ide 1.8.x or later. The code is self-contained so doesn't require installing any libraries. 
 
 ## Hardware and Schematics
-The transmiter and receiver schematics can be found in the'schematics' folder. 
+The transmiter and receiver schematics can be found in the 'schematics' folder. 
 The major components are listed below.
 - 1x Atmega2560 microcontroller, 2x Atmega328p microcontrollers.
 - 2x SX1276/77/78/79 or RFM95 based Lora modules. However any module can possibly be used.
