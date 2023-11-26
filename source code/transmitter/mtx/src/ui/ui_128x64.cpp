@@ -873,10 +873,7 @@ void handleMainUI()
           {
             display.setCursor(14, ypos);
             if(!isEmptyStr(Model.Channel[widget->src].name, sizeof(Model.Channel[0].name)))
-            {
-              strlcpy(txtBuff, Model.Channel[widget->src].name, sizeof(txtBuff));
-              display.print(txtBuff);
-            }
+              display.print(Model.Channel[widget->src].name);
             else
             {
               display.print(F("Ch"));
@@ -906,10 +903,7 @@ void handleMainUI()
           {
             display.setCursor(14, ypos);
             if(!isEmptyStr(Model.Counter[widget->src].name, sizeof(Model.Counter[0].name)))
-            {
-              strlcpy(txtBuff, Model.Counter[widget->src].name, sizeof(txtBuff));
-              display.print(txtBuff);
-            }
+              display.print(Model.Counter[widget->src].name);
             else
             {
               display.print(F("Counter"));
@@ -1114,8 +1108,7 @@ void handleMainUI()
           if(!isEmptyStr(Model.Channel[widget->src].name, sizeof(Model.Channel[0].name)))
           {
             display.print(F(" "));
-            strlcpy(txtBuff, Model.Channel[widget->src].name, sizeof(txtBuff));
-            display.print(txtBuff);
+            display.print(Model.Channel[widget->src].name);
           }
         }
         else if(widget->type == WIDGET_TYPE_MIXSOURCES)
@@ -1126,10 +1119,7 @@ void handleMainUI()
         else if(widget->type == WIDGET_TYPE_COUNTERS)
         {
           if(!isEmptyStr(Model.Counter[widget->src].name, sizeof(Model.Counter[0].name)))
-          {
-            strlcpy(txtBuff, Model.Counter[widget->src].name, sizeof(txtBuff));
-            display.print(txtBuff);
-          }
+            display.print(Model.Counter[widget->src].name);
           else
           {
             display.print(F("Counter"));
@@ -1143,8 +1133,7 @@ void handleMainUI()
           if(!isEmptyStr(Model.Timer[widget->src].name, sizeof(Model.Timer[0].name)))
           {
             display.print(F(" "));
-            strlcpy(txtBuff, Model.Timer[widget->src].name, sizeof(txtBuff));
-            display.print(txtBuff);
+            display.print(Model.Timer[widget->src].name);
           }
         }
 
