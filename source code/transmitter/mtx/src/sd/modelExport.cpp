@@ -74,7 +74,7 @@ void writeArray_U8(File& file, uint8_t level, const char* keyStr_P, uint8_t valu
   file.println();
   for(uint8_t i = 0; i < numValues; i++)
   {
-    printIndention_helper(file, level);
+    printIndention_helper(file, level + 1);
     file.print(i);
     file.print(F(": "));
     file.print(values[i]);
