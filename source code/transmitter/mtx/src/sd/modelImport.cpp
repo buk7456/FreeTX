@@ -197,7 +197,7 @@ uint16_t getTimeFromTimeStr(char* str)
     uint8_t c = *(str + pos);
     if(c == '\0')
       break;
-    if(isDigit(c))
+    if(isDigit(c) && i < sizeof(tempBuff) - 1)
       tempBuff[i++] = c;
     if(c == '.')
     {
@@ -408,7 +408,7 @@ void extractConfig_ThrottleCurve()
       crv->xVal[0] = -100;
     else if(pt == crv->numPoints - 1) 
       crv->xVal[crv->numPoints - 1] = 100;
-    else 
+    else if(pt < MAX_NUM_POINTS_CUSTOM_CURVE)
       crv->xVal[pt] = atoi_with_prefix(valueBuff);
   }
   else if(MATCH_P(keyBuff[1], key_YVal))
@@ -540,7 +540,7 @@ void extractConfig_CustomCurves()
         crv->xVal[0] = -100;
       else if(pt == crv->numPoints - 1) 
         crv->xVal[crv->numPoints - 1] = 100;
-      else 
+      else if(pt < MAX_NUM_POINTS_CUSTOM_CURVE)
         crv->xVal[pt] = atoi_with_prefix(valueBuff);
     }
     else if(MATCH_P(keyBuff[1], key_YVal))
