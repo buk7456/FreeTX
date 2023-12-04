@@ -772,9 +772,6 @@ void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff)
       }
       else //telemetry as sources
       {
-        // strlcpy_P(buff, PSTR("Telemetry"), lenBuff);
-        // itoa((idx - MIXSOURCES_COUNT) + 1, suffix, 10);
-        // strlcat(buff, suffix, lenBuff);
         strlcpy(buff, Model.Telemetry[idx - (MIXSOURCES_COUNT + NUM_COUNTERS)].name, lenBuff);
       }
     }
