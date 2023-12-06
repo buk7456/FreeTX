@@ -135,6 +135,7 @@ enum {
   SCREEN_LOGICAL_SWITCHES,
   POPUP_LOGICAL_SWITCH_MENU,
   DIALOG_COPY_LOGICAL_SWITCH,
+  SCREEN_LOGICAL_SWITCH_OUTPUTS,
   //counters
   SCREEN_COUNTERS,
   POPUP_COUNTER_MENU,
@@ -3971,406 +3972,316 @@ void handleMainUI()
 
         logical_switch_t *ls = &Model.LogicalSwitch[thisLsIdx];
         
-        if(ls->func == LS_FUNC_LATCH || ls->func == LS_FUNC_PULSE || ls->func == LS_FUNC_TOGGLE)
-          changeFocusOnUpDown(6);
-        else
-          changeFocusOnUpDown(7);
-        
-        bool contextMenuHasFocus = false;
-        if(focusedItem == 7 
-           || (focusedItem == 6 && (ls->func == LS_FUNC_LATCH || ls->func == LS_FUNC_PULSE || ls->func == LS_FUNC_TOGGLE)))
-        {
-          contextMenuHasFocus = true;
-        }
-        
-        if(!contextMenuHasFocus)
-          toggleEditModeOnSelectClicked();
-        
-        //--- draw ---
-        
+        //draw title
         display.setCursor(8, 9);
         getSrcName(txtBuff, SRC_SW_LOGICAL_FIRST + thisLsIdx, sizeof(txtBuff));
         display.print(txtBuff);
         display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
-        
-        //function
-        display.setCursor(0, 20);
-        display.print(F("Functn:"));
-        display.setCursor(54, 20);
-        display.print(findStringInIdStr(enum_LogicalSwitch_Func, ls->func));
-        
-        //value 1
-        display.setCursor(0, 29);
-        if(ls->func == LS_FUNC_PULSE) 
-          display.print(F("Width:"));
-        else if(ls->func == LS_FUNC_LATCH) 
-          display.print(F("Set:"));
-        else if(ls->func == LS_FUNC_TOGGLE) 
-          display.print(F("Clock:"));
-        else 
-          display.print(F("Value1:"));
-        display.setCursor(54, 29);
-        if(ls->func == LS_FUNC_NONE)
-          display.print(F("--"));
-        else
-        {
-          switch(ls->func)
-          {
-            case LS_FUNC_A_GREATER_THAN_X:
-            case LS_FUNC_A_LESS_THAN_X:
-            case LS_FUNC_A_EQUAL_X:
-            case LS_FUNC_A_GREATER_THAN_OR_EQUAL_X:
-            case LS_FUNC_A_LESS_THAN_OR_EQUAL_X:
-            case LS_FUNC_ABS_A_GREATER_THAN_X:
-            case LS_FUNC_ABS_A_LESS_THAN_X:
-            case LS_FUNC_ABS_A_EQUAL_X:
-            case LS_FUNC_ABS_A_GREATER_THAN_OR_EQUAL_X:
-            case LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X:
-            case LS_FUNC_A_GREATER_THAN_B:
-            case LS_FUNC_A_LESS_THAN_B:
-            case LS_FUNC_A_EQUAL_B:
-            case LS_FUNC_A_GREATER_THAN_OR_EQUAL_B:
-            case LS_FUNC_A_LESS_THAN_OR_EQUAL_B:
-              {
-                getSrcName(txtBuff, ls->val1, sizeof(txtBuff));
-                display.print(txtBuff);
-              }
-              break;
-            case LS_FUNC_AND:
-            case LS_FUNC_OR:
-            case LS_FUNC_XOR:
-            case LS_FUNC_LATCH:
-            case LS_FUNC_TOGGLE:
-              {
-                getControlSwitchName(txtBuff, ls->val1, sizeof(txtBuff));
-                display.print(txtBuff);
-              }
-              break;
-            case LS_FUNC_PULSE:
-              {
-                printSeconds(ls->val1);
-              } 
-              break;
-          }
-        }
-        
-        //value 2
-        display.setCursor(0, 38);
-        if(ls->func == LS_FUNC_PULSE) 
-          display.print(F("Period:"));
-        else if(ls->func == LS_FUNC_LATCH) 
-          display.print(F("Reset:"));
-        else if(ls->func == LS_FUNC_TOGGLE)
-          display.print(F("Edge:"));
-        else 
-          display.print(F("Value2:"));
-        display.setCursor(54, 38);
-        if(ls->func == LS_FUNC_NONE)
-          display.print(F("--"));
-        else
-        {
-          switch(ls->func)
-          {
-            case LS_FUNC_A_GREATER_THAN_X:
-            case LS_FUNC_A_LESS_THAN_X:
-            case LS_FUNC_A_EQUAL_X:
-            case LS_FUNC_A_GREATER_THAN_OR_EQUAL_X:
-            case LS_FUNC_A_LESS_THAN_OR_EQUAL_X:
-            case LS_FUNC_ABS_A_GREATER_THAN_X:
-            case LS_FUNC_ABS_A_LESS_THAN_X:
-            case LS_FUNC_ABS_A_EQUAL_X:
-            case LS_FUNC_ABS_A_GREATER_THAN_OR_EQUAL_X:
-            case LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X:
-              {
-                if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //mixsource value, counter value
-                  display.print(ls->val2);
-                else //telemetry value
-                {
-                  uint8_t idx = ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS);
-                  printTelemParam(display.getCursorX(), display.getCursorY(), idx, ls->val2);
-                  display.print(Model.Telemetry[idx].unitsName);
-                }
-              }
-              break;
-            case LS_FUNC_A_GREATER_THAN_B:
-            case LS_FUNC_A_LESS_THAN_B:
-            case LS_FUNC_A_EQUAL_B:
-            case LS_FUNC_A_GREATER_THAN_OR_EQUAL_B:
-            case LS_FUNC_A_LESS_THAN_OR_EQUAL_B:
-              {
-                if(ls->val2 == SRC_NONE)
-                  display.print(F("--"));
-                else
-                {
-                  getSrcName(txtBuff, ls->val2, sizeof(txtBuff));
-                  display.print(txtBuff);
-                }
-              }
-              break;
-            case LS_FUNC_AND:
-            case LS_FUNC_OR:
-            case LS_FUNC_XOR:
-            case LS_FUNC_LATCH:
-              {
-                getControlSwitchName(txtBuff, ls->val2, sizeof(txtBuff));
-                display.print(txtBuff);
-              }
-              break;
-            case LS_FUNC_TOGGLE:
-              {
-                display.print(findStringInIdStr(enum_ClockEdge, ls->val2));
-              }
-              break;            
-            case LS_FUNC_PULSE:
-              {
-                printSeconds(ls->val2);
-              } 
-              break;
-          }
-        }
-        
-        //value 3
-        if(ls->func == LS_FUNC_TOGGLE)
-        {
-          display.setCursor(0, 47);
-          display.print(F("Clear:"));
-          display.setCursor(54, 47);
-          getControlSwitchName(txtBuff, ls->val3, sizeof(txtBuff));
-          display.print(txtBuff);
-        }
-        else //delay
-        {
-          display.setCursor(0, 47);
-          display.print(F("Delay:"));
-          display.setCursor(54, 47);
-          if(ls->val3 == 0 || ls->func == LS_FUNC_NONE)
-            display.print(F("--"));
-          else
-            printSeconds(ls->val3);
-        }
-        
-        //value 4
-        //duration, not applicable for latch, pulse, toggle
-        if(ls->func != LS_FUNC_LATCH && ls->func != LS_FUNC_PULSE && ls->func != LS_FUNC_TOGGLE)
-        {
-          display.setCursor(0, 56);
-          display.print(F("Duratn:"));
-          display.setCursor(54, 56);
-          if(ls->val4 == 0 || ls->func == LS_FUNC_NONE)
-            display.print(F("--"));
-          else
-            printSeconds(ls->val4);
-        }
         
         //draw switch icon
         if(checkSwitchCondition(CTRL_SW_LOGICAL_FIRST + thisLsIdx))
           display.drawBitmap(115, 9, icon_switch_is_on, 13, 8, BLACK);
         else
           display.drawBitmap(115, 9, icon_switch_is_off, 13, 8, BLACK);
-
-        //draw context menu icon
-        display.fillRect(120, 0, 8, 7, WHITE);
-        display.drawBitmap(120, 0, contextMenuHasFocus ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
         
-        //draw cursor
-        if(!contextMenuHasFocus)
+        //-- dynamic scrollable list
+        
+        enum {
+          ITEM_LS_FUNC,
+          ITEM_LS_VAL1,
+          ITEM_LS_VAL2,
+          ITEM_LS_VAL3, //delay
+          ITEM_LS_VAL4, //duration
+          
+          ITEM_COUNT
+        };
+        
+        uint8_t listItemIDs[ITEM_COUNT]; 
+        uint8_t listItemCount = 0;
+        
+        //add item Ids to the list of Ids
+        for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
         {
-          if(focusedItem == 1) drawCursor(0, 9);
-          else drawCursor(46, (focusedItem * 9) + 2);
+          if(i == ITEM_LS_VAL4 && (ls->func == LS_FUNC_LATCH || ls->func == LS_FUNC_TOGGLE || ls->func == LS_FUNC_PULSE))
+            continue;
+          if(i == ITEM_LS_VAL3 && (ls->func == LS_FUNC_DELTA_GREATER_THAN_X || ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X))
+              continue;
+          listItemIDs[listItemCount++] = i;
         }
         
-        //--- handle context menu ---
-        if(contextMenuHasFocus && clickedButton == KEY_SELECT)
-          changeToScreen(POPUP_LOGICAL_SWITCH_MENU);
-        
-        //--- adjust params ---
-        uint8_t _focusedItem = contextMenuHasFocus ? 0 : focusedItem;
-        if(_focusedItem == 1) //change index
-          thisLsIdx = incDecOnUpDown(thisLsIdx, 0, NUM_LOGICAL_SWITCHES - 1, INCDEC_WRAP, INCDEC_SLOW);
-        else if(_focusedItem == 2) //func
+        //handle navigation
+        uint8_t numFocusable = listItemCount + 2; //+1 for title focus, +1 for context menu focus
+        changeFocusOnUpDown(numFocusable); 
+        toggleEditModeOnSelectClicked();
+        static uint8_t topItem = 1;
+        if(focusedItem == 1 || focusedItem == numFocusable) //title focus or context menu focus
+          topItem = 1;
+        else if(focusedItem > 1)
         {
-          uint8_t oldGroup = getLSFuncGroup(ls->func);
-          ls->func = incDecOnUpDown(ls->func, 0, LS_FUNC_COUNT - 1, INCDEC_NOWRAP, INCDEC_SLOW);
-          uint8_t newGroup = getLSFuncGroup(ls->func);
-          if(newGroup != oldGroup) //reset values if group changed
-          {
-            switch(ls->func)
-            {
-              case LS_FUNC_A_GREATER_THAN_X:
-              case LS_FUNC_A_LESS_THAN_X:
-              case LS_FUNC_A_EQUAL_X:
-              case LS_FUNC_A_GREATER_THAN_OR_EQUAL_X:
-              case LS_FUNC_A_LESS_THAN_OR_EQUAL_X:
-              case LS_FUNC_ABS_A_GREATER_THAN_X:
-              case LS_FUNC_ABS_A_LESS_THAN_X:
-              case LS_FUNC_ABS_A_EQUAL_X:
-              case LS_FUNC_ABS_A_GREATER_THAN_OR_EQUAL_X:
-              case LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X:
-                {
-                  ls->val1 = SRC_NONE;
-                  ls->val2 = 0;
-                  ls->val3 = 0;
-                  ls->val4 = 0;
-                }
-                break;
-              case LS_FUNC_A_GREATER_THAN_B:
-              case LS_FUNC_A_LESS_THAN_B:
-              case LS_FUNC_A_EQUAL_B:
-              case LS_FUNC_A_GREATER_THAN_OR_EQUAL_B:
-              case LS_FUNC_A_LESS_THAN_OR_EQUAL_B:
-                {
-                  ls->val1 = SRC_NONE;
-                  ls->val2 = SRC_NONE;
-                  ls->val3 = 0;
-                  ls->val4 = 0;
-                }
-                break;
-              case LS_FUNC_AND:
-              case LS_FUNC_OR:
-              case LS_FUNC_XOR:
-              case LS_FUNC_LATCH:
-                {
-                  ls->val1 = CTRL_SW_NONE;
-                  ls->val2 = CTRL_SW_NONE;
-                  ls->val3 = 0;
-                  ls->val4 = 0;
-                }
-                break;
-              case LS_FUNC_TOGGLE:
-                {
-                  ls->val1 = CTRL_SW_NONE;
-                  ls->val2 = 0;
-                  ls->val3 = CTRL_SW_NONE;
-                }
-                break;
-              case LS_FUNC_PULSE:
-                {
-                  ls->val1 = 5;
-                  ls->val2 = 10;
-                  ls->val3 = 0;
-                }
-                break;
-            }
-          }
+          if(focusedItem - 1 < topItem)
+            topItem = focusedItem - 1;
+          while(focusedItem - 1 >= topItem + 5)
+            topItem++;
         }
-        else if((_focusedItem == 3 || _focusedItem == 4) && isEditMode) //val1, val2
+        
+        //fill list and edit items
+        for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
         {
-          switch(ls->func)
+          uint8_t ypos = 20 + line*9;
+          if(focusedItem > 1 && focusedItem < numFocusable && focusedItem - 1 == topItem + line)
+            drawCursor(46, ypos);
+          
+          uint8_t itemID = listItemIDs[topItem - 1 + line];
+          bool edit = (itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          
+          display.setCursor(0, ypos);
+          switch(itemID)
           {
-            case LS_FUNC_A_GREATER_THAN_X:
-            case LS_FUNC_A_LESS_THAN_X:
-            case LS_FUNC_A_EQUAL_X:
-            case LS_FUNC_A_GREATER_THAN_OR_EQUAL_X:
-            case LS_FUNC_A_LESS_THAN_OR_EQUAL_X:
-            case LS_FUNC_ABS_A_GREATER_THAN_X:
-            case LS_FUNC_ABS_A_LESS_THAN_X:
-            case LS_FUNC_ABS_A_EQUAL_X:
-            case LS_FUNC_ABS_A_GREATER_THAN_OR_EQUAL_X:
-            case LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X:
+            case ITEM_LS_FUNC:
               {
-                if(focusedItem == 3)
-                {
-                  //auto detect moved source
-                  uint8_t movedSrc = procMovedSource(getMovedSource());
-                  if(movedSrc != SRC_NONE)
-                    ls->val1 = movedSrc;
-                  //inc dec
-                  ls->val1 = incDecSource(ls->val1, INCDEC_FLAG_MIX_SRC | INCDEC_FLAG_TELEM_SRC | INCDEC_FLAG_COUNTER_SRC);
-                  //reset ls->val2 if out of range
-                  if(ls->val1 < MIXSOURCES_COUNT)
-                  {
-                    if(ls->val2 > 100 || ls->val2 < -100)
-                      ls->val2 = 0;
-                  }
-                  else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS)
-                  {
-                    if(ls->val2 > 9999 || ls->val2 < 0)
-                      ls->val2 = 0;
-                  }
-                }
-                if(focusedItem == 4)
-                {
-                  if(ls->val1 < MIXSOURCES_COUNT)
-                    ls->val2 = incDecOnUpDown(ls->val2, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
-                  else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counter value
-                    ls->val2 = incDecOnUpDown(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_FAST);
-                  else //telemetry value
-                    ls->val2 = incDecOnUpDown(ls->val2, -30000, 30000, INCDEC_NOWRAP, INCDEC_FAST);
-                }
-              }
-              break;
-            case LS_FUNC_A_GREATER_THAN_B:
-            case LS_FUNC_A_LESS_THAN_B:
-            case LS_FUNC_A_EQUAL_B:
-            case LS_FUNC_A_GREATER_THAN_OR_EQUAL_B:
-            case LS_FUNC_A_LESS_THAN_OR_EQUAL_B:
-              {
-                int16_t* param = &ls->val1;
-                if(focusedItem == 4) 
-                  param = &ls->val2;
-                //auto detect moved source
-                uint8_t movedSrc = procMovedSource(getMovedSource());
-                if(movedSrc != SRC_NONE)
-                  *param = movedSrc;
-                //inc dec
-                *param = incDecSource(*param, INCDEC_FLAG_MIX_SRC);
-              }
-              break;
-            case LS_FUNC_AND:
-            case LS_FUNC_OR:
-            case LS_FUNC_XOR:
-            case LS_FUNC_LATCH:
-              {
-                int16_t* param = &ls->val1;
-                if(focusedItem == 4) 
-                  param = &ls->val2;
-                //inc dec
-                if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-                  *param = incDecControlSwitch(*param, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
+                display.print(F("Functn:"));
+                display.setCursor(54, ypos);
+                if(ls->func == LS_FUNC_DELTA_GREATER_THAN_X)
+                  display.print(F("\xEB>x"));
+                else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
+                  display.print(F("|\xEB|>x"));
                 else
-                  *param = incDecControlSwitch(*param, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+                  display.print(findStringInIdStr(enum_LogicalSwitch_Func, ls->func));
+                
+                if(edit)
+                {
+                  uint8_t oldGroup = getLSFuncGroup(ls->func);
+                  ls->func = incDecOnUpDown(ls->func, 0, LS_FUNC_COUNT - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+                  uint8_t newGroup = getLSFuncGroup(ls->func);
+                  if(newGroup != oldGroup) //reset values if group changed
+                  {
+                    ls->val3 = 0;
+                    ls->val4 = 0;
+                    if(ls->func <= LS_FUNC_GROUP1_LAST)     {ls->val1 = SRC_NONE; ls->val2 = 0;}
+                    else if(ls->func <= LS_FUNC_GROUP2_LAST){ls->val1 = SRC_NONE; ls->val2 = SRC_NONE;}
+                    else if(ls->func <= LS_FUNC_GROUP3_LAST){ls->val1 = CTRL_SW_NONE; ls->val2 = CTRL_SW_NONE;}
+                    else if(ls->func == LS_FUNC_TOGGLE) {ls->val1 = CTRL_SW_NONE; ls->val2 = 0; ls->val3 = CTRL_SW_NONE;}
+                    else if(ls->func == LS_FUNC_PULSE)  {ls->val1 = 5; ls->val2 = 10;}
+                  }
+                }
               }
               break;
-            case LS_FUNC_TOGGLE:
+              
+            case ITEM_LS_VAL1:
               {
-                if(focusedItem == 3)
+                if(ls->func == LS_FUNC_PULSE) display.print(F("Width:"));
+                else if(ls->func == LS_FUNC_LATCH) display.print(F("Set:"));
+                else if(ls->func == LS_FUNC_TOGGLE) display.print(F("Clock:"));
+                else display.print(F("Value1:"));
+                
+                display.setCursor(54, ypos);
+                
+                if(ls->func == LS_FUNC_NONE)
+                  display.print(F("--"));
+                else if(ls->func <= LS_FUNC_GROUP2_LAST)
                 {
-                  if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-                    ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
-                  else
-                    ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+                  getSrcName(txtBuff, ls->val1, sizeof(txtBuff));
+                  display.print(txtBuff);
                 }
-                if(focusedItem == 4) //change edge type
-                  ls->val2 = incDecOnUpDown(ls->val2, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
+                else if(ls->func <= LS_FUNC_GROUP3_LAST || ls->func == LS_FUNC_TOGGLE)
+                {
+                  getControlSwitchName(txtBuff, ls->val1, sizeof(txtBuff));
+                  display.print(txtBuff);
+                }
+                else if(ls->func == LS_FUNC_PULSE)
+                  printSeconds(ls->val1);
+                
+                if(edit && ls->func != LS_FUNC_NONE)
+                {
+                  if(ls->func <= LS_FUNC_GROUP1_LAST)
+                  {
+                    //auto detect moved source
+                    uint8_t movedSrc = procMovedSource(getMovedSource());
+                    if(movedSrc != SRC_NONE)
+                      ls->val1 = movedSrc;
+                    //inc dec
+                    ls->val1 = incDecSource(ls->val1, INCDEC_FLAG_MIX_SRC | INCDEC_FLAG_TELEM_SRC | INCDEC_FLAG_COUNTER_SRC);
+                    //reset ls->val2 if out of range
+                    if(ls->val1 < MIXSOURCES_COUNT)
+                    {
+                      if(ls->val2 > 100 || ls->val2 < -100)
+                        ls->val2 = 0;
+                    }
+                    else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS)
+                    {
+                      if(ls->val2 > 9999 || ls->val2 < 0)
+                        ls->val2 = 0;
+                    }
+                  }
+                  else if(ls->func <= LS_FUNC_GROUP2_LAST)
+                  {
+                    //auto detect moved source
+                    uint8_t movedSrc = procMovedSource(getMovedSource());
+                    if(movedSrc != SRC_NONE)
+                      ls->val1 = movedSrc;
+                    //inc dec
+                    ls->val1 = incDecSource(ls->val1, INCDEC_FLAG_MIX_SRC);
+                  }
+                  else if(ls->func <= LS_FUNC_GROUP3_LAST || ls->func == LS_FUNC_TOGGLE)
+                  {
+                    if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
+                      ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
+                    else
+                      ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+                  }
+                  else if(ls->func == LS_FUNC_PULSE)
+                    ls->val1 = incDecOnUpDown(ls->val1, 1, ls->val2 - 1, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                }
               }
               break;
             
-            case LS_FUNC_PULSE:
+            case ITEM_LS_VAL2:
               {
-                if(focusedItem == 3) //adjust width
-                  ls->val1 = incDecOnUpDown(ls->val1, 1, ls->val2 - 1, INCDEC_NOWRAP, INCDEC_SLOW_START);
-                if(focusedItem == 4) //adjust period
-                  ls->val2 = incDecOnUpDown(ls->val2, ls->val1 + 1, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                if(ls->func == LS_FUNC_PULSE) display.print(F("Period:"));
+                else if(ls->func == LS_FUNC_LATCH) display.print(F("Reset:"));
+                else if(ls->func == LS_FUNC_TOGGLE) display.print(F("Edge:"));
+                else display.print(F("Value2:"));
+                
+                display.setCursor(54, ypos);
+                if(ls->func == LS_FUNC_NONE)
+                  display.print(F("--"));
+                else if(ls->func <= LS_FUNC_GROUP1_LAST)
+                {
+                  if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //mixsource value, counter value
+                    display.print(ls->val2);
+                  else //telemetry value
+                  {
+                    uint8_t idx = ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS);
+                    printTelemParam(display.getCursorX(), display.getCursorY(), idx, ls->val2);
+                    display.print(Model.Telemetry[idx].unitsName);
+                  }
+                }
+                else if(ls->func <= LS_FUNC_GROUP2_LAST)
+                {
+                  if(ls->val2 == SRC_NONE)
+                    display.print(F("--"));
+                  else
+                  {
+                    getSrcName(txtBuff, ls->val2, sizeof(txtBuff));
+                    display.print(txtBuff);
+                  }
+                }
+                else if(ls->func <= LS_FUNC_GROUP3_LAST)
+                {
+                  getControlSwitchName(txtBuff, ls->val2, sizeof(txtBuff));
+                  display.print(txtBuff);
+                }
+                else if(ls->func == LS_FUNC_TOGGLE)
+                  display.print(findStringInIdStr(enum_ClockEdge, ls->val2));
+                else if(ls->func == LS_FUNC_PULSE)
+                  printSeconds(ls->val2);
+
+                if(edit && ls->func != LS_FUNC_NONE)
+                {
+                  if(ls->func <= LS_FUNC_GROUP1_LAST)
+                  {
+                    if(ls->val1 < MIXSOURCES_COUNT)
+                      ls->val2 = incDecOnUpDown(ls->val2, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+                    else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counter value
+                      ls->val2 = incDecOnUpDown(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_FAST);
+                    else //telemetry value
+                      ls->val2 = incDecOnUpDown(ls->val2, -30000, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                  }
+                  else if(ls->func <= LS_FUNC_GROUP2_LAST)
+                  {
+                    //auto detect moved source
+                    uint8_t movedSrc = procMovedSource(getMovedSource());
+                    if(movedSrc != SRC_NONE)
+                      ls->val2 = movedSrc;
+                    //inc dec
+                    ls->val2 = incDecSource(ls->val2, INCDEC_FLAG_MIX_SRC);
+                  }
+                  else if(ls->func <= LS_FUNC_GROUP3_LAST)
+                  {
+                    if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
+                      ls->val2 = incDecControlSwitch(ls->val2, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
+                    else
+                      ls->val2 = incDecControlSwitch(ls->val2, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+                  }
+                  else if(ls->func == LS_FUNC_TOGGLE) //change edge type
+                    ls->val2 = incDecOnUpDown(ls->val2, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
+                  else if(ls->func == LS_FUNC_PULSE) //adjust period
+                    ls->val2 = incDecOnUpDown(ls->val2, ls->val1 + 1, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                }
+              }
+              break;
+              
+            case ITEM_LS_VAL3:
+              {
+                if(ls->func == LS_FUNC_TOGGLE)
+                {
+                  display.print(F("Clear:"));
+                  display.setCursor(54, ypos);
+                  getControlSwitchName(txtBuff, ls->val3, sizeof(txtBuff));
+                  display.print(txtBuff);
+                }
+                else
+                {
+                  display.print(F("Delay:"));
+                  display.setCursor(54, ypos);
+                  if(ls->val3 == 0 || ls->func == LS_FUNC_NONE)
+                    display.print(F("--"));
+                  else
+                    printSeconds(ls->val3);
+                }
+
+                if(edit && ls->func != LS_FUNC_NONE)
+                {
+                  if(ls->func == LS_FUNC_TOGGLE) //adjust Clear switch
+                  {
+                    if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
+                      ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
+                    else
+                      ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+                  }
+                  else //adjust delay
+                    ls->val3 = incDecOnUpDown(ls->val3, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                }
+              }
+              break;
+              
+            case ITEM_LS_VAL4:
+              {
+                display.print(F("Duratn:"));
+                display.setCursor(54, ypos);
+                if(ls->val4 == 0 || ls->func == LS_FUNC_NONE)
+                  display.print(F("--"));
+                else
+                  printSeconds(ls->val4);
+                
+                if(edit && ls->func != LS_FUNC_NONE)
+                {
+                  ls->val4 = incDecOnUpDown(ls->val4, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                }
               }
               break;
           }
         }
-        else if(_focusedItem == 5 && ls->func != LS_FUNC_NONE) //val3
-        {
-          if(ls->func == LS_FUNC_TOGGLE) //adjust Clear switch
-          {
-            if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-              ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
-            else
-              ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
-          }
-          else //adjust delay
-            ls->val3 = incDecOnUpDown(ls->val3, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
-        }
-        else if(_focusedItem == 6 && ls->func != LS_FUNC_NONE) //val4
-          ls->val4 = incDecOnUpDown(ls->val4, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START); //duration
         
-        //--- exit ---
+        //scrollbar
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
+        
+        //draw context menu icon
+        display.fillRect(120, 0, 8, 7, WHITE);
+        display.drawBitmap(120, 0, focusedItem == numFocusable ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
+
+        //open context menu
+        if(focusedItem == numFocusable && isEditMode)
+          changeToScreen(POPUP_LOGICAL_SWITCH_MENU);
+        
+        //change to next logical switch
+        if(focusedItem == 1)
+        {          
+          drawCursor(0, 9);
+          thisLsIdx = incDecOnUpDown(thisLsIdx, 0, NUM_LOGICAL_SWITCHES - 1, INCDEC_WRAP, INCDEC_SLOW);
+        }
+
+        // Exit
         if(heldButton == KEY_SELECT)
           changeToScreen(SCREEN_EXTRAS_MENU);
       }
@@ -4379,15 +4290,19 @@ void handleMainUI()
     case POPUP_LOGICAL_SWITCH_MENU:
       {
         enum {
+          ITEM_VIEW_OUTPUTS,
           ITEM_COPY_TO,
           ITEM_RESET
         };
         
         popupMenuInitialise();
+        popupMenuAddItem(PSTR("View outputs"), ITEM_VIEW_OUTPUTS);
         popupMenuAddItem(PSTR("Copy to"), ITEM_COPY_TO);
         popupMenuAddItem(PSTR("Reset settings"), ITEM_RESET);
         popupMenuDraw();
         
+        if(popupMenuSelectedItemID == ITEM_VIEW_OUTPUTS)
+          changeToScreen(SCREEN_LOGICAL_SWITCH_OUTPUTS);
         if(popupMenuSelectedItemID == ITEM_COPY_TO)
         {
           destLsIdx = thisLsIdx;
@@ -4417,6 +4332,69 @@ void handleMainUI()
         }
         if(heldButton == KEY_SELECT) //exit
           changeToScreen(SCREEN_LOGICAL_SWITCHES);
+      }
+      break;
+
+    case SCREEN_LOGICAL_SWITCH_OUTPUTS:
+      {
+        display.setInterlace(false); 
+        drawHeader(PSTR("Logical sw outputs"));
+        
+        //scrollable 
+        uint8_t numPages = (NUM_LOGICAL_SWITCHES + 9) / 10;
+        static uint8_t thisPage = 1;
+        
+        static bool viewInitialised = false;
+        if(!viewInitialised) 
+        {
+          //start in the page that has the switch we want to view
+          thisPage = (thisLsIdx + 10) / 10;
+          viewInitialised = true;
+        }
+
+        isEditMode = true;
+        thisPage = incDecOnUpDown(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+        
+        uint8_t startIdx = (thisPage - 1) * 10;
+        for(uint8_t i = startIdx; i < startIdx + 10 && i < NUM_LOGICAL_SWITCHES; i++)
+        {
+          if((i - startIdx) < 5)
+          {
+            if(i == thisLsIdx)
+            {
+              display.setCursor(0, 10 + (i - startIdx) * 11);
+              display.write(0xB1);
+            }
+            display.setCursor(6, 10 + (i - startIdx) * 11);
+          }
+          else
+          { 
+            if(i == thisLsIdx)
+            {
+              display.setCursor(65, 10 + (i - (startIdx + 5)) * 11);
+              display.write(0xB1);
+            }        
+            display.setCursor(71, 10 + (i - (startIdx + 5)) * 11);
+          }
+          display.print(F("L"));          
+          display.print(1 + i);  
+          display.print(F(":"));
+          if(i < 9)
+            display.print(F(" "));
+
+          if(checkSwitchCondition(CTRL_SW_LOGICAL_FIRST + i))
+            display.drawBitmap(display.getCursorX(), display.getCursorY(), icon_switch_is_on, 13, 8, BLACK);
+          else
+            display.drawBitmap(display.getCursorX(), display.getCursorY(), icon_switch_is_off, 13, 8, BLACK);
+        }
+        //show scrollbar
+        drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
+
+        if(heldButton == KEY_SELECT)
+        {
+          viewInitialised = false;
+          changeToScreen(SCREEN_LOGICAL_SWITCHES);
+        }
       }
       break;
       
