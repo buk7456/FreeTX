@@ -85,6 +85,8 @@ const id_string_t enum_LogicalSwitch_Func[] PROGMEM = {
   {LS_FUNC_ABS_A_EQUAL_X, "|a|==x"},
   {LS_FUNC_ABS_A_GREATER_THAN_OR_EQUAL_X, "|a|>=x"},
   {LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X, "|a|<=x"},
+  {LS_FUNC_DELTA_GREATER_THAN_X, "delta>x"},
+  {LS_FUNC_ABS_DELTA_GREATER_THAN_X, "|delta|>x"},
   {LS_FUNC_A_GREATER_THAN_B, "a>b"},
   {LS_FUNC_A_LESS_THAN_B, "a<b"},
   {LS_FUNC_A_EQUAL_B, "a==b"},

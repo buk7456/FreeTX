@@ -430,7 +430,8 @@ void computeChannelOutputs()
   static uint32_t lsDlyStartTime[NUM_LOGICAL_SWITCHES];
   static bool     lsDurOldState[NUM_LOGICAL_SWITCHES];
   static uint32_t lsDurEndTime[NUM_LOGICAL_SWITCHES];
-  static bool     lsToggleLastState[NUM_LOGICAL_SWITCHES];  
+  static bool     lsToggleLastState[NUM_LOGICAL_SWITCHES];
+  static int32_t  lsDeltaPrevVal[NUM_LOGICAL_SWITCHES];
   
   if(isReinitialiseMixer)  
   {
@@ -438,8 +439,16 @@ void computeChannelOutputs()
     {
       lsDlyStarted[idx] = false;
       lsDurOldState[idx] = false;
-      if(Model.LogicalSwitch[idx].func == LS_FUNC_TOGGLE)
-        lsToggleLastState[idx] = checkSwitchCondition(Model.LogicalSwitch[idx].val1);
+      logical_switch_t *ls = &Model.LogicalSwitch[idx]; 
+      if(ls->func == LS_FUNC_TOGGLE)
+        lsToggleLastState[idx] = checkSwitchCondition(ls->val1);
+      if(ls->func == LS_FUNC_DELTA_GREATER_THAN_X || ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
+      {
+        if(ls->val1 < MIXSOURCES_COUNT) //mixsources
+          lsDeltaPrevVal[idx] = mixSources[ls->val1];
+        else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counters
+          lsDeltaPrevVal[idx] = counterOut[ls->val1 - MIXSOURCES_COUNT];
+      }
     }
   }
     
@@ -460,6 +469,8 @@ void computeChannelOutputs()
       case LS_FUNC_ABS_A_EQUAL_X:
       case LS_FUNC_ABS_A_GREATER_THAN_OR_EQUAL_X:
       case LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X:
+      case LS_FUNC_DELTA_GREATER_THAN_X:
+      case LS_FUNC_ABS_DELTA_GREATER_THAN_X:
         {
           int32_t _val1, _val2;
           if(ls->val1 < MIXSOURCES_COUNT) //mixsources
@@ -495,6 +506,22 @@ void computeChannelOutputs()
           else if(ls->func == LS_FUNC_ABS_A_EQUAL_X)              result = abs(_val1) == _val2;
           else if(ls->func == LS_FUNC_ABS_A_GREATER_THAN_OR_EQUAL_X) result = abs(_val1) >= _val2;
           else if(ls->func == LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X) result = abs(_val1) <= _val2;
+          else if(ls->func == LS_FUNC_DELTA_GREATER_THAN_X)
+          {
+            if((_val1 - lsDeltaPrevVal[idx]) > _val2)
+            {
+              lsDeltaPrevVal[idx] = _val1;
+              result = true;
+            }
+          }
+          else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
+          {
+            if(abs(_val1 - lsDeltaPrevVal[idx]) > _val2)
+            {
+              lsDeltaPrevVal[idx] = _val1;
+              result = true;
+            }
+          }
         }
         break;
 
@@ -606,7 +633,11 @@ void computeChannelOutputs()
     
     //delay
     //here we delay activation of the logical switch by overriding for the specified time
-    if(ls->val3 > 0 && ls->func != LS_FUNC_PULSE && ls->func != LS_FUNC_TOGGLE)
+    if(ls->val3 > 0
+       && ls->func != LS_FUNC_PULSE 
+       && ls->func != LS_FUNC_TOGGLE 
+       && ls->func != LS_FUNC_DELTA_GREATER_THAN_X
+       && ls->func != LS_FUNC_ABS_DELTA_GREATER_THAN_X)
     {
       if(result && !logicalSwitchState[idx]) //went from false to true
       {
@@ -624,7 +655,10 @@ void computeChannelOutputs()
     }
     
     //duration
-    if(ls->val4 > 0 && ls->func != LS_FUNC_PULSE && ls->func != LS_FUNC_LATCH && ls->func != LS_FUNC_TOGGLE)
+    if(ls->val4 > 0 
+       && ls->func != LS_FUNC_PULSE 
+       && ls->func != LS_FUNC_LATCH 
+       && ls->func != LS_FUNC_TOGGLE)
     {
       if(result && !lsDurOldState[idx]) //went from inactive to active
       {
