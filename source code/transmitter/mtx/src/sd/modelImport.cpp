@@ -123,7 +123,7 @@ void readValue_bool(char* str, bool* val)
 
 //--------------------------------------------------------------------------------------------------
 
-int32_t atoi_with_prefix(const char *str) //todo rename this
+int32_t atoi_with_prefix(const char *str)
 {
   int32_t result = 0;
   int32_t sign = 1; // 1 for positive, -1 for negative
@@ -227,7 +227,7 @@ void extractConfig_ModelName()
 
 void extractConfig_ModelType()
 {
-  findIdInIdStr(enum_ModelType, valueBuff, Model.type);
+  Model.type = findIdInIdStr(enum_ModelType, valueBuff);
 }
 
 void extractConfig_RudSrc()
@@ -259,7 +259,7 @@ void extractConfig_SwitchWarning()
 {
   uint8_t idx = getSrcId(keyBuff[1]) - SRC_SW_PHYSICAL_FIRST;
   if(idx < MAX_NUM_PHYSICAL_SWITCHES)
-    findIdInIdStr(enum_SwitchWarn, valueBuff, Model.switchWarn[idx]);
+     Model.switchWarn[idx] = findIdInIdStr(enum_SwitchWarn, valueBuff);
 }
 
 void extractConfig_Telemetry()
@@ -283,7 +283,7 @@ void extractConfig_Telemetry()
     else if(MATCH_P(keyBuff[1], key_Offset))
       tlm->offset = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_AlarmCondition))
-      findIdInIdStr(enum_TelemetryAlarmCondition, valueBuff, tlm->alarmCondition);
+      tlm->alarmCondition = findIdInIdStr(enum_TelemetryAlarmCondition, valueBuff);
     else if(MATCH_P(keyBuff[1], key_AlarmThreshold))
       tlm->alarmThreshold = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_ShowOnHome))
@@ -321,7 +321,7 @@ void extractConfig_Timers()
 void extractConfig_X1Trim()
 {
   if(MATCH_P(keyBuff[1], key_TrimState))
-    findIdInIdStr(enum_TrimState, valueBuff, Model.X1Trim.trimState);
+    Model.X1Trim.trimState = findIdInIdStr(enum_TrimState, valueBuff);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.X1Trim.commonTrim = atoi_with_prefix(valueBuff);
 }
@@ -329,7 +329,7 @@ void extractConfig_X1Trim()
 void extractConfig_Y1Trim()
 {
   if(MATCH_P(keyBuff[1], key_TrimState))
-    findIdInIdStr(enum_TrimState, valueBuff, Model.Y1Trim.trimState);
+    Model.Y1Trim.trimState = findIdInIdStr(enum_TrimState, valueBuff);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.Y1Trim.commonTrim = atoi_with_prefix(valueBuff);
 }
@@ -337,7 +337,7 @@ void extractConfig_Y1Trim()
 void extractConfig_X2Trim()
 {
   if(MATCH_P(keyBuff[1], key_TrimState))
-    findIdInIdStr(enum_TrimState, valueBuff, Model.X2Trim.trimState);
+    Model.X2Trim.trimState = findIdInIdStr(enum_TrimState, valueBuff);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.X2Trim.commonTrim = atoi_with_prefix(valueBuff);
 }
@@ -345,7 +345,7 @@ void extractConfig_X2Trim()
 void extractConfig_Y2Trim()
 {
   if(MATCH_P(keyBuff[1], key_TrimState))
-    findIdInIdStr(enum_TrimState, valueBuff, Model.Y2Trim.trimState);
+    Model.Y2Trim.trimState = findIdInIdStr(enum_TrimState, valueBuff);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.Y2Trim.commonTrim = atoi_with_prefix(valueBuff);
 }
@@ -431,9 +431,9 @@ void extractConfig_FunctionGenerators()
   {
     funcgen_t* fgen = &Model.Funcgen[idx];
     if(MATCH_P(keyBuff[1], key_Waveform))
-      findIdInIdStr(enum_FuncgenWaveform, valueBuff, fgen->waveform);
+      fgen->waveform = findIdInIdStr(enum_FuncgenWaveform, valueBuff);
     else if(MATCH_P(keyBuff[1], key_PeriodMode))
-      findIdInIdStr(enum_FuncgenPeriodMode, valueBuff, fgen->periodMode);
+      fgen->periodMode = findIdInIdStr(enum_FuncgenPeriodMode, valueBuff);
     else if(MATCH_P(keyBuff[1], key_Period1))
       fgen->period1 = getTimeFromTimeStr(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Period2))
@@ -443,7 +443,7 @@ void extractConfig_FunctionGenerators()
     else if(MATCH_P(keyBuff[1], key_ReverseModulator))
       readValue_bool(valueBuff, &fgen->reverseModulator);
     else if(MATCH_P(keyBuff[1], key_PhaseMode))
-      findIdInIdStr(enum_FuncgenPhaseMode, valueBuff, fgen->phaseMode);
+      fgen->phaseMode = findIdInIdStr(enum_FuncgenPhaseMode, valueBuff);
     else if(MATCH_P(keyBuff[1], key_PhaseAngle))
       fgen->phaseAngle = atoi_with_prefix(valueBuff);
   }
@@ -464,7 +464,7 @@ void extractConfig_Mixer()
     else if(MATCH_P(keyBuff[1], key_Switch))
       mxr->swtch = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Operation))
-      findIdInIdStr(enum_MixerOperation, valueBuff, mxr->operation);
+      mxr->operation = findIdInIdStr(enum_MixerOperation, valueBuff);
     else if(MATCH_P(keyBuff[1], key_Input))
       mxr->input = getSrcId(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Weight))
@@ -472,13 +472,13 @@ void extractConfig_Mixer()
     else if(MATCH_P(keyBuff[1], key_Offset))
       mxr->offset = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_CurveType))
-      findIdInIdStr(enum_MixerCurveType, valueBuff, mxr->curveType);
+      mxr->curveType = findIdInIdStr(enum_MixerCurveType, valueBuff);
     else if(MATCH_P(keyBuff[1], key_CurveVal))
     {
       if(mxr->curveType == MIX_CURVE_TYPE_DIFF || mxr->curveType == MIX_CURVE_TYPE_EXPO)
         mxr->curveVal = atoi_with_prefix(valueBuff);
       else if(mxr->curveType == MIX_CURVE_TYPE_FUNCTION)
-        findIdInIdStr(enum_MixerCurveType_Func, valueBuff, mxr->curveVal);
+        mxr->curveVal = findIdInIdStr(enum_MixerCurveType_Func, valueBuff);
       else if(mxr->curveType == MIX_CURVE_TYPE_CUSTOM)
         mxr->curveVal = atoi_with_prefix(valueBuff) - 1;
     }
@@ -564,14 +564,14 @@ void extractConfig_LogicalSwitches()
   {
     logical_switch_t* ls = &Model.LogicalSwitch[idx];
     if(MATCH_P(keyBuff[1], key_Func))
-      findIdInIdStr(enum_LogicalSwitch_Func, valueBuff, ls->func);
+      ls->func = findIdInIdStr(enum_LogicalSwitch_Func, valueBuff);
     else if(MATCH_P(keyBuff[1], key_Val1))
     {
-      if(ls->func <= LS_FUNC_GROUP1_LAST)
+      if(ls->func <= LS_FUNC_GROUP3_LAST)
         ls->val1 = getSrcId(valueBuff);
-      else if(ls->func <= LS_FUNC_GROUP2_LAST)
+      else if(ls->func <= LS_FUNC_GROUP4_LAST)
         ls->val1 = getSrcId(valueBuff);
-      else if(ls->func <= LS_FUNC_GROUP3_LAST)
+      else if(ls->func <= LS_FUNC_GROUP5_LAST)
         ls->val1 = getControlSwitchID(valueBuff);
       else if(ls->func == LS_FUNC_TOGGLE)
         ls->val1 = getControlSwitchID(valueBuff);
@@ -580,14 +580,14 @@ void extractConfig_LogicalSwitches()
     }
     else if(MATCH_P(keyBuff[1], key_Val2))
     {
-      if(ls->func <= LS_FUNC_GROUP1_LAST)
+      if(ls->func <= LS_FUNC_GROUP3_LAST)
         ls->val2 = atoi_with_prefix(valueBuff);
-      else if(ls->func <= LS_FUNC_GROUP2_LAST)
+      else if(ls->func <= LS_FUNC_GROUP4_LAST)
         ls->val2 = getSrcId(valueBuff);
-      else if(ls->func <= LS_FUNC_GROUP3_LAST)
+      else if(ls->func <= LS_FUNC_GROUP5_LAST)
         ls->val2 = getControlSwitchID(valueBuff);
       else if(ls->func == LS_FUNC_TOGGLE)
-        findIdInIdStr(enum_ClockEdge, valueBuff, ls->val2);
+        ls->val2 = findIdInIdStr(enum_ClockEdge, valueBuff);
       else if(ls->func == LS_FUNC_PULSE)
         ls->val2 = getTimeFromTimeStr(valueBuff);
     }
@@ -595,6 +595,8 @@ void extractConfig_LogicalSwitches()
     {
       if(ls->func == LS_FUNC_TOGGLE)
         ls->val3 = getControlSwitchID(valueBuff);
+      else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
+        ls->val3 = findIdInIdStr(enum_DirectionOfChange, valueBuff);
       else
         ls->val3 = getTimeFromTimeStr(valueBuff);
     }
@@ -616,13 +618,13 @@ void extractConfig_Counters()
     if(MATCH_P(keyBuff[1], key_Clock))
       counter->clock = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Edge))
-      findIdInIdStr(enum_ClockEdge, valueBuff, counter->edge);
+      counter->edge = findIdInIdStr(enum_ClockEdge, valueBuff);
     else if(MATCH_P(keyBuff[1], key_Clear))
       counter->clear = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Modulus))
       counter->modulus = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Direction))
-      findIdInIdStr(enum_CounterDirection, valueBuff, counter->direction);
+      counter->direction = findIdInIdStr(enum_CounterDirection, valueBuff);
     else if(MATCH_P(keyBuff[1], key_IsPersistent))
       readValue_bool(valueBuff, &counter->isPersistent);
     else if(MATCH_P(keyBuff[1], key_PersistVal))
@@ -683,7 +685,7 @@ void extractConfig_Channels()
       ch->overrideSwitch = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_OverrideVal))
       ch->overrideVal = atoi_with_prefix(valueBuff);
-    else if(MATCH_P(keyBuff[1], key_Failsafe)) //todo improve this
+    else if(MATCH_P(keyBuff[1], key_Failsafe))
     {
       char tempBuff[MAX_STR_SIZE];
       tempBuff[0] = '\0';
@@ -715,7 +717,7 @@ void extractConfig_Widgets()
   {
     widget_params_t* widget = &Model.Widget[idx];
     if(MATCH_P(keyBuff[1], key_Type))
-      findIdInIdStr(enum_WidgetType, valueBuff, widget->type);
+      widget->type = findIdInIdStr(enum_WidgetType, valueBuff);
     else if(MATCH_P(keyBuff[1], key_Src))
     {
       if(widget->type == WIDGET_TYPE_MIXSOURCES)
@@ -738,7 +740,7 @@ void extractConfig_Widgets()
       }
     }
     else if(MATCH_P(keyBuff[1], key_Disp))
-      findIdInIdStr(enum_WidgetDisplay, valueBuff, widget->disp);
+      widget->disp = findIdInIdStr(enum_WidgetDisplay, valueBuff);
     else if(MATCH_P(keyBuff[1], key_GaugeMin))
       widget->gaugeMin = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_GaugeMax))
