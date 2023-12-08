@@ -1,7 +1,7 @@
 #ifndef _EESTORE_H_
 #define _EESTORE_H_
 
-void eeStoreInit(); //### TODO rename
+void eeStoreInit();
 
 void eeReadSysConfig();
 void eeSaveSysConfig();

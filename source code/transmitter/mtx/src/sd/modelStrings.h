@@ -14,7 +14,7 @@ typedef struct {
 } id_string_t; 
 
 char* findStringInIdStr(const id_string_t *idStr_P, int8_t searchId);
-template <typename T> void findIdInIdStr(const id_string_t *idStr_P, const char *searchStr, T &val);
+int8_t findIdInIdStr(const id_string_t *idStr_P, const char *searchStr);
 
 //---- Strings for the enumerations ----
 //Arrays of structs in PROGMEM
@@ -29,6 +29,7 @@ extern const id_string_t enum_MixerOperation[] PROGMEM;
 extern const id_string_t enum_MixerCurveType[] PROGMEM;
 extern const id_string_t enum_MixerCurveType_Func[] PROGMEM;
 extern const id_string_t enum_LogicalSwitch_Func[] PROGMEM;
+extern const id_string_t enum_DirectionOfChange[] PROGMEM;
 extern const id_string_t enum_ChannelFailsafe[] PROGMEM;
 extern const id_string_t enum_ChannelCurve[] PROGMEM;
 extern const id_string_t enum_TelemetryAlarmCondition[] PROGMEM;

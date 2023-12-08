@@ -356,16 +356,19 @@ void exportModelData(File& file)
     writeKeyValue_S32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Func, findStringInIdStr(enum_LogicalSwitch_Func, ls->func));
     
-    if(ls->func <= LS_FUNC_GROUP1_LAST)
+    if(ls->func <= LS_FUNC_GROUP3_LAST)
     {
       getSrcName(tempBuff, ls->val1, sizeof(tempBuff));
       writeKeyValue_Char(file, 1, key_Val1, tempBuff);
       
       writeKeyValue_S32(file, 1, key_Val2, ls->val2);
-      writeKeyValue_TimeSeconds(file, 1, key_Val3, ls->val3);
+      if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
+        writeKeyValue_Char(file, 1, key_Val3, findStringInIdStr(enum_DirectionOfChange, ls->val3));
+      else
+        writeKeyValue_TimeSeconds(file, 1, key_Val3, ls->val3);
       writeKeyValue_TimeSeconds(file, 1, key_Val4, ls->val4);
     }
-    else if(ls->func <= LS_FUNC_GROUP2_LAST)
+    else if(ls->func <= LS_FUNC_GROUP4_LAST)
     {
       getSrcName(tempBuff, ls->val1, sizeof(tempBuff));
       writeKeyValue_Char(file, 1, key_Val1, tempBuff);
@@ -376,7 +379,7 @@ void exportModelData(File& file)
       writeKeyValue_TimeSeconds(file, 1, key_Val3, ls->val3);
       writeKeyValue_TimeSeconds(file, 1, key_Val4, ls->val4);
     }
-    else if(ls->func <= LS_FUNC_GROUP3_LAST)
+    else if(ls->func <= LS_FUNC_GROUP5_LAST)
     {
       getControlSwitchName_Clean(tempBuff, ls->val1, sizeof(tempBuff));
       writeKeyValue_Char(file, 1, key_Val1, tempBuff);
