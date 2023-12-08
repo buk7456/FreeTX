@@ -3990,8 +3990,8 @@ void handleMainUI()
           ITEM_LS_FUNC,
           ITEM_LS_VAL1,
           ITEM_LS_VAL2,
-          ITEM_LS_VAL3, //delay
-          ITEM_LS_VAL4, //duration
+          ITEM_LS_VAL3,
+          ITEM_LS_VAL4,
           
           ITEM_COUNT
         };
@@ -4004,8 +4004,6 @@ void handleMainUI()
         {
           if(i == ITEM_LS_VAL4 && (ls->func == LS_FUNC_LATCH || ls->func == LS_FUNC_TOGGLE || ls->func == LS_FUNC_PULSE))
             continue;
-          if(i == ITEM_LS_VAL3 && (ls->func == LS_FUNC_DELTA_GREATER_THAN_X || ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X))
-              continue;
           listItemIDs[listItemCount++] = i;
         }
         
@@ -4029,7 +4027,7 @@ void handleMainUI()
         {
           uint8_t ypos = 20 + line*9;
           if(focusedItem > 1 && focusedItem < numFocusable && focusedItem - 1 == topItem + line)
-            drawCursor(46, ypos);
+            drawCursor(52, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
           bool edit = (itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
@@ -4040,10 +4038,8 @@ void handleMainUI()
             case ITEM_LS_FUNC:
               {
                 display.print(F("Functn:"));
-                display.setCursor(54, ypos);
-                if(ls->func == LS_FUNC_DELTA_GREATER_THAN_X)
-                  display.print(F("\xEB>x"));
-                else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
+                display.setCursor(60, ypos);
+                if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
                   display.print(F("|\xEB|>x"));
                 else
                   display.print(findStringInIdStr(enum_LogicalSwitch_Func, ls->func));
@@ -4057,11 +4053,34 @@ void handleMainUI()
                   {
                     ls->val3 = 0;
                     ls->val4 = 0;
-                    if(ls->func <= LS_FUNC_GROUP1_LAST)     {ls->val1 = SRC_NONE; ls->val2 = 0;}
-                    else if(ls->func <= LS_FUNC_GROUP2_LAST){ls->val1 = SRC_NONE; ls->val2 = SRC_NONE;}
-                    else if(ls->func <= LS_FUNC_GROUP3_LAST){ls->val1 = CTRL_SW_NONE; ls->val2 = CTRL_SW_NONE;}
-                    else if(ls->func == LS_FUNC_TOGGLE) {ls->val1 = CTRL_SW_NONE; ls->val2 = 0; ls->val3 = CTRL_SW_NONE;}
-                    else if(ls->func == LS_FUNC_PULSE)  {ls->val1 = 5; ls->val2 = 10;}
+                    if(ls->func <= LS_FUNC_GROUP3_LAST)     
+                    {
+                      ls->val1 = SRC_NONE; 
+                      ls->val2 = 0; 
+                      if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X) 
+                      ls->val3 = 2;
+                    }
+                    else if(ls->func <= LS_FUNC_GROUP4_LAST)
+                    {
+                      ls->val1 = SRC_NONE; 
+                      ls->val2 = SRC_NONE;
+                    }
+                    else if(ls->func <= LS_FUNC_GROUP5_LAST)
+                    {
+                      ls->val1 = CTRL_SW_NONE; 
+                      ls->val2 = CTRL_SW_NONE;
+                    }
+                    else if(ls->func == LS_FUNC_TOGGLE) 
+                    {
+                      ls->val1 = CTRL_SW_NONE; 
+                      ls->val2 = 0; 
+                      ls->val3 = CTRL_SW_NONE;
+                    }
+                    else if(ls->func == LS_FUNC_PULSE)
+                    {
+                      ls->val1 = 5; 
+                      ls->val2 = 10;
+                    }
                   }
                 }
               }
@@ -4074,16 +4093,16 @@ void handleMainUI()
                 else if(ls->func == LS_FUNC_TOGGLE) display.print(F("Clock:"));
                 else display.print(F("Value1:"));
                 
-                display.setCursor(54, ypos);
+                display.setCursor(60, ypos);
                 
                 if(ls->func == LS_FUNC_NONE)
                   display.print(F("--"));
-                else if(ls->func <= LS_FUNC_GROUP2_LAST)
+                else if(ls->func <= LS_FUNC_GROUP4_LAST)
                 {
                   getSrcName(txtBuff, ls->val1, sizeof(txtBuff));
                   display.print(txtBuff);
                 }
-                else if(ls->func <= LS_FUNC_GROUP3_LAST || ls->func == LS_FUNC_TOGGLE)
+                else if(ls->func <= LS_FUNC_GROUP5_LAST || ls->func == LS_FUNC_TOGGLE)
                 {
                   getControlSwitchName(txtBuff, ls->val1, sizeof(txtBuff));
                   display.print(txtBuff);
@@ -4093,7 +4112,7 @@ void handleMainUI()
                 
                 if(edit && ls->func != LS_FUNC_NONE)
                 {
-                  if(ls->func <= LS_FUNC_GROUP1_LAST)
+                  if(ls->func <= LS_FUNC_GROUP3_LAST)
                   {
                     //auto detect moved source
                     uint8_t movedSrc = procMovedSource(getMovedSource());
@@ -4113,7 +4132,7 @@ void handleMainUI()
                         ls->val2 = 0;
                     }
                   }
-                  else if(ls->func <= LS_FUNC_GROUP2_LAST)
+                  else if(ls->func <= LS_FUNC_GROUP4_LAST)
                   {
                     //auto detect moved source
                     uint8_t movedSrc = procMovedSource(getMovedSource());
@@ -4122,7 +4141,7 @@ void handleMainUI()
                     //inc dec
                     ls->val1 = incDecSource(ls->val1, INCDEC_FLAG_MIX_SRC);
                   }
-                  else if(ls->func <= LS_FUNC_GROUP3_LAST || ls->func == LS_FUNC_TOGGLE)
+                  else if(ls->func <= LS_FUNC_GROUP5_LAST || ls->func == LS_FUNC_TOGGLE)
                   {
                     if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
                       ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
@@ -4142,10 +4161,10 @@ void handleMainUI()
                 else if(ls->func == LS_FUNC_TOGGLE) display.print(F("Edge:"));
                 else display.print(F("Value2:"));
                 
-                display.setCursor(54, ypos);
+                display.setCursor(60, ypos);
                 if(ls->func == LS_FUNC_NONE)
                   display.print(F("--"));
-                else if(ls->func <= LS_FUNC_GROUP1_LAST)
+                else if(ls->func <= LS_FUNC_GROUP3_LAST)
                 {
                   if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //mixsource value, counter value
                     display.print(ls->val2);
@@ -4156,7 +4175,7 @@ void handleMainUI()
                     display.print(Model.Telemetry[idx].unitsName);
                   }
                 }
-                else if(ls->func <= LS_FUNC_GROUP2_LAST)
+                else if(ls->func <= LS_FUNC_GROUP4_LAST)
                 {
                   if(ls->val2 == SRC_NONE)
                     display.print(F("--"));
@@ -4166,7 +4185,7 @@ void handleMainUI()
                     display.print(txtBuff);
                   }
                 }
-                else if(ls->func <= LS_FUNC_GROUP3_LAST)
+                else if(ls->func <= LS_FUNC_GROUP5_LAST)
                 {
                   getControlSwitchName(txtBuff, ls->val2, sizeof(txtBuff));
                   display.print(txtBuff);
@@ -4178,16 +4197,16 @@ void handleMainUI()
 
                 if(edit && ls->func != LS_FUNC_NONE)
                 {
-                  if(ls->func <= LS_FUNC_GROUP1_LAST)
+                  if(ls->func <= LS_FUNC_GROUP3_LAST)
                   {
                     if(ls->val1 < MIXSOURCES_COUNT)
-                      ls->val2 = incDecOnUpDown(ls->val2, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+                      ls->val2 = incDecOnUpDown(ls->val2, (ls->func == LS_FUNC_GROUP1_LAST) ? -100 : 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
                     else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counter value
                       ls->val2 = incDecOnUpDown(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_FAST);
                     else //telemetry value
-                      ls->val2 = incDecOnUpDown(ls->val2, -30000, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                      ls->val2 = incDecOnUpDown(ls->val2, (ls->func == LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
                   }
-                  else if(ls->func <= LS_FUNC_GROUP2_LAST)
+                  else if(ls->func <= LS_FUNC_GROUP4_LAST)
                   {
                     //auto detect moved source
                     uint8_t movedSrc = procMovedSource(getMovedSource());
@@ -4196,7 +4215,7 @@ void handleMainUI()
                     //inc dec
                     ls->val2 = incDecSource(ls->val2, INCDEC_FLAG_MIX_SRC);
                   }
-                  else if(ls->func <= LS_FUNC_GROUP3_LAST)
+                  else if(ls->func <= LS_FUNC_GROUP5_LAST)
                   {
                     if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
                       ls->val2 = incDecControlSwitch(ls->val2, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
@@ -4216,14 +4235,20 @@ void handleMainUI()
                 if(ls->func == LS_FUNC_TOGGLE)
                 {
                   display.print(F("Clear:"));
-                  display.setCursor(54, ypos);
+                  display.setCursor(60, ypos);
                   getControlSwitchName(txtBuff, ls->val3, sizeof(txtBuff));
                   display.print(txtBuff);
+                }
+                else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
+                {
+                  display.print(F("Dirctn:"));
+                  display.setCursor(60, ypos);
+                  display.print(findStringInIdStr(enum_DirectionOfChange, ls->val3));
                 }
                 else
                 {
                   display.print(F("Delay:"));
-                  display.setCursor(54, ypos);
+                  display.setCursor(60, ypos);
                   if(ls->val3 == 0 || ls->func == LS_FUNC_NONE)
                     display.print(F("--"));
                   else
@@ -4232,13 +4257,15 @@ void handleMainUI()
 
                 if(edit && ls->func != LS_FUNC_NONE)
                 {
-                  if(ls->func == LS_FUNC_TOGGLE) //adjust Clear switch
+                  if(ls->func == LS_FUNC_TOGGLE)
                   {
                     if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
                       ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
                     else
                       ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
                   }
+                  else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
+                    ls->val3 = incDecOnUpDown(ls->val3, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
                   else //adjust delay
                     ls->val3 = incDecOnUpDown(ls->val3, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
                 }
@@ -4248,7 +4275,7 @@ void handleMainUI()
             case ITEM_LS_VAL4:
               {
                 display.print(F("Duratn:"));
-                display.setCursor(54, ypos);
+                display.setCursor(60, ypos);
                 if(ls->val4 == 0 || ls->func == LS_FUNC_NONE)
                   display.print(F("--"));
                 else
@@ -5867,7 +5894,7 @@ void handleMainUI()
           //reset any associated logical switches
           for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
           {
-            if(Model.LogicalSwitch[i].func <= LS_FUNC_GROUP1_LAST 
+            if(Model.LogicalSwitch[i].func <= LS_FUNC_GROUP3_LAST 
                && Model.LogicalSwitch[i].val1 == (int16_t) MIXSOURCES_COUNT + NUM_COUNTERS + thisTelemIdx)
             {
               resetLogicalSwitchParams(i);
@@ -8761,6 +8788,8 @@ uint8_t getLSFuncGroup(uint8_t func)
   else if(func <= LS_FUNC_GROUP3_LAST) result = 3;
   else if(func <= LS_FUNC_GROUP4_LAST) result = 4;
   else if(func <= LS_FUNC_GROUP5_LAST) result = 5;
+  else if(func <= LS_FUNC_GROUP6_LAST) result = 6;
+  else if(func <= LS_FUNC_GROUP7_LAST) result = 7;
   return result;
 }
 
