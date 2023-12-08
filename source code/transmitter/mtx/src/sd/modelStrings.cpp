@@ -85,7 +85,6 @@ const id_string_t enum_LogicalSwitch_Func[] PROGMEM = {
   {LS_FUNC_ABS_A_EQUAL_X, "|a|==x"},
   {LS_FUNC_ABS_A_GREATER_THAN_OR_EQUAL_X, "|a|>=x"},
   {LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X, "|a|<=x"},
-  {LS_FUNC_DELTA_GREATER_THAN_X, "delta>x"},
   {LS_FUNC_ABS_DELTA_GREATER_THAN_X, "|delta|>x"},
   {LS_FUNC_A_GREATER_THAN_B, "a>b"},
   {LS_FUNC_A_LESS_THAN_B, "a<b"},
@@ -98,6 +97,13 @@ const id_string_t enum_LogicalSwitch_Func[] PROGMEM = {
   {LS_FUNC_LATCH, "Latch"},
   {LS_FUNC_TOGGLE, "Toggle"},
   {LS_FUNC_PULSE, "Pulse"},
+  {0, ""}
+};
+
+const id_string_t enum_DirectionOfChange[] PROGMEM = {
+  {0, "Positive"},
+  {1, "Negative"},
+  {2, "Both"},
   {0, ""}
 };
 
@@ -321,8 +327,9 @@ char* findStringInIdStr(const id_string_t *idStr_P, int8_t searchId)
 
 //=================================================================================================
 
-template <typename T> void findIdInIdStr(const id_string_t *idStr_P, const char *searchStr, T &val) 
+int8_t findIdInIdStr(const id_string_t *idStr_P, const char *searchStr) 
 {
+  int8_t result = 0;
   uint8_t i = 0;
   while(1)
   {
@@ -330,15 +337,11 @@ template <typename T> void findIdInIdStr(const id_string_t *idStr_P, const char 
       break;
     if(MATCH_P(searchStr, (const char*)&idStr_P[i].str))
     {
-      val = pgm_read_byte(&idStr_P[i].id);
+      result = pgm_read_byte(&idStr_P[i].id);
       break;
     }
     i++;
   }
+  return result;
 }
-// Explicit instantiation for the types we want to use, otherwise linking fails with 'undefined reference to..'
-// Add more instantiations as needed
-template void findIdInIdStr<uint8_t>(const id_string_t *idStr_P, const char *searchStr, uint8_t&);
-template void findIdInIdStr<int8_t>(const id_string_t *idStr_P, const char *searchStr, int8_t&);
-template void findIdInIdStr<uint16_t>(const id_string_t *idStr_P, const char *searchStr, uint16_t&);
-template void findIdInIdStr<int16_t>(const id_string_t *idStr_P, const char *searchStr, int16_t&);
+
