@@ -442,7 +442,7 @@ void computeChannelOutputs()
       logical_switch_t *ls = &Model.LogicalSwitch[idx]; 
       if(ls->func == LS_FUNC_TOGGLE)
         lsToggleLastState[idx] = checkSwitchCondition(ls->val1);
-      if(ls->func == LS_FUNC_DELTA_GREATER_THAN_X || ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
+      if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
       {
         if(ls->val1 < MIXSOURCES_COUNT) //mixsources
           lsDeltaPrevVal[idx] = mixSources[ls->val1];
@@ -469,7 +469,6 @@ void computeChannelOutputs()
       case LS_FUNC_ABS_A_EQUAL_X:
       case LS_FUNC_ABS_A_GREATER_THAN_OR_EQUAL_X:
       case LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X:
-      case LS_FUNC_DELTA_GREATER_THAN_X:
       case LS_FUNC_ABS_DELTA_GREATER_THAN_X:
         {
           int32_t _val1, _val2;
@@ -506,20 +505,30 @@ void computeChannelOutputs()
           else if(ls->func == LS_FUNC_ABS_A_EQUAL_X)              result = abs(_val1) == _val2;
           else if(ls->func == LS_FUNC_ABS_A_GREATER_THAN_OR_EQUAL_X) result = abs(_val1) >= _val2;
           else if(ls->func == LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X) result = abs(_val1) <= _val2;
-          else if(ls->func == LS_FUNC_DELTA_GREATER_THAN_X)
-          {
-            if((_val1 - lsDeltaPrevVal[idx]) > _val2)
-            {
-              lsDeltaPrevVal[idx] = _val1;
-              result = true;
-            }
-          }
           else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
           {
-            if(abs(_val1 - lsDeltaPrevVal[idx]) > _val2)
+            int32_t difference = _val1 - lsDeltaPrevVal[idx];
+            if(abs(difference) > _val2)
             {
-              lsDeltaPrevVal[idx] = _val1;
-              result = true;
+              if(ls->val3 == 0) //only in positive direction
+              {
+                if(difference > _val2)
+                  result = true;
+                if(result || difference < 0)
+                  lsDeltaPrevVal[idx] = _val1;
+              }
+              else if(ls->val3 == 1) //only in negative direction
+              {
+                if(difference < -_val2)
+                  result = true;
+                if(result || difference > 0)
+                  lsDeltaPrevVal[idx] = _val1;
+              }
+              else //both directions
+              {
+                result = true;
+                lsDeltaPrevVal[idx] = _val1;
+              }
             }
           }
         }
@@ -636,7 +645,6 @@ void computeChannelOutputs()
     if(ls->val3 > 0
        && ls->func != LS_FUNC_PULSE 
        && ls->func != LS_FUNC_TOGGLE 
-       && ls->func != LS_FUNC_DELTA_GREATER_THAN_X
        && ls->func != LS_FUNC_ABS_DELTA_GREATER_THAN_X)
     {
       if(result && !logicalSwitchState[idx]) //went from false to true
