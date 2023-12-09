@@ -3,6 +3,8 @@
 #include "../mtx.h"
 #include "modelStrings.h"
 
+bool idNotFoundInIdStr = false;
+
 //---- Strings for the enumerations ----
 //Arrays of structs in PROGMEM
 
@@ -327,21 +329,29 @@ char* findStringInIdStr(const id_string_t *idStr_P, int8_t searchId)
 
 //=================================================================================================
 
-int8_t findIdInIdStr(const id_string_t *idStr_P, const char *searchStr) 
+template <typename T> void findIdInIdStr(const id_string_t *idStr_P, const char *searchStr, T &val) 
 {
-  int8_t result = 0;
   uint8_t i = 0;
+  bool found = false;
   while(1)
   {
     if(pgm_read_byte(&idStr_P[i].str) == '\0' || i == 0xff)
       break;
     if(MATCH_P(searchStr, (const char*)&idStr_P[i].str))
     {
-      result = pgm_read_byte(&idStr_P[i].id);
+      found = true;
+      val = pgm_read_byte(&idStr_P[i].id);
       break;
     }
     i++;
   }
-  return result;
+  if(!found)
+    idNotFoundInIdStr = true;
 }
 
+// Explicit instantiation for the types we want to use, otherwise linking fails with 'undefined reference to..'
+// Add more instantiations as needed
+template void findIdInIdStr<uint8_t>(const id_string_t *idStr_P, const char *searchStr, uint8_t&);
+template void findIdInIdStr<int8_t>(const id_string_t *idStr_P, const char *searchStr, int8_t&);
+template void findIdInIdStr<uint16_t>(const id_string_t *idStr_P, const char *searchStr, uint16_t&);
+template void findIdInIdStr<int16_t>(const id_string_t *idStr_P, const char *searchStr, int16_t&);
