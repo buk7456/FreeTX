@@ -18,6 +18,9 @@ bool hasSDcard = false;
 const char* model_backup_directory = "MODELS/";
 // const char* model_backup_directory = "/";
 
+File modelDir;
+bool isModelDirectoryOpen = false; //keeps track of open status
+
 //--------------------------------------------------------------------------------------------------
 
 void sdStoreInit()
@@ -28,13 +31,13 @@ void sdStoreInit()
     return;
   
   //create the backup directory if it does not exist
-  File dir = SD.open(model_backup_directory);
-  if(!dir)
+  modelDir = SD.open(model_backup_directory);
+  if(!modelDir)
   {
     SD.mkdir(model_backup_directory);
   }
   //close
-  dir.close();
+  modelDir.close();
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -50,6 +53,12 @@ bool sdBackupModel(const char *name)
 {
   if(!hasSDcard)
     return false;
+
+  if(isModelDirectoryOpen) //close first as we can only open one thing at a time
+  {
+    modelDir.close();
+    isModelDirectoryOpen = false;
+  }
   
   char fullNameStr[30]; //includes the path
   memset(fullNameStr, 0, sizeof(fullNameStr));
@@ -91,6 +100,12 @@ bool sdRestoreModel(const char *name)
   memset(fullNameStr, 0, sizeof(fullNameStr));
   strlcpy(fullNameStr, model_backup_directory, sizeof(fullNameStr));
   strlcat(fullNameStr, name, sizeof(fullNameStr));
+  
+  if(isModelDirectoryOpen) //close first as we can only open one thing at a time
+  {
+    modelDir.close();
+    isModelDirectoryOpen = false;
+  }
   
   File myFile = SD.open(fullNameStr);
   if(myFile)
@@ -145,15 +160,21 @@ uint16_t sdGetModelCount()
 {
   if(!hasSDcard)
     return 0;
+
+  if(isModelDirectoryOpen) //close first so we dont get a wrong count
+  {
+    modelDir.close();
+    isModelDirectoryOpen = false;
+  }
   
   uint16_t count = 0;
   
-  File dir = SD.open(model_backup_directory);
-  if(dir)
+  modelDir = SD.open(model_backup_directory);
+  if(modelDir)
   {
     while(true)
     {
-      File entry = dir.openNextFile();
+      File entry = modelDir.openNextFile();
       if(!entry) //no more files
         break;
       if(!entry.isDirectory())//a file
@@ -161,9 +182,8 @@ uint16_t sdGetModelCount()
       //close
       entry.close();
     }
-    
     //close
-    dir.close();
+    modelDir.close();
   }
 
   return count;
@@ -176,37 +196,51 @@ bool sdGetModelName(char *buff, uint16_t idx, uint8_t lenBuff)
   if(!hasSDcard)
     return false;
   
-  uint16_t count = 0;
-  
-  File dir = SD.open(model_backup_directory);
-  if(dir)
+  static uint16_t counter = 0;
+  static uint16_t prevIdx = 0;
+  bool rewind = false;
+  if(idx < prevIdx)
+    rewind = true;
+  prevIdx = idx;
+
+  if(!isModelDirectoryOpen)
   {
+    modelDir = SD.open(model_backup_directory);
+    counter = 0;
+  }
+  if(modelDir)
+  {
+    isModelDirectoryOpen = true;
+    if(rewind)
+    {
+      modelDir.rewindDirectory(); //return to first file
+      counter = 0;
+    }
     while(true)
     {
-      File entry = dir.openNextFile();
+      File entry = modelDir.openNextFile();
       if(!entry) //no more files
         break;
       if(!entry.isDirectory())//a file
       {
-        if(idx == count) //found it
+        if(idx == counter) //found it
         {
           //get the name into buffer
           strlcpy(buff, entry.name(), lenBuff);
           //close
           entry.close();
+          counter++;
           break;
         }
-        
-        count++;
+        counter++;
       }
       //close
       entry.close();
     }
     
-    //close
-    dir.close();
+    //here we do not close the modelDir to allow persistency 
+    //and fast retrieval if we have a lot of files inside it.
     
-    //
     return true;
   }
 
@@ -219,6 +253,12 @@ bool sdSimilarModelExists(const char *name)
 {
   if(!hasSDcard)
     return false;
+
+  if(isModelDirectoryOpen) //close first as we can only open one thing at a time
+  {
+    modelDir.close();
+    isModelDirectoryOpen = false;
+  }
   
   char fullNameStr[30]; //includes the path
   memset(fullNameStr, 0, sizeof(fullNameStr));
