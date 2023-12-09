@@ -118,14 +118,14 @@ void exportModelData(File& file)
     
     getSrcName(tempBuff, Model.eleSrcRaw, sizeof(tempBuff));
     writeKeyValue_Char(file, 0, (Model.type == MODEL_TYPE_AIRPLANE) ? key_EleSrc : key_PitchSrc, tempBuff);
+
+    getSrcName(tempBuff, Model.thrSrcRaw, sizeof(tempBuff));
+    writeKeyValue_Char(file, 0, key_ThrSrc, tempBuff);
   }
-  
-  getSrcName(tempBuff, Model.thrSrcRaw, sizeof(tempBuff));
-  writeKeyValue_Char(file, 0, key_ThrSrc, tempBuff);
-  
+
   file.println(F("# ------ Warnings ------"));
-  
-  writeKeyValue_bool(file, 0, key_CheckThrottle, Model.checkThrottle);
+  if((Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER))
+    writeKeyValue_bool(file, 0, key_CheckThrottle, Model.checkThrottle);
   writeKeyValue_Char(file, 0, key_SwitchWarn, NULL);
   for(uint8_t idx = 0; idx < MAX_NUM_PHYSICAL_SWITCHES; idx++)
   {
