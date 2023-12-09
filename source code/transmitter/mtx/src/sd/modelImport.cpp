@@ -3,10 +3,13 @@
 #include <SD.h>
 
 #include "../mtx.h"
+#include "../ui/ui.h" 
 #include "modelStrings.h"
 #include "modelImport.h"
 
 bool isEndOfFile = false;
+
+bool isInvalidParam = false; //for basic error detection only
 
 //Buffers used by the parser to hold the keys and value. 
 //Three buffers are used for the keys as we have upto three indention levels. ie level 0,1,2
@@ -55,7 +58,10 @@ void parser(File& file)
   indentLevel = numLeadingSpaces / 2;
   //return if invalid indention
   if(indentLevel >= sizeof(keyBuff)/sizeof(keyBuff[0]) || numLeadingSpaces % 2 == 1)
+  {
+    isInvalidParam = true;
     return;
+  }
   
   //--- Trim white space at beginning and end
   trimWhiteSpace(lineBuff, sizeof(lineBuff));
@@ -119,6 +125,8 @@ void readValue_bool(char* str, bool* val)
     *val = true;
   else if(MATCH_P(str, PSTR("false")))
     *val = false;
+  else
+    isInvalidParam = true;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -161,7 +169,8 @@ uint8_t getSrcId(char* str)
     if(MATCH(tempBuff, str))
       return i;
   }
-  return 0;
+  isInvalidParam = true;
+  return SRC_NONE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -176,7 +185,8 @@ uint8_t getControlSwitchID(char* str)
     if(MATCH(tempBuff, str))
       return i;
   }
-  return 0;
+  isInvalidParam = true;
+  return CTRL_SW_NONE;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -227,7 +237,7 @@ void extractConfig_ModelName()
 
 void extractConfig_ModelType()
 {
-  Model.type = findIdInIdStr(enum_ModelType, valueBuff);
+  findIdInIdStr(enum_ModelType, valueBuff, Model.type);
 }
 
 void extractConfig_RudSrc()
@@ -259,7 +269,7 @@ void extractConfig_SwitchWarning()
 {
   uint8_t idx = getSrcId(keyBuff[1]) - SRC_SW_PHYSICAL_FIRST;
   if(idx < MAX_NUM_PHYSICAL_SWITCHES)
-     Model.switchWarn[idx] = findIdInIdStr(enum_SwitchWarn, valueBuff);
+    findIdInIdStr(enum_SwitchWarn, valueBuff, Model.switchWarn[idx]);
 }
 
 void extractConfig_Telemetry()
@@ -283,7 +293,7 @@ void extractConfig_Telemetry()
     else if(MATCH_P(keyBuff[1], key_Offset))
       tlm->offset = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_AlarmCondition))
-      tlm->alarmCondition = findIdInIdStr(enum_TelemetryAlarmCondition, valueBuff);
+      findIdInIdStr(enum_TelemetryAlarmCondition, valueBuff, tlm->alarmCondition);
     else if(MATCH_P(keyBuff[1], key_AlarmThreshold))
       tlm->alarmThreshold = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_ShowOnHome))
@@ -293,6 +303,8 @@ void extractConfig_Telemetry()
     else if(MATCH_P(keyBuff[1], key_RecordMinimum))
       readValue_bool(valueBuff, &tlm->recordMinimum);
   }
+  else
+    isInvalidParam = true;
 }
 
 void extractConfig_Timers()
@@ -316,12 +328,14 @@ void extractConfig_Timers()
     else if(MATCH_P(keyBuff[1], key_PersistVal))
       tmr->persistVal = atoi_with_prefix(valueBuff);
   }
+  else
+    isInvalidParam = true;
 }
 
 void extractConfig_X1Trim()
 {
   if(MATCH_P(keyBuff[1], key_TrimState))
-    Model.X1Trim.trimState = findIdInIdStr(enum_TrimState, valueBuff);
+    findIdInIdStr(enum_TrimState, valueBuff, Model.X1Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.X1Trim.commonTrim = atoi_with_prefix(valueBuff);
 }
@@ -329,7 +343,7 @@ void extractConfig_X1Trim()
 void extractConfig_Y1Trim()
 {
   if(MATCH_P(keyBuff[1], key_TrimState))
-    Model.Y1Trim.trimState = findIdInIdStr(enum_TrimState, valueBuff);
+    findIdInIdStr(enum_TrimState, valueBuff, Model.Y1Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.Y1Trim.commonTrim = atoi_with_prefix(valueBuff);
 }
@@ -337,7 +351,7 @@ void extractConfig_Y1Trim()
 void extractConfig_X2Trim()
 {
   if(MATCH_P(keyBuff[1], key_TrimState))
-    Model.X2Trim.trimState = findIdInIdStr(enum_TrimState, valueBuff);
+    findIdInIdStr(enum_TrimState, valueBuff, Model.X2Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.X2Trim.commonTrim = atoi_with_prefix(valueBuff);
 }
@@ -345,7 +359,7 @@ void extractConfig_X2Trim()
 void extractConfig_Y2Trim()
 {
   if(MATCH_P(keyBuff[1], key_TrimState))
-    Model.Y2Trim.trimState = findIdInIdStr(enum_TrimState, valueBuff);
+    findIdInIdStr(enum_TrimState, valueBuff, Model.Y2Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.Y2Trim.commonTrim = atoi_with_prefix(valueBuff);
 }
@@ -431,9 +445,9 @@ void extractConfig_FunctionGenerators()
   {
     funcgen_t* fgen = &Model.Funcgen[idx];
     if(MATCH_P(keyBuff[1], key_Waveform))
-      fgen->waveform = findIdInIdStr(enum_FuncgenWaveform, valueBuff);
+      findIdInIdStr(enum_FuncgenWaveform, valueBuff, fgen->waveform);
     else if(MATCH_P(keyBuff[1], key_PeriodMode))
-      fgen->periodMode = findIdInIdStr(enum_FuncgenPeriodMode, valueBuff);
+      findIdInIdStr(enum_FuncgenPeriodMode, valueBuff, fgen->periodMode);
     else if(MATCH_P(keyBuff[1], key_Period1))
       fgen->period1 = getTimeFromTimeStr(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Period2))
@@ -443,10 +457,12 @@ void extractConfig_FunctionGenerators()
     else if(MATCH_P(keyBuff[1], key_ReverseModulator))
       readValue_bool(valueBuff, &fgen->reverseModulator);
     else if(MATCH_P(keyBuff[1], key_PhaseMode))
-      fgen->phaseMode = findIdInIdStr(enum_FuncgenPhaseMode, valueBuff);
+      findIdInIdStr(enum_FuncgenPhaseMode, valueBuff, fgen->phaseMode);
     else if(MATCH_P(keyBuff[1], key_PhaseAngle))
       fgen->phaseAngle = atoi_with_prefix(valueBuff);
   }
+  else
+    isInvalidParam = true;
 }
 
 void extractConfig_Mixer()
@@ -464,7 +480,7 @@ void extractConfig_Mixer()
     else if(MATCH_P(keyBuff[1], key_Switch))
       mxr->swtch = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Operation))
-      mxr->operation = findIdInIdStr(enum_MixerOperation, valueBuff);
+      findIdInIdStr(enum_MixerOperation, valueBuff, mxr->operation);
     else if(MATCH_P(keyBuff[1], key_Input))
       mxr->input = getSrcId(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Weight))
@@ -472,13 +488,13 @@ void extractConfig_Mixer()
     else if(MATCH_P(keyBuff[1], key_Offset))
       mxr->offset = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_CurveType))
-      mxr->curveType = findIdInIdStr(enum_MixerCurveType, valueBuff);
+      findIdInIdStr(enum_MixerCurveType, valueBuff, mxr->curveType);
     else if(MATCH_P(keyBuff[1], key_CurveVal))
     {
       if(mxr->curveType == MIX_CURVE_TYPE_DIFF || mxr->curveType == MIX_CURVE_TYPE_EXPO)
         mxr->curveVal = atoi_with_prefix(valueBuff);
       else if(mxr->curveType == MIX_CURVE_TYPE_FUNCTION)
-        mxr->curveVal = findIdInIdStr(enum_MixerCurveType_Func, valueBuff);
+        findIdInIdStr(enum_MixerCurveType_Func, valueBuff, mxr->curveVal);
       else if(mxr->curveType == MIX_CURVE_TYPE_CUSTOM)
         mxr->curveVal = atoi_with_prefix(valueBuff) - 1;
     }
@@ -515,6 +531,8 @@ void extractConfig_Mixer()
     else if(MATCH_P(keyBuff[1], key_SlowDown))
       mxr->slowDown = getTimeFromTimeStr(valueBuff);
   }
+  else
+    isInvalidParam = true;
 }
 
 void extractConfig_CustomCurves()
@@ -553,6 +571,8 @@ void extractConfig_CustomCurves()
     else if(MATCH_P(keyBuff[1], key_Smooth))
       readValue_bool(valueBuff, &crv->smooth);
   }
+  else
+    isInvalidParam = true;
 }
 
 void extractConfig_LogicalSwitches()
@@ -564,7 +584,7 @@ void extractConfig_LogicalSwitches()
   {
     logical_switch_t* ls = &Model.LogicalSwitch[idx];
     if(MATCH_P(keyBuff[1], key_Func))
-      ls->func = findIdInIdStr(enum_LogicalSwitch_Func, valueBuff);
+      findIdInIdStr(enum_LogicalSwitch_Func, valueBuff, ls->func);
     else if(MATCH_P(keyBuff[1], key_Val1))
     {
       if(ls->func <= LS_FUNC_GROUP3_LAST)
@@ -587,7 +607,7 @@ void extractConfig_LogicalSwitches()
       else if(ls->func <= LS_FUNC_GROUP5_LAST)
         ls->val2 = getControlSwitchID(valueBuff);
       else if(ls->func == LS_FUNC_TOGGLE)
-        ls->val2 = findIdInIdStr(enum_ClockEdge, valueBuff);
+        findIdInIdStr(enum_ClockEdge, valueBuff, ls->val2);
       else if(ls->func == LS_FUNC_PULSE)
         ls->val2 = getTimeFromTimeStr(valueBuff);
     }
@@ -596,7 +616,7 @@ void extractConfig_LogicalSwitches()
       if(ls->func == LS_FUNC_TOGGLE)
         ls->val3 = getControlSwitchID(valueBuff);
       else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
-        ls->val3 = findIdInIdStr(enum_DirectionOfChange, valueBuff);
+        findIdInIdStr(enum_DirectionOfChange, valueBuff, ls->val3);
       else
         ls->val3 = getTimeFromTimeStr(valueBuff);
     }
@@ -605,6 +625,8 @@ void extractConfig_LogicalSwitches()
       ls->val4 = getTimeFromTimeStr(valueBuff);
     }
   }
+  else
+    isInvalidParam = true;
 }
 
 void extractConfig_Counters()
@@ -618,18 +640,20 @@ void extractConfig_Counters()
     if(MATCH_P(keyBuff[1], key_Clock))
       counter->clock = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Edge))
-      counter->edge = findIdInIdStr(enum_ClockEdge, valueBuff);
+      findIdInIdStr(enum_ClockEdge, valueBuff, counter->edge);
     else if(MATCH_P(keyBuff[1], key_Clear))
       counter->clear = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Modulus))
       counter->modulus = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Direction))
-      counter->direction = findIdInIdStr(enum_CounterDirection, valueBuff);
+      findIdInIdStr(enum_CounterDirection, valueBuff, counter->direction);
     else if(MATCH_P(keyBuff[1], key_IsPersistent))
       readValue_bool(valueBuff, &counter->isPersistent);
     else if(MATCH_P(keyBuff[1], key_PersistVal))
       counter->persistVal = atoi_with_prefix(valueBuff);
   }
+  else
+    isInvalidParam = true;
 }
 
 void extractConfig_FlightModes()
@@ -655,6 +679,8 @@ void extractConfig_FlightModes()
     else if(MATCH_P(keyBuff[1], key_TransitionTime))
       fmd->transitionTime = getTimeFromTimeStr(valueBuff);
   }
+  else
+    isInvalidParam = true;
 }
 
 void extractConfig_Channels()
@@ -706,6 +732,8 @@ void extractConfig_Channels()
     else if(MATCH_P(keyBuff[1], key_EndpointR))
       ch->endpointR = atoi_with_prefix(valueBuff);
   }
+  else
+    isInvalidParam = true;
 }
 
 void extractConfig_Widgets()
@@ -717,7 +745,7 @@ void extractConfig_Widgets()
   {
     widget_params_t* widget = &Model.Widget[idx];
     if(MATCH_P(keyBuff[1], key_Type))
-      widget->type = findIdInIdStr(enum_WidgetType, valueBuff);
+      findIdInIdStr(enum_WidgetType, valueBuff, widget->type);
     else if(MATCH_P(keyBuff[1], key_Src))
     {
       if(widget->type == WIDGET_TYPE_MIXSOURCES)
@@ -740,12 +768,14 @@ void extractConfig_Widgets()
       }
     }
     else if(MATCH_P(keyBuff[1], key_Disp))
-      widget->disp = findIdInIdStr(enum_WidgetDisplay, valueBuff);
+      findIdInIdStr(enum_WidgetDisplay, valueBuff, widget->disp);
     else if(MATCH_P(keyBuff[1], key_GaugeMin))
       widget->gaugeMin = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_GaugeMax))
       widget->gaugeMax = atoi_with_prefix(valueBuff);
   }
+  else
+    isInvalidParam = true;
 }
 
 //============================ Core function =======================================================
@@ -758,6 +788,8 @@ void importModelData(File& file)
   
   //--- Initialise
   isEndOfFile = false;
+  isInvalidParam = false;
+  idNotFoundInIdStr = false;
   memset(keyBuff[0], 0, sizeof(keyBuff[0]));
   memset(keyBuff[1], 0, sizeof(keyBuff[0]));
   memset(keyBuff[2], 0, sizeof(keyBuff[0]));
@@ -809,6 +841,16 @@ void importModelData(File& file)
     else if(MATCH_P(keyBuff[0], key_FlightMode)) extractConfig_FlightModes();
     else if(MATCH_P(keyBuff[0], key_Channel)) extractConfig_Channels();
     else if(MATCH_P(keyBuff[0], key_Widget)) extractConfig_Widgets();
+    else
+    {
+      isInvalidParam = true;
+    }
+  }
+  
+  //show message if errors were encountered
+  if(isInvalidParam || idNotFoundInIdStr)
+  {
+    showMsg(PSTR("Some data skipped"));
+    delay(2000);
   }
 }
-

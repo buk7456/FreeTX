@@ -16,9 +16,7 @@ Remotely operate model airplanes, multicopters, boats, land vehicles, robots, or
 - Intuitive user interface.
 - Model memory. I2C eeprom and SD card supported.
 - Models on SD card saved in a human-readable format for easy editing/modification.
-- Model types, context-aware nomenclature; no need for land vehicles to have controls named after aircraft parts.
-  
-All features 100% working and extensively tested.
+- Model types, context-aware nomenclature.
 
 ## User Interface
 Three buttons are used for navigation; Up, Select, Down. Long press Select to go Back.

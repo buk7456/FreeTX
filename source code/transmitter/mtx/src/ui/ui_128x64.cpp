@@ -308,7 +308,6 @@ bool controlSwitchExists(uint8_t idx);//helper
 
 void drawCursor(uint8_t xpos, uint8_t ypos);
 void drawHeader(const char* str);
-void drawHeader_Menu(const char* str);
 void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const icons[], uint8_t *topItem, uint8_t *highlightedItem);
 void drawDottedVLine(uint8_t x, uint8_t y, uint8_t len, uint8_t fgColor, uint8_t bgColor);
 void drawDottedHLine(uint8_t x, uint8_t y, uint8_t len, uint8_t fgColor, uint8_t bgColor);
@@ -484,7 +483,7 @@ void handleSafetyWarnUI()  //blocking function
     
     //Check throttle position
     bool isThrottleWarn = false;
-    if(Model.checkThrottle)
+    if(Model.checkThrottle && (Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER))
     {
       uint8_t axisType[] = {
         Sys.x1AxisType, Sys.y1AxisType, Sys.x2AxisType, Sys.y2AxisType,
@@ -1407,7 +1406,7 @@ void handleMainUI()
     
     case SCREEN_MAIN_MENU:
       {
-        drawHeader_Menu(PSTR("Main menu"));
+        drawHeader(PSTR("Main menu"));
         
         static uint8_t topItem = 1, highlightedItem = 1;
         drawMenu(mainMenu, sizeof(mainMenu)/sizeof(mainMenu[0]), mainMenuIcons, &topItem, &highlightedItem);
@@ -2132,7 +2131,7 @@ void handleMainUI()
         
         //check if the page is actually available to prevent getting stuck in an infinite loop
         if(Model.type == MODEL_TYPE_OTHER 
-          && (page == PAGE_RUD_CURVE || page == PAGE_AIL_CURVE || page == PAGE_ELE_CURVE))
+          && (page == PAGE_RUD_CURVE || page == PAGE_AIL_CURVE || page == PAGE_ELE_CURVE || page == PAGE_THR_CURVE))
         {
           page = PAGE_STICKS;
         }
@@ -2144,10 +2143,10 @@ void handleMainUI()
             page = incDecOnUpDown(page, 0, NUM_PAGES - 1, INCDEC_WRAP, INCDEC_SLOW);
           else if(Model.type == MODEL_TYPE_OTHER) 
           {
-            //hide rud, ail, ele curves
+            //hide rud, ail, ele, thr curves
             do {
               page = incDecOnUpDown(page, 0, NUM_PAGES - 1, INCDEC_WRAP, INCDEC_SLOW);
-            } while(page == PAGE_RUD_CURVE || page == PAGE_AIL_CURVE || page == PAGE_ELE_CURVE);
+            } while(page == PAGE_RUD_CURVE || page == PAGE_AIL_CURVE || page == PAGE_ELE_CURVE || page == PAGE_THR_CURVE);
           }
           //Show cursor
           drawCursor(0, 9);
@@ -3554,7 +3553,7 @@ void handleMainUI()
     
     case SCREEN_EXTRAS_MENU:
       {
-        drawHeader_Menu(mainMenu[MAIN_MENU_EXTRAS]);
+        drawHeader(mainMenu[MAIN_MENU_EXTRAS]);
         
         static uint8_t topItem = 1, highlightedItem = 1;
         if(Model.type == MODEL_TYPE_OTHER) //### TODO better implementation. This hack hides flight mode entry.
@@ -5146,75 +5145,90 @@ void handleMainUI()
       {
         drawHeader(extrasMenu[EXTRAS_MENU_SAFETY_CHECKS]);
         
-        //-- Scrollable list
-
         enum {
-          ITEM_SAFETY_CHECK_THROTTLE = 1,
+          ITEM_SAFETY_CHECK_THROTTLE,
           ITEM_SAFETY_CHECK_SW_FIRST,
           ITEM_SAFETY_CHECK_SW_LAST = ITEM_SAFETY_CHECK_SW_FIRST + MAX_NUM_PHYSICAL_SWITCHES - 1,
+          
+          ITEM_COUNT
         };
         
-        //include only nonabsent switches
-        uint8_t numItems = 1;
-        uint8_t swIdx[MAX_NUM_PHYSICAL_SWITCHES];
-        uint8_t cntr = 0;
-        for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++)
-        {
-          if(Sys.swType[i] != SW_ABSENT)
+        uint8_t listItemIDs[ITEM_COUNT]; 
+        uint8_t listItemCount = 0;
+        
+        //add item Ids to the list of Ids
+        for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
+        {        
+          if(i == ITEM_SAFETY_CHECK_THROTTLE && Model.type == MODEL_TYPE_OTHER)
+            continue;
+          //skip absent switches
+          if(i >= ITEM_SAFETY_CHECK_SW_FIRST && i <= ITEM_SAFETY_CHECK_SW_LAST)
           {
-            numItems++;
-            swIdx[cntr] = i;
-            cntr++;
+            uint8_t sw = i - ITEM_SAFETY_CHECK_SW_FIRST;
+            if(Sys.swType[sw] == SW_ABSENT)
+              continue; 
           }
+          listItemIDs[listItemCount++] = i;
         }
         
-        //Navigate
-        changeFocusOnUpDown(numItems);
-        toggleEditModeOnSelectClicked();
-        static uint8_t topItem = 1;
+        //initialise
+        static uint8_t topItem;
+        static bool viewInitialised = false;
+        if(!viewInitialised)
+        {
+          focusedItem = 1;
+          topItem = 1;
+          viewInitialised = true;
+        }
+        
+        //handle navigation
+        changeFocusOnUpDown(listItemCount);
         if(focusedItem < topItem)
           topItem = focusedItem;
         while(focusedItem >= topItem + 6)
           topItem++;
         
+        toggleEditModeOnSelectClicked();
+        
         //fill list and edit items
-        for(uint8_t line = 0; line < 6 && line < numItems; line++)
+        for(uint8_t line = 0; line < 6 && line < listItemCount; line++)
         {
-          uint8_t ypos = 9 + line * 9;
-          uint8_t item = topItem + line;
-          bool edit = (focusedItem == item && isEditMode) ? true : false;
-          
+          uint8_t ypos = 9 + line*9;
           if(focusedItem == topItem + line)
             drawCursor(64, ypos);
+          
+          uint8_t itemID = listItemIDs[topItem - 1 + line];
+          bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
+          
           display.setCursor(0, ypos);
-
-          if(item == ITEM_SAFETY_CHECK_THROTTLE)
+          
+          if(itemID == ITEM_SAFETY_CHECK_THROTTLE)
           {
             display.print(F("Throttle:"));
             drawCheckbox(72, ypos, Model.checkThrottle);
             if(edit)
               Model.checkThrottle = incDecOnUpDown(Model.checkThrottle, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
           }
-          else if(item >= ITEM_SAFETY_CHECK_SW_FIRST && item <= ITEM_SAFETY_CHECK_SW_LAST)
+          else if(itemID >= ITEM_SAFETY_CHECK_SW_FIRST && itemID <= ITEM_SAFETY_CHECK_SW_LAST)
           {
-            uint8_t idx = swIdx[item - ITEM_SAFETY_CHECK_SW_FIRST];
+            uint8_t sw = itemID - ITEM_SAFETY_CHECK_SW_FIRST;
             display.print(F("Switch "));
-            display.write(65 + idx);
+            display.write(65 + sw);
             display.print(F(":"));
             display.setCursor(72, ypos);
-            display.print(findStringInIdStr(enum_SwitchWarn, Model.switchWarn[idx]));
+            display.print(findStringInIdStr(enum_SwitchWarn, Model.switchWarn[sw]));
             if(edit)
             {
-              if(Sys.swType[idx] == SW_2POS)
-                Model.switchWarn[idx] = incDecOnUpDown(Model.switchWarn[idx], -1, 1, INCDEC_WRAP, INCDEC_SLOW);
-              else if(Sys.swType[idx] == SW_3POS)
-                Model.switchWarn[idx] = incDecOnUpDown(Model.switchWarn[idx], -1, 2, INCDEC_WRAP, INCDEC_SLOW);
+              if(Sys.swType[sw] == SW_2POS)
+                Model.switchWarn[sw] = incDecOnUpDown(Model.switchWarn[sw], -1, 1, INCDEC_WRAP, INCDEC_SLOW);
+              else if(Sys.swType[sw] == SW_3POS)
+                Model.switchWarn[sw] = incDecOnUpDown(Model.switchWarn[sw], -1, 2, INCDEC_WRAP, INCDEC_SLOW);
             }
           }
         }
         
         //Draw scroll bar
-        drawScrollBar(127, 8, numItems, topItem, 6, 6 * 9);
+        drawScrollBar(127, 8, listItemCount, topItem, 6, 6 * 9);
 
         // Exit
         if(heldButton == KEY_SELECT)
@@ -5920,7 +5934,7 @@ void handleMainUI()
       
     case SCREEN_SYSTEM_MENU:
       {
-        drawHeader_Menu(mainMenu[MAIN_MENU_SYSTEM]);
+        drawHeader(mainMenu[MAIN_MENU_SYSTEM]);
         
         static uint8_t topItem = 1, highlightedItem = 1;
         drawMenu(systemMenu, sizeof(systemMenu)/sizeof(systemMenu[0]), NULL, &topItem, &highlightedItem);
@@ -6120,7 +6134,6 @@ void handleMainUI()
         enum {
           ITEM_SHOW_MENU_ICONS,
           ITEM_KEEP_MENU_POSITION,
-          ITEM_USE_DENSER_MENUS,
           ITEM_USE_ROUND_CORNERS,
           ITEM_ENABLE_ANIMATIONS,
           ITEM_AUTOHIDE_TRIMS,
@@ -6183,13 +6196,6 @@ void handleMainUI()
               }
               break;
               
-            case ITEM_USE_DENSER_MENUS:
-              {
-                display.print(F("Denser menus:")); drawCheckbox(102, ypos, Sys.useDenserMenus);
-                if(edit) Sys.useDenserMenus = incDecOnUpDown(Sys.useDenserMenus, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-              }
-              break;
-              
             case ITEM_USE_ROUND_CORNERS:
               {
                 display.print(F("Round corners:")); drawCheckbox(102, ypos, Sys.useRoundRect);
@@ -6234,7 +6240,7 @@ void handleMainUI()
       
     case SCREEN_ADVANCED_MENU:
       {
-        drawHeader_Menu(systemMenu[SYSTEM_MENU_ADVANCED]);
+        drawHeader(systemMenu[SYSTEM_MENU_ADVANCED]);
         
         static uint8_t topItem = 1, highlightedItem = 1;
         drawMenu(advancedMenu, sizeof(advancedMenu)/sizeof(advancedMenu[0]), NULL, &topItem, &highlightedItem);
@@ -8109,7 +8115,7 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
     {
       if(!(flag & INCDEC_FLAG_MIX_SRC))
         continue;
-      if(Model.type == MODEL_TYPE_OTHER && (i == SRC_RUD || i == SRC_AIL || i == SRC_ELE))
+      if(Model.type == MODEL_TYPE_OTHER && (i == SRC_RUD || i == SRC_AIL || i == SRC_ELE || i == SRC_THR))
         continue;
       if(i >= SRC_SW_PHYSICAL_FIRST && i <= SRC_SW_PHYSICAL_LAST && Sys.swType[i - SRC_SW_PHYSICAL_FIRST] == SW_ABSENT)
         continue;
@@ -8448,35 +8454,12 @@ void drawHeader(const char* str)
 
 //--------------------------------------------------------------------------------------------------
 
-void drawHeader_Menu(const char* str)
-{
-  if(Sys.useDenserMenus)
-    drawHeader(str);
-  else
-  {
-    strlcpy_P(txtBuff, str, sizeof(txtBuff));
-    uint8_t txtWidthPix = strlen(txtBuff) * 6;
-    uint8_t headingXOffset = (display.width() - txtWidthPix) / 2; //middle align heading
-    display.setCursor(headingXOffset, 0);
-    display.print(txtBuff);
-    display.drawHLine(0, 9, 128, BLACK);
-  }
-}
-
-//--------------------------------------------------------------------------------------------------
-
 void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const bitmapTable[], 
               uint8_t *topItem, uint8_t *highlightedItem)
 {
-  uint8_t numVisible = 4;
-  uint8_t lineHeight = 13;
-  uint8_t y0 = 14;
-  if(Sys.useDenserMenus)
-  {
-    numVisible = 5;
-    lineHeight = 11;
-    y0 = 11;
-  }
+  uint8_t numVisible = 5;
+  uint8_t lineHeight = 11;
+  uint8_t y0 = 11;
   
   //handle scenario of being called with invalid highlightedItem
   if(*highlightedItem > numItems) 
@@ -8502,7 +8485,7 @@ void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const bitm
     //highlight selection
     if(*highlightedItem == (*topItem + i))
     {
-      display.fillRoundRect(3, Sys.useDenserMenus ? ypos - 2 : ypos - 3, 122, lineHeight, Sys.useRoundRect ? 4 : 0, BLACK);
+      display.fillRoundRect(3, ypos - 2, 122, lineHeight, Sys.useRoundRect ? 4 : 0, BLACK);
       display.setTextColor(WHITE);
     }
     //show icons
@@ -8521,7 +8504,7 @@ void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const bitm
   }
   
   //scroll bar
-  drawScrollBar(127, Sys.useDenserMenus ? 9 : 11, numItems, *topItem, numVisible, numVisible * lineHeight);
+  drawScrollBar(127, 9, numItems, *topItem, numVisible, numVisible * lineHeight);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -8885,13 +8868,12 @@ uint8_t getMovedSource()
 
 uint8_t procMovedSource(uint8_t src)
 {
-  if(src == Model.thrSrcRaw) 
-    return SRC_THR;
   if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
   {
     if(src == Model.rudSrcRaw) return SRC_RUD;
     if(src == Model.ailSrcRaw) return SRC_AIL;
     if(src == Model.eleSrcRaw) return SRC_ELE;
+    if(src == Model.thrSrcRaw) return SRC_THR;
   }
   return src;
 }

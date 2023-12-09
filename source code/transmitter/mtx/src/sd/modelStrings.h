@@ -14,7 +14,9 @@ typedef struct {
 } id_string_t; 
 
 char* findStringInIdStr(const id_string_t *idStr_P, int8_t searchId);
-int8_t findIdInIdStr(const id_string_t *idStr_P, const char *searchStr);
+template <typename T> void findIdInIdStr(const id_string_t *idStr_P, const char *searchStr, T &val);
+
+extern bool idNotFoundInIdStr; //for basic error detection only
 
 //---- Strings for the enumerations ----
 //Arrays of structs in PROGMEM
