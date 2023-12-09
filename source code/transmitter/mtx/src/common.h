@@ -284,7 +284,6 @@ typedef struct {
   //--- appearance
   bool     showMenuIcons;
   bool     rememberMenuPosition;
-  bool     useDenserMenus;
   bool     useRoundRect;
   bool     animationsEnabled;
   uint8_t  autohideTrims;
