@@ -415,7 +415,7 @@ enum {
 
 #define MIN_NUM_POINTS_CUSTOM_CURVE     2
 #define DEFAULT_NUM_POINTS_CUSTOM_CURVE 5
-#define MAX_NUM_POINTS_CUSTOM_CURVE     16
+#define MAX_NUM_POINTS_CUSTOM_CURVE     12
 
 typedef struct {
   char    name[6]; //5 chars + Null
