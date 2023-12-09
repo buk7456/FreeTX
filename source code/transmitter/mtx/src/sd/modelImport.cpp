@@ -9,7 +9,7 @@
 
 bool isEndOfFile = false;
 
-bool isInvalidParam = false; //for basic error detection only
+bool hasEncounteredInvalidParam = false; //for basic error detection only
 
 //Buffers used by the parser to hold the keys and value. 
 //Three buffers are used for the keys as we have upto three indention levels. ie level 0,1,2
@@ -59,7 +59,7 @@ void parser(File& file)
   //return if invalid indention
   if(indentLevel >= sizeof(keyBuff)/sizeof(keyBuff[0]) || numLeadingSpaces % 2 == 1)
   {
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
     return;
   }
   
@@ -126,7 +126,7 @@ void readValue_bool(char* str, bool* val)
   else if(MATCH_P(str, PSTR("false")))
     *val = false;
   else
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -169,7 +169,7 @@ uint8_t getSrcId(char* str)
     if(MATCH(tempBuff, str))
       return i;
   }
-  isInvalidParam = true;
+  hasEncounteredInvalidParam = true;
   return SRC_NONE;
 }
 
@@ -185,7 +185,7 @@ uint8_t getControlSwitchID(char* str)
     if(MATCH(tempBuff, str))
       return i;
   }
-  isInvalidParam = true;
+  hasEncounteredInvalidParam = true;
   return CTRL_SW_NONE;
 }
 
@@ -304,7 +304,7 @@ void extractConfig_Telemetry()
       readValue_bool(valueBuff, &tlm->recordMinimum);
   }
   else
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_Timers()
@@ -329,7 +329,7 @@ void extractConfig_Timers()
       tmr->persistVal = atoi_with_prefix(valueBuff);
   }
   else
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_X1Trim()
@@ -413,7 +413,10 @@ void extractConfig_ThrottleCurve()
   {
     crv->numPoints = atoi_with_prefix(valueBuff);
     if(crv->numPoints > MAX_NUM_POINTS_CUSTOM_CURVE)
+    {
       crv->numPoints = MAX_NUM_POINTS_CUSTOM_CURVE;
+      hasEncounteredInvalidParam = true;
+    }
   }
   else if(MATCH_P(keyBuff[1], key_XVal))
   {
@@ -424,12 +427,17 @@ void extractConfig_ThrottleCurve()
       crv->xVal[crv->numPoints - 1] = 100;
     else if(pt < MAX_NUM_POINTS_CUSTOM_CURVE)
       crv->xVal[pt] = atoi_with_prefix(valueBuff);
+    else
+      hasEncounteredInvalidParam = true;
   }
   else if(MATCH_P(keyBuff[1], key_YVal))
   {
     uint8_t pt = atoi_with_prefix(keyBuff[2]);
     if(pt >= crv->numPoints)
+    {
       pt = crv->numPoints - 1;
+      hasEncounteredInvalidParam = true;
+    }
     crv->yVal[pt] = atoi_with_prefix(valueBuff);
   }
   else if(MATCH_P(keyBuff[1], key_Smooth))
@@ -462,7 +470,7 @@ void extractConfig_FunctionGenerators()
       fgen->phaseAngle = atoi_with_prefix(valueBuff);
   }
   else
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_Mixer()
@@ -532,7 +540,7 @@ void extractConfig_Mixer()
       mxr->slowDown = getTimeFromTimeStr(valueBuff);
   }
   else
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_CustomCurves()
@@ -549,7 +557,10 @@ void extractConfig_CustomCurves()
     {
       crv->numPoints = atoi_with_prefix(valueBuff);
       if(crv->numPoints > MAX_NUM_POINTS_CUSTOM_CURVE)
+      {
         crv->numPoints = MAX_NUM_POINTS_CUSTOM_CURVE;
+        hasEncounteredInvalidParam = true;
+      }
     }
     else if(MATCH_P(keyBuff[1], key_XVal))
     {
@@ -560,19 +571,24 @@ void extractConfig_CustomCurves()
         crv->xVal[crv->numPoints - 1] = 100;
       else if(pt < MAX_NUM_POINTS_CUSTOM_CURVE)
         crv->xVal[pt] = atoi_with_prefix(valueBuff);
+      else
+        hasEncounteredInvalidParam = true;
     }
     else if(MATCH_P(keyBuff[1], key_YVal))
     {
       uint8_t pt = atoi_with_prefix(keyBuff[2]);
       if(pt >= crv->numPoints)
+      {
         pt = crv->numPoints - 1;
+        hasEncounteredInvalidParam = true;
+      }
       crv->yVal[pt] = atoi_with_prefix(valueBuff);
     }
     else if(MATCH_P(keyBuff[1], key_Smooth))
       readValue_bool(valueBuff, &crv->smooth);
   }
   else
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_LogicalSwitches()
@@ -626,7 +642,7 @@ void extractConfig_LogicalSwitches()
     }
   }
   else
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_Counters()
@@ -653,7 +669,7 @@ void extractConfig_Counters()
       counter->persistVal = atoi_with_prefix(valueBuff);
   }
   else
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_FlightModes()
@@ -680,7 +696,7 @@ void extractConfig_FlightModes()
       fmd->transitionTime = getTimeFromTimeStr(valueBuff);
   }
   else
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_Channels()
@@ -733,7 +749,7 @@ void extractConfig_Channels()
       ch->endpointR = atoi_with_prefix(valueBuff);
   }
   else
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_Widgets()
@@ -775,7 +791,7 @@ void extractConfig_Widgets()
       widget->gaugeMax = atoi_with_prefix(valueBuff);
   }
   else
-    isInvalidParam = true;
+    hasEncounteredInvalidParam = true;
 }
 
 //============================ Core function =======================================================
@@ -788,7 +804,7 @@ void importModelData(File& file)
   
   //--- Initialise
   isEndOfFile = false;
-  isInvalidParam = false;
+  hasEncounteredInvalidParam = false;
   idNotFoundInIdStr = false;
   memset(keyBuff[0], 0, sizeof(keyBuff[0]));
   memset(keyBuff[1], 0, sizeof(keyBuff[0]));
@@ -843,12 +859,12 @@ void importModelData(File& file)
     else if(MATCH_P(keyBuff[0], key_Widget)) extractConfig_Widgets();
     else
     {
-      isInvalidParam = true;
+      hasEncounteredInvalidParam = true;
     }
   }
   
   //show message if errors were encountered
-  if(isInvalidParam || idNotFoundInIdStr)
+  if(hasEncounteredInvalidParam || idNotFoundInIdStr)
   {
     showMsg(PSTR("Some data skipped"));
     delay(2000);
