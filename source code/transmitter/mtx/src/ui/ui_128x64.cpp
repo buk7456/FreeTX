@@ -1849,7 +1849,7 @@ void handleMainUI()
         //get the name
         isEditMode = true;
         uint8_t lastPos = thisPos;
-        thisPos = incDecOnUpDown(thisPos, 0, mdlCount - 1, INCDEC_WRAP, INCDEC_SLOW);
+        thisPos = incDecOnUpDown(thisPos, 0, mdlCount - 1, INCDEC_NOWRAP, INCDEC_SLOW); //strictly No Wrap here
         if(thisPos != lastPos) //changed, refresh
           sdGetModelName(nameStr, thisPos, sizeof(nameStr));
         
@@ -7491,11 +7491,11 @@ void handleMainUI()
         display.drawBitmap(61, 61, icon_down_arrow_small, 5, 3, BLACK);
         
         static const char disclaimerText[] PROGMEM = 
-           "Disclaimer:\n-----------\nThis firmware is provided \"as is\" without warranty of any "
+           "-----Disclaimer-----\nThis software is provided \"as is\" without warranty of any "
            "kind, express or implied. In no event shall the authors or copyright holders be liable "
            "for any direct, indirect, incidental, special, exemplary or consequential "
            "damages (including but not limited to personal and/or property damage) or "
-           "other liability arising from the use of this firmware.\nImproperly "
+           "other liability arising from the use of this software.\n\nImproperly "
            "operating RC models can cause serious injury or death.";
         
         if(clickedButton == KEY_DOWN)
