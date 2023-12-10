@@ -45,13 +45,6 @@
 
 //------------------------------------------------
 
-#define FIXED_PAYLOAD_SIZE ((((NUM_RC_CHANNELS * 10) + 7) / 8) + 1)
-
-#if FIXED_PAYLOAD_SIZE < 10
-  #undef  FIXED_PAYLOAD_SIZE
-  #define FIXED_PAYLOAD_SIZE  10
-#endif
-
 #if NUM_HOP_CHANNELS > FIXED_PAYLOAD_SIZE
   #error Number of hop channels cannot exceed size of payload
 #endif 
