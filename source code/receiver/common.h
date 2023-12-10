@@ -16,6 +16,13 @@ extern uint32_t lastRCPacketMillis;
 
 #define TELEMETRY_NO_DATA  0x7FFF
 
+#define FIXED_PAYLOAD_SIZE ((((NUM_RC_CHANNELS * 10) + 7) / 8) + 1)
+
+#if FIXED_PAYLOAD_SIZE < 10
+  #undef  FIXED_PAYLOAD_SIZE
+  #define FIXED_PAYLOAD_SIZE  10
+#endif
+
 //====================== SYSTEM PARAMETERS =========================================================
 
 #define NUM_HOP_CHANNELS  3 //for frequency hopping
