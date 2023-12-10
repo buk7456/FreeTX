@@ -422,14 +422,29 @@ void doSerialCommunication()
         }
       }
     }
-  }
 
+    //Calculate the Link Quality indicator
+    int16_t lqi = divRoundClosest(((int16_t) receiverPacketRate * 100), transmitterPacketRate);
+    for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++) //search and write
+    {
+      if(Model.Telemetry[idx].identifier == 0x70)
+      {
+        //store the last received value
+        if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
+          telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
+        //write the current value
+        telemetryReceivedValue[idx] = (lqi == 0) ? TELEMETRY_NO_DATA : lqi;
+        telemetryLastReceivedTime[idx] = millis();
+      }
+    }
+  }
 }
 
 //==================================================================================================
 
 void handleTelemetry()
 {
+  //-- stats
   for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
   {
     //-- get stats

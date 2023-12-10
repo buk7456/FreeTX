@@ -19,10 +19,8 @@ char valueBuff[MAX_STR_SIZE];
 
 //--------------------------- Parser ---------------------------------------------------------------
 
-/*
-  Reads in the file line by line, extracts the keys and values to the appropriate buffers and skipping 
-  comments and empty lines. When the end of file is reached, the isEndOfFile flag is set to true. 
-*/
+// Reads in the file line by line, extracts the keys and values to the appropriate buffers and skipping 
+// comments and empty lines. When the end of file is reached, the isEndOfFile flag is set to true. 
 
 void parser(File& file)
 {
@@ -119,7 +117,7 @@ void parser(File& file)
 
 //--------------------------------------------------------------------------------------------------
 
-void readValue_bool(char* str, bool* val)
+void readValue_bool(const char* str, bool* val)
 {
   if(MATCH_P(str, PSTR("true")))
     *val = true;
@@ -135,31 +133,26 @@ int32_t atoi_with_prefix(const char *str)
 {
   int32_t result = 0;
   int32_t sign = 1; // 1 for positive, -1 for negative
-
   // Skip leading non-numeric characters
   while(*str && (*str < '0' || *str > '9')) 
   {
     if(*str == '-') 
-    {
       sign = -1; // Handle negative sign if present
-    }
     str++;
   }
-
   // Process digits and build the integer
   while(*str >= '0' && *str <= '9') 
   {
     result = result * 10 + (*str - '0');
     str++;
   }
-
   // Apply the sign
   return sign * result;
 }
 
 //--------------------------------------------------------------------------------------------------
 
-uint8_t getSrcId(char* str)
+uint8_t getSrcId(const char* str)
 {
   char tempBuff[MAX_STR_SIZE];
   tempBuff[0] = '\0';
@@ -175,7 +168,7 @@ uint8_t getSrcId(char* str)
 
 //--------------------------------------------------------------------------------------------------
 
-uint8_t getControlSwitchID(char* str)
+uint8_t getControlSwitchID(const char* str)
 {
   char tempBuff[MAX_STR_SIZE];
   tempBuff[0] = '\0';
@@ -191,17 +184,15 @@ uint8_t getControlSwitchID(char* str)
 
 //--------------------------------------------------------------------------------------------------
 
-uint16_t getTimeFromTimeStr(char* str)
+uint16_t getTimeFromTimeStr(const char* str)
 {
   //Converts the time string to deciseconds. Forexample 12.5s to becomes 125
-
+  
   char tempBuff[MAX_STR_SIZE];
   tempBuff[0] = '\0';
   uint8_t i = 0;
-
   uint8_t pos = 0;
   bool seenDecimalPoint = false;
-  
   while(true)
   {
     uint8_t c = *(str + pos);
@@ -221,9 +212,7 @@ uint16_t getTimeFromTimeStr(char* str)
     if(pos == 0xff) //catch infinite loop
       break;
   }
-
   tempBuff[i] = '\0';
-
   uint16_t result = atoi_with_prefix(tempBuff); 
   return result;
 }
@@ -417,6 +406,11 @@ void extractConfig_ThrottleCurve()
       crv->numPoints = MAX_NUM_POINTS_CUSTOM_CURVE;
       hasEncounteredInvalidParam = true;
     }
+    else if(crv->numPoints < MIN_NUM_POINTS_CUSTOM_CURVE)
+    {
+      crv->numPoints = MIN_NUM_POINTS_CUSTOM_CURVE;
+      hasEncounteredInvalidParam = true;
+    }
   }
   else if(MATCH_P(keyBuff[1], key_XVal))
   {
@@ -512,21 +506,19 @@ void extractConfig_Mixer()
     {
       if(MATCH_P(valueBuff, PSTR("All")))
         mxr->flightMode = 0xff;
-      else //1,2,3,5,
+      else //example 1,2,5,
       {
-        mxr->flightMode = 0xff;
-        mxr->flightMode <<= NUM_FLIGHT_MODES;
-        uint8_t pos = 0;
-        while(true)
+        mxr->flightMode = (0xff << NUM_FLIGHT_MODES) & 0xff;
+        char *str = valueBuff;
+        while(*str)
         {
-          if(valueBuff[pos] == '\0' || pos == 0xff) //reached end
-            break;
-          if(isDigit(valueBuff[pos]))
+          if(isDigit(*str))
           {
-            uint8_t i = valueBuff[pos] - '1';
-            mxr->flightMode |= 1 << i;
+            uint8_t i = *str - '1';
+            if(i < NUM_FLIGHT_MODES)
+              mxr->flightMode |= 1 << i;
           }
-          pos++;
+          str++;
         }
       }
     }
@@ -559,6 +551,11 @@ void extractConfig_CustomCurves()
       if(crv->numPoints > MAX_NUM_POINTS_CUSTOM_CURVE)
       {
         crv->numPoints = MAX_NUM_POINTS_CUSTOM_CURVE;
+        hasEncounteredInvalidParam = true;
+      }
+      else if(crv->numPoints < MIN_NUM_POINTS_CUSTOM_CURVE)
+      {
+        crv->numPoints = MIN_NUM_POINTS_CUSTOM_CURVE;
         hasEncounteredInvalidParam = true;
       }
     }

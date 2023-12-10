@@ -230,15 +230,15 @@ void exportModelData(File& file)
     writeKeyValue_S32(file, 1, key_Expo2, Model.EleDualRate.expo2);
     getControlSwitchName_Clean(tempBuff, Model.EleDualRate.swtch, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_Switch, tempBuff);
+    
+    file.println(F("# ------ Throttle curve ------"));
+  
+    writeKeyValue_Char(file, 0, key_ThrottleCurve, NULL);
+    writeKeyValue_S32(file, 1, key_NumPoints, Model.ThrottleCurve.numPoints);
+    writeArray_S8(file, 1, key_XVal, Model.ThrottleCurve.xVal, Model.ThrottleCurve.numPoints);
+    writeArray_S8(file, 1, key_YVal, Model.ThrottleCurve.yVal, Model.ThrottleCurve.numPoints);
+    writeKeyValue_bool(file, 1, key_Smooth, Model.ThrottleCurve.smooth);
   }
-  
-  file.println(F("# ------ Throttle curve ------"));
-  
-  writeKeyValue_Char(file, 0, key_ThrottleCurve, NULL);
-  writeKeyValue_S32(file, 1, key_NumPoints, Model.ThrottleCurve.numPoints);
-  writeArray_S8(file, 1, key_XVal, Model.ThrottleCurve.xVal, Model.ThrottleCurve.numPoints);
-  writeArray_S8(file, 1, key_YVal, Model.ThrottleCurve.yVal, Model.ThrottleCurve.numPoints);
-  writeKeyValue_bool(file, 1, key_Smooth, Model.ThrottleCurve.smooth);
 
   file.println(F("# ------ Function generators ------"));
   

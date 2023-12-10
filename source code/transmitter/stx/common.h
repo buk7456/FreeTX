@@ -22,9 +22,17 @@ extern bool     hasPendingRCData;
 extern uint8_t  transmitterPacketRate;
 extern uint8_t  receiverPacketRate;
 
+
+#define FIXED_PAYLOAD_SIZE ((((NUM_RC_CHANNELS * 10) + 7) / 8) + 1)
+
+#if FIXED_PAYLOAD_SIZE < 10
+  #undef  FIXED_PAYLOAD_SIZE
+  #define FIXED_PAYLOAD_SIZE  10
+#endif
+
 //---- Telemetry --------------------------
 
-#define MAX_TELEMETRY_COUNT  6 //same value as in receiver
+#define MAX_TELEMETRY_COUNT  (FIXED_PAYLOAD_SIZE / 3)
 
 extern uint8_t telemID[MAX_TELEMETRY_COUNT];
 extern int16_t telemVal[MAX_TELEMETRY_COUNT]; 

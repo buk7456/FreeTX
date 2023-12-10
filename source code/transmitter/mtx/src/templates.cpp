@@ -163,32 +163,14 @@ void loadSensorTemplateExtVolts4S(uint8_t telemIdx)
                       TELEMETRY_ALARM_CONDITION_LESS_THAN, 1420, 0, true, true, true);
 }
 
-void loadSensorTemplateRPM2Blades(uint8_t telemIdx)
+void loadSensorTemplateRSSI(uint8_t telemIdx)
 {
-  loadTelemetryParams(telemIdx, PSTR("RPM"), NULL, 0x7E, 50, 0, 0, true, 
-                      TELEMETRY_ALARM_CONDITION_NONE, 0, 0, true, true, true);
-}
-
-void loadSensorTemplateRPM3Blades(uint8_t telemIdx)
-{
-  loadTelemetryParams(telemIdx, PSTR("RPM"), NULL, 0x7E, 33, 0, 0, true, 
-                      TELEMETRY_ALARM_CONDITION_NONE, 0, 0, true, true, true);
-}
-
-void loadSensorTemplateRPM4Blades(uint8_t telemIdx)
-{
-  loadTelemetryParams(telemIdx, PSTR("RPM"), NULL, 0x7E, 25, 0, 0, true, 
-                      TELEMETRY_ALARM_CONDITION_NONE, 0, 0, true, true, true);
-}
-
-void loadSensorTemplateTemperature(uint8_t telemIdx)
-{
-  loadTelemetryParams(telemIdx, PSTR("Temp"), PSTR("\xF8""C"), 0x02, 100, 0, 0, true, 
+  loadTelemetryParams(telemIdx, PSTR("RSSI"), PSTR("dBm"), 0x7F, 100, 0, 0, true, 
                      TELEMETRY_ALARM_CONDITION_NONE, 0, 0, true, true, true);
 }
 
-void loadSensorTemplateRSSI(uint8_t telemIdx)
+void loadSensorTemplateLinkQuality(uint8_t telemIdx)
 {
-  loadTelemetryParams(telemIdx, PSTR("RSSI"), NULL, 0x7F, 100, 0, 0, true, 
+  loadTelemetryParams(telemIdx, PSTR("LinkQlty"), PSTR("%"), 0x70, 100, 0, 0, true, 
                      TELEMETRY_ALARM_CONDITION_NONE, 0, 0, true, true, true);
 }
