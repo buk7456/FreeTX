@@ -425,7 +425,10 @@ void doSerialCommunication()
 
     //Calculate the Link Quality indicator
     int16_t lqi = divRoundClosest(((int16_t) receiverPacketRate * 100), transmitterPacketRate);
-    for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++) //search and write
+    if(lqi > 100) lqi = 100;
+    else if(lqi == 0) lqi = TELEMETRY_NO_DATA;
+    //check against configured Ids and write
+    for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++) 
     {
       if(Model.Telemetry[idx].identifier == 0x70)
       {
@@ -433,7 +436,7 @@ void doSerialCommunication()
         if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
           telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
         //write the current value
-        telemetryReceivedValue[idx] = (lqi == 0) ? TELEMETRY_NO_DATA : lqi;
+        telemetryReceivedValue[idx] = lqi;
         telemetryLastReceivedTime[idx] = millis();
       }
     }
