@@ -301,7 +301,7 @@ void changeToScreen(uint8_t scrn);
 void changeFocusOnUpDown(uint8_t numItems);
 void toggleEditModeOnSelectClicked();
 
-int16_t incDecOnUpDown(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEnabled, uint8_t state);
+int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEnabled, uint8_t state);
 uint8_t incDecSource(uint8_t val, uint8_t flag);
 uint8_t incDecControlSwitch(uint8_t val, uint8_t flag);
 bool controlSwitchExists(uint8_t idx);//helper
@@ -967,7 +967,7 @@ void handleMainUI()
         }
 
         isEditMode = true;
-        thisPage = incDecOnUpDown(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+        thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
         
         uint8_t startIdx = (thisPage - 1) * 10;
         for(uint8_t i = startIdx; i < startIdx + 10 && i < NUM_RC_CHANNELS; i++)
@@ -1193,11 +1193,11 @@ void handleMainUI()
 
         //edit items
         if(focusedItem == 1) //change to next widget
-          thisWidgetIdx = incDecOnUpDown(thisWidgetIdx, 0, NUM_WIDGETS - 1, INCDEC_WRAP, INCDEC_SLOW);
+          thisWidgetIdx = incDec(thisWidgetIdx, 0, NUM_WIDGETS - 1, INCDEC_WRAP, INCDEC_SLOW);
         else if(focusedItem == 2) //type
         {
           uint8_t prevType = widget->type;
-          widget->type = incDecOnUpDown(widget->type, 0, WIDGET_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+          widget->type = incDec(widget->type, 0, WIDGET_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
           if(widget->type != prevType)
           {
             widget->disp = WIDGET_DISP_NUMERICAL;
@@ -1245,7 +1245,7 @@ void handleMainUI()
                 break;
               }
             }
-            idxQQ = incDecOnUpDown(idxQQ, 0, srcCnt - 1, INCDEC_WRAP, INCDEC_SLOW);
+            idxQQ = incDec(idxQQ, 0, srcCnt - 1, INCDEC_WRAP, INCDEC_SLOW);
             uint8_t prevSrc = widget->src;
             widget->src = srcQQ[idxQQ];
             if(widget->src != prevSrc)
@@ -1264,17 +1264,17 @@ void handleMainUI()
             widget->src = incDecSource(widget->src, INCDEC_FLAG_MIX_SRC);
           }
           else if(widget->type == WIDGET_TYPE_OUTPUTS)
-            widget->src = incDecOnUpDown(widget->src, 0, NUM_RC_CHANNELS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+            widget->src = incDec(widget->src, 0, NUM_RC_CHANNELS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
           else if(widget->type == WIDGET_TYPE_COUNTERS)
-            widget->src = incDecOnUpDown(widget->src, 0, NUM_COUNTERS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+            widget->src = incDec(widget->src, 0, NUM_COUNTERS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
           else if(widget->type == WIDGET_TYPE_TIMERS)
-            widget->src = incDecOnUpDown(widget->src, 0, NUM_TIMERS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+            widget->src = incDec(widget->src, 0, NUM_TIMERS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
         }
         else if(focusedItem == 4) //disp
         {
           uint8_t prevDisp =  widget->disp;
           do {
-            widget->disp = incDecOnUpDown(widget->disp, 0, WIDGET_DISP_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+            widget->disp = incDec(widget->disp, 0, WIDGET_DISP_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
           } while(widget->type == WIDGET_TYPE_TELEMETRY && widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED);
           
           if(widget->disp != prevDisp)
@@ -1290,18 +1290,18 @@ void handleMainUI()
         else if(focusedItem == 5) //gaugeMin
         {
           if(widget->type == WIDGET_TYPE_TELEMETRY)
-            widget->gaugeMin = incDecOnUpDown(widget->gaugeMin, -30000, widget->gaugeMax, INCDEC_NOWRAP, INCDEC_FAST);
+            widget->gaugeMin = incDec(widget->gaugeMin, -30000, widget->gaugeMax, INCDEC_NOWRAP, INCDEC_FAST);
           else if(widget->type == WIDGET_TYPE_MIXSOURCES || widget->type == WIDGET_TYPE_OUTPUTS)
-            widget->gaugeMin = incDecOnUpDown(widget->gaugeMin, -100, widget->gaugeMax, INCDEC_NOWRAP, INCDEC_NORMAL);
+            widget->gaugeMin = incDec(widget->gaugeMin, -100, widget->gaugeMax, INCDEC_NOWRAP, INCDEC_NORMAL);
           if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
             widget->gaugeMax = 0 - widget->gaugeMin;
         }
         else if(focusedItem == 6) //gaugeMax
         {
           if(widget->type == WIDGET_TYPE_TELEMETRY)
-            widget->gaugeMax = incDecOnUpDown(widget->gaugeMax, widget->gaugeMin, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+            widget->gaugeMax = incDec(widget->gaugeMax, widget->gaugeMin, 30000, INCDEC_NOWRAP, INCDEC_FAST);
           else if(widget->type == WIDGET_TYPE_MIXSOURCES || widget->type == WIDGET_TYPE_OUTPUTS)
-            widget->gaugeMax = incDecOnUpDown(widget->gaugeMax, widget->gaugeMin, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+            widget->gaugeMax = incDec(widget->gaugeMax, widget->gaugeMin, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
           if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
             widget->gaugeMin = 0 - widget->gaugeMax;
         }
@@ -1355,7 +1355,7 @@ void handleMainUI()
     case DIALOG_MOVE_WIDGET:
       {
         isEditMode = true;
-        destWidgetIdx = incDecOnUpDown(destWidgetIdx, 0, NUM_WIDGETS - 1, INCDEC_WRAP, INCDEC_SLOW);
+        destWidgetIdx = incDec(destWidgetIdx, 0, NUM_WIDGETS - 1, INCDEC_WRAP, INCDEC_SLOW);
         drawDialogCopyMove(PSTR("Widget"), thisWidgetIdx, destWidgetIdx, theScreen == DIALOG_COPY_WIDGET);
         if(clickedButton == KEY_SELECT)
         {
@@ -1726,7 +1726,7 @@ void handleMainUI()
           mdlType = Model.type;
         }
         
-        mdlType = incDecOnUpDown(mdlType, 0, MODEL_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+        mdlType = incDec(mdlType, 0, MODEL_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
 
         drawBoundingBox(11, 14, 105, 35,BLACK);
         drawCursor(21, 28);
@@ -1786,7 +1786,7 @@ void handleMainUI()
         //change source model
         isEditMode = true;
         do {
-          thisModelIdx = incDecOnUpDown(thisModelIdx, 0, maxNumOfModels - 1 , INCDEC_WRAP, INCDEC_SLOW);
+          thisModelIdx = incDec(thisModelIdx, 0, maxNumOfModels - 1 , INCDEC_WRAP, INCDEC_SLOW);
         } while(eeModelIsFree(thisModelIdx) || Model.type != eeGetModelType(thisModelIdx));
         
         drawBoundingBox(11, 14, 105, 35,BLACK);
@@ -1849,7 +1849,7 @@ void handleMainUI()
         //get the name
         isEditMode = true;
         uint8_t lastPos = thisPos;
-        thisPos = incDecOnUpDown(thisPos, 0, mdlCount - 1, INCDEC_NOWRAP, INCDEC_SLOW); //strictly No Wrap here
+        thisPos = incDec(thisPos, 0, mdlCount - 1, INCDEC_NOWRAP, INCDEC_SLOW); //strictly No Wrap here
         if(thisPos != lastPos) //changed, refresh
           sdGetModelName(nameStr, thisPos, sizeof(nameStr));
         
@@ -2140,12 +2140,12 @@ void handleMainUI()
         if(focusedItem == 1)
         {
           if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-            page = incDecOnUpDown(page, 0, NUM_PAGES - 1, INCDEC_WRAP, INCDEC_SLOW);
+            page = incDec(page, 0, NUM_PAGES - 1, INCDEC_WRAP, INCDEC_SLOW);
           else if(Model.type == MODEL_TYPE_OTHER) 
           {
             //hide rud, ail, ele, thr curves
             do {
-              page = incDecOnUpDown(page, 0, NUM_PAGES - 1, INCDEC_WRAP, INCDEC_SLOW);
+              page = incDec(page, 0, NUM_PAGES - 1, INCDEC_WRAP, INCDEC_SLOW);
             } while(page == PAGE_RUD_CURVE || page == PAGE_AIL_CURVE || page == PAGE_ELE_CURVE || page == PAGE_THR_CURVE);
           }
           //Show cursor
@@ -2186,9 +2186,9 @@ void handleMainUI()
           //--- Edit values
           
           if(focusedItem == 2)
-            *rate = incDecOnUpDown(*rate, 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL); 
+            *rate = incDec(*rate, 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL); 
           else if(focusedItem == 3)
-            *expo = incDecOnUpDown(*expo, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+            *expo = incDec(*expo, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
           else if(focusedItem == 4 && isEditMode)
             *swtch = incDecControlSwitch(*swtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
           else if(focusedItem == 5 && isEditMode)
@@ -2201,7 +2201,7 @@ void handleMainUI()
                 *qqSrcRaw[idx] = movedSrc;
             }
             //inc dec
-            *qqSrcRaw[idx] = incDecOnUpDown(*qqSrcRaw[idx], SRC_RAW_ANALOG_FIRST, 
+            *qqSrcRaw[idx] = incDec(*qqSrcRaw[idx], SRC_RAW_ANALOG_FIRST, 
                                              SRC_RAW_ANALOG_LAST, INCDEC_NOWRAP, INCDEC_SLOW);
           }
 
@@ -2365,7 +2365,7 @@ void handleMainUI()
                         Model.thrSrcRaw = movedSrc;
                     }
                     //inc dec
-                    Model.thrSrcRaw = incDecOnUpDown(Model.thrSrcRaw, SRC_RAW_ANALOG_FIRST, 
+                    Model.thrSrcRaw = incDec(Model.thrSrcRaw, SRC_RAW_ANALOG_FIRST, 
                                                      SRC_RAW_ANALOG_LAST, INCDEC_NOWRAP, INCDEC_SLOW);
                   }
                 }
@@ -2380,7 +2380,7 @@ void handleMainUI()
                   if(edit)
                   {
                     uint8_t prevNumPoints = crv->numPoints;
-                    crv->numPoints = incDecOnUpDown(crv->numPoints, MIN_NUM_POINTS_CUSTOM_CURVE, 
+                    crv->numPoints = incDec(crv->numPoints, MIN_NUM_POINTS_CUSTOM_CURVE, 
                                                     MAX_NUM_POINTS_CUSTOM_CURVE, INCDEC_NOWRAP, INCDEC_SLOW);
                     if(crv->numPoints != prevNumPoints) //recalculate points if changed
                     {
@@ -2397,7 +2397,7 @@ void handleMainUI()
                   display.setCursor(42, ypos);
                   display.write(97 + thisPt);
                   if(edit)
-                    thisPt = incDecOnUpDown(thisPt, 0, crv->numPoints - 1, INCDEC_WRAP, INCDEC_SLOW);
+                    thisPt = incDec(thisPt, 0, crv->numPoints - 1, INCDEC_WRAP, INCDEC_SLOW);
                 }
                 break;
                 
@@ -2410,7 +2410,7 @@ void handleMainUI()
                   {
                     int8_t _minVal = crv->xVal[thisPt - 1];
                     int8_t _maxVal = crv->xVal[thisPt + 1];
-                    crv->xVal[thisPt] = incDecOnUpDown(crv->xVal[thisPt], _minVal, _maxVal, INCDEC_NOWRAP, INCDEC_NORMAL);
+                    crv->xVal[thisPt] = incDec(crv->xVal[thisPt], _minVal, _maxVal, INCDEC_NOWRAP, INCDEC_NORMAL);
                   }
                 }
                 break;
@@ -2421,7 +2421,7 @@ void handleMainUI()
                   display.setCursor(42, ypos);
                   display.print(crv->yVal[thisPt]);
                   if(edit)
-                    crv->yVal[thisPt] = incDecOnUpDown(crv->yVal[thisPt], -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+                    crv->yVal[thisPt] = incDec(crv->yVal[thisPt], -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
                 }
                 break;
                 
@@ -2430,7 +2430,7 @@ void handleMainUI()
                   display.print(F("Smth:"));
                   drawCheckbox(42, ypos, crv->smooth);
                   if(edit)
-                    crv->smooth = incDecOnUpDown(crv->smooth, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                    crv->smooth = incDec(crv->smooth, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
                 }
                 break;
             }
@@ -2658,7 +2658,7 @@ void handleMainUI()
                   mxr->output = tempMixerOutput;
                   tempInitialised = false;
                   //change to another mix
-                  thisMixIdx = incDecOnUpDown(thisMixIdx, 0, NUM_MIXSLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
+                  thisMixIdx = incDec(thisMixIdx, 0, NUM_MIXSLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
                 }
               }
               break;
@@ -2701,7 +2701,7 @@ void handleMainUI()
                 display.setCursor(60, ypos);
                 display.print(findStringInIdStr(enum_MixerOperation, mxr->operation));
                 if(edit)
-                  mxr->operation = incDecOnUpDown(mxr->operation, 0, MIX_OPERATOR_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                  mxr->operation = incDec(mxr->operation, 0, MIX_OPERATOR_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               }
               break;
               
@@ -2729,7 +2729,7 @@ void handleMainUI()
                 display.setCursor(60, ypos);
                 display.print(mxr->weight);
                 if(edit)
-                  mxr->weight = incDecOnUpDown(mxr->weight, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+                  mxr->weight = incDec(mxr->weight, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
               }
               break;
               
@@ -2739,7 +2739,7 @@ void handleMainUI()
                 display.setCursor(60, ypos);
                 display.print(mxr->offset);
                 if(edit)
-                  mxr->offset = incDecOnUpDown(mxr->offset, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+                  mxr->offset = incDec(mxr->offset, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
               }
               break;
               
@@ -2751,7 +2751,7 @@ void handleMainUI()
                 if(edit)
                 {
                   uint8_t prevCurveType = mxr->curveType;
-                  mxr->curveType = incDecOnUpDown(mxr->curveType, 0, MIX_CURVE_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                  mxr->curveType = incDec(mxr->curveType, 0, MIX_CURVE_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
                   if(mxr->curveType != prevCurveType) 
                     mxr->curveVal = 0; //reset value if changed
                 }
@@ -2779,11 +2779,11 @@ void handleMainUI()
                 if(edit)
                 {
                   if(mxr->curveType == MIX_CURVE_TYPE_DIFF || mxr->curveType == MIX_CURVE_TYPE_EXPO)
-                    mxr->curveVal = incDecOnUpDown(mxr->curveVal, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+                    mxr->curveVal = incDec(mxr->curveVal, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
                   else if(mxr->curveType == MIX_CURVE_TYPE_FUNCTION)
-                    mxr->curveVal = incDecOnUpDown(mxr->curveVal, 0, MIX_CURVE_FUNC_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                    mxr->curveVal = incDec(mxr->curveVal, 0, MIX_CURVE_FUNC_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
                   else if(mxr->curveType == MIX_CURVE_TYPE_CUSTOM)
-                    mxr->curveVal = incDecOnUpDown(mxr->curveVal, 0, NUM_CUSTOM_CURVES - 1, INCDEC_WRAP, INCDEC_SLOW);
+                    mxr->curveVal = incDec(mxr->curveVal, 0, NUM_CUSTOM_CURVES - 1, INCDEC_WRAP, INCDEC_SLOW);
                 }
               }
               break;
@@ -2803,7 +2803,7 @@ void handleMainUI()
                 {
                   drawCheckbox(60, ypos, mxr->trimEnabled);
                   if(edit)
-                    mxr->trimEnabled = incDecOnUpDown(mxr->trimEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                    mxr->trimEnabled = incDec(mxr->trimEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
                 }
                 else
                   display.print(F("N/A"));
@@ -2818,15 +2818,17 @@ void handleMainUI()
                   display.print(F("All"));
                 else
                 {
+                  bool delimit = false;
                   for(uint8_t i = 0; i < NUM_FLIGHT_MODES; i++)
                   {
                     if((mxr->flightMode >> i) & 0x01)
                     {
+                      if(delimit)
+                        display.print(F(","));
                       display.print(i+1);
-                      display.print(F(","));
+                      delimit = true;
                     }
                   }
-                  display.fillRect(display.getCursorX() - 6, ypos, 6, 8, WHITE); //hide the last comma
                 }
                 if(edit)
                   changeToScreen(DIALOG_MIX_FLIGHT_MODE);
@@ -2839,7 +2841,7 @@ void handleMainUI()
                 display.setCursor(60, ypos);
                 printSeconds(mxr->delayUp);
                 if(edit)
-                  mxr->delayUp = incDecOnUpDown(mxr->delayUp, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  mxr->delayUp = incDec(mxr->delayUp, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
               }
               break;
               
@@ -2849,7 +2851,7 @@ void handleMainUI()
                 display.setCursor(60, ypos);
                 printSeconds(mxr->delayDown);
                 if(edit)
-                  mxr->delayDown = incDecOnUpDown(mxr->delayDown, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  mxr->delayDown = incDec(mxr->delayDown, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
               }
               break;
               
@@ -2859,7 +2861,7 @@ void handleMainUI()
                 display.setCursor(60, ypos);
                 printSeconds(mxr->slowUp);
                 if(edit)
-                  mxr->slowUp = incDecOnUpDown(mxr->slowUp, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  mxr->slowUp = incDec(mxr->slowUp, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
               }
               break;
               
@@ -2869,7 +2871,7 @@ void handleMainUI()
                 display.setCursor(60, ypos);
                 printSeconds(mxr->slowDown);
                 if(edit)
-                  mxr->slowDown = incDecOnUpDown(mxr->slowDown, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  mxr->slowDown = incDec(mxr->slowDown, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
               }
               break;
           }
@@ -3246,7 +3248,7 @@ void handleMainUI()
         
         //change page
         isEditMode = true;
-        thisPage = incDecOnUpDown(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+        thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
         
         //--- draw graphs---
         uint8_t startIdx = (thisPage - 1) * 8;
@@ -3301,7 +3303,7 @@ void handleMainUI()
     case DIALOG_MOVE_MIX:
       {
         isEditMode = true;
-        destMixIdx = incDecOnUpDown(destMixIdx, 0, NUM_MIXSLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
+        destMixIdx = incDec(destMixIdx, 0, NUM_MIXSLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
         drawDialogCopyMove(PSTR("Mix#"), thisMixIdx, destMixIdx, theScreen == DIALOG_COPY_MIX);
         if(clickedButton == KEY_SELECT)
         {
@@ -3343,7 +3345,7 @@ void handleMainUI()
         {
           uint8_t numPages = (listItemCount + 5) / 6;
           isEditMode = true;
-          thisPage = incDecOnUpDown(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+          thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
           
           uint8_t startIdx = (thisPage - 1) * 6;
           for(uint8_t i = startIdx; i < startIdx + 6 && i < listItemCount; i++)
@@ -3492,23 +3494,23 @@ void handleMainUI()
         
         //edit items
         if(focusedItem == 1)
-          thisChIdx = incDecOnUpDown(thisChIdx, 0, NUM_RC_CHANNELS - 1, INCDEC_WRAP, INCDEC_SLOW); 
+          thisChIdx = incDec(thisChIdx, 0, NUM_RC_CHANNELS - 1, INCDEC_WRAP, INCDEC_SLOW); 
         else if(focusedItem == 2)
-          ch->curve = incDecOnUpDown(ch->curve, -1, NUM_CUSTOM_CURVES - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+          ch->curve = incDec(ch->curve, -1, NUM_CUSTOM_CURVES - 1, INCDEC_NOWRAP, INCDEC_SLOW);
         else if(focusedItem == 3)
-          ch->reverse = incDecOnUpDown(ch->reverse, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          ch->reverse = incDec(ch->reverse, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 4)
-          ch->subtrim = incDecOnUpDown(ch->subtrim, -20, 20, INCDEC_NOWRAP, INCDEC_SLOW);
+          ch->subtrim = incDec(ch->subtrim, -20, 20, INCDEC_NOWRAP, INCDEC_SLOW);
         else if(focusedItem == 5 && isEditMode)
           ch->overrideSwitch = incDecControlSwitch(ch->overrideSwitch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
         else if(focusedItem == 6 && ch->overrideSwitch != CTRL_SW_NONE)
-          ch->overrideVal = incDecOnUpDown(ch->overrideVal, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+          ch->overrideVal = incDec(ch->overrideVal, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
         else if(focusedItem == 7)
-          ch->failsafe = incDecOnUpDown(ch->failsafe, -102, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+          ch->failsafe = incDec(ch->failsafe, -102, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
         else if(focusedItem == 8)
-          ch->endpointL = incDecOnUpDown(ch->endpointL, -100, 0, INCDEC_NOWRAP, INCDEC_NORMAL);
+          ch->endpointL = incDec(ch->endpointL, -100, 0, INCDEC_NOWRAP, INCDEC_NORMAL);
         else if(focusedItem == 9)
-          ch->endpointR = incDecOnUpDown(ch->endpointR, 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+          ch->endpointR = incDec(ch->endpointR, 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
         else if(focusedItem == 10 && isEditMode) //context menu
           changeToScreen(POPUP_OUTPUTS_MENU);
 
@@ -3674,14 +3676,14 @@ void handleMainUI()
         if(focusedItem == 1) //change to next or previous curve
         {
           uint8_t _prevCrvIdx = thisCrvIdx;
-          thisCrvIdx = incDecOnUpDown(thisCrvIdx, 0, NUM_CUSTOM_CURVES - 1, INCDEC_WRAP, INCDEC_SLOW);
+          thisCrvIdx = incDec(thisCrvIdx, 0, NUM_CUSTOM_CURVES - 1, INCDEC_WRAP, INCDEC_SLOW);
           if(thisCrvIdx != _prevCrvIdx)
             thisCrvPt = 0;
         }
         else if(focusedItem == 2) //change number of points
         {
           uint8_t prevNumPoints = crv->numPoints;
-          crv->numPoints = incDecOnUpDown(crv->numPoints, MIN_NUM_POINTS_CUSTOM_CURVE, MAX_NUM_POINTS_CUSTOM_CURVE, 
+          crv->numPoints = incDec(crv->numPoints, MIN_NUM_POINTS_CUSTOM_CURVE, MAX_NUM_POINTS_CUSTOM_CURVE, 
                                           INCDEC_NOWRAP, INCDEC_SLOW);
           if(crv->numPoints != prevNumPoints) //recalculate points if changed
           {
@@ -3690,20 +3692,20 @@ void handleMainUI()
           }
         }
         else if(focusedItem == 3) //move to next/prev point
-          thisCrvPt = incDecOnUpDown(thisCrvPt, 0, crv->numPoints - 1, INCDEC_WRAP, INCDEC_SLOW);
+          thisCrvPt = incDec(thisCrvPt, 0, crv->numPoints - 1, INCDEC_WRAP, INCDEC_SLOW);
         else if(focusedItem == 4 && isEditMode) //edit x values
         {
           if(thisCrvPt > 0 && thisCrvPt < crv->numPoints - 1) //only edit inner x values
           {
             int8_t _minVal = crv->xVal[thisCrvPt - 1];
             int8_t _maxVal = crv->xVal[thisCrvPt + 1];
-            crv->xVal[thisCrvPt] = incDecOnUpDown(crv->xVal[thisCrvPt], _minVal, _maxVal, INCDEC_NOWRAP, INCDEC_NORMAL);
+            crv->xVal[thisCrvPt] = incDec(crv->xVal[thisCrvPt], _minVal, _maxVal, INCDEC_NOWRAP, INCDEC_NORMAL);
           }
         }
         else if(focusedItem == 5) //edit Y values
-          crv->yVal[thisCrvPt] = incDecOnUpDown(crv->yVal[thisCrvPt], -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+          crv->yVal[thisCrvPt] = incDec(crv->yVal[thisCrvPt], -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
         else if(focusedItem == 6) //smoothing
-          crv->smooth = incDecOnUpDown(crv->smooth, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          crv->smooth = incDec(crv->smooth, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 7 && isEditMode) //context menu
           changeToScreen(POPUP_CUSTOM_CURVE_MENU);
 
@@ -3825,7 +3827,7 @@ void handleMainUI()
     case DIALOG_COPY_CUSTOM_CURVE:
       {
         isEditMode = true;
-        destCrvIdx = incDecOnUpDown(destCrvIdx, 0, NUM_CUSTOM_CURVES - 1, INCDEC_WRAP, INCDEC_SLOW);
+        destCrvIdx = incDec(destCrvIdx, 0, NUM_CUSTOM_CURVES - 1, INCDEC_WRAP, INCDEC_SLOW);
         drawDialogCopyMove(PSTR("Curve"), thisCrvIdx, destCrvIdx, true);
         if(clickedButton == KEY_SELECT)
         {
@@ -3864,7 +3866,7 @@ void handleMainUI()
         drawCursor(63, 28);
         
         isEditMode = true;
-        insertionPt = incDecOnUpDown(insertionPt, 1, crv->numPoints - 1, INCDEC_WRAP, INCDEC_SLOW);
+        insertionPt = incDec(insertionPt, 1, crv->numPoints - 1, INCDEC_WRAP, INCDEC_SLOW);
         
         if(clickedButton == KEY_SELECT)
         {
@@ -3938,7 +3940,7 @@ void handleMainUI()
         //move the element to the end and decrement numPoints by one.
         
         isEditMode = true;
-        deletePt = incDecOnUpDown(deletePt, 1, crv->numPoints - 2, INCDEC_WRAP, INCDEC_SLOW);
+        deletePt = incDec(deletePt, 1, crv->numPoints - 2, INCDEC_WRAP, INCDEC_SLOW);
         
         if(clickedButton == KEY_SELECT)
         {
@@ -4046,7 +4048,7 @@ void handleMainUI()
                 if(edit)
                 {
                   uint8_t oldGroup = getLSFuncGroup(ls->func);
-                  ls->func = incDecOnUpDown(ls->func, 0, LS_FUNC_COUNT - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+                  ls->func = incDec(ls->func, 0, LS_FUNC_COUNT - 1, INCDEC_NOWRAP, INCDEC_SLOW);
                   uint8_t newGroup = getLSFuncGroup(ls->func);
                   if(newGroup != oldGroup) //reset values if group changed
                   {
@@ -4148,7 +4150,7 @@ void handleMainUI()
                       ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
                   }
                   else if(ls->func == LS_FUNC_PULSE)
-                    ls->val1 = incDecOnUpDown(ls->val1, 1, ls->val2 - 1, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                    ls->val1 = incDec(ls->val1, 1, ls->val2 - 1, INCDEC_NOWRAP, INCDEC_SLOW_START);
                 }
               }
               break;
@@ -4199,11 +4201,11 @@ void handleMainUI()
                   if(ls->func <= LS_FUNC_GROUP3_LAST)
                   {
                     if(ls->val1 < MIXSOURCES_COUNT)
-                      ls->val2 = incDecOnUpDown(ls->val2, (ls->func == LS_FUNC_GROUP1_LAST) ? -100 : 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+                      ls->val2 = incDec(ls->val2, (ls->func == LS_FUNC_GROUP1_LAST) ? -100 : 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
                     else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counter value
-                      ls->val2 = incDecOnUpDown(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_FAST);
+                      ls->val2 = incDec(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_FAST);
                     else //telemetry value
-                      ls->val2 = incDecOnUpDown(ls->val2, (ls->func == LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                      ls->val2 = incDec(ls->val2, (ls->func == LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
                   }
                   else if(ls->func <= LS_FUNC_GROUP4_LAST)
                   {
@@ -4222,9 +4224,9 @@ void handleMainUI()
                       ls->val2 = incDecControlSwitch(ls->val2, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
                   }
                   else if(ls->func == LS_FUNC_TOGGLE) //change edge type
-                    ls->val2 = incDecOnUpDown(ls->val2, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
+                    ls->val2 = incDec(ls->val2, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
                   else if(ls->func == LS_FUNC_PULSE) //adjust period
-                    ls->val2 = incDecOnUpDown(ls->val2, ls->val1 + 1, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                    ls->val2 = incDec(ls->val2, ls->val1 + 1, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
                 }
               }
               break;
@@ -4264,9 +4266,9 @@ void handleMainUI()
                       ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
                   }
                   else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
-                    ls->val3 = incDecOnUpDown(ls->val3, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
+                    ls->val3 = incDec(ls->val3, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
                   else //adjust delay
-                    ls->val3 = incDecOnUpDown(ls->val3, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                    ls->val3 = incDec(ls->val3, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
                 }
               }
               break;
@@ -4282,7 +4284,7 @@ void handleMainUI()
                 
                 if(edit && ls->func != LS_FUNC_NONE)
                 {
-                  ls->val4 = incDecOnUpDown(ls->val4, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  ls->val4 = incDec(ls->val4, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
                 }
               }
               break;
@@ -4304,7 +4306,7 @@ void handleMainUI()
         if(focusedItem == 1)
         {          
           drawCursor(0, 9);
-          thisLsIdx = incDecOnUpDown(thisLsIdx, 0, NUM_LOGICAL_SWITCHES - 1, INCDEC_WRAP, INCDEC_SLOW);
+          thisLsIdx = incDec(thisLsIdx, 0, NUM_LOGICAL_SWITCHES - 1, INCDEC_WRAP, INCDEC_SLOW);
         }
 
         // Exit
@@ -4348,7 +4350,7 @@ void handleMainUI()
     case DIALOG_COPY_LOGICAL_SWITCH:
       {
         isEditMode = true;
-        destLsIdx = incDecOnUpDown(destLsIdx, 0, NUM_LOGICAL_SWITCHES - 1, INCDEC_WRAP, INCDEC_SLOW);
+        destLsIdx = incDec(destLsIdx, 0, NUM_LOGICAL_SWITCHES - 1, INCDEC_WRAP, INCDEC_SLOW);
         drawDialogCopyMove(PSTR("L"), thisLsIdx, destLsIdx, true);
         if(clickedButton == KEY_SELECT)
         {
@@ -4379,7 +4381,7 @@ void handleMainUI()
         }
 
         isEditMode = true;
-        thisPage = incDecOnUpDown(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+        thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
         
         uint8_t startIdx = (thisPage - 1) * 10;
         for(uint8_t i = startIdx; i < startIdx + 10 && i < NUM_LOGICAL_SWITCHES; i++)
@@ -4508,7 +4510,7 @@ void handleMainUI()
                 display.setCursor(78, ypos);
                 display.print(findStringInIdStr(enum_FuncgenWaveform, fgen->waveform));
                 if(edit)
-                  fgen->waveform = incDecOnUpDown(fgen->waveform, 0, FUNCGEN_WAVEFORM_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                  fgen->waveform = incDec(fgen->waveform, 0, FUNCGEN_WAVEFORM_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               }
               break;
               
@@ -4521,7 +4523,7 @@ void handleMainUI()
                 display.setCursor(78, ypos);
                 display.print(findStringInIdStr(enum_FuncgenPeriodMode, fgen->periodMode));
                 if(edit)
-                  fgen->periodMode = incDecOnUpDown(fgen->periodMode, 0, FUNCGEN_PERIODMODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                  fgen->periodMode = incDec(fgen->periodMode, 0, FUNCGEN_PERIODMODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               }
               break;
               
@@ -4548,7 +4550,7 @@ void handleMainUI()
                   uint16_t max = 600;
                   if(fgen->waveform != FUNCGEN_WAVEFORM_RANDOM && fgen->periodMode == FUNCGEN_PERIODMODE_VARIABLE)
                     max = fgen->period2 - 1;
-                  fgen->period1 = incDecOnUpDown(fgen->period1, 1, max, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  fgen->period1 = incDec(fgen->period1, 1, max, INCDEC_NOWRAP, INCDEC_SLOW_START);
                 }
               }
               break;
@@ -4562,7 +4564,7 @@ void handleMainUI()
                 display.setCursor(78, ypos);
                 printSeconds(fgen->period2);
                 if(edit)
-                  fgen->period2 = incDecOnUpDown(fgen->period2, fgen->period1 + 1, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  fgen->period2 = incDec(fgen->period2, fgen->period1 + 1, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
               }
               break;
             
@@ -4588,7 +4590,7 @@ void handleMainUI()
                 display.print(F("Reverse:"));
                 drawCheckbox(78, ypos, fgen->reverseModulator);
                 if(edit)
-                  fgen->reverseModulator = incDecOnUpDown(fgen->reverseModulator, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                  fgen->reverseModulator = incDec(fgen->reverseModulator, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
             
@@ -4598,7 +4600,7 @@ void handleMainUI()
                 display.setCursor(78, ypos);
                 display.print(findStringInIdStr(enum_FuncgenPhaseMode, fgen->phaseMode));
                 if(edit)
-                  fgen->phaseMode = incDecOnUpDown(fgen->phaseMode, 0, FUNCGEN_PHASEMODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                  fgen->phaseMode = incDec(fgen->phaseMode, 0, FUNCGEN_PHASEMODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               }
               break;
               
@@ -4623,7 +4625,7 @@ void handleMainUI()
                     isEditMode = false;
                   }
                   else if(fgen->phaseMode == FUNCGEN_PHASEMODE_FIXED)
-                    fgen->phaseAngle = incDecOnUpDown(fgen->phaseAngle, 0, 360, INCDEC_NOWRAP, INCDEC_NORMAL);
+                    fgen->phaseAngle = incDec(fgen->phaseAngle, 0, 360, INCDEC_NOWRAP, INCDEC_NORMAL);
                 }
               }
               break;
@@ -4645,7 +4647,7 @@ void handleMainUI()
         if(focusedItem == 1)
         {          
           drawCursor(0, 9);
-          thisFgenIdx = incDecOnUpDown(thisFgenIdx, 0, NUM_FUNCGEN - 1, INCDEC_WRAP, INCDEC_SLOW);
+          thisFgenIdx = incDec(thisFgenIdx, 0, NUM_FUNCGEN - 1, INCDEC_WRAP, INCDEC_SLOW);
         }
 
         //exit
@@ -4689,7 +4691,7 @@ void handleMainUI()
     case DIALOG_COPY_FUNCGEN:
       {
         isEditMode = true;
-        destFgenIdx = incDecOnUpDown(destFgenIdx, 0, NUM_FUNCGEN - 1, INCDEC_WRAP, INCDEC_SLOW);
+        destFgenIdx = incDec(destFgenIdx, 0, NUM_FUNCGEN - 1, INCDEC_WRAP, INCDEC_SLOW);
         drawDialogCopyMove(PSTR("Fgen"), thisFgenIdx, destFgenIdx, true);
         if(clickedButton == KEY_SELECT)
         {
@@ -4720,7 +4722,7 @@ void handleMainUI()
         }
 
         isEditMode = true;
-        thisPage = incDecOnUpDown(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+        thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
         
         uint8_t startIdx = (thisPage - 1) * 5;
         for(uint8_t i = startIdx; i < startIdx + 5 && i < NUM_FUNCGEN; i++)
@@ -4851,7 +4853,7 @@ void handleMainUI()
                 display.setCursor(66, ypos);
                 display.print(findStringInIdStr(enum_ClockEdge, counter->edge));
                 if(edit)
-                  counter->edge = incDecOnUpDown(counter->edge, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
+                  counter->edge = incDec(counter->edge, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
               }
               break;
             
@@ -4861,7 +4863,7 @@ void handleMainUI()
                 display.setCursor(66, ypos);
                 display.print(counter->modulus);
                 if(edit)
-                  counter->modulus = incDecOnUpDown(counter->modulus, 2, 10000, INCDEC_NOWRAP, INCDEC_FAST);
+                  counter->modulus = incDec(counter->modulus, 2, 10000, INCDEC_NOWRAP, INCDEC_FAST);
               }
               break;
             
@@ -4871,7 +4873,7 @@ void handleMainUI()
                 display.setCursor(66, ypos);
                 display.print(findStringInIdStr(enum_CounterDirection, counter->direction));
                 if(edit)
-                  counter->direction = incDecOnUpDown(counter->direction, 0, 1, INCDEC_WRAP, INCDEC_SLOW);
+                  counter->direction = incDec(counter->direction, 0, 1, INCDEC_WRAP, INCDEC_SLOW);
               }
               break;
             
@@ -4891,7 +4893,7 @@ void handleMainUI()
                 display.print(F("Persist:"));
                 drawCheckbox(66, ypos, counter->isPersistent);
                 if(edit)
-                  counter->isPersistent = incDecOnUpDown(counter->isPersistent, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                  counter->isPersistent = incDec(counter->isPersistent, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
           }
@@ -4912,7 +4914,7 @@ void handleMainUI()
         if(focusedItem == 1)
         {          
           drawCursor(0, 9);
-          thisCounterIdx = incDecOnUpDown(thisCounterIdx, 0, NUM_COUNTERS - 1, INCDEC_WRAP, INCDEC_SLOW);
+          thisCounterIdx = incDec(thisCounterIdx, 0, NUM_COUNTERS - 1, INCDEC_WRAP, INCDEC_SLOW);
         }
 
         // Exit
@@ -4977,7 +4979,7 @@ void handleMainUI()
     case DIALOG_COPY_COUNTER:
       {
         isEditMode = true;
-        destCounterIdx = incDecOnUpDown(destCounterIdx, 0, NUM_COUNTERS - 1, INCDEC_WRAP, INCDEC_SLOW);
+        destCounterIdx = incDec(destCounterIdx, 0, NUM_COUNTERS - 1, INCDEC_WRAP, INCDEC_SLOW);
         drawDialogCopyMove(PSTR("Counter"), thisCounterIdx, destCounterIdx, true);
         if(clickedButton == KEY_SELECT)
         {
@@ -5077,7 +5079,7 @@ void handleMainUI()
         
         //edit items
         if(focusedItem == 1)
-          thisTimerIdx = incDecOnUpDown(thisTimerIdx, 0, NUM_TIMERS - 1, INCDEC_WRAP, INCDEC_SLOW);
+          thisTimerIdx = incDec(thisTimerIdx, 0, NUM_TIMERS - 1, INCDEC_WRAP, INCDEC_SLOW);
         else if(focusedItem == 2 && isEditMode)
           isEditTextDialog = true;
         else if(focusedItem == 3 && isEditMode)
@@ -5085,9 +5087,9 @@ void handleMainUI()
         else if(focusedItem == 4 && isEditMode)
           tmr->resetSwitch = incDecControlSwitch(tmr->resetSwitch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
         else if(focusedItem == 5)
-          tmr->initialMinutes = incDecOnUpDown(tmr->initialMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_NORMAL);
+          tmr->initialMinutes = incDec(tmr->initialMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_NORMAL);
         else if(focusedItem == 6)
-          tmr->isPersistent = incDecOnUpDown(tmr->isPersistent, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          tmr->isPersistent = incDec(tmr->isPersistent, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 7 && isEditMode)
           changeToScreen(POPUP_TIMER_MENU);
 
@@ -5207,7 +5209,7 @@ void handleMainUI()
             display.print(F("Throttle:"));
             drawCheckbox(72, ypos, Model.checkThrottle);
             if(edit)
-              Model.checkThrottle = incDecOnUpDown(Model.checkThrottle, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              Model.checkThrottle = incDec(Model.checkThrottle, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
           }
           else if(itemID >= ITEM_SAFETY_CHECK_SW_FIRST && itemID <= ITEM_SAFETY_CHECK_SW_LAST)
           {
@@ -5220,9 +5222,9 @@ void handleMainUI()
             if(edit)
             {
               if(Sys.swType[sw] == SW_2POS)
-                Model.switchWarn[sw] = incDecOnUpDown(Model.switchWarn[sw], -1, 1, INCDEC_WRAP, INCDEC_SLOW);
+                Model.switchWarn[sw] = incDec(Model.switchWarn[sw], -1, 1, INCDEC_WRAP, INCDEC_SLOW);
               else if(Sys.swType[sw] == SW_3POS)
-                Model.switchWarn[sw] = incDecOnUpDown(Model.switchWarn[sw], -1, 2, INCDEC_WRAP, INCDEC_SLOW);
+                Model.switchWarn[sw] = incDec(Model.switchWarn[sw], -1, 2, INCDEC_WRAP, INCDEC_SLOW);
             }
           }
         }
@@ -5262,7 +5264,7 @@ void handleMainUI()
         {
           uint8_t i = focusedItem - 1;
           do {
-            trim[i]->trimState = incDecOnUpDown(trim[i]->trimState, 0, TRIM_STATE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+            trim[i]->trimState = incDec(trim[i]->trimState, 0, TRIM_STATE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
           } while(Model.type == MODEL_TYPE_OTHER && trim[i]->trimState == TRIM_FLIGHT_MODE);
         }
 
@@ -5324,13 +5326,13 @@ void handleMainUI()
         
         //edit
         if(focusedItem == 1)
-          thisFmdIdx = incDecOnUpDown(thisFmdIdx, 0, NUM_FLIGHT_MODES - 1, INCDEC_WRAP, INCDEC_SLOW);
+          thisFmdIdx = incDec(thisFmdIdx, 0, NUM_FLIGHT_MODES - 1, INCDEC_WRAP, INCDEC_SLOW);
         else if(focusedItem == 2 && isEditMode)
           isEditTextDialog = true;
         else if(focusedItem == 3 && thisFmdIdx > 0 && isEditMode)
           fmd->swtch = incDecControlSwitch(fmd->swtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
         else if(focusedItem == 4)
-          fmd->transitionTime = incDecOnUpDown(fmd->transitionTime, 0, 50, INCDEC_NOWRAP, INCDEC_SLOW_START);
+          fmd->transitionTime = incDec(fmd->transitionTime, 0, 50, INCDEC_NOWRAP, INCDEC_SLOW_START);
 
         //exit
         if(heldButton == KEY_SELECT)
@@ -5451,32 +5453,23 @@ void handleMainUI()
           ITEM_EXTVOLTS_2S,
           ITEM_EXTVOLTS_3S,
           ITEM_EXTVOLTS_4S,
-          ITEM_RPM_2BLADES,
-          ITEM_RPM_3BLADES,
-          ITEM_RPM_4BLADES,
-          ITEM_TEMPERATURE,
-          ITEM_RSSI
+          ITEM_RSSI,
+          ITEM_LINK_QUALITY,
         };
         
         popupMenuInitialise();
         popupMenuAddItem(PSTR("ExtVolts 2S"), ITEM_EXTVOLTS_2S);
         popupMenuAddItem(PSTR("ExtVolts 3S"), ITEM_EXTVOLTS_3S);
         popupMenuAddItem(PSTR("ExtVolts 4S"), ITEM_EXTVOLTS_4S);
-        popupMenuAddItem(PSTR("RPM 2 Blades"), ITEM_RPM_2BLADES);
-        popupMenuAddItem(PSTR("RPM 3 Blades"), ITEM_RPM_3BLADES);
-        popupMenuAddItem(PSTR("RPM 4 Blades"), ITEM_RPM_4BLADES);
-        popupMenuAddItem(PSTR("Temperature"), ITEM_TEMPERATURE);
+        popupMenuAddItem(PSTR("Link quality"), ITEM_LINK_QUALITY);
         popupMenuAddItem(PSTR("RSSI"), ITEM_RSSI);
         popupMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_EXTVOLTS_2S) loadSensorTemplateExtVolts2S(thisTelemIdx);
-        if(popupMenuSelectedItemID == ITEM_EXTVOLTS_3S) loadSensorTemplateExtVolts3S(thisTelemIdx);
-        if(popupMenuSelectedItemID == ITEM_EXTVOLTS_4S) loadSensorTemplateExtVolts4S(thisTelemIdx);
-        if(popupMenuSelectedItemID == ITEM_RPM_2BLADES) loadSensorTemplateRPM2Blades(thisTelemIdx);
-        if(popupMenuSelectedItemID == ITEM_RPM_3BLADES) loadSensorTemplateRPM3Blades(thisTelemIdx);
-        if(popupMenuSelectedItemID == ITEM_RPM_4BLADES) loadSensorTemplateRPM4Blades(thisTelemIdx);
-        if(popupMenuSelectedItemID == ITEM_TEMPERATURE) loadSensorTemplateTemperature(thisTelemIdx);
-        if(popupMenuSelectedItemID == ITEM_RSSI) loadSensorTemplateRSSI(thisTelemIdx);
+        if(popupMenuSelectedItemID == ITEM_EXTVOLTS_2S)  loadSensorTemplateExtVolts2S(thisTelemIdx);
+        if(popupMenuSelectedItemID == ITEM_EXTVOLTS_3S)  loadSensorTemplateExtVolts3S(thisTelemIdx);
+        if(popupMenuSelectedItemID == ITEM_EXTVOLTS_4S)  loadSensorTemplateExtVolts4S(thisTelemIdx);
+        if(popupMenuSelectedItemID == ITEM_RSSI)         loadSensorTemplateRSSI(thisTelemIdx);
+        if(popupMenuSelectedItemID == ITEM_LINK_QUALITY) loadSensorTemplateLinkQuality(thisTelemIdx);
         
         if(popupMenuSelectedItemID != 0xff) 
           changeToScreen(SCREEN_TELEMETRY);
@@ -5679,7 +5672,7 @@ void handleMainUI()
           if(isEditMode)
           {
             do {
-              page = incDecOnUpDown(page, 0, NUM_CUSTOM_TELEMETRY - 1, INCDEC_WRAP, INCDEC_SLOW);
+              page = incDec(page, 0, NUM_CUSTOM_TELEMETRY - 1, INCDEC_WRAP, INCDEC_SLOW);
             } while(isEmptyStr(Model.Telemetry[page].name, sizeof(Model.Telemetry[0].name))); //skip empty
           }          
         }
@@ -5799,11 +5792,12 @@ void handleMainUI()
               {
                 display.print(F("ID:"));
                 display.setCursor(72, ypos);
+                display.print(F("0x"));
                 if(tlm->identifier < 16)
                   display.print(F("0"));
                 display.print(tlm->identifier, HEX);
                 if(edit)
-                  tlm->identifier = incDecOnUpDown(tlm->identifier, 0x00, 0xFE, INCDEC_NOWRAP, INCDEC_NORMAL);
+                  tlm->identifier = incDec(tlm->identifier, 0x00, 0xFE, INCDEC_NOWRAP, INCDEC_NORMAL);
               }
               break;
 
@@ -5819,7 +5813,7 @@ void handleMainUI()
                   display.print(F("0"));
                 display.print(val);
                 if(edit)
-                  tlm->multiplier = incDecOnUpDown(tlm->multiplier, 1, 1000, INCDEC_NOWRAP, INCDEC_FAST);
+                  tlm->multiplier = incDec(tlm->multiplier, 1, 1000, INCDEC_NOWRAP, INCDEC_FAST);
               }
               break;
             
@@ -5829,7 +5823,7 @@ void handleMainUI()
                 display.setCursor(72, ypos);
                 display.print(tlm->factor10);
                 if(edit)
-                  tlm->factor10 = incDecOnUpDown(tlm->factor10, -2, 2, INCDEC_NOWRAP, INCDEC_SLOW);
+                  tlm->factor10 = incDec(tlm->factor10, -2, 2, INCDEC_NOWRAP, INCDEC_SLOW);
               }
               break;
             
@@ -5838,7 +5832,7 @@ void handleMainUI()
                 display.print(F("Offset:"));
                 printTelemParam(72, ypos, thisTelemIdx, tlm->offset);
                 if(edit)
-                  tlm->offset = incDecOnUpDown(tlm->offset, -30000, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                  tlm->offset = incDec(tlm->offset, -30000, 30000, INCDEC_NOWRAP, INCDEC_FAST);
               }
               break;
 
@@ -5848,7 +5842,7 @@ void handleMainUI()
                 display.setCursor(72, ypos);
                 display.print(findStringInIdStr(enum_TelemetryAlarmCondition, tlm->alarmCondition));
                 if(edit)
-                  tlm->alarmCondition = incDecOnUpDown(tlm->alarmCondition, 0, TELEMETRY_ALARM_CONDITION_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                  tlm->alarmCondition = incDec(tlm->alarmCondition, 0, TELEMETRY_ALARM_CONDITION_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               }
               break;
             
@@ -5857,7 +5851,7 @@ void handleMainUI()
                 display.print(F("Thresh:"));
                 printTelemParam(72, ypos, thisTelemIdx, tlm->alarmThreshold);
                 if(edit)
-                  tlm->alarmThreshold = incDecOnUpDown(tlm->alarmThreshold, -30000, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                  tlm->alarmThreshold = incDec(tlm->alarmThreshold, -30000, 30000, INCDEC_NOWRAP, INCDEC_FAST);
               }
               break;
             
@@ -5866,7 +5860,7 @@ void handleMainUI()
                 display.print(F("On home:"));
                 drawCheckbox(72, ypos, tlm->showOnHome);
                 if(edit)
-                  tlm->showOnHome = incDecOnUpDown(tlm->showOnHome, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                  tlm->showOnHome = incDec(tlm->showOnHome, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
             
@@ -5875,7 +5869,7 @@ void handleMainUI()
                 display.print(F("RecordMax:"));
                 drawCheckbox(72, ypos, tlm->recordMaximum);
                 if(edit)
-                  tlm->recordMaximum = incDecOnUpDown(tlm->recordMaximum, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                  tlm->recordMaximum = incDec(tlm->recordMaximum, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
             
@@ -5884,7 +5878,7 @@ void handleMainUI()
                 display.print(F("RecordMin:"));
                 drawCheckbox(72, ypos, tlm->recordMinimum);
                 if(edit)
-                  tlm->recordMinimum = incDecOnUpDown(tlm->recordMinimum, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                  tlm->recordMinimum = incDec(tlm->recordMinimum, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
           }
@@ -5989,9 +5983,9 @@ void handleMainUI()
         
         //edit
         if(focusedItem == 1)
-          Sys.rfEnabled = incDecOnUpDown(Sys.rfEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.rfEnabled = incDec(Sys.rfEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 2)
-          Sys.rfPower = incDecOnUpDown(Sys.rfPower, 0, RF_POWER_COUNT - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+          Sys.rfPower = incDec(Sys.rfPower, 0, RF_POWER_COUNT - 1, INCDEC_NOWRAP, INCDEC_SLOW);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -6047,17 +6041,17 @@ void handleMainUI()
         
         //edit
         if(focusedItem == 1)
-          Sys.soundEnabled = incDecOnUpDown(Sys.soundEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.soundEnabled = incDec(Sys.soundEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 2)
-          Sys.inactivityMinutes = incDecOnUpDown(Sys.inactivityMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_SLOW_START);
+          Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_SLOW_START);
         else if(focusedItem == 3)
-          Sys.soundSwitches = incDecOnUpDown(Sys.soundSwitches, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.soundSwitches = incDec(Sys.soundSwitches, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 4)
-          Sys.soundTrims = incDecOnUpDown(Sys.soundTrims, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.soundTrims = incDec(Sys.soundTrims, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 5)
-          Sys.soundKnobCenter = incDecOnUpDown(Sys.soundKnobCenter, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.soundKnobCenter = incDec(Sys.soundKnobCenter, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 6)
-          Sys.soundKeys = incDecOnUpDown(Sys.soundKeys, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.soundKeys = incDec(Sys.soundKeys, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -6108,15 +6102,15 @@ void handleMainUI()
         
         //edit
         if(focusedItem == 1)
-          Sys.backlightEnabled = incDecOnUpDown(Sys.backlightEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.backlightEnabled = incDec(Sys.backlightEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 2)
-          Sys.backlightLevel = incDecOnUpDown(Sys.backlightLevel, 10, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+          Sys.backlightLevel = incDec(Sys.backlightLevel, 10, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
         else if(focusedItem == 3)
-          Sys.backlightTimeout = incDecOnUpDown(Sys.backlightTimeout, 0, BACKLIGHT_TIMEOUT_COUNT - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+          Sys.backlightTimeout = incDec(Sys.backlightTimeout, 0, BACKLIGHT_TIMEOUT_COUNT - 1, INCDEC_NOWRAP, INCDEC_SLOW);
         else if(focusedItem == 4)
-          Sys.backlightWakeup = incDecOnUpDown(Sys.backlightWakeup, 0, BACKLIGHT_WAKEUP_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+          Sys.backlightWakeup = incDec(Sys.backlightWakeup, 0, BACKLIGHT_WAKEUP_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
         else if(focusedItem == 5)
-          Sys.backlightSuppressFirstKey = incDecOnUpDown(Sys.backlightSuppressFirstKey, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.backlightSuppressFirstKey = incDec(Sys.backlightSuppressFirstKey, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -6185,35 +6179,35 @@ void handleMainUI()
             case ITEM_SHOW_MENU_ICONS:
               {
                 display.print(F("Menu icons:")); drawCheckbox(102, ypos, Sys.showMenuIcons);
-                if(edit) Sys.showMenuIcons = incDecOnUpDown(Sys.showMenuIcons, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                if(edit) Sys.showMenuIcons = incDec(Sys.showMenuIcons, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
               
             case ITEM_KEEP_MENU_POSITION:
               {
                 display.print(F("Keep menu pstn:")); drawCheckbox(102, ypos, Sys.rememberMenuPosition);
-                if(edit) Sys.rememberMenuPosition = incDecOnUpDown(Sys.rememberMenuPosition, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                if(edit) Sys.rememberMenuPosition = incDec(Sys.rememberMenuPosition, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
               
             case ITEM_USE_ROUND_CORNERS:
               {
                 display.print(F("Round corners:")); drawCheckbox(102, ypos, Sys.useRoundRect);
-                if(edit) Sys.useRoundRect = incDecOnUpDown(Sys.useRoundRect, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                if(edit) Sys.useRoundRect = incDec(Sys.useRoundRect, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
               
             case ITEM_ENABLE_ANIMATIONS:
               {
                 display.print(F("Animations:")); drawCheckbox(102, ypos, Sys.animationsEnabled);
-                if(edit) Sys.animationsEnabled = incDecOnUpDown(Sys.animationsEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                if(edit) Sys.animationsEnabled = incDec(Sys.animationsEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
               
             case ITEM_AUTOHIDE_TRIMS:
               {
                 display.print(F("Autohide trims:")); drawCheckbox(102, ypos, Sys.autohideTrims);
-                if(edit) Sys.autohideTrims = incDecOnUpDown(Sys.autohideTrims, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                if(edit) Sys.autohideTrims = incDec(Sys.autohideTrims, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
           }
@@ -6342,7 +6336,7 @@ void handleMainUI()
                 isEditMode = false;
               }
               else if(focusedItem == 2)
-                Sys.defaultStickMode = incDecOnUpDown(Sys.defaultStickMode, 0, STICK_MODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                Sys.defaultStickMode = incDec(Sys.defaultStickMode, 0, STICK_MODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               
               if(heldButton == KEY_SELECT)
               {
@@ -6410,7 +6404,7 @@ void handleMainUI()
               //edit params
               uint8_t idx = focusedItem - 1;
               if(idx < numItems)
-                *axisType[idx] = incDecOnUpDown(*axisType[idx], 0, STICK_AXIS_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                *axisType[idx] = incDec(*axisType[idx], 0, STICK_AXIS_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               
               if(focusedItem == numItems + 1 && isEditMode)
               {
@@ -6523,7 +6517,7 @@ void handleMainUI()
               //edit params
               uint8_t idx = focusedItem - 1;
               if(idx < numItems && *axisType[idx] == STICK_AXIS_SELF_CENTERING)
-                *axisDeadzone[idx] = incDecOnUpDown(*axisDeadzone[idx], 0, 15, INCDEC_NOWRAP, INCDEC_SLOW);
+                *axisDeadzone[idx] = incDec(*axisDeadzone[idx], 0, 15, INCDEC_NOWRAP, INCDEC_SLOW);
               
               if(focusedItem == numItems + 1 && isEditMode)
               {
@@ -6620,7 +6614,7 @@ void handleMainUI()
         //Edit items
         uint8_t idx = focusedItem - 1;
         if(idx < MAX_NUM_PHYSICAL_SWITCHES)
-          Sys.swType[idx] = incDecOnUpDown(Sys.swType[idx], 0, SW_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+          Sys.swType[idx] = incDec(Sys.swType[idx], 0, SW_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
 
         //exit
         if((heldButton == KEY_SELECT && !hasNextButton)
@@ -6685,7 +6679,7 @@ void handleMainUI()
           int16_t min = 300;
           int16_t max = (Sys.battVoltsMax - 100) / 10;
           //inc dec
-          val = incDecOnUpDown(val, min, max, INCDEC_NOWRAP, INCDEC_NORMAL);
+          val = incDec(val, min, max, INCDEC_NOWRAP, INCDEC_NORMAL);
           //scale back
           Sys.battVoltsMin = val * 10;
         }
@@ -6696,12 +6690,12 @@ void handleMainUI()
           int16_t min = (Sys.battVoltsMin + 100) / 10;
           int16_t max = 1500;
           //inc dec
-          val = incDecOnUpDown(val, min, max, INCDEC_NOWRAP, INCDEC_NORMAL);
+          val = incDec(val, min, max, INCDEC_NOWRAP, INCDEC_NORMAL);
           //scale back
           Sys.battVoltsMax = val * 10;
         }
         else if(focusedItem == 3)
-          Sys.battVfactor = incDecOnUpDown(Sys.battVfactor, 0, 2000, INCDEC_NOWRAP, INCDEC_FAST);
+          Sys.battVfactor = incDec(Sys.battVfactor, 0, 2000, INCDEC_NOWRAP, INCDEC_FAST);
 
         //exit
         if((heldButton == KEY_SELECT && !hasNextButton) || (focusedItem == 4 && clickedButton == KEY_SELECT))
@@ -6742,9 +6736,9 @@ void handleMainUI()
         drawCursor(0, focusedItem * 9);
         
         if(focusedItem == 1)
-          Sys.lockStartup = incDecOnUpDown(Sys.lockStartup, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.lockStartup = incDec(Sys.lockStartup, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 2)
-          Sys.lockModels = incDecOnUpDown(Sys.lockModels, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.lockModels = incDec(Sys.lockModels, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 3 && isEditMode)
           isEditTextDialog = true;
 
@@ -6791,13 +6785,13 @@ void handleMainUI()
         drawCursor(94, focusedItem * 9);
         
         if(focusedItem == 1)
-          Sys.autoSelectMovedControl = incDecOnUpDown(Sys.autoSelectMovedControl, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.autoSelectMovedControl = incDec(Sys.autoSelectMovedControl, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 2)
-          Sys.mixerTemplatesEnabled = incDecOnUpDown(Sys.mixerTemplatesEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          Sys.mixerTemplatesEnabled = incDec(Sys.mixerTemplatesEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 3 && Sys.mixerTemplatesEnabled) 
         { 
           //there are 4P4 = 4! = 24 possible arrangements. So our range is 0 to 23.  
-          Sys.defaultChannelOrder = incDecOnUpDown(Sys.defaultChannelOrder, 0, 23, INCDEC_NOWRAP, INCDEC_SLOW);
+          Sys.defaultChannelOrder = incDec(Sys.defaultChannelOrder, 0, 23, INCDEC_NOWRAP, INCDEC_SLOW);
         }
 
         //exit
@@ -6889,7 +6883,7 @@ void handleMainUI()
                 if(isFocused)
                 {
                   toggleEditModeOnSelectClicked();
-                  Sys.DBG_showLoopTime = incDecOnUpDown(Sys.DBG_showLoopTime, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                  Sys.DBG_showLoopTime = incDec(Sys.DBG_showLoopTime, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
                 }
               }
               break;
@@ -6903,7 +6897,7 @@ void handleMainUI()
                 {
                   toggleEditModeOnSelectClicked();
                   bool lastState = Sys.DBG_simulateTelemetry;
-                  Sys.DBG_simulateTelemetry = incDecOnUpDown(Sys.DBG_simulateTelemetry, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                  Sys.DBG_simulateTelemetry = incDec(Sys.DBG_simulateTelemetry, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
                   if(!lastState && Sys.DBG_simulateTelemetry)
                     makeToast(PSTR("ID:0x30, Src:Virt1"), 2000, 300);
                 }
@@ -6919,7 +6913,7 @@ void handleMainUI()
                 {
                   toggleEditModeOnSelectClicked();
                   bool lastState = Sys.DBG_disableInterlacing;
-                  Sys.DBG_disableInterlacing = incDecOnUpDown(Sys.DBG_disableInterlacing, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                  Sys.DBG_disableInterlacing = incDec(Sys.DBG_disableInterlacing, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
                   if(!lastState && Sys.DBG_disableInterlacing)
                     makeToast(PSTR("May reduce performnc"), 2000, 300);
                 }
@@ -7051,7 +7045,7 @@ void handleMainUI()
         //handle navigation
         int16_t lastPage = page;
         isEditMode = true;
-        page = incDecOnUpDown(page, numPages - 1, 0, INCDEC_WRAP, INCDEC_SLOW_START);
+        page = incDec(page, numPages - 1, 0, INCDEC_WRAP, INCDEC_SLOW_START);
         if(page != lastPage)
           needsUpdate = true;
         
@@ -7142,7 +7136,7 @@ void handleMainUI()
         const uint8_t numPages = 3;
         static uint8_t thisPage = 1;
         isEditMode = true;
-        thisPage = incDecOnUpDown(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+        thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
         
         uint16_t startIdx = (thisPage - 1) * itemsPerPage;
         for(uint16_t i = startIdx; i < startIdx + itemsPerPage && i < 256; i++)
@@ -7235,7 +7229,7 @@ void handleMainUI()
         
         static uint8_t page = PAGE_MAIN_RECEIVER;
         if(focusedItem == 1)
-          page = incDecOnUpDown(page, 0, numPages - 1, INCDEC_WRAP, INCDEC_SLOW);
+          page = incDec(page, 0, numPages - 1, INCDEC_WRAP, INCDEC_SLOW);
         
         isMainReceiver = (page == PAGE_MAIN_RECEIVER) ? true : false;
         
@@ -7429,7 +7423,7 @@ void handleMainUI()
           //edit params
           uint8_t idx = startIdx + focusedItem - 1;
           if(idx <= endIdx)
-            outputChConfig[idx] = incDecOnUpDown(outputChConfig[idx], 0, maxOutputChConfig[idx], INCDEC_WRAP, INCDEC_SLOW);
+            outputChConfig[idx] = incDec(outputChConfig[idx], 0, maxOutputChConfig[idx], INCDEC_WRAP, INCDEC_SLOW);
           
           //write configuration
           if(focusedItem == numItems + 1 && clickedButton == KEY_SELECT)
@@ -7535,19 +7529,15 @@ void handleMainUI()
         
         //note that some values here have been empirically determined
         
-        const int16_t birdHeight = 12;
-        const int16_t birdLength = 17;
-        
-        static float birdX;
-        static float birdY; //
-        
-        const int16_t birdYmax = 50;
-        
-        const int16_t pipeWidth = 17;
-        const int16_t pipeGap = 30;
-        
-        static float pipeX;
-        static float pipeY;
+        const int16_t BIRD_HEIGHT = 12;
+        const int16_t BIRD_LENGTH = 17;
+        const int16_t BIRD_YMAX = 50;
+        const int16_t PIPE_WIDTH = 17;
+        const int16_t PIPE_GAP = 30;
+        const float   GRAVITY = 0.068; 
+        const float   SCROLL_ACC = 0.0004; 
+        const float   SCROLL_VELOCITY_MAX = 2.0;
+        const float   BG_SCROLL_ACC = 0.0002;
         
         enum {
           PIPE_VARIANT_A,
@@ -7556,41 +7546,15 @@ void handleMainUI()
           PIPE_VARIANT_COUNT
         };
         
-        static uint8_t pipeVariant;
-        
-        const float gravity = 0.068; 
-        static float velocity; 
-        
-        const float scrollAcc = 0.0004; 
-        static float scrollVelocity;
-        const float scrollVelocityMax = 2.0;
-        static bool maxScrollVelocityReached;
-        
-        static int16_t score;
-        static int16_t hiScore;
-        
-        static bool hasScored;
-        
-        const float bgScrollAcc = 0.0002;
-        static float bgScrollVelocity;
-        static float bgX;
         static const uint8_t bgTerrain[128] PROGMEM = {
-          0x04, 0x0c, 0x06, 0x02, 0x03, 0x06, 0x04, 0x0c, 
-          0x08, 0x08, 0x08, 0x08, 0x0c, 0x04, 0x0c, 0x08, 
-          0x08, 0x0c, 0x06, 0x04, 0x0c, 0x0c, 0x04, 0x04, 
-          0x0c, 0x08, 0x08, 0x0e, 0x03, 0x03, 0x02, 0x02, 
-          0x06, 0x04, 0x04, 0x0c, 0x08, 0x0c, 0x08, 0x08, 
-          0x08, 0x08, 0x08, 0x0c, 0x04, 0x07, 0x01, 0x03, 
-          0x02, 0x02, 0x02, 0x02, 0x02, 0x06, 0x04, 0x04, 
-          0x06, 0x02, 0x06, 0x03, 0x07, 0x04, 0x04, 0x04, 
-          0x0c, 0x08, 0x0c, 0x0c, 0x08, 0x08, 0x08, 0x08, 
-          0x08, 0x0c, 0x06, 0x03, 0x07, 0x04, 0x04, 0x04, 
-          0x0c, 0x06, 0x02, 0x06, 0x04, 0x0c, 0x08, 0x08, 
-          0x0c, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
-          0x06, 0x03, 0x01, 0x01, 0x03, 0x02, 0x02, 0x03, 
-          0x02, 0x02, 0x02, 0x03, 0x03, 0x06, 0x06, 0x02, 
-          0x02, 0x06, 0x04, 0x04, 0x0e, 0x08, 0x08, 0x08, 
-          0x0c, 0x06, 0x06, 0x04, 0x06, 0x02, 0x06, 0x04
+          0x04, 0x0c, 0x06, 0x02, 0x03, 0x06, 0x04, 0x0c, 0x08, 0x08, 0x08, 0x08, 0x0c, 0x04, 0x0c, 0x08, 
+          0x08, 0x0c, 0x06, 0x04, 0x0c, 0x0c, 0x04, 0x04, 0x0c, 0x08, 0x08, 0x0e, 0x03, 0x03, 0x02, 0x02, 
+          0x06, 0x04, 0x04, 0x0c, 0x08, 0x0c, 0x08, 0x08, 0x08, 0x08, 0x08, 0x0c, 0x04, 0x07, 0x01, 0x03, 
+          0x02, 0x02, 0x02, 0x02, 0x02, 0x06, 0x04, 0x04, 0x06, 0x02, 0x06, 0x03, 0x07, 0x04, 0x04, 0x04, 
+          0x0c, 0x08, 0x0c, 0x0c, 0x08, 0x08, 0x08, 0x08, 0x08, 0x0c, 0x06, 0x03, 0x07, 0x04, 0x04, 0x04, 
+          0x0c, 0x06, 0x02, 0x06, 0x04, 0x0c, 0x08, 0x08, 0x0c, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 
+          0x06, 0x03, 0x01, 0x01, 0x03, 0x02, 0x02, 0x03, 0x02, 0x02, 0x02, 0x03, 0x03, 0x06, 0x06, 0x02, 
+          0x02, 0x06, 0x04, 0x04, 0x0e, 0x08, 0x08, 0x08, 0x0c, 0x06, 0x06, 0x04, 0x06, 0x02, 0x06, 0x04
         };
         
         enum {
@@ -7600,9 +7564,48 @@ void handleMainUI()
           GAME_STATE_PAUSED
         };
         
-        static uint8_t gameState = GAME_STATE_INIT;
+        static int16_t hiScore;
         
-        switch(gameState)
+        //Dynamically allocated memory for the game
+        
+        static struct FlappyGame {
+          float    birdX;
+          float    birdY; 
+          float    pipeX;
+          float    pipeY;
+          uint8_t  pipeVariant;
+          float    velocity; 
+          float    scrollVelocity;
+          bool     maxScrollVelocityReached;
+          int16_t  score;
+          bool     hasScored;
+          float    bgScrollVelocity;
+          float    bgX;
+          uint8_t  state;
+        } *game = NULL;
+        
+        //Allocate memory if it hasn't been allocated yet
+        
+        if(game == NULL)
+        {
+          game = (struct FlappyGame *)malloc(sizeof(struct FlappyGame));
+          if(game == NULL) //allocation failed
+          {
+            showMsg(PSTR("Failed to allocate\nmemory for game"));
+            delay(2000);
+            //force exit
+            changeToScreen(SCREEN_MAIN_MENU);
+            break;
+          }
+          else
+          {
+            game->state = GAME_STATE_INIT;
+          }
+        }
+        
+        //Run the game
+        
+        switch(game->state)
         {
           case GAME_STATE_INIT:
             {
@@ -7610,25 +7613,23 @@ void handleMainUI()
               if(clickedButton == KEY_SELECT || millis() - buttonReleaseTime > 1000)
               {
                 //initialise variables
-                birdX = 24.0;
-                birdY = 11.0;
-                velocity = 0.0;
-                bgX = 0.0;
-                score = 0;
-                hasScored = false;
-                pipeX = 127.0;
-                pipeY = random(5 + pipeGap, 51);
-                pipeVariant = random() % PIPE_VARIANT_COUNT;
-                scrollVelocity = 0.65;
-                bgScrollVelocity = 0.1625;
-                maxScrollVelocityReached = false;
+                game->birdX = 24.0;
+                game->birdY = 11.0;
+                game->velocity = 0.0;
+                game->bgX = 0.0;
+                game->score = 0;
+                game->hasScored = false;
+                game->pipeX = 127.0;
+                game->pipeY = random(5 + PIPE_GAP, 51);
+                game->pipeVariant = random() % PIPE_VARIANT_COUNT;
+                game->scrollVelocity = 0.65;
+                game->bgScrollVelocity = 0.1625;
+                game->maxScrollVelocityReached = false;
                 
                 //change state
-                gameState = GAME_STATE_PLAYING;
+                game->state = GAME_STATE_PLAYING;
                 killButtonEvents();
               }
-              if(heldButton == KEY_SELECT)
-                changeToScreen(SCREEN_MAIN_MENU);
             }
             break;
           
@@ -7643,73 +7644,73 @@ void handleMainUI()
               //value to the velocity (not realistic physics).
               
               if(pressedButton == KEY_SELECT || pressedButton == KEY_UP)
-                velocity = -1.043; //about some constant*sqrt(gravity). Constant determined to be about 4
+                game->velocity = -1.043; //about some constant*sqrt(GRAVITY). Constant determined to be about 4
               
               //s = ut + 1/2at^2, v = u + at, time is unity and discrete
-              birdY += velocity + (gravity / 2.0);
-              velocity += gravity;
+              game->birdY += game->velocity + (GRAVITY / 2.0);
+              game->velocity += GRAVITY;
               
-              if(birdY > birdYmax)
-                birdY = birdYmax;
+              if(game->birdY > BIRD_YMAX)
+                game->birdY = BIRD_YMAX;
 
               //Calculate the pipe x position
-              if(maxScrollVelocityReached)
-                pipeX -= scrollVelocity;
+              if(game->maxScrollVelocityReached)
+                game->pipeX -= game->scrollVelocity;
               else
               {
-                pipeX -= (scrollVelocity + (scrollAcc / 2.0));
-                scrollVelocity += scrollAcc;
-                if(scrollVelocity > scrollVelocityMax)
-                  maxScrollVelocityReached = true;
+                game->pipeX -= (game->scrollVelocity + (SCROLL_ACC / 2.0));
+                game->scrollVelocity += SCROLL_ACC;
+                if(game->scrollVelocity > SCROLL_VELOCITY_MAX)
+                  game->maxScrollVelocityReached = true;
               }
               
-              // maxScrollVelocityReached = false; //##debug
+              // game->maxScrollVelocityReached = false; //##debug
               
               //Generate new pipe when out of view
-              if(pipeX < 0.0 - pipeWidth)
+              if(game->pipeX < 0.0 - PIPE_WIDTH)
               {
-                pipeX = 127;
-                pipeVariant = random() % PIPE_VARIANT_COUNT;
-                if(pipeVariant == PIPE_VARIANT_C)
-                  pipeY = random(5 + pipeGap, 51);
-                if(pipeVariant == PIPE_VARIANT_B)
-                  pipeY = random(5 + pipeGap, 62);
-                if(pipeVariant == PIPE_VARIANT_A)
-                  pipeY = random(pipeGap, 51);
+                game->pipeX = 127;
+                game->pipeVariant = random() % PIPE_VARIANT_COUNT;
+                if(game->pipeVariant == PIPE_VARIANT_C)
+                  game->pipeY = random(5 + PIPE_GAP, 51);
+                if(game->pipeVariant == PIPE_VARIANT_B)
+                  game->pipeY = random(5 + PIPE_GAP, 62);
+                if(game->pipeVariant == PIPE_VARIANT_A)
+                  game->pipeY = random(PIPE_GAP, 51);
               }
               
               //Calc background position
               //the background is parallax scrolled
-              if(maxScrollVelocityReached)
-                bgX += bgScrollVelocity;
+              if(game->maxScrollVelocityReached)
+                game->bgX += game->bgScrollVelocity;
               else
               {
-                bgX += (bgScrollVelocity + (bgScrollAcc / 2.0));
-                bgScrollVelocity += bgScrollAcc;
+                game->bgX += (game->bgScrollVelocity + (BG_SCROLL_ACC / 2.0));
+                game->bgScrollVelocity += BG_SCROLL_ACC;
               }
               
-              if(bgX > 127)
-                bgX = 0.0;
+              if(game->bgX > 127)
+                game->bgX = 0.0;
               
               ///--- Detect collisions ---
               
               bool collided = false; 
               
               //collision of bird with floor
-              if(birdY >= birdYmax)
+              if(game->birdY >= BIRD_YMAX)
                 collided = true;
               
               //collision of bird with pipe
-              if(pipeX < (birdX + birdLength) && birdX < (pipeX + pipeWidth))
+              if(game->pipeX < (game->birdX + BIRD_LENGTH) && game->birdX < (game->pipeX + PIPE_WIDTH))
               {
-                if(pipeVariant == PIPE_VARIANT_A || pipeVariant == PIPE_VARIANT_C)
+                if(game->pipeVariant == PIPE_VARIANT_A || game->pipeVariant == PIPE_VARIANT_C)
                 {
-                  if(pipeY < (birdY + birdHeight))
+                  if(game->pipeY < (game->birdY + BIRD_HEIGHT))
                     collided = true;
                 }
-                if(pipeVariant == PIPE_VARIANT_B || pipeVariant == PIPE_VARIANT_C)
+                if(game->pipeVariant == PIPE_VARIANT_B || game->pipeVariant == PIPE_VARIANT_C)
                 {
-                  if(birdY < (pipeY - pipeGap + 1))
+                  if(game->birdY < (game->pipeY - PIPE_GAP + 1))
                     collided = true;
                 }
               }
@@ -7718,20 +7719,20 @@ void handleMainUI()
               
               ///--- Calculate scores ---
               
-              if(birdX > (pipeX + pipeWidth) && !hasScored && !collided)
+              if(game->birdX > (game->pipeX + PIPE_WIDTH) && !game->hasScored && !collided)
               {
-                hasScored = true;
-                score++;
-                if(score > hiScore)
-                  hiScore = score;
+                game->hasScored = true;
+                game->score++;
+                if(game->score > hiScore)
+                  hiScore = game->score;
               }
-              if(birdX < pipeX)
-                hasScored = false;
+              if(game->birdX < game->pipeX)
+                game->hasScored = false;
               
               ///--- Draw on the screen ---
               
               //draw the background
-              uint8_t idx = bgX;
+              uint8_t idx = game->bgX;
               for(uint8_t x = 0; x < 128; x++, idx++)
               {
                 if(idx > 127)
@@ -7746,14 +7747,14 @@ void handleMainUI()
               
               //Draw the foreground
               display.drawHLine(0, 62, 128, BLACK);
-              int16_t gx = pipeX;
+              int16_t gx = game->pipeX;
               while(gx >= 0)
               {
                 display.drawPixel(gx, 63, BLACK);
                 display.drawPixel(gx + 1, 63, BLACK);
                 gx -= 6;
               }
-              gx = pipeX;
+              gx = game->pipeX;
               while(gx < 128)
               {
                 display.drawPixel(gx, 63, BLACK);
@@ -7762,59 +7763,52 @@ void handleMainUI()
               }
               
               //Draw the pipe
-              if(pipeVariant == PIPE_VARIANT_A || pipeVariant == PIPE_VARIANT_C)
+              if(game->pipeVariant == PIPE_VARIANT_A || game->pipeVariant == PIPE_VARIANT_C)
               {
                 //lower pipe
-                display.drawRect(pipeX, pipeY, pipeWidth, 4, BLACK);
-                display.fillRect(pipeX + 1, pipeY + 3, pipeWidth - 2, 60 - pipeY, WHITE);
-                display.drawRect(pipeX + 1, pipeY + 3, pipeWidth - 2, 60 - pipeY, BLACK);
+                display.drawRect(game->pipeX, game->pipeY, PIPE_WIDTH, 4, BLACK);
+                display.fillRect(game->pipeX + 1, game->pipeY + 3, PIPE_WIDTH - 2, 60 - game->pipeY, WHITE);
+                display.drawRect(game->pipeX + 1, game->pipeY + 3, PIPE_WIDTH - 2, 60 - game->pipeY, BLACK);
               }
-              if(pipeVariant == PIPE_VARIANT_B || pipeVariant == PIPE_VARIANT_C)
+              if(game->pipeVariant == PIPE_VARIANT_B || game->pipeVariant == PIPE_VARIANT_C)
               {
                 //upper pipe
-                display.drawRect(pipeX, pipeY - pipeGap - 3, pipeWidth, 4, BLACK);
-                display.drawVLine(pipeX + 1, 0, pipeY - pipeGap - 3, BLACK);
-                display.drawVLine(pipeX + pipeWidth - 2, 0, pipeY - pipeGap - 3, BLACK);
+                display.drawRect(game->pipeX, game->pipeY - PIPE_GAP - 3, PIPE_WIDTH, 4, BLACK);
+                display.drawVLine(game->pipeX + 1, 0, game->pipeY - PIPE_GAP - 3, BLACK);
+                display.drawVLine(game->pipeX + PIPE_WIDTH - 2, 0, game->pipeY - PIPE_GAP - 3, BLACK);
               }
               
               //Draw the bird
-              display.fillRect(birdX, birdY, birdLength, birdHeight, WHITE);
-              drawAnimatedSprite(birdX, birdY, animation_bird, birdLength, birdHeight, BLACK, 3, 80, 0);
+              display.fillRect(game->birdX, game->birdY, BIRD_LENGTH, BIRD_HEIGHT, WHITE);
+              drawAnimatedSprite(game->birdX, game->birdY, animation_bird, BIRD_LENGTH, BIRD_HEIGHT, BLACK, 3, 80, 0);
               
               //Draw the score
               display.setCursor(0, 0);
-              display.print(score);
+              display.print(game->score);
               
               //###Debug draw
               // display.setCursor(0, 8);
-              // display.print(scrollVelocity);
+              // display.print(game->scrollVelocity);
               // display.setCursor(0, 16);
-              // display.print(bgScrollVelocity);
+              // display.print(game->bgScrollVelocity);
               
               ///--- Play audio ---
               /* 
               if(audioToPlay = AUDIO_KEY_PRESSED) //always suppress key press tones
                 audioToPlay = AUDIO_NONE;
-              if(hasScored)
+              if(game->hasScored)
                 audioToPlay = AUDIO_NONE; //replace with actual
               if(collided)
                 audioToPlay = AUDIO_NONE; //replace with actual 
               */
 
-              ///--- Change game state, handle exit ---
+              ///--- Change game state ---
               
               //change state if collided
               if(collided)
               {
-                gameState = GAME_STATE_OVER;
+                game->state = GAME_STATE_OVER;
                 killButtonEvents();
-              }
-              
-              //handle exit
-              if(heldButton == KEY_SELECT)
-              {
-                gameState = GAME_STATE_INIT;
-                changeToScreen(SCREEN_MAIN_MENU);
               }
             }
             break;
@@ -7826,23 +7820,26 @@ void handleMainUI()
               display.print(F("Game over"));
               display.setCursor(17, 28);
               display.print(F("Score:   "));
-              display.print(score);
+              display.print(game->score);
               display.setCursor(17, 38);
               display.print(F("HiScore: "));
               display.print(hiScore);
               
               if(clickedButton == KEY_SELECT)
               {
-                gameState = GAME_STATE_INIT;
+                game->state = GAME_STATE_INIT;
                 killButtonEvents();
-              }
-              if(heldButton == KEY_SELECT)
-              {
-                gameState = GAME_STATE_INIT;
-                changeToScreen(SCREEN_MAIN_MENU);
               }
             }
             break;
+        }
+        
+        //Exit the game, freeing the allocated memory
+        if(heldButton == KEY_SELECT)
+        {
+          free(game); //free the memory
+          game = NULL; //set the pointer to NULL to avoid dangling pointer issues
+          changeToScreen(SCREEN_MAIN_MENU);
         }
       }
       break;
@@ -8000,7 +7997,7 @@ void changeFocusOnUpDown(uint8_t numItems)
   if(isEditMode)
     return;
   isEditMode = true;
-  focusedItem = incDecOnUpDown(focusedItem, numItems, 1, INCDEC_WRAP, INCDEC_SLOW);
+  focusedItem = incDec(focusedItem, numItems, 1, INCDEC_WRAP, INCDEC_SLOW);
   isEditMode = false;
 }
 
@@ -8020,7 +8017,7 @@ void changeToScreen(uint8_t scrn)
 
 //--------------------------------------------------------------------------------------------------
 
-int16_t incDecOnUpDown(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEnabled, uint8_t state)
+int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEnabled, uint8_t state)
 {
   //Increments/decrements the passed value between the specified limits inclusive. 
   //If wrap is enabled, wraps around when either limit is reached.
@@ -8148,7 +8145,7 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
       break;
     }
   }
-  idxQQ = incDecOnUpDown(idxQQ, 0, srcCnt - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+  idxQQ = incDec(idxQQ, 0, srcCnt - 1, INCDEC_NOWRAP, INCDEC_SLOW);
   return srcQQ[idxQQ];
 }
 
@@ -8199,7 +8196,7 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
       break;
     }
   }
-  idxQQ = incDecOnUpDown(idxQQ, 0, ctrlCnt - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+  idxQQ = incDec(idxQQ, 0, ctrlCnt - 1, INCDEC_NOWRAP, INCDEC_SLOW);
   return ctrlQQ[idxQQ];
 }
 
@@ -8467,7 +8464,7 @@ void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const bitm
   
   //handle navigation
   isEditMode = true;
-  *highlightedItem = incDecOnUpDown(*highlightedItem, numItems, 1, INCDEC_WRAP, INCDEC_SLOW);
+  *highlightedItem = incDec(*highlightedItem, numItems, 1, INCDEC_WRAP, INCDEC_SLOW);
   isEditMode = false;
   if(*highlightedItem < *topItem)
     *topItem = *highlightedItem;
@@ -9225,7 +9222,7 @@ void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEm
   
   //adjust
   isEditMode = true;
-  thisChar = incDecOnUpDown(thisChar, 67, 0, INCDEC_NOWRAP, INCDEC_SLOW);
+  thisChar = incDec(thisChar, 67, 0, INCDEC_NOWRAP, INCDEC_SLOW);
 
   //map back
   if(thisChar <= 25) thisChar = 90 - thisChar;
@@ -9336,7 +9333,7 @@ void popupMenuDraw()
   
   //handle navigation
   isEditMode = true;
-  popupMenuFocusedItem = incDecOnUpDown(popupMenuFocusedItem, _popupMenuItemCount, 1, INCDEC_WRAP, INCDEC_SLOW);
+  popupMenuFocusedItem = incDec(popupMenuFocusedItem, _popupMenuItemCount, 1, INCDEC_WRAP, INCDEC_SLOW);
   isEditMode = false;
   if(popupMenuFocusedItem < popupMenuTopItem)
     popupMenuTopItem = popupMenuFocusedItem;
