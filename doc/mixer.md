@@ -1,5 +1,6 @@
 # The Mixer
-
+The mixer is where the inputs (mixer sources) get linked to the output channels (servos, etc.).
+This controller features a mixer system that draws inspiration from that found in OpenTX(R) based RC transmitters, though not directly compatible.
 ## Mixer sources
 Mixer sources can be any of the following
 - Raw stick axes (X1, Y1, X2, Y2, ...)
