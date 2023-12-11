@@ -7485,11 +7485,11 @@ void handleMainUI()
         display.drawBitmap(61, 61, icon_down_arrow_small, 5, 3, BLACK);
         
         static const char disclaimerText[] PROGMEM = 
-           "-----Disclaimer-----\nThis software is provided \"as is\" without warranty of any "
+           "-----Disclaimer-----\nThe software is provided \"as is\" without warranty of any "
            "kind, express or implied. In no event shall the authors or copyright holders be liable "
            "for any direct, indirect, incidental, special, exemplary or consequential "
            "damages (including but not limited to personal and/or property damage) or "
-           "other liability arising from the use of this software.\n\nImproperly "
+           "other liability arising from the use of the software.\n\nImproperly "
            "operating RC models can cause serious injury or death.";
         
         if(clickedButton == KEY_DOWN)
