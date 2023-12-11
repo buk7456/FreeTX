@@ -51,7 +51,7 @@ The major components are listed below.
 Here is a video showcasing many of the features.
 <br>
 <br>
-[![Menu browse and features overview - FreeTX](doc/yt.jpg)](http://www.youtube.com/watch?v=zj9_WzwAFPE)
+[![Menu browse and features overview - FreeTX](doc/yt.jpg)](https://youtu.be/rDpRMRE8av0)
 
 ## Help topics
 [Mixer](doc/mixer.md)
