@@ -53,7 +53,7 @@ Here is a video showcasing many of the features.
 <br>
 [![Menu browse and features overview - FreeTX](doc/yt.jpg)](https://youtu.be/rDpRMRE8av0)
 
-## User guides
+## User guide
 [Mixer](doc/mixer.md)
 <br>[Custom curves](doc/custom_curves.md)
 <br>[Logical switches](doc/logical_switches.md)
