@@ -1,5 +1,5 @@
 # Receiver 
-Each receiver supports maximum of 10 channels. To use all the 20 channels, two receivers are required.
+Each receiver supports up to 10 channels. To use all the 20 channels, two receivers are required.
 
 ## Binding to a receiver
 A receiver can be bound as either a main receiver or a secondary receiver. 
