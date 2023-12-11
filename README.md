@@ -47,13 +47,13 @@ The major components are listed below.
 <img src="doc/img4.jpg"/>
 </p>
 
-## YouTube video
+## Video
 Here is a video showcasing many of the features.
 <br>
 <br>
 [![Menu browse and features overview - FreeTX](doc/yt.jpg)](https://youtu.be/rDpRMRE8av0)
 
-## Help topics
+## User guides
 [Mixer](doc/mixer.md)
 <br>[Custom curves](doc/custom_curves.md)
 <br>[Logical switches](doc/logical_switches.md)
