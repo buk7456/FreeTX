@@ -4059,7 +4059,7 @@ void handleMainUI()
                       ls->val1 = SRC_NONE; 
                       ls->val2 = 0; 
                       if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X) 
-                      ls->val3 = 2;
+                        ls->val3 = 2;
                     }
                     else if(ls->func <= LS_FUNC_GROUP4_LAST)
                     {
@@ -4201,11 +4201,11 @@ void handleMainUI()
                   if(ls->func <= LS_FUNC_GROUP3_LAST)
                   {
                     if(ls->val1 < MIXSOURCES_COUNT)
-                      ls->val2 = incDec(ls->val2, (ls->func == LS_FUNC_GROUP1_LAST) ? -100 : 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+                      ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -100 : 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
                     else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counter value
                       ls->val2 = incDec(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_FAST);
                     else //telemetry value
-                      ls->val2 = incDec(ls->val2, (ls->func == LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                      ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
                   }
                   else if(ls->func <= LS_FUNC_GROUP4_LAST)
                   {
