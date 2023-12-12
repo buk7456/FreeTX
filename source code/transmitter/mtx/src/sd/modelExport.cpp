@@ -484,7 +484,7 @@ void exportModelData(File& file)
 
     writeKeyValue_S32(file, 1, key_OverrideVal, ch->overrideVal);
     if(ch->failsafe >= -100)
-      file.println(ch->failsafe); 
+      writeKeyValue_S32(file, 1, key_Failsafe, ch->failsafe);
     else
       writeKeyValue_Char(file, 1, key_Failsafe, findStringInIdStr(enum_ChannelFailsafe, ch->failsafe));
     writeKeyValue_S32(file, 1, key_EndpointL, ch->endpointL);
