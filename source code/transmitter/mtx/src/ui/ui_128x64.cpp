@@ -4040,7 +4040,9 @@ void handleMainUI()
               {
                 display.print(F("Functn:"));
                 display.setCursor(60, ypos);
-                if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
+                if(ls->func == LS_FUNC_NONE)
+                  display.print(F("--"));
+                else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
                   display.print(F("|\xEB|>x"));
                 else
                   display.print(findStringInIdStr(enum_LogicalSwitch_Func, ls->func));
@@ -4100,8 +4102,13 @@ void handleMainUI()
                   display.print(F("--"));
                 else if(ls->func <= LS_FUNC_GROUP4_LAST)
                 {
-                  getSrcName(txtBuff, ls->val1, sizeof(txtBuff));
-                  display.print(txtBuff);
+                  if(ls->val1 == SRC_NONE)
+                    display.print(F("--"));
+                  else
+                  {
+                    getSrcName(txtBuff, ls->val1, sizeof(txtBuff));
+                    display.print(txtBuff);
+                  }
                 }
                 else if(ls->func <= LS_FUNC_GROUP5_LAST || ls->func == LS_FUNC_TOGGLE)
                 {
