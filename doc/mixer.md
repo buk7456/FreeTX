@@ -22,7 +22,7 @@ Mixer sources can be any of the following
 - Offset: The input is offset by this value after the weight has been applied. -100 to 100. 
 - Curve: Differential, Expo, Function, Custom curve.
 - Curve value: Differential {-100 to 100}, Expo {-100 to 100}, Function {x>0, x<0, |x|}, Curve name if custom curve.
-- Trim: Whether to add trim or not. Only available for Ail, Ele, Rud, or Thr.
+- Trim: Whether to add trim or not.
 - F-Mode: The flight mode in which the mix applies.
 - Delay Up and Down: This is used to delay the input.
 - Slow Up and Down: This when non-zero specifies how fast the input changes.
