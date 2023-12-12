@@ -616,12 +616,18 @@ bool verifyModelData()
   for(uint8_t i = 0; i < NUM_MIXSLOTS; i++)
   {
     if(Model.Mixer[i].output >= MIXSOURCES_COUNT) isSane = false;
-    if(Model.Mixer[i].input  >= MIXSOURCES_COUNT) isSane = false;
-    if(Model.Mixer[i].swtch     >= CTRL_SW_COUNT)  isSane = false;
+    if(Model.Mixer[i].input >= MIXSOURCES_COUNT) isSane = false;
+    if(Model.Mixer[i].swtch >= CTRL_SW_COUNT)  isSane = false;
     if(Model.Mixer[i].curveType >= MIX_CURVE_TYPE_COUNT)  isSane = false;
     if(Model.Mixer[i].operation >= MIX_OPERATOR_COUNT)  isSane = false;
   }
   
+  for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
+  {
+    if(Model.Channel[i].curve != -1 && Model.Channel[i].curve >= NUM_CUSTOM_CURVES)
+      isSane = false;
+  }
+
   for(uint8_t i = 0; i < NUM_CUSTOM_CURVES; i++)
   {
     if(Model.CustomCurve[i].numPoints > MAX_NUM_POINTS_CUSTOM_CURVE) 
