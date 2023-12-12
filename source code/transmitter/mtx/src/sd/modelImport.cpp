@@ -498,7 +498,11 @@ void extractConfig_Mixer()
       else if(mxr->curveType == MIX_CURVE_TYPE_FUNCTION)
         findIdInIdStr(enum_MixerCurveType_Func, valueBuff, mxr->curveVal);
       else if(mxr->curveType == MIX_CURVE_TYPE_CUSTOM)
-        mxr->curveVal = atoi_with_prefix(valueBuff) - 1;
+      {
+        uint8_t crvIdx = atoi_with_prefix(valueBuff) - 1;
+        if(crvIdx < NUM_CUSTOM_CURVES)
+          mxr->curveVal = crvIdx;
+      }
     }
     else if(MATCH_P(keyBuff[1], key_TrimEnabled))
       readValue_bool(valueBuff, &mxr->trimEnabled);
@@ -714,7 +718,11 @@ void extractConfig_Channels()
       if(MATCH(tempBuff, valueBuff))
         ch->curve = -1;
       else
-        ch->curve = atoi_with_prefix(valueBuff) - 1;
+      {
+        uint8_t crvIdx = atoi_with_prefix(valueBuff) - 1;
+        if(crvIdx < NUM_CUSTOM_CURVES)
+          ch->curve = crvIdx;
+      }
     }
     else if(MATCH_P(keyBuff[1], key_Reverse))
       readValue_bool(valueBuff, &ch->reverse);
@@ -763,11 +771,23 @@ void extractConfig_Widgets()
     {
       if(widget->type == WIDGET_TYPE_MIXSOURCES)
         widget->src = getSrcId(valueBuff);
-      else if(widget->type == WIDGET_TYPE_COUNTERS 
-              || widget->type == WIDGET_TYPE_TIMERS 
-              || widget->type == WIDGET_TYPE_OUTPUTS)
+      else if(widget->type == WIDGET_TYPE_COUNTERS)
       {
-        widget->src = atoi_with_prefix(valueBuff) - 1;
+        uint8_t counterIdx = atoi_with_prefix(valueBuff) - 1;
+        if(counterIdx < NUM_COUNTERS)
+          widget->src = counterIdx;
+      }
+      else if(widget->type == WIDGET_TYPE_TIMERS)
+      {
+        uint8_t timerIdx = atoi_with_prefix(valueBuff) - 1;
+        if(timerIdx < NUM_TIMERS)
+          widget->src = timerIdx;
+      }
+      else if(widget->type == WIDGET_TYPE_OUTPUTS)
+      {
+        uint8_t chIdx = atoi_with_prefix(valueBuff) - 1;
+        if(chIdx < NUM_RC_CHANNELS)
+          widget->src = chIdx;
       }
       else if(widget->type == WIDGET_TYPE_TELEMETRY)
       {
@@ -777,7 +797,11 @@ void extractConfig_Widgets()
         if(MATCH(tempBuff, valueBuff))
           widget->src = WIDGET_SRC_AUTO;
         else
-          widget->src = getSrcId(valueBuff) - (MIXSOURCES_COUNT + NUM_COUNTERS);
+        {
+          uint8_t tlmIdx = getSrcId(valueBuff) - (MIXSOURCES_COUNT + NUM_COUNTERS);
+          if(tlmIdx < NUM_CUSTOM_TELEMETRY)
+            widget->src = tlmIdx;
+        }
       }
     }
     else if(MATCH_P(keyBuff[1], key_Disp))
