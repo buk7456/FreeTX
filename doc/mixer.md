@@ -176,25 +176,30 @@ override as SwA and value -100.
 ### Example 14: Sticky throttle cut
 Assuming Ch3 is the throttle channel, and assigning SwA for cut. Also assume our Throttle source is 
 Y1 axis. We want the throttle cut whenever SwA is in Up position, but to only remove the cut when 
-the throttle is at minimum. This example makes use of logical switches as follows.
+the throttle is at minimum and SwA is in Down position. This example makes use of logical switches as follows.
 ```txt
 Logical switch L1
+Func:   Latch
+Value1: SwA_Up     //sets the latch
+Value2: L3         //resets the latch
+
+Logical switch L2
 Func: a==x
 Value1: Y1
 value2: -100
 
-Logical switch L2
-Func:   Latch
-Value1: SwA_Up     //sets the latch
-Value2: L1         //resets the latch
+Logical switch L3
+Func: AND
+Value1: SwA_down
+value2: L2
 ``` 
 Then in the mixer
 ```txt
 1. Ch3  Add   Thrt (Weight 100)
-2. Ch3  RplW  max  (Weight -100, Switch L2)
+2. Ch3  RplW  max  (Weight -100, Switch L1)
 ```
 Alternatively, a much safer throttle cut can be achieved in the Outputs screen by specifying the 
-override as L2 and value -100.
+override as L1 and value -100.
 
 ### Example 15: Landing gear sequencer (gear doors stay open after gear is extended)
 Using SwD for operation. Assuming gear doors on Ch6 and gear on Ch7.
