@@ -1,5 +1,5 @@
 # FreeTX
-Remotely operate model airplanes, multicopters, boats, land vehicles, robots, or anything you can imagine.
+Remotely operate model airplanes, multicopters, boats, land vehicles, robots, etc.
 <p align="left">
 <img src="doc/tx_views.jpg"/>
 </p>
