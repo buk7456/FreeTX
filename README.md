@@ -48,7 +48,7 @@ The major components are listed below.
 </p>
 
 ## Video
-Here is a video showcasing many of the features.
+Here is a video showcasing the major features.
 <br>
 <br>
 [![Menu browse and features overview - FreeTX](doc/yt.jpg)](https://youtu.be/rDpRMRE8av0)
