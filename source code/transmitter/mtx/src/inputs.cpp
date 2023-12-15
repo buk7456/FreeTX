@@ -198,7 +198,7 @@ void readSticks()
     x1AxisIn  = deadzoneAndMap(x1AxisIn, Sys.x1AxisMin, Sys.x1AxisCenter, Sys.x1AxisMax, Sys.x1AxisDeadzone, -500, 500);
   else
   {
-    x1AxisIn  = map(x1AxisIn, Sys.x1AxisMin, Sys.x1AxisMax, -500, 500);
+    x1AxisIn = map(x1AxisIn, Sys.x1AxisMin, Sys.x1AxisMax, -500, 500);
     x1AxisIn = constrain(x1AxisIn, -500, 500);
   }
     
@@ -258,7 +258,6 @@ void readSticks()
     y4AxisIn = constrain(y4AxisIn, -500, 500);
   }
   
-  
   //add deadband at extremes of knobs for stability
   knobAIn = map(knobAIn, 20, 1003, -500, 500); 
   knobAIn = constrain(knobAIn, -500, 500);
@@ -313,18 +312,16 @@ void readSticks()
 
 int16_t deadzoneAndMap(int16_t input, int16_t minVal, int16_t centreVal, int16_t maxVal, int16_t deadzn, int16_t mapMin, int16_t mapMax)
 {
-  int32_t deadznTmp = ((int32_t)(maxVal - minVal) * deadzn) / 100; 
-  int16_t deadznVal = deadznTmp / 2; //divide by 2 as we apply deadzone about center
-  int16_t mapCenter = (mapMin / 2) + (mapMax / 2);
-  //add dead zone and map the input
-  int16_t output;
-  if(input > centreVal + deadznVal)
-    output = map(input, centreVal + deadznVal, maxVal, mapCenter + 1, mapMax);
-  else if(input < centreVal - deadznVal)
-    output = map(input, minVal, centreVal - deadznVal, mapMin, mapCenter - 1);
-  else
-    output = mapCenter;
-  
+  //Formula is ((maxVal-minVal)*deadzn/100)/2. We divide by 2 as its applied about center
+  int16_t deadznVal = ((int32_t)(maxVal - minVal) * deadzn) / 200;
+  int16_t threshR = centreVal + deadznVal;
+  int16_t threshL = centreVal - deadznVal;
+  int16_t mapCenter = (mapMin + mapMax) / 2;
+  int16_t output = mapCenter;
+  if(input > threshR)
+    output = map(input, threshR, maxVal, mapCenter + 1, mapMax);
+  else if(input < threshL)
+    output = map(input, minVal, threshL, mapMin, mapCenter - 1);
   output = constrain(output, mapMin, mapMax);
   return output;
 }
