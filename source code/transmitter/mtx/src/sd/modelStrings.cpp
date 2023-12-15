@@ -312,6 +312,7 @@ const char key_GaugeMax[] PROGMEM = "GaugeMax";
 char* findStringInIdStr(const id_string_t *idStr_P, int8_t searchId)
 {
   static char retStr[MAX_STR_SIZE];
+  *retStr = '\0';
   uint8_t i = 0;
   while(1)
   {
@@ -320,11 +321,11 @@ char* findStringInIdStr(const id_string_t *idStr_P, int8_t searchId)
     if(pgm_read_byte(&idStr_P[i].id) == (uint8_t)searchId)
     {
       strlcpy_P(retStr, (const char*)&idStr_P[i].str, sizeof(retStr));
-      return retStr;
+      break;
     }
     i++;
   }
-  return NULL;
+  return retStr;
 }
 
 //=================================================================================================
@@ -355,3 +356,4 @@ template void findIdInIdStr<uint8_t>(const id_string_t *idStr_P, const char *sea
 template void findIdInIdStr<int8_t>(const id_string_t *idStr_P, const char *searchStr, int8_t&);
 template void findIdInIdStr<uint16_t>(const id_string_t *idStr_P, const char *searchStr, uint16_t&);
 template void findIdInIdStr<int16_t>(const id_string_t *idStr_P, const char *searchStr, int16_t&);
+
