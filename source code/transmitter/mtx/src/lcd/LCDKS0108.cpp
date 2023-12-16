@@ -11,6 +11,17 @@
 #define DISP_ON       0b00111111
 #define DISP_OFF      0b00111110
 
+//asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n") is 10 cycles (625 ns at 16 MHz)
+
+#define EN_DELAY_HIGHLOW { asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
+                           asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); }
+
+#define EN_DELAY_LOWHIGH { asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
+                           asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
+                           asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
+                           asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
+                           asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); }
+
 //--------------------------------------------------------------------------------------------------
 
 LCDKS0108::LCDKS0108(int8_t QRS, int8_t QEN, int8_t QCS1, int8_t QCS2) : GFX(LCDWIDTH, LCDHEIGHT)
@@ -180,25 +191,11 @@ void LCDKS0108::writePageColumn(uint8_t page, uint8_t column, uint8_t val)
     #endif
   }
   
-  //write
-  PORTx_LCD_DATA = val;
-  
-  //EN high
-  *qenport |= qenpinmask; 
-  
-  // Delay 
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  
-  //EN low
-  *qenport &= ~qenpinmask; 
-  
-  // Delay
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
+  PORTx_LCD_DATA = val;    //write
+  *qenport |= qenpinmask;  //EN high
+  EN_DELAY_HIGHLOW;        //Delay 
+  *qenport &= ~qenpinmask; //EN low 
+  EN_DELAY_LOWHIGH;        //Delay
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -304,6 +301,7 @@ void LCDKS0108::display()
     *qcs2port &= ~qcs2pinmask; 
     #endif
     
+    /*     
     for(uint8_t column = 0; column < 128; column++)
     {
       if(column == 64)
@@ -318,23 +316,81 @@ void LCDKS0108::display()
       #endif
       }
       
-      //write
-      PORTx_LCD_DATA = dispBuffer[dataIdx++];
-      //EN high
-      *qenport |= qenpinmask;  
-      // Delay 
-      asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-      asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-      //EN low
-      *qenport &= ~qenpinmask; 
-      // Delay
-      asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-      asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-      asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-      asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-      asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-    } 
-   
+      PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
+      *qenport |= qenpinmask;  //EN high
+      EN_DELAY_HIGHLOW;        //Delay 
+      *qenport &= ~qenpinmask; //EN low 
+      EN_DELAY_LOWHIGH;        //Delay
+    }
+    */
+
+    
+    //Unrolled loop version
+    //this saves about 0.6ms in progressive scan mode
+    //at the expense of a few bytes more flash memory usage
+    for(uint8_t column = 0; column < 128; column += 8)
+    {
+      if(column == 64)
+      {
+        //enable chip2, disable chip1
+      #if defined (CS_ACTIVE_LOW)
+        *qcs2port &= ~qcs2pinmask;
+        *qcs1port |= qcs1pinmask;
+      #else 
+        *qcs2port |= qcs2pinmask; 
+        *qcs1port &= ~qcs1pinmask;
+      #endif
+      }
+      
+      PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
+      *qenport |= qenpinmask;  //EN high
+      EN_DELAY_HIGHLOW;        //Delay 
+      *qenport &= ~qenpinmask; //EN low 
+      EN_DELAY_LOWHIGH;        //Delay
+      
+      PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
+      *qenport |= qenpinmask;  //EN high
+      EN_DELAY_HIGHLOW;        //Delay 
+      *qenport &= ~qenpinmask; //EN low 
+      EN_DELAY_LOWHIGH;        //Delay
+      
+      PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
+      *qenport |= qenpinmask;  //EN high
+      EN_DELAY_HIGHLOW;        //Delay 
+      *qenport &= ~qenpinmask; //EN low 
+      EN_DELAY_LOWHIGH;        //Delay
+      
+      PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
+      *qenport |= qenpinmask;  //EN high
+      EN_DELAY_HIGHLOW;        //Delay 
+      *qenport &= ~qenpinmask; //EN low 
+      EN_DELAY_LOWHIGH;        //Delay
+      
+      PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
+      *qenport |= qenpinmask;  //EN high
+      EN_DELAY_HIGHLOW;        //Delay 
+      *qenport &= ~qenpinmask; //EN low 
+      EN_DELAY_LOWHIGH;        //Delay
+      
+      PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
+      *qenport |= qenpinmask;  //EN high
+      EN_DELAY_HIGHLOW;        //Delay 
+      *qenport &= ~qenpinmask; //EN low 
+      EN_DELAY_LOWHIGH;        //Delay
+      
+      PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
+      *qenport |= qenpinmask;  //EN high
+      EN_DELAY_HIGHLOW;        //Delay 
+      *qenport &= ~qenpinmask; //EN low 
+      EN_DELAY_LOWHIGH;        //Delay
+      
+      PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
+      *qenport |= qenpinmask;  //EN high
+      EN_DELAY_HIGHLOW;        //Delay 
+      *qenport &= ~qenpinmask; //EN low 
+      EN_DELAY_LOWHIGH;        //Delay
+    }
+
     if(isInterlacedScan)
       dataIdx += 128;
   }
@@ -355,20 +411,11 @@ inline void LCDKS0108::lcdCommand(uint8_t command)
   
   //rs low
   *qrsport &= ~qrspinmask;
-  //write
-  PORTx_LCD_DATA = command;
-  //EN high
-  *qenport |= qenpinmask; 
-  // Delay
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  //EN low
-  *qenport &= ~qenpinmask; 
-  // Delay
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
-  asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); //10 cycles (625 ns at 16 MHz)
+ 
+  PORTx_LCD_DATA = command; //write
+  *qenport |= qenpinmask;  //EN high
+  EN_DELAY_HIGHLOW;        //Delay 
+  *qenport &= ~qenpinmask; //EN low 
+  EN_DELAY_LOWHIGH;        //Delay
 }
 
