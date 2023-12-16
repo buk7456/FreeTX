@@ -36,9 +36,8 @@ The major components are listed below.
 - 128x64 KS0108 based LCD. Any 128x64 LCD can however be used (provide own driver code).
 
 <p align="left">
-<img src="doc/img2.jpg" width="300"/>
-<img src="doc/img3.jpg" width="300"/>
-<img src="doc/img4.jpg" width="300"/>
+<img src="doc/img2.jpg" width="400"/>
+<img src="doc/img4.jpg" width="400"/>
 </p>
 
 ## Video
