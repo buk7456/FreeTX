@@ -357,7 +357,7 @@ void computeChannelOutputs()
     operand = weightAndOffset(operand, mxr->weight, mxr->offset);
     
     //--- DIFFERENTIAL
-    if(mxr->curveType == MIX_CURVE_TYPE_DIFF)
+    if(mxr->curveType == MIX_CURVE_TYPE_DIFF && mxr->curveVal != 0)
       operand = calcDifferential(operand, mxr->curveVal);
     
     //--- TRIM
