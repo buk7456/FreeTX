@@ -36,22 +36,16 @@ The major components are listed below.
 - 128x64 KS0108 based LCD. Any 128x64 LCD can however be used (provide own driver code).
 
 <p align="left">
-<img src="doc/img2.jpg"/>
-</p>
-
-<p align="left">
-<img src="doc/img3.jpg"/>
-</p>
-
-<p align="left">
-<img src="doc/img4.jpg"/>
+<img src="doc/img2.jpg" width="300"/>
+<img src="doc/img3.jpg" width="300"/>
+<img src="doc/img4.jpg" width="300"/>
 </p>
 
 ## Video
 Here is a video showcasing some of the features.
 <br>
 <br>
-[![Menu browse and features overview - FreeTX](doc/yt.jpg)](https://youtu.be/rDpRMRE8av0)
+[![Features overview - FreeTX](doc/yt.jpg)](https://youtu.be/rDpRMRE8av0)
 
 ## User guide
 [Mixer](doc/mixer.md)
