@@ -1,1 +1,1 @@
-This folder contains the EAGLE circuit schematics for transmitter and receiver. 
+This folder contains the EAGLE circuit schematics for the RC transmitter and receiver. 
