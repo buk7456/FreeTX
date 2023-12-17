@@ -1,4 +1,7 @@
 ## Frequently asked questions
+### Where do i start?
+Preferably with the simulation to test out the features before committing your time and effort building the actual hardware. Also please note that
+this project is not suitable for beginners. 
 
 ### Where are the mechanical CAD files?
 As this is a DIY project, I did not make any detailed mechanical CAD, only a plan layout for the front 
