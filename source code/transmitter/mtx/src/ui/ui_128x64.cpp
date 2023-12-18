@@ -2341,7 +2341,7 @@ void handleMainUI()
           {
             uint8_t ypos = 20 + line*9;
             if(focusedItem > 1 && focusedItem - 1 == topItem + line)
-              drawCursor(34, ypos);
+              drawCursor(32, ypos);
             
             uint8_t itemID = listItemIDs[topItem - 1 + line];
             bool edit = (itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
@@ -2352,7 +2352,7 @@ void handleMainUI()
               case ITEM_THR_SRC_RAW:
                 {
                   display.print(F("Src:"));
-                  display.setCursor(42, ypos);
+                  display.setCursor(40, ypos);
                   getSrcName(txtBuff, Model.thrSrcRaw, sizeof(txtBuff));
                   display.print(txtBuff);
                   if(edit)
@@ -2374,7 +2374,7 @@ void handleMainUI()
               case ITEM_CURVE_NUM_POINTS:
                 {
                   display.print(F("Curv:"));
-                  display.setCursor(42, ypos);
+                  display.setCursor(40, ypos);
                   display.print(crv->numPoints);
                   display.print(F("pts"));
                   if(edit)
@@ -2394,7 +2394,7 @@ void handleMainUI()
               case ITEM_CURVE_POINT:
                 {
                   display.print(F("Pt:"));
-                  display.setCursor(42, ypos);
+                  display.setCursor(40, ypos);
                   display.write(97 + thisPt);
                   if(edit)
                     thisPt = incDec(thisPt, 0, crv->numPoints - 1, INCDEC_WRAP, INCDEC_SLOW);
@@ -2404,7 +2404,7 @@ void handleMainUI()
               case ITEM_CURVE_XVAL:
                 {
                   display.print(F("Xval:"));
-                  display.setCursor(42, ypos);
+                  display.setCursor(40, ypos);
                   display.print(crv->xVal[thisPt]);
                   if(edit && thisPt > 0 && thisPt < crv->numPoints - 1)
                   {
@@ -2418,7 +2418,7 @@ void handleMainUI()
               case ITEM_CURVE_YVAL:
                 {
                   display.print(F("Yval:"));
-                  display.setCursor(42, ypos);
+                  display.setCursor(40, ypos);
                   display.print(crv->yVal[thisPt]);
                   if(edit)
                     crv->yVal[thisPt] = incDec(crv->yVal[thisPt], -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
@@ -2428,7 +2428,7 @@ void handleMainUI()
               case ITEM_CURVE_SMOOTH:
                 {
                   display.print(F("Smth:"));
-                  drawCheckbox(42, ypos, crv->smooth);
+                  drawCheckbox(40, ypos, crv->smooth);
                   if(edit)
                     crv->smooth = incDec(crv->smooth, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
                 }
@@ -2436,6 +2436,9 @@ void handleMainUI()
             }
           }
           
+          //scrollbar
+          drawScrollBar(69, 19, listItemCount, topItem, 5, 5 * 9);
+        
           //--- draw graph
           drawDottedVLine(100 + mixSources[Model.thrSrcRaw]/20, 11, 51, BLACK, WHITE);
           drawCustomCurve(crv, (focusedItem >= 3 && focusedItem <= 5) ? thisPt : 0xff);
