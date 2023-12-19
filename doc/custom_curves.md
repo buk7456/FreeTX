@@ -5,4 +5,4 @@ These can be used in the mixer or channel outputs. They basically define a relat
 <br>See the mixer guide for an example where custom curves are used.
 
 #### Combining two curves for extra points or nodes
-If more curve points are desired, a work around trick is to combine two curves by switching out one for the other in the mixer.
+If more curve points are desired, a work around trick is to combine two curves by switching out one for the other in the mixer, with help of a logical switch.
