@@ -297,8 +297,8 @@ void computeChannelOutputs()
     }
     
     //--- SLOW
-    //We use a multiplier value of 1000 here to improve precision
-    const int32_t _factor = 1000;
+    //We use a multiplier value here to improve precision
+    const int32_t _factor = 10000;
     if(isReinitialiseMixer)
       slowCurrVal[mixIdx] = _factor * operand;
     int32_t _op = _factor * operand;
