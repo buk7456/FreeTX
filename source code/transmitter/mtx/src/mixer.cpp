@@ -806,7 +806,9 @@ void computeChannelOutputs()
     if(Model.Channel[i].overrideSwitch != CTRL_SW_NONE && checkSwitchCondition(Model.Channel[i].overrideSwitch))
       channelOut[i] = 5 * Model.Channel[i].overrideVal;
     //endpoints
-    channelOut[i] = constrain(channelOut[i], 5 * Model.Channel[i].endpointL, 5 * Model.Channel[i].endpointR); 
+    int16_t endptL = 5 * Model.Channel[i].endpointL;
+    int16_t endptR = 5 * Model.Channel[i].endpointR;
+    channelOut[i] = constrain(channelOut[i], endptL, endptR); 
   }
   
   /// ---------------- RESET SOME VARIABLES --------------
