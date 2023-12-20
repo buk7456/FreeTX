@@ -27,6 +27,7 @@ class LCDKS0108 : public GFX
     void drawPixel(uint8_t x, uint8_t y, uint8_t color);
     uint8_t getPixel(uint8_t x, uint8_t y);
     
+    void drawHLine(uint8_t x, uint8_t y, uint8_t w, uint8_t color);
     void drawVLine(uint8_t x, uint8_t y, uint8_t h, uint8_t color);
     void drawChar(uint8_t x, uint8_t y, unsigned char c, uint8_t color);
     
