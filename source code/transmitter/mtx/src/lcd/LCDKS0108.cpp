@@ -65,8 +65,23 @@ uint8_t LCDKS0108::getPixel(uint8_t x, uint8_t y)
 //Credit: cbm80amiga's ST7567 library https://github.com/cbm80amiga/ST7567_FB
 void LCDKS0108::drawVLine(uint8_t x, uint8_t y, uint8_t h, uint8_t color)
 {
-  if(x >= LCDWIDTH || y >= LCDHEIGHT) 
+  if(x >= LCDWIDTH) 
     return;
+  
+  if(y >= LCDHEIGHT) 
+  {
+    //Handle the uint8_t wrapping around.
+    //For example the y position passed to the function could have been negative. In this case 
+    //we draw the portion visible, instead of instead of just returning from the function.
+    uint8_t p = (255 - y) + 1;
+    if(p >= h || p >= 64)
+      return;
+    else
+    {
+      y = 0;
+      h -= p;
+    }
+  }
   
   uint8_t y0 = y;
   uint8_t y1 = y0 + h - 1;
@@ -114,8 +129,23 @@ void LCDKS0108::drawVLine(uint8_t x, uint8_t y, uint8_t h, uint8_t color)
 //Credit: cbm80amiga's ST7567 library https://github.com/cbm80amiga/ST7567_FB
 void LCDKS0108::drawHLine(uint8_t x, uint8_t y, uint8_t w, uint8_t color)
 {
-  if(x >= LCDWIDTH || y >= LCDHEIGHT) 
+  if(y >= LCDHEIGHT) 
     return;
+  
+  if(x >= LCDWIDTH) 
+  {
+    //Handle the uint8_t wrapping around.
+    //For example the x position passed to the function could have been negative. In this case 
+    //we draw the portion visible, instead of instead of just returning from the function.
+    uint8_t p = (255 - x) + 1;
+    if(p >= w || p >= 64)
+      return;
+    else
+    {
+      x = 0;
+      w -= p;
+    }
+  }
   
   uint8_t x0 = x;
   uint8_t x1 = x0 + w - 1;
