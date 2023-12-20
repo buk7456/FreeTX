@@ -103,7 +103,7 @@ void GFX::drawHLine(uint8_t x, uint8_t y, uint8_t w, uint8_t color)
     drawPixel(x + i, y, color);
 }
 
-void GFX::drawVLine(uint8_t x, uint8_t y, uint8_t h, uint8_t color) //redefined in subclass for speed 
+void GFX::drawVLine(uint8_t x, uint8_t y, uint8_t h, uint8_t color)
 {
   for(uint8_t i = 0; i < h; i++)
     drawPixel(x, y+i, color);
@@ -119,8 +119,17 @@ void GFX::drawRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color)
 
 void GFX::fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color)
 {
-  for(uint8_t i = 0; i < w; i++)
-    drawVLine(x + i, y, h, color);
+  //Here we choose the faster method
+  if(w > 2*h)
+  {
+    for(uint8_t i = 0; i < h; i++)
+      drawHLine(x, y + i, w, color);
+  }
+  else
+  {
+    for(uint8_t i = 0; i < w; i++)
+      drawVLine(x + i, y, h, color);
+  }
 }
 
 void GFX::drawRoundRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t r, uint8_t color) 

@@ -107,6 +107,34 @@ void LCDKS0108::drawVLine(uint8_t x, uint8_t y, uint8_t h, uint8_t color)
 
 //--------------------------------------------------------------------------------------------------
 
+//Faster implementation than regular drawHLine
+//Achieves speed by eliminating calls to drawPixel() in the loops.
+//Credit: cbm80amiga's ST7567 library https://github.com/cbm80amiga/ST7567_FB
+void LCDKS0108::drawHLine(uint8_t x, uint8_t y, uint8_t w, uint8_t color)
+{
+  if(x >= LCDWIDTH || y >= LCDHEIGHT) 
+    return;
+  
+  uint8_t x0 = x;
+  uint8_t x1 = x0 + w - 1;
+  if(x1 >= LCDWIDTH)
+    x1 = LCDWIDTH - 1;
+  
+  uint8_t mask = 1 << (y&7);
+  if(color)
+  {
+    for(uint8_t k = x0; k <= x1; k++)
+      dispBuffer[(y/8)*LCDWIDTH+k] |= mask;
+  }
+  else
+  {
+    for(uint8_t k = x0; k <= x1; k++)
+      dispBuffer[(y/8)*LCDWIDTH+k] &= ~mask;
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+
 // Faster implementation of drawChar
 // Code page 437 character set
 // 5x7 font 
