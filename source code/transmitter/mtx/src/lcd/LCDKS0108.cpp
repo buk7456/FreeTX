@@ -12,11 +12,13 @@
 #define DISP_OFF      0b00111110
 
 //asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n") is 10 cycles (625 ns at 16 MHz)
+//If the display is glitchy, you may need to increase the delays here
 
 #define EN_DELAY_HIGHLOW { asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
                            asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); }
 
 #define EN_DELAY_LOWHIGH { asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
+                           asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
                            asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
                            asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
                            asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
