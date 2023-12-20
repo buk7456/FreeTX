@@ -126,7 +126,7 @@ void loop()
   //Rollover isn't a problem here. 
   uint32_t loopTime = micros() - loopStartTime;
   if(Sys.DBG_showLoopTime) //debug
-    DBG_loopTime = loopTime / 1000;
+    DBG_loopTime = loopTime;
   if(loopTime < (fixedLoopTime * 1000)) 
     delayMicroseconds((fixedLoopTime * 1000) - loopTime);
   loopStartTime = micros(); 
