@@ -950,7 +950,7 @@ void handleMainUI()
       
     case SCREEN_CHANNEL_MONITOR:
       {
-        display.setInterlace(false); 
+        // display.setInterlace(false); 
         
         drawHeader(PSTR("Outputs"));
         
@@ -2111,8 +2111,6 @@ void handleMainUI()
     
     case SCREEN_INPUTS:
       {
-        display.setInterlace(false); 
-        
         drawHeader(mainMenu[MAIN_MENU_INPUTS]);
 
         enum { 
@@ -2257,7 +2255,20 @@ void handleMainUI()
           //--- Draw graph
           
           //draw stick input marker
-          drawDottedVLine(100 + qqValIn[idx]/20, 11, 51, BLACK, WHITE);
+          static int8_t lastVal = 0;
+          static uint32_t lastMovedTime = 0;
+          int16_t difference = qqValIn[idx]/5 - lastVal;
+          if(difference >= 5 || difference <= -5)
+          {
+            lastVal = qqValIn[idx]/5;
+            lastMovedTime = millis();
+          }
+          if(millis() - lastMovedTime < 3000)
+          {
+            display.setInterlace(false);
+            drawDottedVLine(100 + qqValIn[idx]/20, 11, 51, BLACK, WHITE);
+          }
+          
           //draw x y axis lines
           display.drawVLine(100, 11, 51, BLACK);
           display.drawHLine(75, 36, 51, BLACK);
@@ -2440,7 +2451,21 @@ void handleMainUI()
           drawScrollBar(69, 19, listItemCount, topItem, 5, 5 * 9);
         
           //--- draw graph
-          drawDottedVLine(100 + mixSources[Model.thrSrcRaw]/20, 11, 51, BLACK, WHITE);
+          //draw stick input marker
+          static int8_t lastVal = 0;
+          static uint32_t lastMovedTime = 0;
+          int16_t difference = mixSources[Model.thrSrcRaw]/5 - lastVal;
+          if(difference >= 5 || difference <= -5)
+          {
+            lastVal = mixSources[Model.thrSrcRaw]/5;
+            lastMovedTime = millis();
+          }
+          if(millis() - lastMovedTime < 3000)
+          {
+            display.setInterlace(false);
+            drawDottedVLine(100 + mixSources[Model.thrSrcRaw]/20, 11, 51, BLACK, WHITE);
+          }
+          //draw graph
           drawCustomCurve(crv, (focusedItem >= 3 && focusedItem <= 5) ? thisPt : 0xff);
         }
 
@@ -7974,9 +7999,12 @@ void handleMainUI()
   //--------------- Debug print --------------------------
   if(Sys.DBG_showLoopTime)
   {
-    display.fillRect(114, 55, 13, 9, WHITE);
-    display.setCursor(115, 56); 
-    display.print(DBG_loopTime); 
+    // display.fillRect(102, 55, 26, 9, WHITE);
+    display.setCursor(103, 56);
+    uint16_t tt = DBG_loopTime/100;
+    display.print(tt/10);
+    display.print(F(".")); 
+    display.print(tt%10); 
   }
 
   //-------------- Show on physical lcd -----------------
