@@ -1,8 +1,4 @@
 ## Frequently asked questions
-### Where do i start?
-Probably with the simulation to test out the features before committing your time and effort building the actual hardware. Also please note that
-this project is not suitable for beginners. 
-
 ### Where are the mechanical CAD files?
 As this is a DIY project, I did not make any detailed mechanical CAD, only a plan layout for the front 
 plate of the transmitter. This is because part dimensions for example of the LCD screen differ
