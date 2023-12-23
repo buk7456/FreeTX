@@ -24,9 +24,6 @@ Three buttons are used for navigation; Up, Select, Down. Long press Select to go
 <img src="doc/img1.svg"/>
 </p>
 
-## Compiling the firmware
-The code compiles on arduino ide 1.8.x or later. The code is self-contained so doesn't require installing any libraries. 
-
 ## Hardware and Schematics
 The transmiter and receiver schematics can be found in the 'schematics' folder. 
 The major components are listed below.
