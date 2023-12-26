@@ -298,7 +298,7 @@ void computeChannelOutputs()
     
     //--- SLOW
     //We use a multiplier value here to improve precision
-    const int32_t _factor = 10000;
+    const int32_t _factor = 4096;
     if(isReinitialiseMixer)
       slowCurrVal[mixIdx] = _factor * operand;
     int32_t _op = _factor * operand;
@@ -1172,24 +1172,24 @@ int16_t generateWaveform(uint8_t idx, int32_t _currTime)
     case FUNCGEN_WAVEFORM_SINE:
       {
         // Table for generating stepped sine waveform
-        static const int8_t sineTable[100] PROGMEM = {
-          0, 6, 13, 19, 25, 31, 37, 43, 48, 54, 59, 64, 68, 73, 77, 81, 84, 88, 90, 93, 95, 97, 98, 99, 100, 
-          100, 100, 99, 98, 97, 95, 93, 90, 88, 84, 81, 77, 73, 68, 64, 59, 54, 48, 43, 37, 31, 25, 19, 13, 6,
-          0, -6, -13, -19, -25, -31, -37, -43, -48, -54, -59, -64, -68, -73, -77, -81, -84, -88, -90, -93, -95, -97, -98, -99, -100, 
-          -100, -100, -99, -98, -97, -95, -93, -90, -88, -84, -81, -77, -73, -68, -64, -59, -54, -48, -43, -37, -31, -25, -19, -13, -6
+        static const int8_t sineTable[64] PROGMEM = {
+          0, 10, 20, 29, 38, 47, 56, 63, 71, 77, 83, 88, 92, 96, 98, 100, 
+          100, 100, 98, 96, 92, 88, 83, 77, 71, 63, 56, 47, 38, 29, 20, 10, 
+          0, -10, -20, -29, -38, -47, -56, -63, -71, -77, -83, -88, -92, -96, -98, -100, 
+          -100, -100, -98, -96, -92, -88, -83, -77, -71, -63, -56, -47, -38, -29, -20, -10
         };
         
-        //--fixed point arithmetic with 2 decimal digits for fractional part
-        // upper 2 digits are the actual index in the LUT,
-        // the lower 2 digits are the fractional part used for linear interpolation
-        int16_t index = (timeInstance * 10000L)/period; 
-        uint8_t indexLUT = index / 100; //100 is scaling factor
+        //--fixed point arithmetic with a fractional part
+        // the fractional part is used for linear interpolation
+        const int16_t multiplier = 32;
+        int16_t index = (timeInstance * sizeof(sineTable) * multiplier)/period; 
+        uint8_t indexLUT = index / multiplier;
         int16_t valL = (int16_t)5 * (int8_t)pgm_read_byte(&sineTable[indexLUT]);
         indexLUT++; 
-        if(indexLUT > 99) 
+        if(indexLUT >= sizeof(sineTable)) 
           indexLUT = 0;
         int16_t valR = (int16_t)5 * (int8_t)pgm_read_byte(&sineTable[indexLUT]);
-        result = valL + (((valR - valL)*(index % 100))/100); //100 is scaling factor
+        result = valL + (((valR - valL)*(index % multiplier))/multiplier);
       }
       break;
     
