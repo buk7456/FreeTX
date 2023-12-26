@@ -68,7 +68,7 @@ int16_t linearInterpolate(int16_t xValues[], int16_t yValues[], uint8_t numValue
 // https://en.wikipedia.org/wiki/Cubic_Hermite_spline
 // https://en.wikipedia.org/wiki/Monotone_cubic_interpolation
 // For our implementation as we are using integer math, we need to use some multiplier to scale
-// up the math to avoid losing precision. A multiplier of 1000 is sufficient for our application.
+// up the math to avoid losing precision. A multiplier of say 1000 is sufficient for our application.
 // We then scale back the result after calculations.
 // For infinite slope we simply return the immediate left y value if x is in the first half
 // or the immediate right y value if x is in the second half
@@ -103,7 +103,7 @@ int16_t cubicHermiteInterpolate(int16_t xValues[], int16_t yValues[], uint8_t nu
         }
         else //interpolate
         {
-          const int32_t multiplier = 1000;
+          const int32_t multiplier = 1024; 
         
           int32_t dx = x1 - x0;
           int32_t t = (multiplier * (x - x0)) / dx;
@@ -135,7 +135,7 @@ int16_t cubicHermiteInterpolate(int16_t xValues[], int16_t yValues[], uint8_t nu
 
 int32_t calcTangent(int16_t xValues[], int16_t yValues[], uint8_t numValues, uint8_t i)
 {
-  const int32_t multiplier = 1000; 
+  const int32_t multiplier = 1024;
   
   // Compute the slopes of the secant lines between successive points. 
   // For the endpoints, use one-sided differences.
