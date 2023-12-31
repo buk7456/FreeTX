@@ -1112,11 +1112,16 @@ bool isSyncWaveform[NUM_FUNCGEN];
 
 void syncWaveform(uint8_t idx)
 {
+  if(idx >= NUM_FUNCGEN)
+    return;
   isSyncWaveform[idx] = true;
 }
 
 int16_t generateWaveform(uint8_t idx, int32_t _currTime)
 {
+  if(idx >= NUM_FUNCGEN)
+    return 0;
+  
   funcgen_t *fgen = &Model.Funcgen[idx];
   
   int32_t period;
@@ -1144,13 +1149,20 @@ int16_t generateWaveform(uint8_t idx, int32_t _currTime)
      || fgen->periodMode == FUNCGEN_PERIODMODE_VARIABLE)
   {
     // Smoothly transition to new period when the period is being adjusted.
-    // We add some time offset so that we maintain the next ratio of 
-    // timeInstance/period upon change.
+    // We add some time offset so that we maintain the next ratio of timeInstance/period upon change.
     if(period != oldPeriod[idx])
     {
-      int32_t nextTimeInstance = (_currTime + fixedLoopTime + timeOffset[idx]) % oldPeriod[idx];
-      timeOffset[idx] = ((period * nextTimeInstance)/oldPeriod[idx]) - (_currTime % period);
-      oldPeriod[idx] = period; 
+      if(oldPeriod[idx] == 0) //at initial run
+      {
+        timeOffset[idx] = 0;
+        oldPeriod[idx] = period; 
+      }
+      else
+      {
+        int32_t nextTimeInstance = (_currTime + timeOffset[idx]) % oldPeriod[idx];
+        timeOffset[idx] = ((period * nextTimeInstance)/oldPeriod[idx]) - (_currTime % period);
+        oldPeriod[idx] = period; 
+      }
     }
     timeInstance = (_currTime + timeOffset[idx]) % period;
   }
