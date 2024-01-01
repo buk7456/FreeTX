@@ -340,7 +340,7 @@ bool hasEnoughMixSlots(uint8_t start, uint8_t numRequired);
 bool hasOccupiedMixSlots(uint8_t start, uint8_t numRequired);
 
 void calcNewCurvePts(custom_curve_t *crv, uint8_t numOldPts);
-void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt);
+void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, int16_t src);
 
 uint8_t getLSFuncGroup(uint8_t func);
 
@@ -2254,6 +2254,10 @@ void handleMainUI()
 
           //--- Draw graph
           
+          //draw x y axis lines
+          display.drawVLine(100, 11, 51, BLACK);
+          display.drawHLine(75, 36, 51, BLACK);
+          
           //draw stick input marker
           static int8_t lastVal = 0;
           static uint32_t lastMovedTime = 0;
@@ -2267,11 +2271,10 @@ void handleMainUI()
           {
             display.setInterlace(false);
             drawDottedVLine(100 + qqValIn[idx]/20, 11, 51, BLACK, WHITE);
+            int8_t y = calcRateExpo(qqValIn[idx], *rate, *expo) / 20;
+            drawDottedHLine(75, 36 - y, 51, BLACK, WHITE);
           }
           
-          //draw x y axis lines
-          display.drawVLine(100, 11, 51, BLACK);
-          display.drawHLine(75, 36, 51, BLACK);
           //cache the y values so we don't have to recalculate them every time
           static int8_t lastRate, lastExpo;
           static int8_t graphYVals[26]; 
@@ -2282,6 +2285,7 @@ void handleMainUI()
             for(int16_t i = 0; i <= 25; i++)
               graphYVals[i] = calcRateExpo(i * 20, *rate, *expo) / 20;
           }
+          
           //plot the points
           for(int16_t i = 0; i <= 25; i++)
           {
@@ -2452,8 +2456,9 @@ void handleMainUI()
         
           //--- draw graph
           //draw stick input marker
-          static int8_t lastVal = 0;
+          static int8_t lastVal = mixSources[Model.thrSrcRaw]/5;
           static uint32_t lastMovedTime = 0;
+          bool moved = false;
           int16_t difference = mixSources[Model.thrSrcRaw]/5 - lastVal;
           if(difference >= 5 || difference <= -5)
           {
@@ -2462,11 +2467,11 @@ void handleMainUI()
           }
           if(millis() - lastMovedTime < 3000)
           {
+            moved = true;
             display.setInterlace(false);
-            drawDottedVLine(100 + mixSources[Model.thrSrcRaw]/20, 11, 51, BLACK, WHITE);
           }
           //draw graph
-          drawCustomCurve(crv, (focusedItem >= 3 && focusedItem <= 5) ? thisPt : 0xff);
+          drawCustomCurve(crv, (focusedItem >= 3 && focusedItem <= 5) ? thisPt : 0xff, moved ? mixSources[Model.thrSrcRaw] : 0x7fff);
         }
 
         //------ STICKS
@@ -3669,11 +3674,9 @@ void handleMainUI()
         display.fillRect(120, 0, 8, 7, WHITE);
         display.drawBitmap(120, 0, focusedItem == 7 ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
         
-        //draw graph
-        drawCustomCurve(crv, (focusedItem >= 3 && focusedItem < 6) ? thisCrvPt : 0xff);
-        
-        //show moved input
+        //show moved input on graph
         static uint8_t movedSrc = SRC_NONE;
+        bool moved = false;
         uint8_t tmpMovedSrc = getMovedSource();
         if(tmpMovedSrc != SRC_NONE)
           movedSrc = tmpMovedSrc;
@@ -3689,12 +3692,15 @@ void handleMainUI()
           }
           if(millis() - lastMovedTime < 3000)
           {
+            moved = true;
             display.setInterlace(false);
-            drawDottedVLine(100 + mixSources[movedSrc]/20, 11, 51, BLACK, WHITE);
           }
           else
             movedSrc = SRC_NONE;
         }
+
+        //draw graph
+        drawCustomCurve(crv, (focusedItem >= 3 && focusedItem < 6) ? thisCrvPt : 0xff, moved ? mixSources[movedSrc] : 0x7fff);
 
         //change focus
         changeFocusOnUpDown(7);
@@ -8943,13 +8949,32 @@ void calcNewCurvePts(custom_curve_t *crv, uint8_t numOldPts)
 
 //--------------------------------------------------------------------------------------------------
 
-void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt)
+void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, int16_t src)
 {
-  //--- Show axes
+  //--- draw axes
   display.drawVLine(100, 11, 51, BLACK);
   display.drawHLine(75, 36, 51, BLACK);
 
-  //--- Plot graph. Plot area is 50x50 px
+  //--- draw cross hairs
+  if(src != 0x7fff)
+  {
+    int16_t xQQ[MAX_NUM_POINTS_CUSTOM_CURVE];
+    int16_t yQQ[MAX_NUM_POINTS_CUSTOM_CURVE];
+    for(uint8_t pt = 0; pt < crv->numPoints; pt++)
+    {
+      xQQ[pt] = 5 * crv->xVal[pt];
+      yQQ[pt] = 5 * crv->yVal[pt];
+    }
+    drawDottedVLine(100 + src/20, 11, 51, BLACK, WHITE);
+    int8_t y;
+    if(crv->smooth) 
+      y = cubicHermiteInterpolate(xQQ, yQQ, crv->numPoints, src) / 20;
+    else 
+      y = linearInterpolate(xQQ, yQQ, crv->numPoints, src) / 20;
+    drawDottedHLine(75, 36 - y, 51, BLACK, WHITE);
+  }
+
+  //--- plot graph. Plot area is 50x50 px
   
   if(crv->smooth)
   {
@@ -9037,7 +9062,7 @@ void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt)
     }
   }
   
-  //--- mark modes, show node we've selected
+  //--- mark nodes, show node we've selected
   for(uint8_t pt = 0; pt < crv->numPoints; pt++)
   {
     //mark nodes
