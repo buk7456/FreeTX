@@ -120,7 +120,7 @@ void GFX::drawRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color)
 void GFX::fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color)
 {
   //Here we choose the faster method
-  if(w > 2*h)
+  if(w > 4*h)
   {
     for(uint8_t i = 0; i < h; i++)
       drawHLine(x, y + i, w, color);
