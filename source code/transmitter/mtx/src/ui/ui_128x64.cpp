@@ -591,12 +591,34 @@ void handleSafetyWarnUI()  //blocking function
 void handleMainUI()
 {
   //-------------- Keys filtering for backlight ----------
-  if(!backlightIsOn && Sys.backlightSuppressFirstKey && Sys.backlightEnabled)
+
+  if(Sys.backlightSuppressFirstKey && Sys.backlightEnabled)
   {
-    if(buttonCode == KEY_SELECT || buttonCode == KEY_DOWN || buttonCode == KEY_UP)
-      killButtonEvents();
+    static bool suppressDownClicked = false; //flag to kill the clickedButton event on home screen
+    if(!backlightIsOn)
+    {
+      if(buttonCode == KEY_SELECT || buttonCode == KEY_UP)
+        killButtonEvents();
+      if(buttonCode == KEY_DOWN)
+      {
+        if(theScreen == SCREEN_HOME) 
+        {
+          //Only let through the held event so we can mute/unmute telemetry alarms without
+          //requiring extra key action.
+          pressedButton = 0;
+          suppressDownClicked = true; 
+        }
+        else
+          killButtonEvents();
+      }
+    }
+    if(suppressDownClicked && clickedButton == KEY_DOWN)
+    {
+      suppressDownClicked = false;
+      clickedButton = 0;
+    }
   }
-  
+
   // ------------ Timers -------------------------------
   for(uint8_t i = 0; i < NUM_TIMERS; i++)
   {
@@ -3465,7 +3487,7 @@ void handleMainUI()
         display.print(F("Curve:"));
         display.setCursor(62, 16);
         if(ch->curve == -1)
-          display.print(findStringInIdStr(enum_ChannelCurve, -1));
+          display.print(F("--"));
         else
         {
           if(isEmptyStr(Model.CustomCurve[ch->curve].name, sizeof(Model.CustomCurve[0].name)))
