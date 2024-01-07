@@ -247,7 +247,7 @@ Type: 4 point
 Point(x,y): PtA(-100,-100) PtB(50,-100) PtC(50,100) PtD(100,100)
 ```
 <p align="left">
-<img src="examples/sequenced_landing_gear/retracts_version/img1.png"/>
+<img src="img5.png"/>
 </p>
 
 Then in the mixer, assuming gear door servos on Ch7, gear retracts on Ch8, and using SwD to operate, 
