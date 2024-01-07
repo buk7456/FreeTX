@@ -10,6 +10,12 @@
 #include "modelExport.h"
 #include "modelImport.h"
 
+#if defined (DISPLAY_KS0108)
+#include "../lcd/GFX.h"
+#include "../lcd/LCDKS0108.h"
+#endif
+
+
 //limit to 128kiB files
 #define FILE_SIZE_LIMIT_BYTES 131072
 
@@ -270,4 +276,65 @@ bool sdSimilarModelExists(const char *name)
     return true;
 
   return false;
+}
+
+//--------------------------------------------------------------------------------------------------
+//--------------------------- Splash screen functionality ------------------------------------------
+
+const char* splash_full_name_str = "IMAGES/SPLASH";
+
+void sdShowSplashScreen()
+{
+  if(!hasSDcard)
+    return;
+  
+  //abort if it doesnt exist
+  if(!SD.exists(splash_full_name_str))
+    return;
+  
+  File myFile = SD.open(splash_full_name_str);
+  if(myFile)
+  {
+    if(myFile.isDirectory())//not a file, abort
+    {
+      myFile.close();
+      return;
+    }
+
+    //prevent reading large files as they could be spam or cause the system to hang
+    if(myFile.size() > FILE_SIZE_LIMIT_BYTES)
+    {
+      myFile.close();
+      return;
+    }
+    
+    //--- read from file and directly write to the lcd ---
+
+    uint8_t page = 0;
+    uint8_t column = 0;
+
+    while(myFile.available())
+    {
+      uint8_t c = myFile.read();
+
+    #if defined (DISPLAY_KS0108)
+      display.writePageColumn(page, column, c);
+      column++;
+      if(column > 127)
+      {
+        column = 0;
+        page++;
+        if(page > 7)
+          break;
+      }
+    #endif
+
+    } 
+    
+    //close the file
+    myFile.close();
+
+    //delay to make it noticeable
+    delay(2500);
+  }
 }

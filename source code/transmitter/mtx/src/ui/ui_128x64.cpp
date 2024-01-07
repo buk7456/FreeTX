@@ -4,7 +4,6 @@
 #include "../mtx.h"
 #include "../templates.h"
 #include "../tonePlayer.h"
-#include "../lcd/GFX.h"
 #include "../sd/modelStrings.h"
 #include "bitmaps.h"
 #include "ui.h"
@@ -12,8 +11,9 @@
 #if defined (UI_128X64)
 
 #if defined (DISPLAY_KS0108)
-  #include "../lcd/LCDKS0108.h"
-  LCDKS0108 display = LCDKS0108(PIN_KS_RS, PIN_KS_EN, PIN_KS_CS1, PIN_KS_CS2);
+#include "../lcd/GFX.h"
+#include "../lcd/LCDKS0108.h"
+LCDKS0108 display = LCDKS0108(PIN_KS_RS, PIN_KS_EN, PIN_KS_CS1, PIN_KS_CS2);
 #endif
 
 //------ Menu strings --------
@@ -373,6 +373,8 @@ void initialiseDisplay()
 {
   display.begin();
   display.setTextWrap(false);
+  display.clearDisplay();
+  display.display();
 }
 
 //==================================================================================================
@@ -6194,6 +6196,8 @@ void handleMainUI()
           ITEM_USE_ROUND_CORNERS,
           ITEM_ENABLE_ANIMATIONS,
           ITEM_AUTOHIDE_TRIMS,
+          ITEM_SHOW_WELCOME_MSG,
+          ITEM_SHOW_SPLASH_SCREEN,
           
           ITEM_COUNT
         };
@@ -6271,6 +6275,20 @@ void handleMainUI()
               {
                 display.print(F("Autohide trims:")); drawCheckbox(102, ypos, Sys.autohideTrims);
                 if(edit) Sys.autohideTrims = incDec(Sys.autohideTrims, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+            
+            case ITEM_SHOW_SPLASH_SCREEN:
+              {
+                display.print(F("Splash screen:")); drawCheckbox(102, ypos, Sys.showSplashScreen);
+                if(edit) Sys.showSplashScreen = incDec(Sys.showSplashScreen, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+            
+            case ITEM_SHOW_WELCOME_MSG:
+              {
+                display.print(F("Welcome msg:")); drawCheckbox(102, ypos, Sys.showWelcomeMsg);
+                if(edit) Sys.showWelcomeMsg = incDec(Sys.showWelcomeMsg, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
           }

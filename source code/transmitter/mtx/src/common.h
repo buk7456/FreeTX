@@ -246,7 +246,7 @@ typedef struct {
 
   //--- stick mode
   //used for default assignment when creating new models
-  uint8_t defaultStickMode;
+  uint8_t  defaultStickMode;
 
   //--- switches
   uint8_t  swType[MAX_NUM_PHYSICAL_SWITCHES];
@@ -274,7 +274,7 @@ typedef struct {
   uint8_t  inactivityMinutes;
 
   //--- backlight
-  uint8_t  backlightEnabled; 
+  bool     backlightEnabled; 
   uint8_t  backlightLevel;    //in percentage
   uint8_t  backlightTimeout;
   uint8_t  backlightWakeup;
@@ -286,7 +286,9 @@ typedef struct {
   bool     rememberMenuPosition;
   bool     useRoundRect;
   bool     animationsEnabled;
-  uint8_t  autohideTrims;
+  bool     autohideTrims;
+  bool     showSplashScreen;
+  bool     showWelcomeMsg;
   
   //--- misc
   bool     autoSelectMovedControl;

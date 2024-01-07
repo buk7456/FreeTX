@@ -238,6 +238,8 @@ void resetSystemParams()
   Sys.useRoundRect = false;
   Sys.animationsEnabled = true;
   Sys.autohideTrims = false;
+  Sys.showSplashScreen = true;
+  Sys.showWelcomeMsg = true;
   
   Sys.autoSelectMovedControl = true;
   Sys.mixerTemplatesEnabled = true;
