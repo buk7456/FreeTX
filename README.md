@@ -15,7 +15,6 @@ Remotely operate model airplanes, multicopters, boats, land vehicles, robots, et
 - Alarms, Warnings, Timers, etc.
 - Intuitive user interface.
 - Model memory. I2C eeprom and SD card supported.
-- Models on SD card saved in a human-readable format for easy editing/modification.
 - Model types, context-aware nomenclature.
 
 ## User Interface
