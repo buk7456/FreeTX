@@ -66,7 +66,8 @@ void setup()
   }
 
   //Welcome message
-  showMsg(PSTR("Welcome"));
+  if(Sys.showWelcomeMsg)
+    showMsg(PSTR("Welcome"));
   
   uint32_t tt = millis();
   
@@ -74,9 +75,16 @@ void setup()
   //moved here as it implicitly blocks for about 2seconds when there is no sd card
   sdStoreInit();
   
-  tt = millis() - tt;
-  if(tt < 2000)
-    delay(2000 - tt);
+  if(Sys.showWelcomeMsg)
+  {
+    tt = millis() - tt;
+    if(tt < 1000)
+      delay(1000 - tt);
+  }
+  
+  //splash screen
+  if(Sys.showSplashScreen)
+    sdShowSplashScreen();
     
   //Warnings
   handleSafetyWarnUI(); //blocking
