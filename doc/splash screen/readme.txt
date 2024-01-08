@@ -1,3 +1,6 @@
+Making a custom splash screen
+----------------------------------
+
 Prerequisites
 - Python installed on your computer
 - Pillow library (install via command pip install Pillow if not already installed)
