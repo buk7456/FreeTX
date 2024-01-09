@@ -375,7 +375,7 @@ void bind()
   memset(dataToSend, 0, sizeof(dataToSend));
   if(Sys.isMainReceiver) //generate receiverID
   {
-    randomSeed(millis());
+    randomSeed(micros());
     Sys.receiverID = random(0x01, 0xFF);
   }
   dataToSend[0] = Sys.receiverID;
