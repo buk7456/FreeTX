@@ -778,7 +778,18 @@ void handleMainUI()
         printModelName(Model.name, Sys.activeModelIdx);
 
         //Flightmode
-        if(activeFmdIdx != 0)
+        //Determine if flight modes are defined other than the default. 
+        //If any exist, show the active flight mode. Otherwise hide it, as user does not care.
+        bool hasDefinedFlightModes = false;
+        for(uint8_t i = 1; i < NUM_FLIGHT_MODES; i++)
+        {
+          if(Model.FlightMode[i].swtch != CTRL_SW_NONE)
+          {
+            hasDefinedFlightModes = true;
+            break;
+          }
+        }
+        if(hasDefinedFlightModes)
         {
           if(isEmptyStr(Model.FlightMode[activeFmdIdx].name, sizeof(Model.FlightMode[0].name)))
           {
