@@ -203,7 +203,7 @@ void resetSystemParams()
   
   Sys.defaultStickMode = STICK_MODE_RTAE;
 
-  Sys.battVoltsMin = 7000; 
+  Sys.battVoltsMin = 7200; 
   Sys.battVoltsMax = 8000; 
   Sys.battVfactor  = 1000;  
   
