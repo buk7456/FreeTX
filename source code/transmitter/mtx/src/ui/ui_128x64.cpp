@@ -731,16 +731,21 @@ void handleMainUI()
         //This gauge doesn't indicate state of charge; only battery voltage
         display.drawRect(112, 0, 15, 7, BLACK);
         display.drawVLine(127, 2, 3, BLACK);
-        static int8_t lastNumOfBars = 19;
         if(battState == BATTHEALTY)
         {
-          int8_t numOfBars = (20L *(battVoltsNow - Sys.battVoltsMin)) / (Sys.battVoltsMax - Sys.battVoltsMin);
-          if(numOfBars > 19) 
-            numOfBars = 19;
+          static int8_t lastNumOfBars = 16;
+          int8_t numOfBars = 2 + ((int32_t)(battVoltsNow - Sys.battVoltsMin) * 16) / (Sys.battVoltsMax - Sys.battVoltsMin);
+          if(numOfBars > 16) 
+            numOfBars = 16;
           if(numOfBars > lastNumOfBars && numOfBars - lastNumOfBars < 2) //prevent jitter at boundaries
             numOfBars = lastNumOfBars;
-          for(int8_t i = 0; i < (numOfBars/5 + 1); i++)
-            display.fillRect(114 + i * 3, 2, 2, 3, BLACK);
+          uint8_t xpos = 114;
+          for(uint8_t i = 0; i < numOfBars/2; i++)
+          {
+            display.drawVLine(xpos, 2, 3, BLACK);
+            if(i > 0 && i % 2) xpos += 2;
+            else xpos += 1;
+          }
           lastNumOfBars = numOfBars;
         }
 
