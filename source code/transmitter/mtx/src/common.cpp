@@ -205,7 +205,7 @@ void resetSystemParams()
 
   Sys.battVoltsMin = 7200; 
   Sys.battVoltsMax = 8000; 
-  Sys.battVfactor  = 1000;  
+  Sys.battVfactor  = 1000; 
   
   for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++) 
   {
@@ -240,6 +240,7 @@ void resetSystemParams()
   Sys.autohideTrims = false;
   Sys.showSplashScreen = true;
   Sys.showWelcomeMsg = true;
+  Sys.useNumericalBatteryIndicator = false;
   
   Sys.autoSelectMovedControl = true;
   Sys.mixerTemplatesEnabled = true;
