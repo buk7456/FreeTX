@@ -46,7 +46,7 @@ void getControlSwitchName_Clean(char* buff, uint8_t idx, uint8_t lenBuff);
 //---- Output channels -------------------
 
 /* NOTE: Changing these will need updating the stx and receiver code,
-as well as the schematics and all related stuff.*/
+as well as the schematics and all related stuff */
 #define NUM_RC_CHANNELS  20
 #define MAX_CHANNELS_PER_RECEIVER 10
 
@@ -287,6 +287,7 @@ typedef struct {
   bool     useRoundRect;
   bool     animationsEnabled;
   bool     autohideTrims;
+  bool     useNumericalBatteryIndicator;
   bool     showSplashScreen;
   bool     showWelcomeMsg;
   
