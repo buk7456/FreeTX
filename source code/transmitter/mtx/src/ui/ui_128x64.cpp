@@ -710,44 +710,64 @@ void handleMainUI()
         
         //--------------- Icons -----------------
         
+        uint8_t icon_xpos = 127;
+        
+        //Battery level indicator
+        //Gauges don't indicate state of charge; only battery voltage
+        if(Sys.useNumericalBatteryIndicator)
+        {
+          //print right aligned. 
+          //Using a hack to measure the width of text first before actually printing.
+          display.setCursor(0, 64);
+          printVoltage(battVoltsNow);
+          uint8_t len = display.getCursorX() / 6;
+          icon_xpos = 127 - len * 6;
+          display.setCursor(icon_xpos, 0);
+          printVoltage(battVoltsNow);
+        }
+        else
+        {
+          icon_xpos = 113;
+          display.drawRect(icon_xpos, 0, 14, 7, BLACK);
+          display.drawVLine(icon_xpos + 14, 2, 3, BLACK);
+          if(battState == BATTHEALTY)
+          {
+            static int8_t lastNumOfBars = 20;
+            int8_t numOfBars = 2 + ((int32_t)(battVoltsNow - Sys.battVoltsMin) * 20) / (Sys.battVoltsMax - Sys.battVoltsMin);
+            if(numOfBars > 20) 
+              numOfBars = 20;
+            if(numOfBars > lastNumOfBars && numOfBars - lastNumOfBars < 2) //prevent jitter at boundaries
+              numOfBars = lastNumOfBars;
+            for(uint8_t i = 0; i < numOfBars/2; i++)
+              display.drawVLine(icon_xpos + 2 + i, 2, 3, BLACK);
+            lastNumOfBars = numOfBars;
+          }
+        }
+        
+        //Draw other icons. Offset the x position by (4 + iconWidth)
         //Rf icon and tx power level as signal strength bars
         if(Sys.rfEnabled)
         {
-          display.drawBitmap(95, 0, icon_rf, 7, 7, BLACK);
+          icon_xpos -= 16;
+          display.drawBitmap(icon_xpos, 0, icon_rf, 7, 7, BLACK);
           uint8_t bars = 2 + (4 * Sys.rfPower) / (RF_POWER_COUNT - 1);
           for(uint8_t i = 0; i < bars; i++)
-            display.drawVLine(101 + i, 6 - i, i + 1, BLACK);
+            display.drawVLine(icon_xpos + 6 + i, 6 - i, i + 1, BLACK);
         }
         
         //Mute icon
         if(!Sys.soundEnabled)
-          display.drawBitmap(74, 0, icon_mute, 8, 7, BLACK);
+        {
+          icon_xpos -= 12;
+          display.drawBitmap(icon_xpos, 0, icon_mute, 8, 7, BLACK);
+        }
         
         //Lock icon
         if(mainMenuLocked)
-          display.drawBitmap(86, 0, icon_padlock, 5, 7, BLACK); 
-        
-        //Graphical battery gauge
-        //This gauge doesn't indicate state of charge; only battery voltage
-        display.drawRect(112, 0, 15, 7, BLACK);
-        display.drawVLine(127, 2, 3, BLACK);
-        if(battState == BATTHEALTY)
         {
-          static int8_t lastNumOfBars = 16;
-          int8_t numOfBars = 2 + ((int32_t)(battVoltsNow - Sys.battVoltsMin) * 16) / (Sys.battVoltsMax - Sys.battVoltsMin);
-          if(numOfBars > 16) 
-            numOfBars = 16;
-          if(numOfBars > lastNumOfBars && numOfBars - lastNumOfBars < 2) //prevent jitter at boundaries
-            numOfBars = lastNumOfBars;
-          uint8_t xpos = 114;
-          for(uint8_t i = 0; i < numOfBars/2; i++)
-          {
-            display.drawVLine(xpos, 2, 3, BLACK);
-            if(i > 0 && i % 2) xpos += 2;
-            else xpos += 1;
-          }
-          lastNumOfBars = numOfBars;
-        }
+          icon_xpos -= 9;
+          display.drawBitmap(icon_xpos, 0, icon_padlock, 5, 7, BLACK);
+        }          
 
         //------------ Trims --------------------
         static uint32_t endTime; 
@@ -6212,6 +6232,7 @@ void handleMainUI()
           ITEM_USE_ROUND_CORNERS,
           ITEM_ENABLE_ANIMATIONS,
           ITEM_AUTOHIDE_TRIMS,
+          ITEM_USE_NUMERICAL_BATTERY_INDICATOR,
           ITEM_SHOW_WELCOME_MSG,
           ITEM_SHOW_SPLASH_SCREEN,
           
@@ -6305,6 +6326,13 @@ void handleMainUI()
               {
                 display.print(F("Welcome msg:")); drawCheckbox(102, ypos, Sys.showWelcomeMsg);
                 if(edit) Sys.showWelcomeMsg = incDec(Sys.showWelcomeMsg, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+
+            case ITEM_USE_NUMERICAL_BATTERY_INDICATOR:
+              {
+                display.print(F("Numeric BattV:")); drawCheckbox(102, ypos, Sys.useNumericalBatteryIndicator);
+                if(edit) Sys.useNumericalBatteryIndicator = incDec(Sys.useNumericalBatteryIndicator, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
           }
@@ -6735,17 +6763,17 @@ void handleMainUI()
 
         display.setCursor(0, 9);
         display.print(F("Gauge min:"));
-        display.setCursor(78, 9);
+        display.setCursor(72, 9);
         printVoltage(Sys.battVoltsMin);
 
         display.setCursor(0, 18);
         display.print(F("Gauge max:"));
-        display.setCursor(78, 18);
+        display.setCursor(72, 18);
         printVoltage(Sys.battVoltsMax);
         
         display.setCursor(0, 27);
         display.print(F("Multplr:"));
-        display.setCursor(78, 27);
+        display.setCursor(72, 27);
         display.print(Sys.battVfactor);
         
         display.setCursor(0, hasNextButton ? 45 : 56);
@@ -6763,7 +6791,7 @@ void handleMainUI()
         }
         
         if(focusedItem < 4)
-          drawCursor(70, focusedItem * 9);
+          drawCursor(64, focusedItem * 9);
         
         changeFocusOnUpDown(hasNextButton ? 4 : 3);
         toggleEditModeOnSelectClicked();
