@@ -303,3 +303,54 @@ helps smooth the movement.
 <br>If desired, we can also incorporate a custom curve to sort of bias the generated servo positions, for example
 if we want our turret be pointing around the middle most of the time.
 <br>We can also easily modify the setup to include an extra switch to manually stop the motion.
+
+### Example 19: Random servo motion generator - advanced version
+This example generates a random servo position at a random interval, with an added effect of 
+random intermittency, and also random selection between two speeds.  
+Furthermore, a physical switch SwE is used to start/stop the random motion of the servo.
+
+```txt
+Fgen1
+Waveform: Random
+IntervalMode: Variable
+Min Interval: 1.0s
+Max Interval: 2.0s
+Control: Fgen2
+
+Fgen2  (modulates the interval of Fgen1)
+Waveform: Random
+IntervalMode: Fixed
+Interval: 1.0s
+
+Fgen3  (used for the intermittent motion)
+Waveform: Random
+IntervalMode: Fixed
+Interval: 1.0s
+
+Fgen4  (used for the selection between two speeds)
+Waveform: Random
+IntervalMode: Fixed
+Interval: 2.0s
+```
+
+Then set up two logical switches as follows.
+```txt
+Logical switch L1
+Func:   a>x
+Value1: Fgen3
+value2: 0
+
+Logical switch L2
+Func:   a>x
+Value1: Fgen4
+value2: 0
+``` 
+
+Then in the mixer, assuming our servo is on Ch7,
+```txt
+1. Ch7   Add   Fgen1 (Weight 100)          
+2. Ch7   Hold        (L1)          
+3. Ch7   RplW  Max   (Weight 0, SwE_Up) 
+4. Ch7   RplW  Ch7   (Weight 100, SlowUp 5s, SlowDown 5s, L2) 
+5. Ch7   RplW  Ch7   (Weight 100, SlowUp 2s, SlowDown 2s) 
+```
