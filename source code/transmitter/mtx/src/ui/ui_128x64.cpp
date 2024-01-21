@@ -340,7 +340,7 @@ bool hasEnoughMixSlots(uint8_t start, uint8_t numRequired);
 bool hasOccupiedMixSlots(uint8_t start, uint8_t numRequired);
 
 void calcNewCurvePts(custom_curve_t *crv, uint8_t numOldPts);
-void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, int16_t src);
+void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src);
 
 uint8_t getLSFuncGroup(uint8_t func);
 
@@ -2531,7 +2531,7 @@ void handleMainUI()
             display.setInterlace(false);
           }
           //draw graph
-          drawCustomCurve(crv, (focusedItem >= 3 && focusedItem <= 5) ? thisPt : 0xff, moved ? mixSources[Model.thrSrcRaw] : 0x7fff);
+          drawCustomCurve(crv, (focusedItem >= 3 && focusedItem <= 5) ? thisPt : 0xff, moved ? Model.thrSrcRaw : (uint8_t)SRC_NONE);
         }
 
         //------ STICKS
@@ -3760,7 +3760,7 @@ void handleMainUI()
         }
 
         //draw graph
-        drawCustomCurve(crv, (focusedItem >= 3 && focusedItem < 6) ? thisCrvPt : 0xff, moved ? mixSources[movedSrc] : 0x7fff);
+        drawCustomCurve(crv, (focusedItem >= 3 && focusedItem < 6) ? thisCrvPt : 0xff, moved ? movedSrc : (uint8_t)SRC_NONE);
 
         //change focus
         changeFocusOnUpDown(7);
@@ -8936,10 +8936,9 @@ uint8_t getMovedSource()
 {
   //Detects which source is moved
   //Only detects stick axes, knobs and physical switches.
-
+  
   if(!Sys.autoSelectMovedControl)
     return SRC_NONE;
-  
   //use array to hold values for the valid sources
   const uint8_t srcCnt = (SRC_RAW_ANALOG_LAST - SRC_RAW_ANALOG_FIRST + 1) + MAX_NUM_PHYSICAL_SWITCHES;
   uint8_t  srcQQ[srcCnt];
@@ -8956,10 +8955,8 @@ uint8_t getMovedSource()
         break;
     }
   }
-  
   uint8_t movedSrc = SRC_NONE;
   static uint32_t lastLoopNum;
-  
   for(uint8_t i = 0; i < MIXSOURCES_COUNT; i++)
   {
     if((i >= SRC_RAW_ANALOG_FIRST && i <= SRC_RAW_ANALOG_LAST) || (i >= SRC_SW_PHYSICAL_FIRST && i <= SRC_SW_PHYSICAL_LAST))
@@ -8984,7 +8981,6 @@ uint8_t getMovedSource()
       }
     }
   }
-  
   lastLoopNum = thisLoopNum;
   return movedSrc; 
 }
@@ -9033,14 +9029,14 @@ void calcNewCurvePts(custom_curve_t *crv, uint8_t numOldPts)
 
 //--------------------------------------------------------------------------------------------------
 
-void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, int16_t src)
+void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src)
 {
   //--- draw axes
   display.drawVLine(100, 11, 51, BLACK);
   display.drawHLine(75, 36, 51, BLACK);
 
   //--- draw cross hairs
-  if(src != 0x7fff)
+  if(src != SRC_NONE)
   {
     int16_t xQQ[MAX_NUM_POINTS_CUSTOM_CURVE];
     int16_t yQQ[MAX_NUM_POINTS_CUSTOM_CURVE];
@@ -9049,17 +9045,16 @@ void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, int16_t src)
       xQQ[pt] = 5 * crv->xVal[pt];
       yQQ[pt] = 5 * crv->yVal[pt];
     }
-    drawDottedVLine(100 + src/20, 11, 51, BLACK, WHITE);
+    drawDottedVLine(100 + mixSources[src]/20, 11, 51, BLACK, WHITE);
     int8_t y;
     if(crv->smooth) 
-      y = cubicHermiteInterpolate(xQQ, yQQ, crv->numPoints, src) / 20;
+      y = cubicHermiteInterpolate(xQQ, yQQ, crv->numPoints, mixSources[src]) / 20;
     else 
-      y = linearInterpolate(xQQ, yQQ, crv->numPoints, src) / 20;
+      y = linearInterpolate(xQQ, yQQ, crv->numPoints, mixSources[src]) / 20;
     drawDottedHLine(75, 36 - y, 51, BLACK, WHITE);
   }
 
   //--- plot graph. Plot area is 50x50 px
-  
   if(crv->smooth)
   {
     //We cache the y cordinates so we dont have to recompute unnecessarily.
@@ -9171,10 +9166,8 @@ void drawTelemetryValue(uint8_t xpos, uint8_t ypos, uint8_t idx, int16_t rawVal,
     display.print(F("No data"));
     return;
   }
-  
   if(blink && telemetryAlarmState[idx] && (millis() % 1000 > 700)) //flashing effect
     return;
-
   int32_t tVal = ((int32_t) rawVal * Model.Telemetry[idx].multiplier) / 100;
   tVal += Model.Telemetry[idx].offset;
   printTelemParam(xpos, ypos, idx, tVal);
