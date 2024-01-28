@@ -12,7 +12,6 @@ void handleSafetyWarnUI();
 void handleMainUI();
 
 void restoreTimerRegisters();
-
 void restoreCounterRegisters();
 
 #if defined (DISPLAY_KS0108)
