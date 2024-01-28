@@ -717,6 +717,8 @@ typedef struct {
 
 #define NUM_TIMERS 3
 
+extern uint32_t timerElapsedTime[NUM_TIMERS];
+
 //------------------------------------------------
 // structure for home screen widget data
 //------------------------------------------------
