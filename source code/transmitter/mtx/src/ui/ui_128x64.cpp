@@ -224,8 +224,9 @@ enum {
   INCDEC_FAST,
   
   INCDEC_FLAG_TELEM_SRC = 0x01,
-  INCDEC_FLAG_MIX_SRC   = 0x02,
+  INCDEC_FLAG_MIX_SRC = 0x02,
   INCDEC_FLAG_COUNTER_SRC = 0x04,
+  INCDEC_FLAG_TIMER_SRC = 0x08,
   
   INCDEC_FLAG_PHY_SW  = 0X01,
   INCDEC_FLAG_LGC_SW  = 0x02,
@@ -278,7 +279,6 @@ uint8_t thisWidgetIdx = 0;
 uint8_t destWidgetIdx = 0;
 
 //timers
-uint32_t timerElapsedTime[NUM_TIMERS];
 uint32_t timerLastElapsedTime[NUM_TIMERS];
 uint32_t timerLastPaused[NUM_TIMERS];
 bool     timerIsRunning[NUM_TIMERS];
@@ -4221,7 +4221,7 @@ void handleMainUI()
                     if(movedSrc != SRC_NONE)
                       ls->val1 = movedSrc;
                     //inc dec
-                    ls->val1 = incDecSource(ls->val1, INCDEC_FLAG_MIX_SRC | INCDEC_FLAG_TELEM_SRC | INCDEC_FLAG_COUNTER_SRC);
+                    ls->val1 = incDecSource(ls->val1, INCDEC_FLAG_MIX_SRC | INCDEC_FLAG_TELEM_SRC | INCDEC_FLAG_COUNTER_SRC | INCDEC_FLAG_TIMER_SRC);
                     //reset ls->val2 if out of range
                     if(ls->val1 < MIXSOURCES_COUNT)
                     {
@@ -4231,6 +4231,11 @@ void handleMainUI()
                     else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS)
                     {
                       if(ls->val2 > 9999 || ls->val2 < 0)
+                        ls->val2 = 0;
+                    }
+                    else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS)
+                    {
+                      if(ls->val2 < 0)
                         ls->val2 = 0;
                     }
                   }
@@ -4270,9 +4275,11 @@ void handleMainUI()
                 {
                   if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //mixsource value, counter value
                     display.print(ls->val2);
+                  else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timer
+                    printHHMMSS((int32_t)ls->val2 * 1000);
                   else //telemetry value
                   {
-                    uint8_t idx = ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS);
+                    uint8_t idx = ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS);
                     printTelemParam(display.getCursorX(), display.getCursorY(), idx, ls->val2);
                     display.print(Model.Telemetry[idx].unitsName);
                   }
@@ -4305,6 +4312,8 @@ void handleMainUI()
                       ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -100 : 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
                     else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counter value
                       ls->val2 = incDec(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_FAST);
+                    else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timer value
+                      ls->val2 = incDec(ls->val2, 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
                     else //telemetry value
                       ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
                   }
@@ -6004,7 +6013,7 @@ void handleMainUI()
           for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
           {
             if(Model.LogicalSwitch[i].func <= LS_FUNC_GROUP3_LAST 
-               && Model.LogicalSwitch[i].val1 == (int16_t) MIXSOURCES_COUNT + NUM_COUNTERS + thisTelemIdx)
+               && Model.LogicalSwitch[i].val1 == (int16_t) MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS + thisTelemIdx)
             {
               resetLogicalSwitchParams(i);
             }
@@ -8232,7 +8241,7 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
     return val;
   
   //use an array to hold the valid sources
-  uint8_t srcQQ[MIXSOURCES_COUNT + NUM_COUNTERS + NUM_CUSTOM_TELEMETRY];
+  uint8_t srcQQ[MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS + NUM_CUSTOM_TELEMETRY];
   uint8_t srcCnt = 0;
   for(uint8_t i = 0; i < sizeof(srcQQ); i++)
   {
@@ -8250,12 +8259,17 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
       if(!(flag & INCDEC_FLAG_COUNTER_SRC))
         continue;
     }
+    else if(i < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timers
+    {
+      if(!(flag & INCDEC_FLAG_TIMER_SRC))
+        continue;
+    }
     else //telemetry sources
     {
       if(!(flag & INCDEC_FLAG_TELEM_SRC))
         continue;
       //skip empty telemetry
-      uint8_t idx = i - (MIXSOURCES_COUNT + NUM_COUNTERS);
+      uint8_t idx = i - (MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS);
       if(isEmptyStr(Model.Telemetry[idx].name, sizeof(Model.Telemetry[0].name)))
         continue;
     }
