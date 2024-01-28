@@ -448,6 +448,8 @@ void computeChannelOutputs()
           lsDeltaPrevVal[idx] = mixSources[ls->val1];
         else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counters
           lsDeltaPrevVal[idx] = counterOut[ls->val1 - MIXSOURCES_COUNT];
+        else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timers
+          lsDeltaPrevVal[idx] = timerElapsedTime[ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS)];
       }
     }
   }
@@ -482,9 +484,14 @@ void computeChannelOutputs()
             _val1 = counterOut[ls->val1 - MIXSOURCES_COUNT];
             _val2 = ls->val2;
           }
+          else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timers
+          {
+            _val1 = timerElapsedTime[ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS)];
+            _val2 = (int32_t)ls->val2 * 1000;
+          }
           else //telemetry
           {
-            uint8_t tlmIdx = ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS);
+            uint8_t tlmIdx = ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS);
             if(telemetryReceivedValue[tlmIdx] == TELEMETRY_NO_DATA)
               break; 
             else
