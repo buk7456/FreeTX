@@ -114,7 +114,7 @@ void loop()
   ///--- STICKS 
   readSticks();
   
-  ///---- COMPUTE OUTPUTS
+  ///--- COMPUTE OUTPUTS
   computeChannelOutputs();
   
   ///--- HANDLE MAIN INTERFACE
@@ -143,20 +143,6 @@ void loop()
   doSerialCommunication();
 
   ///--- TELEMETRY
-  if(Sys.DBG_simulateTelemetry)
-  {
-    //check against configured Ids and copy to telemetryReceivedValue 
-    for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++)
-    {
-      if(Model.Telemetry[idx].identifier == 0x30)
-      {
-        if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
-          telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
-        telemetryReceivedValue[idx] = mixSources[SRC_VIRTUAL_FIRST] / 5;
-        telemetryLastReceivedTime[idx] = millis();
-      }
-    }
-  }
   handleTelemetry();
   
   ///--- CHECK BATTERY
@@ -189,7 +175,7 @@ void checkBattery()
 
 void turnOnBacklight()
 {
-  //Forces backlight to be on, irrespective of system settings
+  //Force the backlight to be on, irrespective of system settings
   analogWrite(PIN_LCD_BACKLIGHT, 76); //30% level
   backlightIsOn = true;
 }
@@ -455,6 +441,22 @@ void doSerialCommunication()
 
 void handleTelemetry()
 {
+  //-- simulated telemetry
+  if(Sys.DBG_simulateTelemetry)
+  {
+    //check against configured Ids and copy to telemetryReceivedValue 
+    for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++)
+    {
+      if(Model.Telemetry[idx].identifier == 0x30)
+      {
+        if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
+          telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
+        telemetryReceivedValue[idx] = mixSources[SRC_VIRTUAL_FIRST] / 5;
+        telemetryLastReceivedTime[idx] = millis();
+      }
+    }
+  }
+  
   //-- stats
   for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
   {
