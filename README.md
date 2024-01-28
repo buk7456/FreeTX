@@ -5,14 +5,14 @@ Remotely operate model airplanes, multicopters, boats, land vehicles, robots, et
 </p>
 
 ## Main features
-- 20 fully proportional RC channels, each channel encoded with 10 bits.
+- 20 fully proportional RC channels, each encoded with 10 bits.
 - Configurable RC channel output signal format.
 - Update rate of 50x per second for all RC channels.
 - Receiver binding, Adjustable RF power, Frequency hopping.
 - Reverse, subtrim, endpoints, failsafe.
 - Dual rates and expo, Custom curves, Flight modes.
-- Powerful mixer system, Logical switches, Custom telemetry.
-- Alarms, Warnings, Timers, etc.
+- Powerful mixer system, Logical switches, Function generators, Counters, Timers.
+- Custom telemetry, Alarms, Warnings, etc.
 - Intuitive user interface.
 - Model memory. I2C eeprom and SD card supported.
 - Model types, context-aware nomenclature.
