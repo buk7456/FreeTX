@@ -162,6 +162,8 @@ bool     telemetryForceRequest = false;
 
 int16_t  counterOut[NUM_COUNTERS];
 
+uint32_t timerElapsedTime[NUM_TIMERS];
+
 uint8_t  maxNumOfModels;
 
 uint32_t thisLoopNum = 0; 
@@ -778,9 +780,15 @@ void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff)
         itoa((idx - MIXSOURCES_COUNT) + 1, suffix, 10);
         strlcat(buff, suffix, lenBuff);
       }
+      else if(idx < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timers as sources
+      {
+        strlcpy_P(buff, PSTR("Timer"), lenBuff);
+        itoa((idx - (MIXSOURCES_COUNT + NUM_COUNTERS)) + 1, suffix, 10);
+        strlcat(buff, suffix, lenBuff);
+      }
       else //telemetry as sources
       {
-        strlcpy(buff, Model.Telemetry[idx - (MIXSOURCES_COUNT + NUM_COUNTERS)].name, lenBuff);
+        strlcpy(buff, Model.Telemetry[idx - (MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS)].name, lenBuff);
       }
     }
   }
