@@ -5,14 +5,11 @@
 #include "font.h"
 #include "../../config.h"
 
-#define START_LINE    0b11000000
-#define SET_Y_ADDRESS 0b01000000
-#define SET_PAGE      0b10111000
-#define DISP_ON       0b00111111
-#define DISP_OFF      0b00111110
+//uncomment the following line if the chip select pins are active low
+#define CS_ACTIVE_LOW  
 
 //asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n") is 10 cycles (625 ns at 16 MHz)
-//If the display is glitchy, you may need to increase the delays here
+//If the display is glitchy, you may need to increase the delays below.
 
 #define EN_DELAY_HIGHLOW { asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
                            asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); }
@@ -24,14 +21,20 @@
                            asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); \
                            asm volatile ("lpm \n" "lpm \n" "lpm \n" "nop \n"); }
 
+#define START_LINE    0b11000000
+#define SET_Y_ADDRESS 0b01000000
+#define SET_PAGE      0b10111000
+#define DISP_ON       0b00111111
+#define DISP_OFF      0b00111110
+
 //--------------------------------------------------------------------------------------------------
 
-LCDKS0108::LCDKS0108(int8_t QRS, int8_t QEN, int8_t QCS1, int8_t QCS2) : GFX(LCDWIDTH, LCDHEIGHT)
+LCDKS0108::LCDKS0108(int8_t rs, int8_t en, int8_t cs1, int8_t cs2) : GFX(LCDWIDTH, LCDHEIGHT)
 {
-  _qrs = QRS;
-  _qen = QEN;
-  _qcs1 = QCS1;
-  _qcs2 = QCS2;
+  _rs = rs;
+  _en = en;
+  _cs1 = cs1;
+  _cs2 = cs2;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -226,62 +229,62 @@ void LCDKS0108::writePageColumn(uint8_t page, uint8_t column, uint8_t val)
   lcdCommand(SET_Y_ADDRESS | column); //set column
   
   //rs high
-  *qrsport |= qrspinmask;
+  *rsPort |= rsPinMask;
 
   if(column < 64)
   {
     //enable chip1, disable chip2
     #if defined (CS_ACTIVE_LOW)
-    *qcs1port &= ~qcs1pinmask;  
-    *qcs2port |= qcs2pinmask;
+    *cs1Port &= ~cs1PinMask;  
+    *cs2Port |= cs2PinMask;
     #else
-    *qcs1port |= qcs1pinmask;  
-    *qcs2port &= ~qcs2pinmask; 
+    *cs1Port |= cs1PinMask;  
+    *cs2Port &= ~cs2PinMask; 
     #endif
   }
   else
   {
     //enable chip2, disable chip1
     #if defined (CS_ACTIVE_LOW)
-      *qcs2port &= ~qcs2pinmask;
-      *qcs1port |= qcs1pinmask;
+      *cs2Port &= ~cs2PinMask;
+      *cs1Port |= cs1PinMask;
     #else 
-      *qcs2port |= qcs2pinmask; 
-      *qcs1port &= ~qcs1pinmask;
+      *cs2Port |= cs2PinMask; 
+      *cs1Port &= ~cs1PinMask;
     #endif
   }
   
-  PORTx_LCD_DATA = val;    //write
-  *qenport |= qenpinmask;  //EN high
-  EN_DELAY_HIGHLOW;        //Delay 
-  *qenport &= ~qenpinmask; //EN low 
-  EN_DELAY_LOWHIGH;        //Delay
+  PORTx_LCD_DATA = val;  //write
+  *enPort |= enPinMask;  //EN high
+  EN_DELAY_HIGHLOW;      //Delay 
+  *enPort &= ~enPinMask; //EN low 
+  EN_DELAY_LOWHIGH;      //Delay
 }
 
 //--------------------------------------------------------------------------------------------------
 
 void LCDKS0108::begin()
 {
-  pinMode(_qrs, OUTPUT);
-  pinMode(_qen, OUTPUT);
-  pinMode(_qcs1, OUTPUT);
-  pinMode(_qcs2, OUTPUT);
+  pinMode(_rs, OUTPUT);
+  pinMode(_en, OUTPUT);
+  pinMode(_cs1, OUTPUT);
+  pinMode(_cs2, OUTPUT);
   
   //set port as output port
   DDRx_LCD_DATA = 0xFF;
 
   //Set ports and masks
-  qrsport = portOutputRegister(digitalPinToPort(_qrs));
-  qrspinmask = digitalPinToBitMask(_qrs);
+  rsPort = portOutputRegister(digitalPinToPort(_rs));
+  rsPinMask = digitalPinToBitMask(_rs);
 
-  qenport = portOutputRegister(digitalPinToPort(_qen));
-  qenpinmask = digitalPinToBitMask(_qen);
+  enPort = portOutputRegister(digitalPinToPort(_en));
+  enPinMask = digitalPinToBitMask(_en);
 
-  qcs1port = portOutputRegister(digitalPinToPort(_qcs1));
-  qcs1pinmask = digitalPinToBitMask(_qcs1);
+  cs1Port = portOutputRegister(digitalPinToPort(_cs1));
+  cs1PinMask = digitalPinToBitMask(_cs1);
   
-  qcs2port = portOutputRegister(digitalPinToPort(_qcs2));
-  qcs2pinmask = digitalPinToBitMask(_qcs2);
+  cs2Port = portOutputRegister(digitalPinToPort(_cs2));
+  cs2PinMask = digitalPinToBitMask(_cs2);
 
   //initialise lcd
   lcdCommand(DISP_ON);
@@ -293,9 +296,9 @@ void LCDKS0108::begin()
 
 //--------------------------------------------------------------------------------------------------
 
-void LCDKS0108::setPage(uint8_t pageNo)
+void LCDKS0108::setPage(uint8_t page)
 {
-  lcdCommand(SET_PAGE | pageNo);
+  lcdCommand(SET_PAGE | page);
   lcdCommand(SET_Y_ADDRESS);
 }
 
@@ -350,15 +353,15 @@ void LCDKS0108::display()
     setPage(page);
     
     //rs high
-    *qrsport |= qrspinmask; 
+    *rsPort |= rsPinMask; 
 
     //enable chip1, disable chip2
     #if defined (CS_ACTIVE_LOW)
-    *qcs1port &= ~qcs1pinmask;  
-    *qcs2port |= qcs2pinmask;
+    *cs1Port &= ~cs1PinMask;  
+    *cs2Port |= cs2PinMask;
     #else
-    *qcs1port |= qcs1pinmask;  
-    *qcs2port &= ~qcs2pinmask; 
+    *cs1Port |= cs1PinMask;  
+    *cs2Port &= ~cs2PinMask; 
     #endif
     
     /*     
@@ -368,19 +371,19 @@ void LCDKS0108::display()
       {
         //enable chip2, disable chip1
       #if defined (CS_ACTIVE_LOW)
-        *qcs2port &= ~qcs2pinmask;
-        *qcs1port |= qcs1pinmask;
+        *cs2Port &= ~cs2PinMask;
+        *cs1Port |= cs1PinMask;
       #else 
-        *qcs2port |= qcs2pinmask; 
-        *qcs1port &= ~qcs1pinmask;
+        *cs2Port |= cs2PinMask; 
+        *cs1Port &= ~cs1PinMask;
       #endif
       }
       
       PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
-      *qenport |= qenpinmask;  //EN high
-      EN_DELAY_HIGHLOW;        //Delay 
-      *qenport &= ~qenpinmask; //EN low 
-      EN_DELAY_LOWHIGH;        //Delay
+      *enPort |= enPinMask;  //EN high
+      EN_DELAY_HIGHLOW;      //Delay 
+      *enPort &= ~enPinMask; //EN low 
+      EN_DELAY_LOWHIGH;      //Delay
     }
     */
 
@@ -394,61 +397,61 @@ void LCDKS0108::display()
       {
         //enable chip2, disable chip1
       #if defined (CS_ACTIVE_LOW)
-        *qcs2port &= ~qcs2pinmask;
-        *qcs1port |= qcs1pinmask;
+        *cs2Port &= ~cs2PinMask;
+        *cs1Port |= cs1PinMask;
       #else 
-        *qcs2port |= qcs2pinmask; 
-        *qcs1port &= ~qcs1pinmask;
+        *cs2Port |= cs2PinMask; 
+        *cs1Port &= ~cs1PinMask;
       #endif
       }
       
       PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
-      *qenport |= qenpinmask;  //EN high
-      EN_DELAY_HIGHLOW;        //Delay 
-      *qenport &= ~qenpinmask; //EN low 
-      EN_DELAY_LOWHIGH;        //Delay
+      *enPort |= enPinMask;  //EN high
+      EN_DELAY_HIGHLOW;      //Delay 
+      *enPort &= ~enPinMask; //EN low 
+      EN_DELAY_LOWHIGH;      //Delay
       
       PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
-      *qenport |= qenpinmask;  //EN high
-      EN_DELAY_HIGHLOW;        //Delay 
-      *qenport &= ~qenpinmask; //EN low 
-      EN_DELAY_LOWHIGH;        //Delay
+      *enPort |= enPinMask;  //EN high
+      EN_DELAY_HIGHLOW;      //Delay 
+      *enPort &= ~enPinMask; //EN low 
+      EN_DELAY_LOWHIGH;      //Delay
       
       PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
-      *qenport |= qenpinmask;  //EN high
-      EN_DELAY_HIGHLOW;        //Delay 
-      *qenport &= ~qenpinmask; //EN low 
-      EN_DELAY_LOWHIGH;        //Delay
+      *enPort |= enPinMask;  //EN high
+      EN_DELAY_HIGHLOW;      //Delay 
+      *enPort &= ~enPinMask; //EN low 
+      EN_DELAY_LOWHIGH;      //Delay
       
       PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
-      *qenport |= qenpinmask;  //EN high
-      EN_DELAY_HIGHLOW;        //Delay 
-      *qenport &= ~qenpinmask; //EN low 
-      EN_DELAY_LOWHIGH;        //Delay
+      *enPort |= enPinMask;  //EN high
+      EN_DELAY_HIGHLOW;      //Delay 
+      *enPort &= ~enPinMask; //EN low 
+      EN_DELAY_LOWHIGH;      //Delay
       
       PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
-      *qenport |= qenpinmask;  //EN high
-      EN_DELAY_HIGHLOW;        //Delay 
-      *qenport &= ~qenpinmask; //EN low 
-      EN_DELAY_LOWHIGH;        //Delay
+      *enPort |= enPinMask;  //EN high
+      EN_DELAY_HIGHLOW;      //Delay 
+      *enPort &= ~enPinMask; //EN low 
+      EN_DELAY_LOWHIGH;      //Delay
       
       PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
-      *qenport |= qenpinmask;  //EN high
-      EN_DELAY_HIGHLOW;        //Delay 
-      *qenport &= ~qenpinmask; //EN low 
-      EN_DELAY_LOWHIGH;        //Delay
+      *enPort |= enPinMask;  //EN high
+      EN_DELAY_HIGHLOW;      //Delay 
+      *enPort &= ~enPinMask; //EN low 
+      EN_DELAY_LOWHIGH;      //Delay
       
       PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
-      *qenport |= qenpinmask;  //EN high
-      EN_DELAY_HIGHLOW;        //Delay 
-      *qenport &= ~qenpinmask; //EN low 
-      EN_DELAY_LOWHIGH;        //Delay
+      *enPort |= enPinMask;  //EN high
+      EN_DELAY_HIGHLOW;      //Delay 
+      *enPort &= ~enPinMask; //EN low 
+      EN_DELAY_LOWHIGH;      //Delay
       
       PORTx_LCD_DATA = dispBuffer[dataIdx++]; //write
-      *qenport |= qenpinmask;  //EN high
-      EN_DELAY_HIGHLOW;        //Delay 
-      *qenport &= ~qenpinmask; //EN low 
-      EN_DELAY_LOWHIGH;        //Delay
+      *enPort |= enPinMask;  //EN high
+      EN_DELAY_HIGHLOW;      //Delay 
+      *enPort &= ~enPinMask; //EN low 
+      EN_DELAY_LOWHIGH;      //Delay
     }
 
     if(isInterlacedScan)
@@ -462,20 +465,20 @@ inline void LCDKS0108::lcdCommand(uint8_t command)
 {
 //enable both controllers
 #if defined (CS_ACTIVE_LOW)
-  *qcs1port &= ~qcs1pinmask;
-  *qcs2port &= ~qcs2pinmask;
+  *cs1Port &= ~cs1PinMask;
+  *cs2Port &= ~cs2PinMask;
 #else
-  *qcs1port |= qcs1pinmask;
-  *qcs2port |= qcs2pinmask;
+  *cs1Port |= cs1PinMask;
+  *cs2Port |= cs2PinMask;
 #endif
   
   //rs low
-  *qrsport &= ~qrspinmask;
+  *rsPort &= ~rsPinMask;
  
   PORTx_LCD_DATA = command; //write
-  *qenport |= qenpinmask;  //EN high
-  EN_DELAY_HIGHLOW;        //Delay 
-  *qenport &= ~qenpinmask; //EN low 
-  EN_DELAY_LOWHIGH;        //Delay
+  *enPort |= enPinMask;   //EN high
+  EN_DELAY_HIGHLOW;       //Delay 
+  *enPort &= ~enPinMask;  //EN low 
+  EN_DELAY_LOWHIGH;       //Delay
 }
 
