@@ -2,8 +2,6 @@
 #ifndef _KS0108_H
 #define _KS0108_H
 
-#define CS_ACTIVE_LOW  //uncomment this if the chip select pins are active low
-
 #define BLACK 1
 #define WHITE 0
 
@@ -16,7 +14,7 @@ typedef uint8_t PortMask;
 class LCDKS0108 : public GFX
 {
   public:
-    LCDKS0108(int8_t QRS, int8_t QEN, int8_t QCS1, int8_t QCS2);
+    LCDKS0108(int8_t rs, int8_t en, int8_t cs1, int8_t cs2);
 
     void begin();
     void clearDisplay();
@@ -34,18 +32,19 @@ class LCDKS0108 : public GFX
     void writePageColumn(uint8_t page, uint8_t column, uint8_t val); //direct access
 
   private:
-    int8_t _qrs, _qen, _qcs1, _qcs2;
+    int8_t _rs, _en, _cs1, _cs2;
     
     bool isInterlacedScan;
 
     // The memory buffer for holding the data to be sent to the LCD
     uint8_t dispBuffer[LCDWIDTH * LCDHEIGHT / 8];
 
-    volatile PortReg *qrsport, *qenport, *qcs1port, *qcs2port;
-    PortMask qrspinmask, qenpinmask, qcs1pinmask, qcs2pinmask;
+    volatile PortReg *rsPort, *enPort, *cs1Port, *cs2Port;
+    PortMask rsPinMask, enPinMask, cs1PinMask, cs2PinMask;
 
     void lcdCommand(uint8_t command);
-    void setPage(uint8_t pageNo);
+    void setPage(uint8_t page);
 };
+
 
 #endif
