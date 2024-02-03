@@ -42,7 +42,16 @@ Note:
 <br>For example if the Ail stick is moved right, the left aileron moves down and right aileron moves up.
 <br>If a servo is moving in wrong direction, reversing the direction in Outputs screen solves this.
 
-### Example 1: Elevon
+### Example 1: Basic 4 channel
+Assuming Aileron servo in Ch1, Elevator servo in Ch2, Throttle in Ch3, Rudder servo in Ch4  
+```txt
+1. Ch1  Add  Ail (Weight 100)
+2. Ch2  Add  Ele (Weight -100)
+3. Ch3  Add  Thr (Weight 100)
+4. Ch4  Add  Rud (Weight 100)
+```
+
+### Example 2: Elevon
 Left servo in Ch1, right servo in Ch2
 ```txt
 1. Ch1  Add  Ail (Weight -50)
@@ -51,7 +60,7 @@ Left servo in Ch1, right servo in Ch2
 4. Ch2  Add  Ele (Weight -50)
 ```
 
-### Example 2: Vtail
+### Example 3: Vtail
 Left servo in Ch2, right servo in Ch4
 ```txt
 1. Ch2  Add  Rud (Weight 50)
@@ -60,7 +69,7 @@ Left servo in Ch2, right servo in Ch4
 4. Ch4  Add  Ele (Weight -50)
 ```
 
-### Example 3: Aileron differential
+### Example 4: Aileron differential
 Left aileron in Ch1, right aileron in Ch8. We want the downward going aileron to get less displaced
 than the upward going aileron. Due to differences in lift and air pressure on the top and bottom wing surfaces, 
 the aileron surface produces more drag when it moves down than when it moves up. This tends to cause 
@@ -70,7 +79,7 @@ an adverse yaw effect hence the need for aileron differential.
 2. Ch8  Add  Ail (Weight 100, Diff 30)
 ```
 
-### Example 4: Tailerons
+### Example 5: Tailerons
 Left Elevator servo in Ch6, Right Elevator servo in Ch7. The mix is turned on/off with SwG.
 ```txt
 1. Ch6  Add  Ele (Weight -60)
@@ -79,7 +88,7 @@ Left Elevator servo in Ch6, Right Elevator servo in Ch7. The mix is turned on/of
 4. Ch7  Add  Ail (Weight 40, SwG_Down)
 ```
 
-### Example 5: Flaperons
+### Example 6: Flaperons
 Left aileron in Ch1, right aileron in Ch8. Using SwC to operate the flaperons. 
 <br>When SwC is in upper position, flaperons are off. In middle position half flaperons, 
 and in lower position full flaperons.
@@ -91,7 +100,7 @@ and in lower position full flaperons.
 4. Ch8  Add  SwC (Weight -40, Offset -40, SlowUp 1s, SlowDown 1s)
 ```
 
-### Example 6: Crow braking 
+### Example 7: Crow braking 
 Left ail servo in Ch1, Right Ail servo in Ch8, left flap servo in Ch5, right flap servo in Ch6.
 <br>Using the three position SwC for operation. Normal aileron action occurs when SwC is in upper or middle position. 
 Half flaps are deployed when SwC is in middle position. When SwC is in lower position, both ailerons 
@@ -105,7 +114,7 @@ move upward and full flaps are deployed.
 6. Ch6   Add  Ch5 (Weight 100)
 ```
 
-### Example 7: Flaps working as ailerons 
+### Example 8: Flaps working as ailerons 
 This mix allows the entire trailing edge of the wing (aileron and flap) to operate as ailerons. 
 Assuming the left flap servo in Ch5, right flap servo in Ch6.
 <br>Using a two position switch e.g SwD to switch between flap mode and aileron mode. 
@@ -117,7 +126,7 @@ Assuming the left flap servo in Ch5, right flap servo in Ch6.
 4. Ch6   RplW  Ail (Weight 100,  Diff 20, SwD_Down)
 ```
 
-### Example 8: Differential thrust
+### Example 9: Differential thrust
 Left motor in Ch3, right motor in Ch7. We can use a switch e.g SwE to turn the differential thrust off 
 while in the air. Also assume the Rud source is the X1 axis
 ```txt
@@ -129,7 +138,7 @@ while in the air. Also assume the Rud source is the X1 axis
 For safety, we also need to set Failsafe for both Ch3 and Ch7 in the 'Outputs' screen. 
 <br>We can also add throttle cut by specifying an override switch and a value of -100.
 
-### Example 9: Elevator throttle mixing
+### Example 10: Elevator throttle mixing
 When the throttle is increased, some down elevator can be added to counter tendency of the model gaining 
 <br> altitude when the throttle increases.
 
@@ -138,7 +147,7 @@ When the throttle is increased, some down elevator can be added to counter tende
 2. Ch2  Add  Thr (Weight -20, Offset -20)
 ```
 
-### Example 10: Variable steering depending on throttle position
+### Example 11: Variable steering depending on throttle position
 Steering servo in Ch6. We want the steering response to reduce with increasing throttle.
 Assuming we use the X1 axis to steer, and Y1 axis as our throttle source, then
 ```txt
@@ -146,7 +155,7 @@ Assuming we use the X1 axis to steer, and Y1 axis as our throttle source, then
 2. Ch6  Mltply Y1 (Weight -40, Offset 60)
 ```
 
-### Example 11: Adjust idle throttle with knob
+### Example 12: Adjust idle throttle with knob
 Suppose we have a gas model and want to adjust the idle setting of engine with the knob without affecting full throttle.
 Assuming the throttle servo is in Ch3,
 ```txt
@@ -155,7 +164,7 @@ Assuming the throttle servo is in Ch3,
 3. Ch3   Add     Thrt (Weight 100)
 ```
 
-### Example 12: Adjust maximum throttle with knob
+### Example 13: Adjust maximum throttle with knob
 We can adjust the maximum throttle without affecting the low throttle setting. Assuming the motor is in Ch3,
 ```txt
 1. Ch3   Add     KnobA (Weight 20, Offset -20)
@@ -163,7 +172,7 @@ We can adjust the maximum throttle without affecting the low throttle setting. A
 3. Ch3   Add     Thrt (Weight 100)
 ```
 
-### Example 13: Simple throttle cut
+### Example 14: Simple throttle cut
 Assuming Ch3 is the throttle channel, and assigning SwA for cut. When SwA is in the Up position, Ch3 
 is locked to -100, otherwise the Throttle input is sent to Ch3
 ```txt
@@ -173,7 +182,7 @@ is locked to -100, otherwise the Throttle input is sent to Ch3
 Alternatively, a much safer throttle cut can be achieved in the Outputs screen by specifying the 
 override as SwA and value -100.
 
-### Example 14: Sticky throttle cut
+### Example 15: Sticky throttle cut
 Assuming Ch3 is the throttle channel, and assigning SwA for cut. Also assume our Throttle source is 
 Y1 axis. We want the throttle cut whenever SwA is in Up position, but to only remove the cut when 
 the throttle is at minimum and SwA is in Down position. This example makes use of logical switches as follows.
@@ -201,14 +210,14 @@ Then in the mixer
 Alternatively, a much safer throttle cut can be achieved in the Outputs screen by specifying the 
 override as L1 and value -100.
 
-### Example 15: Landing gear sequencer (gear doors stay open after gear is extended)
+### Example 16: Landing gear sequencer (gear doors stay open after gear is extended)
 Using SwD for operation. Assuming gear doors on Ch6 and gear on Ch7.
 ```txt
 1. Ch6  Add  SwD (Weight 100, DelayUp 0s, DelayDown 3s, SlowUp 2s, SlowDown 2s)
 2. Ch7  Add  SwD (Weight 100, DelayUp 3s, DelayDown 0s, SlowUp 2s, SlowDown 2s)
 ```
 
-### Example 16: Landing gear sequencer (gear doors close after gear is extended)
+### Example 17: Landing gear sequencer (gear doors close after gear is extended)
 The extend sequence is doors open, gear is lowered, doors close.
 <br>The retract sequence is doors open, gear retracts, doors close.
 <br>We can achieve the above using custom curves in combination with a slowed switch.
@@ -259,7 +268,7 @@ Then in the mixer, assuming gear door servos on Ch7, gear retracts on Ch8, and u
 ```
 We can, if necessary, set Ch8 to 'Digital' mode in the receiver output configuration screen.
 
-### Example 17: Servo tester
+### Example 18: Servo tester
 We can program a simple servo tester that repeatedly moves a servo back and forth.
 <br>In the inputs screen, navigate to Function generator page and select desired movement type. 
 <br>Then in the mixer, assuming the servo is connected to Ch8,
@@ -269,7 +278,7 @@ We can program a simple servo tester that repeatedly moves a servo back and fort
 We can even use make the above interesting by adding the ability to switch between waveforms or patterns 
 via a switch. This is left as an exercise.
 
-### Example 18: Random servo motion generator
+### Example 19: Random servo motion generator
 Suppose we have a model equipped with a turret. What we would like is to move the turret automatically but in a 
 random and intermittent manner, as we can't always be controlling it manually, for we only got one brain :)
 <br>We can easily achieve this behaviour with function genarators and logical switches as follows.
@@ -304,7 +313,7 @@ helps smooth the movement.
 if we want our turret be pointing around the middle most of the time.
 <br>We can also easily modify the setup to include an extra switch to manually stop the motion.
 
-### Example 19: Random servo motion generator - advanced version
+### Example 20: Random servo motion generator (advanced version)
 This example generates a random servo position at a random interval, with an added effect of 
 random intermittency, and also random selection between two speeds.  
 Furthermore, a physical switch SwE is used to start/stop the random motion of the servo.
