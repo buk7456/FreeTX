@@ -237,7 +237,7 @@ Then in the mixer, assuming gear door servos on Ch7, gear servos on Ch8, and usi
 ```txt
 1. Virt1 Add  SwD   (Weight 100, SlowUp 7s, SlowDown 7s) //Create a source that slowly ramps
 2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)          //Apply curve1 for the door sequence
-3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)          //Apply curve3 for the gear sequence
+3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)          //Apply curve2 for the gear sequence
 ```
 ##### Retract actuator version
 Most electric retract actuators require an on/off control signal, so this example is designed to work with these. 
