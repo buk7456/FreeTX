@@ -2309,7 +2309,7 @@ void handleMainUI()
           for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
           {
             uint8_t ypos = 20 + line*9;
-            if(focusedItem > 1 && focusedItem - 1 == topItem + line)
+            if(focusedItem - 1 == topItem + line)
               drawCursor(32, ypos);
             
             uint8_t itemID = listItemIDs[topItem - 1 + line];
@@ -4015,7 +4015,7 @@ void handleMainUI()
         for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
         {
           uint8_t ypos = 20 + line*9;
-          if(focusedItem > 1 && focusedItem < numFocusable && focusedItem - 1 == topItem + line)
+          if(focusedItem - 1 == topItem + line)
             drawCursor(52, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
@@ -4499,7 +4499,7 @@ void handleMainUI()
         for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
         {
           uint8_t ypos = 20 + line*9;
-          if(focusedItem > 1 && focusedItem < numFocusable && focusedItem - 1 == topItem + line)
+          if(focusedItem - 1 == topItem + line)
             drawCursor(70, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
@@ -4831,7 +4831,7 @@ void handleMainUI()
         for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
         {
           uint8_t ypos = 20 + line*9;
-          if(focusedItem > 1 && focusedItem < numFocusable && focusedItem - 1 == topItem + line)
+          if(focusedItem - 1 == topItem + line)
             drawCursor(58, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
@@ -5575,7 +5575,7 @@ void handleMainUI()
         for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
         {
           uint8_t ypos = 20 + line*9;
-          if(focusedItem > 1 && focusedItem - 1 == topItem + line)
+          if(focusedItem - 1 == topItem + line)
             drawCursor(58, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
