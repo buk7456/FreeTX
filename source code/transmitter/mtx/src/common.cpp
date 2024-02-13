@@ -374,6 +374,9 @@ void resetModelParams()
   for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++)
     Model.switchWarn[i] = 0; //Up position
   
+  //--- notifications ---
+  resetNotificationParams();
+  
   //--- telemetry ---
   resetTelemParams();
   
@@ -466,11 +469,11 @@ void resetCounterParams(uint8_t idx)
   if(idx >= NUM_COUNTERS)
     return;
   
-  Model.Counter[idx].name[0]   = '\0';
-  Model.Counter[idx].clock     = CTRL_SW_NONE;
-  Model.Counter[idx].edge      = 0;
-  Model.Counter[idx].clear     = CTRL_SW_NONE;
-  Model.Counter[idx].modulus   = 1000;
+  Model.Counter[idx].name[0] = '\0';
+  Model.Counter[idx].clock = CTRL_SW_NONE;
+  Model.Counter[idx].edge = 0;
+  Model.Counter[idx].clear = CTRL_SW_NONE;
+  Model.Counter[idx].modulus = 1000;
   Model.Counter[idx].direction = 0; 
   Model.Counter[idx].isPersistent = false;
   Model.Counter[idx].persistVal = 0;
@@ -520,20 +523,20 @@ void resetMixerParams(uint8_t idx)
     return;
   
   Model.Mixer[idx].name[0] = '\0';
-  Model.Mixer[idx].output      = SRC_NONE;
-  Model.Mixer[idx].swtch       = CTRL_SW_NONE;
-  Model.Mixer[idx].operation   = MIX_ADD;
-  Model.Mixer[idx].input       = SRC_NONE;
-  Model.Mixer[idx].weight      = 100;
-  Model.Mixer[idx].offset      = 0;
-  Model.Mixer[idx].curveType   = 0;
-  Model.Mixer[idx].curveVal    = 0;
+  Model.Mixer[idx].output = SRC_NONE;
+  Model.Mixer[idx].swtch = CTRL_SW_NONE;
+  Model.Mixer[idx].operation = MIX_ADD;
+  Model.Mixer[idx].input = SRC_NONE;
+  Model.Mixer[idx].weight = 100;
+  Model.Mixer[idx].offset = 0;
+  Model.Mixer[idx].curveType = 0;
+  Model.Mixer[idx].curveVal = 0;
   Model.Mixer[idx].trimEnabled = true;
-  Model.Mixer[idx].flightMode  = 0xFF;
-  Model.Mixer[idx].delayUp     = 0;
-  Model.Mixer[idx].delayDown   = 0;
-  Model.Mixer[idx].slowUp      = 0;
-  Model.Mixer[idx].slowDown    = 0;
+  Model.Mixer[idx].flightMode = 0xFF;
+  Model.Mixer[idx].delayUp = 0;
+  Model.Mixer[idx].delayDown = 0;
+  Model.Mixer[idx].slowUp = 0;
+  Model.Mixer[idx].slowDown = 0;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -551,19 +554,19 @@ void resetTelemParams(uint8_t idx)
   if(idx >= NUM_CUSTOM_TELEMETRY)
     return;
   
-  Model.Telemetry[idx].name[0]        = '\0';
-  Model.Telemetry[idx].unitsName[0]   = '\0';
-  Model.Telemetry[idx].identifier     = 0;
-  Model.Telemetry[idx].multiplier     = 100;
-  Model.Telemetry[idx].factor10       = 0;
-  Model.Telemetry[idx].offset         = 0;
-  Model.Telemetry[idx].logEnabled     = false;
+  Model.Telemetry[idx].name[0] = '\0';
+  Model.Telemetry[idx].unitsName[0] = '\0';
+  Model.Telemetry[idx].identifier = 0;
+  Model.Telemetry[idx].multiplier = 100;
+  Model.Telemetry[idx].factor10 = 0;
+  Model.Telemetry[idx].offset = 0;
+  Model.Telemetry[idx].logEnabled = false;
   Model.Telemetry[idx].alarmCondition = TELEMETRY_ALARM_CONDITION_NONE;
   Model.Telemetry[idx].alarmThreshold = 0;
-  Model.Telemetry[idx].alarmMelody    = 0; 
-  Model.Telemetry[idx].showOnHome     = true; 
-  Model.Telemetry[idx].recordMaximum  = true; 
-  Model.Telemetry[idx].recordMinimum  = true; 
+  Model.Telemetry[idx].alarmMelody = 0; 
+  Model.Telemetry[idx].showOnHome = true; 
+  Model.Telemetry[idx].recordMaximum = true; 
+  Model.Telemetry[idx].recordMinimum = true; 
   
   //also reset received telemetry
   telemetryReceivedValue[idx] = TELEMETRY_NO_DATA;
@@ -571,6 +574,27 @@ void resetTelemParams(uint8_t idx)
   telemetryLastReceivedTime[idx] = millis();
   telemetryMaxReceivedValue[idx] = TELEMETRY_NO_DATA;
   telemetryMinReceivedValue[idx] = TELEMETRY_NO_DATA;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void resetNotificationParams()
+{
+  for(uint8_t i = 0; i < NUM_CUSTOM_NOTIFICATIONS; i++)
+    resetNotificationParams(i);
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void resetNotificationParams(uint8_t idx)
+{
+  if(idx >= NUM_CUSTOM_NOTIFICATIONS)
+    return;
+  
+  Model.CustomNotification[idx].swtch = CTRL_SW_NONE;
+  Model.CustomNotification[idx].tone = AUDIO_NOTIFICATION_TONE_FIRST;
+  Model.CustomNotification[idx].showPopup = true;
+  Model.CustomNotification[idx].text[0] = '\0';
 }
 
 //--------------------------------------------------------------------------------------------------
