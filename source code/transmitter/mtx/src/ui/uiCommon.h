@@ -49,6 +49,8 @@ void telemetryAlarmHandler();
 void inactivityAlarmHandler();
 void timerHandler();
 
+void notificationHandler();
+
 uint8_t getLSFuncGroup(uint8_t func);
 
 bool hasEnoughMixSlots(uint8_t start, uint8_t numRequired);
@@ -61,5 +63,8 @@ void makeToast(const char* text, uint16_t duration, uint16_t dly);
 int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEnabled, uint8_t state);
 uint8_t incDecSource(uint8_t val, uint8_t flag);
 uint8_t incDecControlSwitch(uint8_t val, uint8_t flag);
+
+void drawNotificationOverlay(uint8_t idx); //implemented in the resolution specific UI file
+
 
 #endif

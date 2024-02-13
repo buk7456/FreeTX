@@ -30,12 +30,12 @@ enum {
 
 char const extrasMenu[][20] PROGMEM = { 
   "Custom curves", "Functn generators", "Logical switches", "Counters", "Timers", "Safety checks",
-  "Trim setup", "Flight modes"
+  "Notifications", "Trim setup", "Flight modes"
 };
 enum {
   EXTRAS_MENU_CUSTOM_CURVES, EXTRAS_MENU_FUNCTION_GENERATORS, EXTRAS_MENU_LOGICAL_SWITCHES,
-  EXTRAS_MENU_COUNTERS, EXTRAS_MENU_TIMERS, EXTRAS_MENU_SAFETY_CHECKS, EXTRAS_MENU_TRIM_SETUP, 
-  EXTRAS_MENU_FLIGHT_MODES
+  EXTRAS_MENU_COUNTERS, EXTRAS_MENU_TIMERS, EXTRAS_MENU_SAFETY_CHECKS, EXTRAS_MENU_NOTIFICATION_SETUP, 
+  EXTRAS_MENU_TRIM_SETUP, EXTRAS_MENU_FLIGHT_MODES
 };
 
 char const systemMenu[][20] PROGMEM = { 
@@ -76,9 +76,9 @@ enum {
   //--- Home screen and related
   SCREEN_HOME,
   SCREEN_CHANNEL_MONITOR,
-  POPUP_HOME_SCREEN_MENU,
+  CONTEXT_MENU_HOME_SCREEN,
   SCREEN_WIDGET_SETUP,
-  POPUP_WIDGETS_MENU,
+  CONTEXT_MENU_WIDGETS,
   DIALOG_COPY_WIDGET,
   DIALOG_MOVE_WIDGET,
   
@@ -89,9 +89,9 @@ enum {
   //---- Model ----
   SCREEN_UNLOCK_MODEL_MANAGER,
   SCREEN_MODEL,
-  POPUP_ACTIVE_MODEL_MENU,
-  POPUP_INACTIVE_MODEL_MENU,
-  POPUP_FREE_MODEL_MENU,
+  CONTEXT_MENU_ACTIVE_MODEL,
+  CONTEXT_MENU_INACTIVE_MODEL,
+  CONTEXT_MENU_FREE_MODEL,
   DIALOG_MODEL_TYPE,
   DIALOG_RENAME_MODEL,
   DIALOG_COPYFROM_MODEL,
@@ -108,38 +108,38 @@ enum {
   //---- Mixer ----
   SCREEN_MIXER,
   DIALOG_MIX_FLIGHT_MODE,
-  POPUP_MIXER_MENU,
+  CONTEXT_MENU_MIXER,
   SCREEN_MIXER_OUTPUT,
   DIALOG_COPY_MIX,
   DIALOG_MOVE_MIX,
   DIALOG_RENAME_MIX,
   CONFIRMATION_MIXES_RESET,
-  POPUP_MIXER_TEMPLATES_MENU,
+  CONTEXT_MENU_MIXER_TEMPLATES,
   CONFIRMATION_LOAD_MIXER_TEMPLATE,
   SCREEN_MIXER_OVERVIEW,
   
   //---- Outputs ----
   SCREEN_OUTPUTS,
-  POPUP_OUTPUTS_MENU,
+  CONTEXT_MENU_OUTPUTS,
   DIALOG_RENAME_CHANNEL,
   
   //---- Extras ---
   SCREEN_EXTRAS_MENU,
   //custom curves
   SCREEN_CUSTOM_CURVES,
-  POPUP_CUSTOM_CURVE_MENU,
+  CONTEXT_MENU_CUSTOM_CURVE,
   DIALOG_RENAME_CUSTOM_CURVE,
   DIALOG_COPY_CUSTOM_CURVE,
   DIALOG_INSERT_CURVE_POINT,
   DIALOG_DELETE_CURVE_POINT,
   //logical switches
   SCREEN_LOGICAL_SWITCHES,
-  POPUP_LOGICAL_SWITCH_MENU,
+  CONTEXT_MENU_LOGICAL_SWITCHES,
   DIALOG_COPY_LOGICAL_SWITCH,
   SCREEN_LOGICAL_SWITCH_OUTPUTS,
   //counters
   SCREEN_COUNTERS,
-  POPUP_COUNTER_MENU,
+  CONTEXT_MENU_COUNTERS,
   DIALOG_RENAME_COUNTER,
   DIALOG_COPY_COUNTER,
   CONFIRMATION_CLEAR_ALL_COUNTERS,
@@ -147,7 +147,7 @@ enum {
   SCREEN_FLIGHT_MODES,
   //function generators
   SCREEN_FUNCTION_GENERATORS,
-  POPUP_FUNCGEN_MENU,
+  CONTEXT_MENU_FUNCGEN,
   DIALOG_COPY_FUNCGEN,
   SCREEN_FUNCGEN_OUTPUTS,
   //trim setup
@@ -156,14 +156,18 @@ enum {
   SCREEN_SAFETY_CHECKS,
   //timers
   SCREEN_TIMERS,
-  POPUP_TIMER_MENU,
+  CONTEXT_MENU_TIMERS,
+  //notifications
+  SCREEN_NOTIFICATION_SETUP,
+  CONTEXT_MENU_NOTIFICATIONS,
+  DIALOG_COPY_NOTIFICATION,
 
   //---- Telemetry ----
   SCREEN_TELEMETRY,
-  POPUP_ACTIVE_SENSOR_MENU,
-  POPUP_FREE_SENSOR_MENU,
+  CONTEXT_MENU_ACTIVE_SENSOR,
+  CONTEXT_MENU_FREE_SENSOR,
   SCREEN_CREATE_SENSOR,
-  POPUP_SENSOR_TEMPLATES_MENU,
+  CONTEXT_MENU_SENSOR_TEMPLATES,
   SCREEN_SENSOR_STATS,
   SCREEN_EDIT_SENSOR,
   CONFIRMATION_DELETE_SENSOR,
@@ -213,10 +217,10 @@ uint8_t focusedItem = 1;
 bool isEditTextDialog = false;
 bool isDisplayingBattWarn = false;
 
-//popup
-uint8_t popupMenuTopItem = 1;
-uint8_t popupMenuFocusedItem = 1;
-uint8_t popupMenuSelectedItemID = 0xff;
+//context menu
+uint8_t contextMenuTopItem = 1;
+uint8_t contextMenuFocusedItem = 1;
+uint8_t contextMenuSelectedItemID = 0xff;
 
 //Model
 uint8_t thisModelIdx = 0;
@@ -254,6 +258,10 @@ uint8_t destWidgetIdx = 0;
 
 //timers
 uint8_t thisTimerIdx = 0;
+
+//notifications
+uint8_t thisNotificationIdx = 0;
+uint8_t destNotificationIdx = 0;
 
 //others 
 bool isRequestingStickCalibration = false;
@@ -296,10 +304,10 @@ void printModelName(char* buff, uint8_t modelIdx);
 void printTimerValue(uint8_t idx);
 void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEmpty, bool trimStr, bool isSecureMode);
 void validatePassword(uint8_t nextScreen, uint8_t prevScreen);
-void popupMenuInitialise();
-void popupMenuAddItem(const char* str, uint8_t itemID);
-void popupMenuDraw();
-uint8_t popupMenuGetItemCount();
+void contextMenuInitialise();
+void contextMenuAddItem(const char* str, uint8_t itemID);
+void contextMenuDraw();
+uint8_t contextMenuGetItemCount();
 
 //==================================================================================================
 
@@ -364,14 +372,14 @@ void handleBatteryWarnUI()
       audioToPlay = AUDIO_BATTERY_WARN;
       playTones();
       
-      //self dismiss warning or on a button click
-      if((clickedButton > 0 || millis() - battWarnMillis > 2000))
+      //self dismiss warning or on a button press
+      if((pressedButton > 0 || millis() - battWarnMillis > 2000))
       {
         battWarnDismissed = true;
         battWarnMillis = millis();
         isDisplayingBattWarn = false;
-        //only kill button events if a button was clicked
-        if(clickedButton > 0)
+        //only kill button events if a button was pressed
+        if(pressedButton > 0)
           killButtonEvents();
       }
     }
@@ -568,10 +576,6 @@ void handleMainUI()
   if(isDisplayingBattWarn)
     return;
   
-  //-------------- Startup lock -------------------------
-  if(!Sys.lockStartup || isEmptyStr(Sys.password, sizeof(Sys.password)))
-    mainMenuLocked = false;
-
   //-------------- Enable interlace mode by default -----
   //This can be overriden where necessary specially in some screens
   //to prevent interlace artifacts
@@ -601,6 +605,9 @@ void handleMainUI()
           changeToScreen(SCREEN_BATTERY);
           break;
         }
+        
+        if(!Sys.lockStartup || isEmptyStr(Sys.password, sizeof(Sys.password)))
+          mainMenuLocked = false;
         
         //--------------- Icons -----------------
         
@@ -889,7 +896,7 @@ void handleMainUI()
         else if(clickedButton == KEY_UP)
           changeToScreen(SCREEN_CHANNEL_MONITOR);
         else if(clickedButton == KEY_DOWN)
-          changeToScreen(POPUP_HOME_SCREEN_MENU);
+          changeToScreen(CONTEXT_MENU_HOME_SCREEN);
         
         //mute audible telemetry alarms
         if(heldButton == KEY_DOWN && millis() - buttonStartTime > 1000UL)
@@ -915,7 +922,7 @@ void handleMainUI()
         static bool viewInitialised = false;
         if(!viewInitialised) 
         {
-          if(lastScreen == POPUP_OUTPUTS_MENU) //start in the page that has the channel we want to view
+          if(lastScreen == CONTEXT_MENU_OUTPUTS) //start in the page that has the channel we want to view
             thisPage = (thisChIdx + 10) / 10;
           viewInitialised = true;
         }
@@ -928,7 +935,7 @@ void handleMainUI()
         {
           if((i - startIdx) < 5)
           {
-            if(lastScreen == POPUP_OUTPUTS_MENU && i == thisChIdx)
+            if(lastScreen == CONTEXT_MENU_OUTPUTS && i == thisChIdx)
             {
               display.setCursor(0, 10 + (i - startIdx) * 11);
               display.write(0xB1);
@@ -937,7 +944,7 @@ void handleMainUI()
           }
           else
           { 
-            if(lastScreen == POPUP_OUTPUTS_MENU && i == thisChIdx)
+            if(lastScreen == CONTEXT_MENU_OUTPUTS && i == thisChIdx)
             {
               display.setCursor(65, 10 + (i - (startIdx + 5)) * 11);
               display.write(0xB1);
@@ -957,7 +964,7 @@ void handleMainUI()
         if(heldButton == KEY_SELECT)
         {
           viewInitialised = false;
-          if(lastScreen == POPUP_OUTPUTS_MENU)
+          if(lastScreen == CONTEXT_MENU_OUTPUTS)
             changeToScreen(SCREEN_OUTPUTS);
           else
             changeToScreen(SCREEN_HOME);
@@ -965,7 +972,7 @@ void handleMainUI()
       }
       break;
       
-    case POPUP_HOME_SCREEN_MENU:
+    case CONTEXT_MENU_HOME_SCREEN:
       {
         enum {
           ITEM_SETUP_WIDGETS,
@@ -980,7 +987,7 @@ void handleMainUI()
         static char const resetTimerStr[][20] PROGMEM = {"Reset timer 1", "Reset timer 2", "Reset timer 3"};
 
         //dynamically add items
-        popupMenuInitialise();
+        contextMenuInitialise();
         for(uint8_t idx = 0; idx < NUM_TIMERS; idx++)
         {
           //only add a timer if the timer has a widget associated
@@ -991,35 +998,35 @@ void handleMainUI()
               if(Model.Timer[idx].swtch == CTRL_SW_NONE)
               {
                 if(timerIsRunning[idx]) 
-                  popupMenuAddItem(stopTimerStr[idx], ITEM_START_STOP_TIMER_FIRST + idx);
+                  contextMenuAddItem(stopTimerStr[idx], ITEM_START_STOP_TIMER_FIRST + idx);
                 else 
-                  popupMenuAddItem(startTimerStr[idx], ITEM_START_STOP_TIMER_FIRST + idx);
+                  contextMenuAddItem(startTimerStr[idx], ITEM_START_STOP_TIMER_FIRST + idx);
               }
-              popupMenuAddItem(resetTimerStr[idx], ITEM_RESET_TIMER_FIRST + idx);
+              contextMenuAddItem(resetTimerStr[idx], ITEM_RESET_TIMER_FIRST + idx);
               break; 
             }
           }
         }
         if(!mainMenuLocked)        
-          popupMenuAddItem(PSTR("Setup widgets"), ITEM_SETUP_WIDGETS);
-        popupMenuDraw();
+          contextMenuAddItem(PSTR("Setup widgets"), ITEM_SETUP_WIDGETS);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID >= ITEM_START_STOP_TIMER_FIRST && popupMenuSelectedItemID <= ITEM_START_STOP_TIMER_LAST)
+        if(contextMenuSelectedItemID >= ITEM_START_STOP_TIMER_FIRST && contextMenuSelectedItemID <= ITEM_START_STOP_TIMER_LAST)
         {
-          uint8_t idx = popupMenuSelectedItemID - ITEM_START_STOP_TIMER_FIRST;
+          uint8_t idx = contextMenuSelectedItemID - ITEM_START_STOP_TIMER_FIRST;
           timerForceRun[idx] = timerIsRunning[idx] ? false : true;
           changeToScreen(SCREEN_HOME);
         }
-        if(popupMenuSelectedItemID >= ITEM_RESET_TIMER_FIRST && popupMenuSelectedItemID <= ITEM_RESET_TIMER_LAST)
+        if(contextMenuSelectedItemID >= ITEM_RESET_TIMER_FIRST && contextMenuSelectedItemID <= ITEM_RESET_TIMER_LAST)
         {
-          uint8_t idx = popupMenuSelectedItemID - ITEM_RESET_TIMER_FIRST;
+          uint8_t idx = contextMenuSelectedItemID - ITEM_RESET_TIMER_FIRST;
           resetTimerRegister(idx);
           changeToScreen(SCREEN_HOME);
         }
-        if(popupMenuSelectedItemID == ITEM_SETUP_WIDGETS)
+        if(contextMenuSelectedItemID == ITEM_SETUP_WIDGETS)
           changeToScreen(SCREEN_WIDGET_SETUP);
           
-        if(heldButton == KEY_SELECT || popupMenuGetItemCount() == 0) //exit
+        if(heldButton == KEY_SELECT || contextMenuGetItemCount() == 0) //exit
           changeToScreen(SCREEN_HOME);
       }
       break;
@@ -1262,7 +1269,7 @@ void handleMainUI()
         
         //open context menu
         if(focusedItem == contextMenu && clickedButton == KEY_SELECT)
-          changeToScreen(POPUP_WIDGETS_MENU);
+          changeToScreen(CONTEXT_MENU_WIDGETS);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -1270,7 +1277,7 @@ void handleMainUI()
       }
       break;
       
-    case POPUP_WIDGETS_MENU:
+    case CONTEXT_MENU_WIDGETS:
       {
         enum {
           ITEM_COPY_WIDGET,
@@ -1278,23 +1285,23 @@ void handleMainUI()
           ITEM_RESET_WIDGET,
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("Copy to"), ITEM_COPY_WIDGET);
-        popupMenuAddItem(PSTR("Move to"), ITEM_MOVE_WIDGET);
-        popupMenuAddItem(PSTR("Reset widget"), ITEM_RESET_WIDGET);
-        popupMenuDraw();
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("Copy to"), ITEM_COPY_WIDGET);
+        contextMenuAddItem(PSTR("Move to"), ITEM_MOVE_WIDGET);
+        contextMenuAddItem(PSTR("Reset widget"), ITEM_RESET_WIDGET);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_RESET_WIDGET)
+        if(contextMenuSelectedItemID == ITEM_RESET_WIDGET)
         {
           resetWidgetParams(thisWidgetIdx);
           changeToScreen(SCREEN_WIDGET_SETUP);
         }
-        if(popupMenuSelectedItemID == ITEM_COPY_WIDGET)
+        if(contextMenuSelectedItemID == ITEM_COPY_WIDGET)
         {
           destWidgetIdx = thisWidgetIdx;
           changeToScreen(DIALOG_COPY_WIDGET);
         }
-        if(popupMenuSelectedItemID == ITEM_MOVE_WIDGET)
+        if(contextMenuSelectedItemID == ITEM_MOVE_WIDGET)
         {
           destWidgetIdx = thisWidgetIdx;
           changeToScreen(DIALOG_MOVE_WIDGET);
@@ -1485,11 +1492,11 @@ void handleMainUI()
         if(clickedButton == KEY_SELECT)
         {
           if(thisModelIdx == Sys.activeModelIdx)
-            changeToScreen(POPUP_ACTIVE_MODEL_MENU);
+            changeToScreen(CONTEXT_MENU_ACTIVE_MODEL);
           else if(!eeModelIsFree(thisModelIdx))
-            changeToScreen(POPUP_INACTIVE_MODEL_MENU);
+            changeToScreen(CONTEXT_MENU_INACTIVE_MODEL);
           else if(eeModelIsFree(thisModelIdx))
-            changeToScreen(POPUP_FREE_MODEL_MENU);
+            changeToScreen(CONTEXT_MENU_FREE_MODEL);
           //force the list to be updated
           modelListNeedsUpdate = true; 
         }
@@ -1503,7 +1510,7 @@ void handleMainUI()
       }
       break;
       
-    case POPUP_ACTIVE_MODEL_MENU:
+    case CONTEXT_MENU_ACTIVE_MODEL:
       {
         enum {
           ITEM_RENAME_MODEL,
@@ -1514,24 +1521,24 @@ void handleMainUI()
           ITEM_RESTORE_MODEL,
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("Rename model"), ITEM_RENAME_MODEL);
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("Rename model"), ITEM_RENAME_MODEL);
         if(maxNumOfModels > 1)
         {
-          popupMenuAddItem(PSTR("Duplicate"), ITEM_DUPLICATE_MODEL);
-          popupMenuAddItem(PSTR("Copy from"), ITEM_COPY_FROM);
+          contextMenuAddItem(PSTR("Duplicate"), ITEM_DUPLICATE_MODEL);
+          contextMenuAddItem(PSTR("Copy from"), ITEM_COPY_FROM);
         }
-        popupMenuAddItem(PSTR("Reset model"), ITEM_RESET_MODEL);
+        contextMenuAddItem(PSTR("Reset model"), ITEM_RESET_MODEL);
         if(sdHasCard())
         {
-          popupMenuAddItem(PSTR("Backup to SD"), ITEM_BACKUP_MODEL);
-          popupMenuAddItem(PSTR("Restore from SD"), ITEM_RESTORE_MODEL);
+          contextMenuAddItem(PSTR("Backup to SD"), ITEM_BACKUP_MODEL);
+          contextMenuAddItem(PSTR("Restore from SD"), ITEM_RESTORE_MODEL);
         }
-        popupMenuDraw();
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_RENAME_MODEL) 
+        if(contextMenuSelectedItemID == ITEM_RENAME_MODEL) 
           changeToScreen(DIALOG_RENAME_MODEL);
-        if(popupMenuSelectedItemID == ITEM_DUPLICATE_MODEL)
+        if(contextMenuSelectedItemID == ITEM_DUPLICATE_MODEL)
         {          
           //Find the nearest free slot and copy to it
           uint8_t nearestLeft = 0xff;
@@ -1583,13 +1590,13 @@ void handleMainUI()
             changeToScreen(SCREEN_MODEL);
           }
         }
-        if(popupMenuSelectedItemID == ITEM_COPY_FROM)    
+        if(contextMenuSelectedItemID == ITEM_COPY_FROM)    
           changeToScreen(DIALOG_COPYFROM_MODEL);
-        if(popupMenuSelectedItemID == ITEM_RESET_MODEL)  
+        if(contextMenuSelectedItemID == ITEM_RESET_MODEL)  
           changeToScreen(CONFIRMATION_MODEL_RESET);
-        if(popupMenuSelectedItemID == ITEM_BACKUP_MODEL)
+        if(contextMenuSelectedItemID == ITEM_BACKUP_MODEL)
           changeToScreen(CONFIRMATION_MODEL_BACKUP);
-        if(popupMenuSelectedItemID == ITEM_RESTORE_MODEL)
+        if(contextMenuSelectedItemID == ITEM_RESTORE_MODEL)
           changeToScreen(DIALOG_RESTORE_MODEL);
         
         if(heldButton == KEY_SELECT) //exit
@@ -1597,7 +1604,7 @@ void handleMainUI()
       }
       break;
       
-    case POPUP_INACTIVE_MODEL_MENU:
+    case CONTEXT_MENU_INACTIVE_MODEL:
       {
         enum {
           ITEM_LOAD_MODEL,
@@ -1605,14 +1612,14 @@ void handleMainUI()
           ITEM_BACKUP_MODEL,
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("Load model"), ITEM_LOAD_MODEL);
-        popupMenuAddItem(PSTR("Delete model"), ITEM_DELETE_MODEL);
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("Load model"), ITEM_LOAD_MODEL);
+        contextMenuAddItem(PSTR("Delete model"), ITEM_DELETE_MODEL);
         if(sdHasCard())
-          popupMenuAddItem(PSTR("Backup to SD"), ITEM_BACKUP_MODEL);
-        popupMenuDraw();
+          contextMenuAddItem(PSTR("Backup to SD"), ITEM_BACKUP_MODEL);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_LOAD_MODEL) 
+        if(contextMenuSelectedItemID == ITEM_LOAD_MODEL) 
         {
           showWaitMsg();
           stopTones();
@@ -1636,31 +1643,31 @@ void handleMainUI()
           //exit
           changeToScreen(SCREEN_MODEL);
         }
-        if(popupMenuSelectedItemID == ITEM_DELETE_MODEL)
+        if(contextMenuSelectedItemID == ITEM_DELETE_MODEL)
           changeToScreen(CONFIRMATION_MODEL_DELETE);
-        if(popupMenuSelectedItemID == ITEM_BACKUP_MODEL)
+        if(contextMenuSelectedItemID == ITEM_BACKUP_MODEL)
           changeToScreen(CONFIRMATION_MODEL_BACKUP);
         if(heldButton == KEY_SELECT) //exit
           changeToScreen(SCREEN_MODEL);
       }
       break;
       
-    case POPUP_FREE_MODEL_MENU:
+    case CONTEXT_MENU_FREE_MODEL:
       {
         enum {
           ITEM_NEW_MODEL,
           ITEM_RESTORE_MODEL,
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("New model"), ITEM_NEW_MODEL);
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("New model"), ITEM_NEW_MODEL);
         if(sdHasCard())
-          popupMenuAddItem(PSTR("Restore from SD"), ITEM_RESTORE_MODEL);
-        popupMenuDraw();
+          contextMenuAddItem(PSTR("Restore from SD"), ITEM_RESTORE_MODEL);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_NEW_MODEL)
+        if(contextMenuSelectedItemID == ITEM_NEW_MODEL)
           changeToScreen(DIALOG_MODEL_TYPE);
-        if(popupMenuSelectedItemID == ITEM_RESTORE_MODEL)
+        if(contextMenuSelectedItemID == ITEM_RESTORE_MODEL)
           changeToScreen(DIALOG_RESTORE_MODEL);
 
         if(heldButton == KEY_SELECT) //exit
@@ -2873,12 +2880,15 @@ void handleMainUI()
         
         //Assign from temp
         if(!isEditMode || (buttonCode == 0 && millis() - buttonReleaseTime > 1000))
+        {
           mxr->output = tempMixerOutput;
+          tempInitialised = false;
+        }
 
         //Open context menu
         if(focusedItem == contextMenu && clickedButton == KEY_SELECT)
         {
-          changeToScreen(POPUP_MIXER_MENU);
+          changeToScreen(CONTEXT_MENU_MIXER);
           viewInitialised = false;
           //assign from temp
           mxr->output = tempMixerOutput;
@@ -2891,7 +2901,7 @@ void handleMainUI()
           viewInitialised = false;
           changeToScreen(SCREEN_MAIN_MENU);
           //assign from temp
-          mxr->output = tempMixerOutput;
+          mxr->output = tempMixerOutput; 
           tempInitialised = false;
         } 
       }
@@ -2959,7 +2969,7 @@ void handleMainUI()
       }
       break;
 
-    case POPUP_MIXER_MENU:
+    case CONTEXT_MENU_MIXER:
       {
         enum {
           ITEM_MIXER_OUTPUTS,
@@ -2974,36 +2984,36 @@ void handleMainUI()
           ITEM_MIXER_OVERVIEW,
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("View outputs"), ITEM_MIXER_OUTPUTS);
-        popupMenuAddItem(PSTR("Copy mix to"), ITEM_COPY_MIX);
-        popupMenuAddItem(PSTR("Move mix to"), ITEM_MOVE_MIX);
-        popupMenuAddItem(PSTR("Insert free"), ITEM_INSERT_FREE);
-        popupMenuAddItem(PSTR("Rename mix" ), ITEM_RENAME_MIX);
-        popupMenuAddItem(PSTR("Reset mix" ), ITEM_RESET_MIX);
-        popupMenuAddItem(PSTR("Reset all mixes"), ITEM_RESET_ALL_MIXES);
-        popupMenuAddItem(PSTR("Compact mixes"), ITEM_COMPACT_MIXES);
-        popupMenuAddItem(PSTR("Show overview"), ITEM_MIXER_OVERVIEW);
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("View outputs"), ITEM_MIXER_OUTPUTS);
+        contextMenuAddItem(PSTR("Copy mix to"), ITEM_COPY_MIX);
+        contextMenuAddItem(PSTR("Move mix to"), ITEM_MOVE_MIX);
+        contextMenuAddItem(PSTR("Insert free"), ITEM_INSERT_FREE);
+        contextMenuAddItem(PSTR("Rename mix" ), ITEM_RENAME_MIX);
+        contextMenuAddItem(PSTR("Reset mix" ), ITEM_RESET_MIX);
+        contextMenuAddItem(PSTR("Reset all mixes"), ITEM_RESET_ALL_MIXES);
+        contextMenuAddItem(PSTR("Compact mixes"), ITEM_COMPACT_MIXES);
+        contextMenuAddItem(PSTR("Show overview"), ITEM_MIXER_OVERVIEW);
         if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
         {
           if(Sys.mixerTemplatesEnabled)
-            popupMenuAddItem(PSTR("Templates"), ITEM_MIXER_TEMPLATES);
+            contextMenuAddItem(PSTR("Templates"), ITEM_MIXER_TEMPLATES);
         }
-        popupMenuDraw();
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_MIXER_OUTPUTS) 
+        if(contextMenuSelectedItemID == ITEM_MIXER_OUTPUTS) 
           changeToScreen(SCREEN_MIXER_OUTPUT);
-        if(popupMenuSelectedItemID == ITEM_COPY_MIX)
+        if(contextMenuSelectedItemID == ITEM_COPY_MIX)
         {
           destMixIdx = thisMixIdx;
           changeToScreen(DIALOG_COPY_MIX);
         }
-        if(popupMenuSelectedItemID == ITEM_MOVE_MIX)
+        if(contextMenuSelectedItemID == ITEM_MOVE_MIX)
         {
           destMixIdx = thisMixIdx;
           changeToScreen(DIALOG_MOVE_MIX);
         }
-        if(popupMenuSelectedItemID == ITEM_INSERT_FREE)
+        if(contextMenuSelectedItemID == ITEM_INSERT_FREE)
         {
           //Find a slot that is empty.
           //If the slot exists after thisMixIdx, move it here, otherwise we dont.
@@ -3031,16 +3041,16 @@ void handleMainUI()
           }
           changeToScreen(SCREEN_MIXER);
         }
-        if(popupMenuSelectedItemID == ITEM_RENAME_MIX)
+        if(contextMenuSelectedItemID == ITEM_RENAME_MIX)
           changeToScreen(DIALOG_RENAME_MIX);
-        if(popupMenuSelectedItemID == ITEM_RESET_MIX)
+        if(contextMenuSelectedItemID == ITEM_RESET_MIX)
         {
           resetMixerParams(thisMixIdx);
           changeToScreen(SCREEN_MIXER);
         }
-        if(popupMenuSelectedItemID == ITEM_RESET_ALL_MIXES)
+        if(contextMenuSelectedItemID == ITEM_RESET_ALL_MIXES)
           changeToScreen(CONFIRMATION_MIXES_RESET);
-        if(popupMenuSelectedItemID == ITEM_COMPACT_MIXES)
+        if(contextMenuSelectedItemID == ITEM_COMPACT_MIXES)
         {
           //Find all empty slots and move them to the end.
           //This is similar to the classic 'move all zeros to end of array' problem.
@@ -3071,9 +3081,9 @@ void handleMainUI()
           thisMixIdx = 0;
           changeToScreen(SCREEN_MIXER);
         }
-        if(popupMenuSelectedItemID == ITEM_MIXER_TEMPLATES)
-          changeToScreen(POPUP_MIXER_TEMPLATES_MENU);
-        if(popupMenuSelectedItemID == ITEM_MIXER_OVERVIEW)
+        if(contextMenuSelectedItemID == ITEM_MIXER_TEMPLATES)
+          changeToScreen(CONTEXT_MENU_MIXER_TEMPLATES);
+        if(contextMenuSelectedItemID == ITEM_MIXER_OVERVIEW)
           changeToScreen(SCREEN_MIXER_OVERVIEW);
         
         if(heldButton == KEY_SELECT) //exit
@@ -3081,7 +3091,7 @@ void handleMainUI()
       }
       break;
       
-    case POPUP_MIXER_TEMPLATES_MENU:
+    case CONTEXT_MENU_MIXER_TEMPLATES:
     case CONFIRMATION_LOAD_MIXER_TEMPLATE:
       {
         enum {
@@ -3091,19 +3101,19 @@ void handleMainUI()
           ITEM_DIFF_THRUST
         };
         
-        if(theScreen == POPUP_MIXER_TEMPLATES_MENU)
+        if(theScreen == CONTEXT_MENU_MIXER_TEMPLATES)
         {
-          popupMenuInitialise();
-          popupMenuAddItem(PSTR("Basic"), ITEM_BASIC);
+          contextMenuInitialise();
+          contextMenuAddItem(PSTR("Basic"), ITEM_BASIC);
           if(Model.type == MODEL_TYPE_AIRPLANE)
           {
-            popupMenuAddItem(PSTR("Elevon"), ITEM_ELEVON);
-            popupMenuAddItem(PSTR("Vtail"), ITEM_VTAIL);
-            popupMenuAddItem(PSTR("Diff thrust"), ITEM_DIFF_THRUST);
+            contextMenuAddItem(PSTR("Elevon"), ITEM_ELEVON);
+            contextMenuAddItem(PSTR("Vtail"), ITEM_VTAIL);
+            contextMenuAddItem(PSTR("Diff thrust"), ITEM_DIFF_THRUST);
           }
-          popupMenuDraw();
+          contextMenuDraw();
           
-          if(popupMenuSelectedItemID != 0xff) //selection
+          if(contextMenuSelectedItemID != 0xff) //selection
             theScreen = CONFIRMATION_LOAD_MIXER_TEMPLATE;
 
           if(heldButton == KEY_SELECT) //exit
@@ -3113,7 +3123,7 @@ void handleMainUI()
         {
           bool hasWarning = false;
           //basic
-          if(popupMenuSelectedItemID == ITEM_BASIC) 
+          if(contextMenuSelectedItemID == ITEM_BASIC) 
           {
             if(hasEnoughMixSlots(thisMixIdx, 4))
             {
@@ -3129,7 +3139,7 @@ void handleMainUI()
               changeToScreen(SCREEN_MIXER);
           }
           //elevon
-          if(popupMenuSelectedItemID == ITEM_ELEVON) 
+          if(contextMenuSelectedItemID == ITEM_ELEVON) 
           {
             if(hasEnoughMixSlots(thisMixIdx, 4))
             {
@@ -3145,7 +3155,7 @@ void handleMainUI()
               changeToScreen(SCREEN_MIXER);
           }
           //vtail
-          if(popupMenuSelectedItemID == ITEM_VTAIL) 
+          if(contextMenuSelectedItemID == ITEM_VTAIL) 
           {
             if(hasEnoughMixSlots(thisMixIdx, 4))
             {
@@ -3161,7 +3171,7 @@ void handleMainUI()
               changeToScreen(SCREEN_MIXER);
           }
           //differential thrust
-          if(popupMenuSelectedItemID == ITEM_DIFF_THRUST) 
+          if(contextMenuSelectedItemID == ITEM_DIFF_THRUST) 
           {
             if(hasEnoughMixSlots(thisMixIdx, 4))
             {
@@ -3499,7 +3509,7 @@ void handleMainUI()
         else if(focusedItem == 9)
           ch->endpointR = incDec(ch->endpointR, 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
         else if(focusedItem == 10 && isEditMode) //context menu
-          changeToScreen(POPUP_OUTPUTS_MENU);
+          changeToScreen(CONTEXT_MENU_OUTPUTS);
 
         //Exit
         if(heldButton == KEY_SELECT)
@@ -3507,21 +3517,21 @@ void handleMainUI()
       }
       break;
  
-    case POPUP_OUTPUTS_MENU:
+    case CONTEXT_MENU_OUTPUTS:
       {
         enum {
           ITEM_CHANNEL_MONITOR,
           ITEM_RENAME_CHANNEL,
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("View outputs"), ITEM_CHANNEL_MONITOR);
-        popupMenuAddItem(PSTR("Rename channel"), ITEM_RENAME_CHANNEL);
-        popupMenuDraw();
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("View outputs"), ITEM_CHANNEL_MONITOR);
+        contextMenuAddItem(PSTR("Rename channel"), ITEM_RENAME_CHANNEL);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_RENAME_CHANNEL)
+        if(contextMenuSelectedItemID == ITEM_RENAME_CHANNEL)
           changeToScreen(DIALOG_RENAME_CHANNEL);
-        if(popupMenuSelectedItemID == ITEM_CHANNEL_MONITOR)
+        if(contextMenuSelectedItemID == ITEM_CHANNEL_MONITOR)
           changeToScreen(SCREEN_CHANNEL_MONITOR);
         
         if(heldButton == KEY_SELECT)
@@ -3562,6 +3572,7 @@ void handleMainUI()
           if(selectIdx == EXTRAS_MENU_COUNTERS) changeToScreen(SCREEN_COUNTERS);
           if(selectIdx == EXTRAS_MENU_FUNCTION_GENERATORS) changeToScreen(SCREEN_FUNCTION_GENERATORS);
           if(selectIdx == EXTRAS_MENU_TIMERS) changeToScreen(SCREEN_TIMERS);
+          if(selectIdx == EXTRAS_MENU_NOTIFICATION_SETUP) changeToScreen(SCREEN_NOTIFICATION_SETUP);
         }
 
         //Exit
@@ -3695,7 +3706,7 @@ void handleMainUI()
         else if(focusedItem == 6) //smoothing
           crv->smooth = incDec(crv->smooth, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 7 && isEditMode) //context menu
-          changeToScreen(POPUP_CUSTOM_CURVE_MENU);
+          changeToScreen(CONTEXT_MENU_CUSTOM_CURVE);
 
         ////// Exit
         if(heldButton == KEY_SELECT)
@@ -3706,7 +3717,7 @@ void handleMainUI()
       }
       break;
 
-    case POPUP_CUSTOM_CURVE_MENU:
+    case CONTEXT_MENU_CUSTOM_CURVE:
       {
         enum {
           ITEM_COPY_CURVE,
@@ -3718,30 +3729,30 @@ void handleMainUI()
           ITEM_DELETE_POINT
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("Copy curve to"), ITEM_COPY_CURVE);
-        popupMenuAddItem(PSTR("Rename curve"), ITEM_RENAME_CURVE);
-        popupMenuAddItem(PSTR("Reset curve"), ITEM_RESET_CURVE);
-        popupMenuAddItem(PSTR("Flip horizontal"), ITEM_FLIP_HORIZONTAL);
-        popupMenuAddItem(PSTR("Flip vertical"), ITEM_FLIP_VERTICAL);
-        popupMenuAddItem(PSTR("Insert point"), ITEM_INSERT_POINT);
-        popupMenuAddItem(PSTR("Delete point"), ITEM_DELETE_POINT);
-        popupMenuDraw();
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("Copy curve to"), ITEM_COPY_CURVE);
+        contextMenuAddItem(PSTR("Rename curve"), ITEM_RENAME_CURVE);
+        contextMenuAddItem(PSTR("Reset curve"), ITEM_RESET_CURVE);
+        contextMenuAddItem(PSTR("Flip horizontal"), ITEM_FLIP_HORIZONTAL);
+        contextMenuAddItem(PSTR("Flip vertical"), ITEM_FLIP_VERTICAL);
+        contextMenuAddItem(PSTR("Insert point"), ITEM_INSERT_POINT);
+        contextMenuAddItem(PSTR("Delete point"), ITEM_DELETE_POINT);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_COPY_CURVE)
+        if(contextMenuSelectedItemID == ITEM_COPY_CURVE)
         {
           destCrvIdx = thisCrvIdx;
           changeToScreen(DIALOG_COPY_CUSTOM_CURVE);
         }
-        if(popupMenuSelectedItemID == ITEM_RENAME_CURVE)
+        if(contextMenuSelectedItemID == ITEM_RENAME_CURVE)
           changeToScreen(DIALOG_RENAME_CUSTOM_CURVE);
-        if(popupMenuSelectedItemID == ITEM_RESET_CURVE)
+        if(contextMenuSelectedItemID == ITEM_RESET_CURVE)
         {
           resetCustomCurveParams(thisCrvIdx);
           changeToScreen(SCREEN_CUSTOM_CURVES);
           thisCrvPt = 0;
         }
-        if(popupMenuSelectedItemID == ITEM_FLIP_HORIZONTAL)
+        if(contextMenuSelectedItemID == ITEM_FLIP_HORIZONTAL)
         {
           //Reflect about y axis.
           //If say a point M(h,k), then M'(-h,k). This however affects the order of the points so 
@@ -3766,7 +3777,7 @@ void handleMainUI()
           changeToScreen(SCREEN_CUSTOM_CURVES);
           thisCrvPt = 0;
         }
-        if(popupMenuSelectedItemID == ITEM_FLIP_VERTICAL)
+        if(contextMenuSelectedItemID == ITEM_FLIP_VERTICAL)
         {
           //Reflect about x axis.
           //If say a point M(h,k), then M'(h,-k)
@@ -3776,7 +3787,7 @@ void handleMainUI()
           changeToScreen(SCREEN_CUSTOM_CURVES);
           thisCrvPt = 0;
         }
-        if(popupMenuSelectedItemID == ITEM_INSERT_POINT)
+        if(contextMenuSelectedItemID == ITEM_INSERT_POINT)
         {
           if(Model.CustomCurve[thisCrvIdx].numPoints == MAX_NUM_POINTS_CUSTOM_CURVE)
           {
@@ -3786,7 +3797,7 @@ void handleMainUI()
           else 
             changeToScreen(DIALOG_INSERT_CURVE_POINT);
         }
-        if(popupMenuSelectedItemID == ITEM_DELETE_POINT)
+        if(contextMenuSelectedItemID == ITEM_DELETE_POINT)
         {
           if(Model.CustomCurve[thisCrvIdx].numPoints == MIN_NUM_POINTS_CUSTOM_CURVE)
           {
@@ -4304,7 +4315,7 @@ void handleMainUI()
 
         //open context menu
         if(focusedItem == numFocusable && isEditMode)
-          changeToScreen(POPUP_LOGICAL_SWITCH_MENU);
+          changeToScreen(CONTEXT_MENU_LOGICAL_SWITCHES);
         
         //change to next logical switch
         if(focusedItem == 1)
@@ -4319,7 +4330,7 @@ void handleMainUI()
       }
       break;
       
-    case POPUP_LOGICAL_SWITCH_MENU:
+    case CONTEXT_MENU_LOGICAL_SWITCHES:
       {
         enum {
           ITEM_VIEW_OUTPUTS,
@@ -4327,20 +4338,20 @@ void handleMainUI()
           ITEM_RESET
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("View outputs"), ITEM_VIEW_OUTPUTS);
-        popupMenuAddItem(PSTR("Copy to"), ITEM_COPY_TO);
-        popupMenuAddItem(PSTR("Reset settings"), ITEM_RESET);
-        popupMenuDraw();
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("View outputs"), ITEM_VIEW_OUTPUTS);
+        contextMenuAddItem(PSTR("Copy to"), ITEM_COPY_TO);
+        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_VIEW_OUTPUTS)
+        if(contextMenuSelectedItemID == ITEM_VIEW_OUTPUTS)
           changeToScreen(SCREEN_LOGICAL_SWITCH_OUTPUTS);
-        if(popupMenuSelectedItemID == ITEM_COPY_TO)
+        if(contextMenuSelectedItemID == ITEM_COPY_TO)
         {
           destLsIdx = thisLsIdx;
           changeToScreen(DIALOG_COPY_LOGICAL_SWITCH);
         }
-        if(popupMenuSelectedItemID == ITEM_RESET)
+        if(contextMenuSelectedItemID == ITEM_RESET)
         {
           resetLogicalSwitchParams(thisLsIdx);
           changeToScreen(SCREEN_LOGICAL_SWITCHES);
@@ -4645,7 +4656,7 @@ void handleMainUI()
 
         //open context menu
         if(focusedItem == numFocusable && isEditMode)
-          changeToScreen(POPUP_FUNCGEN_MENU);
+          changeToScreen(CONTEXT_MENU_FUNCGEN);
         
         //change to next function generator
         if(focusedItem == 1)
@@ -4660,7 +4671,7 @@ void handleMainUI()
       }
       break;
       
-    case POPUP_FUNCGEN_MENU:
+    case CONTEXT_MENU_FUNCGEN:
       {
         enum {
           ITEM_VIEW_OUTPUTS,
@@ -4668,23 +4679,23 @@ void handleMainUI()
           ITEM_RESET_FUNCGEN,
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("View outputs"), ITEM_VIEW_OUTPUTS);
-        popupMenuAddItem(PSTR("Copy to"), ITEM_COPY_FUNCGEN);
-        popupMenuAddItem(PSTR("Reset settings"), ITEM_RESET_FUNCGEN);
-        popupMenuDraw();
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("View outputs"), ITEM_VIEW_OUTPUTS);
+        contextMenuAddItem(PSTR("Copy to"), ITEM_COPY_FUNCGEN);
+        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_FUNCGEN);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_RESET_FUNCGEN)
+        if(contextMenuSelectedItemID == ITEM_RESET_FUNCGEN)
         {
           resetFuncgenParams(thisFgenIdx);
           changeToScreen(SCREEN_FUNCTION_GENERATORS);
         }
-        if(popupMenuSelectedItemID == ITEM_COPY_FUNCGEN)
+        if(contextMenuSelectedItemID == ITEM_COPY_FUNCGEN)
         {
           destFgenIdx = thisFgenIdx;
           changeToScreen(DIALOG_COPY_FUNCGEN);
         }
-        if(popupMenuSelectedItemID == ITEM_VIEW_OUTPUTS)
+        if(contextMenuSelectedItemID == ITEM_VIEW_OUTPUTS)
           changeToScreen(SCREEN_FUNCGEN_OUTPUTS);
 
         if(heldButton == KEY_SELECT) //exit
@@ -4912,7 +4923,7 @@ void handleMainUI()
 
         //open context menu
         if(focusedItem == numFocusable && isEditMode)
-          changeToScreen(POPUP_COUNTER_MENU);
+          changeToScreen(CONTEXT_MENU_COUNTERS);
         
         //change to next counter
         if(focusedItem == 1)
@@ -4927,7 +4938,7 @@ void handleMainUI()
       }
       break;
       
-    case POPUP_COUNTER_MENU:
+    case CONTEXT_MENU_COUNTERS:
       {
         enum {
           ITEM_RENAME_COUNTER,
@@ -4937,29 +4948,29 @@ void handleMainUI()
           ITEM_CLEAR_ALL_COUNTERS,
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("Copy to"), ITEM_COPY_COUNTER);
-        popupMenuAddItem(PSTR("Rename counter"), ITEM_RENAME_COUNTER);
-        popupMenuAddItem(PSTR("Reset settings"), ITEM_RESET_COUNTER);
-        popupMenuAddItem(PSTR("Clear counter"), ITEM_CLEAR_COUNTER);
-        popupMenuAddItem(PSTR("Clear all"), ITEM_CLEAR_ALL_COUNTERS);
-        popupMenuDraw();
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("Copy to"), ITEM_COPY_COUNTER);
+        contextMenuAddItem(PSTR("Rename counter"), ITEM_RENAME_COUNTER);
+        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_COUNTER);
+        contextMenuAddItem(PSTR("Clear counter"), ITEM_CLEAR_COUNTER);
+        contextMenuAddItem(PSTR("Clear all"), ITEM_CLEAR_ALL_COUNTERS);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_RESET_COUNTER)
+        if(contextMenuSelectedItemID == ITEM_RESET_COUNTER)
         {
           resetCounterParams(thisCounterIdx);
           changeToScreen(SCREEN_COUNTERS);
         }
-        if(popupMenuSelectedItemID == ITEM_CLEAR_COUNTER)
+        if(contextMenuSelectedItemID == ITEM_CLEAR_COUNTER)
         {
           resetCounterRegister(thisCounterIdx);
           changeToScreen(SCREEN_COUNTERS);  
         }
-        if(popupMenuSelectedItemID == ITEM_CLEAR_ALL_COUNTERS)
+        if(contextMenuSelectedItemID == ITEM_CLEAR_ALL_COUNTERS)
           changeToScreen(CONFIRMATION_CLEAR_ALL_COUNTERS);  
-        if(popupMenuSelectedItemID == ITEM_RENAME_COUNTER)
+        if(contextMenuSelectedItemID == ITEM_RENAME_COUNTER)
           changeToScreen(DIALOG_RENAME_COUNTER);
-        if(popupMenuSelectedItemID == ITEM_COPY_COUNTER)
+        if(contextMenuSelectedItemID == ITEM_COPY_COUNTER)
         {
           destCounterIdx = thisCounterIdx;
           changeToScreen(DIALOG_COPY_COUNTER);  
@@ -5095,7 +5106,7 @@ void handleMainUI()
         else if(focusedItem == 6)
           tmr->isPersistent = incDec(tmr->isPersistent, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 7 && isEditMode)
-          changeToScreen(POPUP_TIMER_MENU);
+          changeToScreen(CONTEXT_MENU_TIMERS);
 
         //exit 
         if(heldButton == KEY_SELECT)
@@ -5105,7 +5116,7 @@ void handleMainUI()
       }
       break;
       
-    case POPUP_TIMER_MENU:
+    case CONTEXT_MENU_TIMERS:
       {
         enum {
           ITEM_START_STOP_TIMER,
@@ -5113,29 +5124,29 @@ void handleMainUI()
           ITEM_RESET_TIMER_SETTINGS,
         };
         
-        popupMenuInitialise();
+        contextMenuInitialise();
         if(Model.Timer[thisTimerIdx].swtch == CTRL_SW_NONE)
         {
           if(timerIsRunning[thisTimerIdx]) 
-            popupMenuAddItem(PSTR("Stop timer"), ITEM_START_STOP_TIMER);
+            contextMenuAddItem(PSTR("Stop timer"), ITEM_START_STOP_TIMER);
           else 
-            popupMenuAddItem(PSTR("Start timer"), ITEM_START_STOP_TIMER);
+            contextMenuAddItem(PSTR("Start timer"), ITEM_START_STOP_TIMER);
         }
-        popupMenuAddItem(PSTR("Reset timer"), ITEM_RESET_TIMER);
-        popupMenuAddItem(PSTR("Reset settings"), ITEM_RESET_TIMER_SETTINGS);
-        popupMenuDraw();
+        contextMenuAddItem(PSTR("Reset timer"), ITEM_RESET_TIMER);
+        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_TIMER_SETTINGS);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_START_STOP_TIMER)
+        if(contextMenuSelectedItemID == ITEM_START_STOP_TIMER)
         {
           timerForceRun[thisTimerIdx] = timerIsRunning[thisTimerIdx] ? false : true;
           changeToScreen(SCREEN_TIMERS);
         }
-        if(popupMenuSelectedItemID == ITEM_RESET_TIMER)
+        if(contextMenuSelectedItemID == ITEM_RESET_TIMER)
         {
           resetTimerRegister(thisTimerIdx);
           changeToScreen(SCREEN_TIMERS);
         }
-        if(popupMenuSelectedItemID == ITEM_RESET_TIMER_SETTINGS)
+        if(contextMenuSelectedItemID == ITEM_RESET_TIMER_SETTINGS)
         {
           resetTimerParams(thisTimerIdx);
           resetTimerRegister(thisTimerIdx); //also reset the register
@@ -5242,6 +5253,184 @@ void handleMainUI()
       }
       break;
       
+    case SCREEN_NOTIFICATION_SETUP:
+      {
+        notification_params_t *notification = &Model.CustomNotification[thisNotificationIdx]; 
+        
+        if(isEditTextDialog) 
+        {
+          editTextDialog(PSTR("Text"), notification->text, sizeof(notification->text), true, true, false);
+          break;
+        }
+        
+        //use a temporary variable for the swtch and assign later 
+        //to avoid annoying playback while scrolling through the options
+        static uint8_t tempSwtch;
+        static bool tempInitialised = false;
+        if(!tempInitialised)
+        {
+          tempSwtch = notification->swtch;
+          tempInitialised = true;
+        }
+        
+        drawHeader(extrasMenu[EXTRAS_MENU_NOTIFICATION_SETUP]);
+        
+        display.setCursor(8, 9);
+        display.print(F("Notification"));
+        display.print(thisNotificationIdx + 1);
+        display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
+        
+        display.setCursor(0, 20);
+        display.print(F("Switch:"));
+        display.setCursor(60, 20);
+        getControlSwitchName(txtBuff, tempSwtch, sizeof(txtBuff));
+        display.print(txtBuff);
+        
+        display.setCursor(0, 29);
+        display.print(F("Tone:"));
+        display.setCursor(60, 29);
+        display.print("Tone");
+        display.print(notification->tone - AUDIO_NOTIFICATION_TONE_FIRST + 1);
+        
+        display.setCursor(0, 38);
+        display.print(F("Popup:"));
+        drawCheckbox(60, 38, notification->showPopup);
+
+        display.setCursor(0, 47);
+        display.print(F("Text:"));
+        display.setCursor(60, 47);
+        if(isEmptyStr(notification->text, sizeof(notification->text)))
+          display.print(F("--"));
+        else
+          display.print(notification->text);
+
+
+        //draw cursor
+        if(focusedItem == 1) 
+          drawCursor(0, 9);
+        else if(focusedItem < 6)
+          drawCursor(52, (focusedItem * 9) + 2);
+        
+        //draw context menu icon
+        display.fillRect(120, 0, 8, 7, WHITE);
+        display.drawBitmap(120, 0, focusedItem == 6 ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
+
+        //change focus
+        changeFocusOnUpDown(6);
+        toggleEditModeOnSelectClicked();
+        
+        //---- edit params
+        if(focusedItem == 1) //change to next or previous
+        {
+          thisNotificationIdx = incDec(thisNotificationIdx, 0, NUM_CUSTOM_NOTIFICATIONS - 1, INCDEC_WRAP, INCDEC_SLOW);
+          //assign from temp
+          notification->swtch = tempSwtch;
+          tempInitialised = false;
+        }
+        else if(focusedItem == 2) //swtch
+        {
+          if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
+            tempSwtch = incDecControlSwitch(tempSwtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
+          else
+            tempSwtch = incDecControlSwitch(tempSwtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+        }
+        else if(focusedItem == 3) //tone
+        {
+          //preview the tone while in edit mode
+          static bool editStarted = false;
+          static uint8_t prevTone;
+          if(isEditMode && !editStarted)
+          {
+            editStarted = true;
+            prevTone = notification->tone;
+          }
+          if(!isEditMode || heldButton == KEY_SELECT)
+          {
+            prevTone = notification->tone;
+            editStarted = false;
+          }
+          notification->tone = incDec(notification->tone, AUDIO_NOTIFICATION_TONE_FIRST, AUDIO_NOTIFICATION_TONE_LAST, INCDEC_NOWRAP, INCDEC_SLOW);
+          if(notification->tone != prevTone && buttonCode == 0 && millis() - buttonReleaseTime >= 500) 
+          {
+            prevTone = notification->tone;
+            audioToPlay = notification->tone;
+          }
+        }
+        else if(focusedItem == 4)//enable popup
+          notification->showPopup = incDec(notification->showPopup, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+        else if(focusedItem == 5 && isEditMode) //edit text
+          isEditTextDialog = true;
+        else if(focusedItem == 6 && isEditMode) //context menu
+        {
+          changeToScreen(CONTEXT_MENU_NOTIFICATIONS);
+          //assign from temp
+          notification->swtch = tempSwtch;
+          tempInitialised = false;
+        }
+          
+        //assign from temp
+        if(!isEditMode || (buttonCode == 0 && millis() - buttonReleaseTime >= 500))
+        {
+          notification->swtch = tempSwtch;
+          tempInitialised = false;
+        }
+
+        //exit
+        if(heldButton == KEY_SELECT)
+        {
+          changeToScreen(SCREEN_EXTRAS_MENU);
+          //assign from temp
+          notification->swtch = tempSwtch;
+          tempInitialised = false;
+        }
+      }
+      break;
+      
+    case CONTEXT_MENU_NOTIFICATIONS:
+      {
+        enum {
+          ITEM_COPY_TO,
+          ITEM_RESET_SETTINGS,
+        };
+        
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("Copy to"), ITEM_COPY_TO);
+        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_SETTINGS);
+        contextMenuDraw();
+        
+        if(contextMenuSelectedItemID == ITEM_COPY_TO)
+        {
+          destNotificationIdx = thisNotificationIdx;
+          changeToScreen(DIALOG_COPY_NOTIFICATION);
+        }
+        
+        if(contextMenuSelectedItemID == ITEM_RESET_SETTINGS)
+        {
+          resetNotificationParams(thisNotificationIdx);
+          changeToScreen(SCREEN_NOTIFICATION_SETUP);
+        }
+
+        if(heldButton == KEY_SELECT) //exit
+          changeToScreen(SCREEN_NOTIFICATION_SETUP);
+      }
+      break;
+      
+    case DIALOG_COPY_NOTIFICATION:
+      {
+        isEditMode = true;
+        destNotificationIdx = incDec(destNotificationIdx, 0, NUM_CUSTOM_NOTIFICATIONS - 1, INCDEC_WRAP, INCDEC_SLOW);
+        drawDialogCopyMove(PSTR("#"), thisNotificationIdx, destNotificationIdx, true);
+        if(clickedButton == KEY_SELECT)
+        {
+          Model.CustomNotification[destNotificationIdx] = Model.CustomNotification[thisNotificationIdx];
+          thisNotificationIdx = destNotificationIdx;
+          changeToScreen(SCREEN_NOTIFICATION_SETUP);
+        }
+        if(heldButton == KEY_SELECT) //exit
+          changeToScreen(SCREEN_NOTIFICATION_SETUP);
+      }
+      break;
+
     case SCREEN_TRIM_SETUP:
       {
         drawHeader(extrasMenu[EXTRAS_MENU_TRIM_SETUP]);
@@ -5400,9 +5589,9 @@ void handleMainUI()
         {
           viewInitialised = false;
           if(isEmptyStr(Model.Telemetry[thisTelemIdx].name, sizeof(Model.Telemetry[0].name)))
-            changeToScreen(POPUP_FREE_SENSOR_MENU);
+            changeToScreen(CONTEXT_MENU_FREE_SENSOR);
           else
-            changeToScreen(POPUP_ACTIVE_SENSOR_MENU);
+            changeToScreen(CONTEXT_MENU_ACTIVE_SENSOR);
         }
 
         if(heldButton == KEY_SELECT)
@@ -5413,27 +5602,27 @@ void handleMainUI()
       }
       break;
       
-    case POPUP_FREE_SENSOR_MENU:
+    case CONTEXT_MENU_FREE_SENSOR:
       {
         enum {
           ITEM_NEW_SENSOR,
           ITEM_SENSOR_TEMPLATES
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("New sensor"), ITEM_NEW_SENSOR);
-        popupMenuAddItem(PSTR("Templates"), ITEM_SENSOR_TEMPLATES);
-        popupMenuDraw();
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("New sensor"), ITEM_NEW_SENSOR);
+        contextMenuAddItem(PSTR("Templates"), ITEM_SENSOR_TEMPLATES);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_NEW_SENSOR)
+        if(contextMenuSelectedItemID == ITEM_NEW_SENSOR)
         { 
           resetTelemParams(thisTelemIdx);        
           changeToScreen(SCREEN_CREATE_SENSOR);
         }
-        if(popupMenuSelectedItemID == ITEM_SENSOR_TEMPLATES)
+        if(contextMenuSelectedItemID == ITEM_SENSOR_TEMPLATES)
         {
           resetTelemParams(thisTelemIdx);
-          changeToScreen(POPUP_SENSOR_TEMPLATES_MENU);
+          changeToScreen(CONTEXT_MENU_SENSOR_TEMPLATES);
         }
 
         if(heldButton == KEY_SELECT) //exit
@@ -5451,7 +5640,7 @@ void handleMainUI()
       } 
       break;
       
-    case POPUP_SENSOR_TEMPLATES_MENU:
+    case CONTEXT_MENU_SENSOR_TEMPLATES:
       {
         enum {
           ITEM_EXTVOLTS_2S,
@@ -5461,21 +5650,21 @@ void handleMainUI()
           ITEM_LINK_QUALITY,
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("ExtVolts 2S"), ITEM_EXTVOLTS_2S);
-        popupMenuAddItem(PSTR("ExtVolts 3S"), ITEM_EXTVOLTS_3S);
-        popupMenuAddItem(PSTR("ExtVolts 4S"), ITEM_EXTVOLTS_4S);
-        popupMenuAddItem(PSTR("Link quality"), ITEM_LINK_QUALITY);
-        popupMenuAddItem(PSTR("RSSI"), ITEM_RSSI);
-        popupMenuDraw();
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("ExtVolts 2S"), ITEM_EXTVOLTS_2S);
+        contextMenuAddItem(PSTR("ExtVolts 3S"), ITEM_EXTVOLTS_3S);
+        contextMenuAddItem(PSTR("ExtVolts 4S"), ITEM_EXTVOLTS_4S);
+        contextMenuAddItem(PSTR("Link quality"), ITEM_LINK_QUALITY);
+        contextMenuAddItem(PSTR("RSSI"), ITEM_RSSI);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_EXTVOLTS_2S)  loadSensorTemplateExtVolts2S(thisTelemIdx);
-        if(popupMenuSelectedItemID == ITEM_EXTVOLTS_3S)  loadSensorTemplateExtVolts3S(thisTelemIdx);
-        if(popupMenuSelectedItemID == ITEM_EXTVOLTS_4S)  loadSensorTemplateExtVolts4S(thisTelemIdx);
-        if(popupMenuSelectedItemID == ITEM_RSSI)         loadSensorTemplateRSSI(thisTelemIdx);
-        if(popupMenuSelectedItemID == ITEM_LINK_QUALITY) loadSensorTemplateLinkQuality(thisTelemIdx);
+        if(contextMenuSelectedItemID == ITEM_EXTVOLTS_2S)  loadSensorTemplateExtVolts2S(thisTelemIdx);
+        if(contextMenuSelectedItemID == ITEM_EXTVOLTS_3S)  loadSensorTemplateExtVolts3S(thisTelemIdx);
+        if(contextMenuSelectedItemID == ITEM_EXTVOLTS_4S)  loadSensorTemplateExtVolts4S(thisTelemIdx);
+        if(contextMenuSelectedItemID == ITEM_RSSI)         loadSensorTemplateRSSI(thisTelemIdx);
+        if(contextMenuSelectedItemID == ITEM_LINK_QUALITY) loadSensorTemplateLinkQuality(thisTelemIdx);
         
-        if(popupMenuSelectedItemID != 0xff) 
+        if(contextMenuSelectedItemID != 0xff) 
           changeToScreen(SCREEN_TELEMETRY);
         
         if(heldButton == KEY_SELECT) //exit
@@ -5483,7 +5672,7 @@ void handleMainUI()
       }
       break;
       
-    case POPUP_ACTIVE_SENSOR_MENU:
+    case CONTEXT_MENU_ACTIVE_SENSOR:
       {
         enum {
           ITEM_VIEW_STATS,
@@ -5491,15 +5680,15 @@ void handleMainUI()
           ITEM_DELETE_SENSOR
         };
         
-        popupMenuInitialise();
-        popupMenuAddItem(PSTR("View stats"), ITEM_VIEW_STATS);
-        popupMenuAddItem(PSTR("Edit sensor"), ITEM_EDIT_SENSOR);
-        popupMenuAddItem(PSTR("Delete sensor"), ITEM_DELETE_SENSOR);
-        popupMenuDraw();
+        contextMenuInitialise();
+        contextMenuAddItem(PSTR("View stats"), ITEM_VIEW_STATS);
+        contextMenuAddItem(PSTR("Edit sensor"), ITEM_EDIT_SENSOR);
+        contextMenuAddItem(PSTR("Delete sensor"), ITEM_DELETE_SENSOR);
+        contextMenuDraw();
         
-        if(popupMenuSelectedItemID == ITEM_VIEW_STATS) changeToScreen(SCREEN_SENSOR_STATS);
-        if(popupMenuSelectedItemID == ITEM_EDIT_SENSOR) changeToScreen(SCREEN_EDIT_SENSOR);
-        if(popupMenuSelectedItemID == ITEM_DELETE_SENSOR) changeToScreen(CONFIRMATION_DELETE_SENSOR);
+        if(contextMenuSelectedItemID == ITEM_VIEW_STATS) changeToScreen(SCREEN_SENSOR_STATS);
+        if(contextMenuSelectedItemID == ITEM_EDIT_SENSOR) changeToScreen(SCREEN_EDIT_SENSOR);
+        if(contextMenuSelectedItemID == ITEM_DELETE_SENSOR) changeToScreen(CONFIRMATION_DELETE_SENSOR);
 
         if(heldButton == KEY_SELECT) //exit
           changeToScreen(SCREEN_TELEMETRY);
@@ -7985,6 +8174,9 @@ void handleMainUI()
       changeToScreen(SCREEN_HOME);
   }
 
+  //-------------- Custom notifications -----------------
+  notificationHandler();
+
   //-------------- Toasts -------------------------------
   drawToast();
   
@@ -8036,9 +8228,9 @@ void changeToScreen(uint8_t scrn)
   theScreen = scrn;
   focusedItem = 1;
   isEditMode = false;
-  popupMenuTopItem = 1;
-  popupMenuFocusedItem = 1;
-  popupMenuSelectedItemID = 0xff;
+  contextMenuTopItem = 1;
+  contextMenuFocusedItem = 1;
+  contextMenuSelectedItemID = 0xff;
   killButtonEvents();
 }
 
@@ -8809,34 +9001,47 @@ void validatePassword(uint8_t nextScreen, uint8_t prevScreen)
 
 //--------------------------------------------------------------------------------------------------
 
-#define _POPUP_MAX_ITEMS  16
-const char* _popupMenuItems[_POPUP_MAX_ITEMS];
-uint8_t     _popupMenuItemIDs[_POPUP_MAX_ITEMS];
-uint8_t     _popupMenuItemCount = 0;
-
-void popupMenuInitialise()
+void drawNotificationOverlay(uint8_t idx)
 {
-  _popupMenuItemCount = 0;
+  display.fillRect(24, 24, 80, 16, WHITE);
+  display.drawRoundRect(25, 25, 78, 14, Sys.useRoundRect ? 3 : 0, BLACK);
+  uint8_t txtWidthPix = 6 * strlen(Model.CustomNotification[idx].text); 
+  uint8_t xpos = 36 + (66 - txtWidthPix) / 2; //middle align text
+  display.setCursor(xpos, 28);
+  display.print(Model.CustomNotification[idx].text);
+  display.drawBitmap(26, 26, icon_info, 10, 12, BLACK);
 }
 
-void popupMenuAddItem(const char* str, uint8_t itemID)
+//--------------------------------------------------------------------------------------------------
+
+#define _CONTEXT_MENU_MAX_ITEMS  16
+const char* _contextMenuItems[_CONTEXT_MENU_MAX_ITEMS];
+uint8_t     _contextMenuItemIDs[_CONTEXT_MENU_MAX_ITEMS];
+uint8_t     _contextMenuItemCount = 0;
+
+void contextMenuInitialise()
 {
-  if(_popupMenuItemCount < _POPUP_MAX_ITEMS)
+  _contextMenuItemCount = 0;
+}
+
+void contextMenuAddItem(const char* str, uint8_t itemID)
+{
+  if(_contextMenuItemCount < _CONTEXT_MENU_MAX_ITEMS)
   {
-    _popupMenuItems[_popupMenuItemCount] = str;
-    _popupMenuItemIDs[_popupMenuItemCount] = itemID;
-    _popupMenuItemCount++;
+    _contextMenuItems[_contextMenuItemCount] = str;
+    _contextMenuItemIDs[_contextMenuItemCount] = itemID;
+    _contextMenuItemCount++;
   }
 }
 
-uint8_t popupMenuGetItemCount()
+uint8_t contextMenuGetItemCount()
 {
-  return _popupMenuItemCount;
+  return _contextMenuItemCount;
 }
 
-void popupMenuDraw()
+void contextMenuDraw()
 {
-  if(_popupMenuItemCount == 0)
+  if(_contextMenuItemCount == 0)
     return;
   
   //--- scrollable list
@@ -8845,15 +9050,15 @@ void popupMenuDraw()
   
   //handle navigation
   isEditMode = true;
-  popupMenuFocusedItem = incDec(popupMenuFocusedItem, _popupMenuItemCount, 1, INCDEC_WRAP, INCDEC_SLOW);
+  contextMenuFocusedItem = incDec(contextMenuFocusedItem, _contextMenuItemCount, 1, INCDEC_WRAP, INCDEC_SLOW);
   isEditMode = false;
-  if(popupMenuFocusedItem < popupMenuTopItem)
-    popupMenuTopItem = popupMenuFocusedItem;
-  while(popupMenuFocusedItem >= popupMenuTopItem + maxVisible)
-    popupMenuTopItem++;
+  if(contextMenuFocusedItem < contextMenuTopItem)
+    contextMenuTopItem = contextMenuFocusedItem;
+  while(contextMenuFocusedItem >= contextMenuTopItem + maxVisible)
+    contextMenuTopItem++;
 
   //Calculate y coord for text item 0. Items are center aligned
-  uint8_t numVisible = _popupMenuItemCount <= maxVisible ? _popupMenuItemCount : maxVisible;
+  uint8_t numVisible = _contextMenuItemCount <= maxVisible ? _contextMenuItemCount : maxVisible;
   uint8_t y0 = ((display.height() - (numVisible * 10)) / 2) + 1;  //10 is line height
   
   //draw bounding box
@@ -8863,11 +9068,11 @@ void popupMenuDraw()
   for(uint8_t line = 0; line < numVisible; line++)
   {
     uint8_t ypos = y0 + line * 10;
-    uint8_t item = popupMenuTopItem + line;
-    strlcpy_P(txtBuff, _popupMenuItems[item-1], sizeof(txtBuff));
-    if(item == popupMenuFocusedItem)
+    uint8_t item = contextMenuTopItem + line;
+    strlcpy_P(txtBuff, _contextMenuItems[item-1], sizeof(txtBuff));
+    if(item == contextMenuFocusedItem)
     {
-      display.fillRoundRect(13, ypos - 2, _popupMenuItemCount <= maxVisible ? 101 : 97, 11, Sys.useRoundRect ? 4 : 0, BLACK);
+      display.fillRoundRect(13, ypos - 2, _contextMenuItemCount <= maxVisible ? 101 : 97, 11, Sys.useRoundRect ? 4 : 0, BLACK);
       display.setTextColor(WHITE);
     }
     display.setCursor(17, ypos);
@@ -8878,12 +9083,12 @@ void popupMenuDraw()
   //scroll bar
   uint8_t  y = Sys.useRoundRect ? y0 - 1 : y0 - 2;
   uint16_t h = Sys.useRoundRect ? numVisible * 10 - 1 : numVisible * 10 + 1;
-  drawScrollBar(112, y, _popupMenuItemCount, popupMenuTopItem, numVisible, h);
+  drawScrollBar(112, y, _contextMenuItemCount, contextMenuTopItem, numVisible, h);
   
   //get the id of the item selected
-  popupMenuSelectedItemID = 0xff;
+  contextMenuSelectedItemID = 0xff;
   if(clickedButton == KEY_SELECT)
-    popupMenuSelectedItemID = _popupMenuItemIDs[popupMenuFocusedItem - 1];
+    contextMenuSelectedItemID = _contextMenuItemIDs[contextMenuFocusedItem - 1];
 }
 
 #endif //UI_128X64

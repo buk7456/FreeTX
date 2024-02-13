@@ -654,7 +654,9 @@ void extractConfig_Counters()
   if(idx < NUM_COUNTERS)
   {
     counter_params_t* counter = &Model.Counter[idx];
-    if(MATCH_P(keyBuff[1], key_Clock))
+    if(MATCH_P(keyBuff[1], key_Name))
+      strlcpy(counter->name, valueBuff, sizeof(counter->name));
+    else if(MATCH_P(keyBuff[1], key_Clock))
       counter->clock = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Edge))
       findIdInIdStr(enum_ClockEdge, valueBuff, counter->edge);
@@ -815,6 +817,31 @@ void extractConfig_Widgets()
     hasEncounteredInvalidParam = true;
 }
 
+void extractConfig_Notifications()
+{
+  static uint8_t idx = 0xff;
+  if(MATCH_P(keyBuff[1], key_Number))
+    idx = atoi_with_prefix(valueBuff) - 1;
+  if(idx < NUM_CUSTOM_NOTIFICATIONS)
+  {
+    notification_params_t *notification = &Model.CustomNotification[idx];
+    if(MATCH_P(keyBuff[1], key_Text))
+      strlcpy(notification->text, valueBuff, sizeof(notification->text));
+    else if(MATCH_P(keyBuff[1], key_Switch))
+      notification->swtch = getControlSwitchID(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_Tone))
+    {
+      notification->tone = AUDIO_NOTIFICATION_TONE_FIRST + atoi_with_prefix(valueBuff) - 1;
+      if(notification->tone < AUDIO_NOTIFICATION_TONE_FIRST) notification->tone = AUDIO_NOTIFICATION_TONE_FIRST;
+      if(notification->tone > AUDIO_NOTIFICATION_TONE_LAST) notification->tone = AUDIO_NOTIFICATION_TONE_LAST;
+    }
+    else if(MATCH_P(keyBuff[1], key_ShowPopup))
+      readValue_bool(valueBuff, &notification->showPopup);
+  }
+  else
+    hasEncounteredInvalidParam = true;
+}
+
 //============================ Core function =======================================================
 
 void importModelData(File& file)
@@ -878,6 +905,7 @@ void importModelData(File& file)
     else if(MATCH_P(keyBuff[0], key_FlightMode)) extractConfig_FlightModes();
     else if(MATCH_P(keyBuff[0], key_Channel)) extractConfig_Channels();
     else if(MATCH_P(keyBuff[0], key_Widget)) extractConfig_Widgets();
+    else if(MATCH_P(keyBuff[0], key_Notification)) extractConfig_Notifications();
     else
     {
       hasEncounteredInvalidParam = true;

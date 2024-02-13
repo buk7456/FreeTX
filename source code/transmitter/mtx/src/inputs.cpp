@@ -32,21 +32,28 @@ void initialiseSwitches()
 void readSwitchesAndButtons()
 {
   //--Read switches--
-  for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++)
+  //These are read on every other call to the function, as an extra debounce measure,
+  //at the expense of slight additional delay/lag.
+  static bool read;
+  read = !read;
+  if(read)
   {
-    swState[i] = SWUPPERPOS;
-    if(Sys.swType[i] == SW_2POS) 
+    for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++)
     {
-      if(!digitalRead(swPin[i][1])) 
-        swState[i] = SWLOWERPOS;
-    }
-    else if(Sys.swType[i] == SW_3POS) 
-    {
-      swState[i] = SWMIDPOS;
-      if(!digitalRead(swPin[i][0]))      
-        swState[i] = SWUPPERPOS;
-      else if(!digitalRead(swPin[i][1])) 
-        swState[i] = SWLOWERPOS;
+      swState[i] = SWUPPERPOS;
+      if(Sys.swType[i] == SW_2POS) 
+      {
+        if(!digitalRead(swPin[i][1])) 
+          swState[i] = SWLOWERPOS;
+      }
+      else if(Sys.swType[i] == SW_3POS) 
+      {
+        swState[i] = SWMIDPOS;
+        if(!digitalRead(swPin[i][0]))      
+          swState[i] = SWUPPERPOS;
+        else if(!digitalRead(swPin[i][1])) 
+          swState[i] = SWLOWERPOS;
+      }
     }
   }
 
