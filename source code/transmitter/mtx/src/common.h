@@ -27,6 +27,9 @@ void resetTimerParams(uint8_t idx);
 void resetFuncgenParams();
 void resetFuncgenParams(uint8_t idx);
 
+void resetNotificationParams();
+void resetNotificationParams(uint8_t idx);
+
 void resetWidgetParams();
 void resetWidgetParams(uint8_t idx);
 
@@ -130,6 +133,8 @@ enum {
 
 //---- Audio ------------------------------
 
+#define NOTIFICATION_TONE_COUNT 6
+
 enum {  
   AUDIO_NONE, 
   
@@ -144,7 +149,10 @@ enum {
 
   AUDIO_SWITCH_MOVED,
   
-  AUDIO_KEY_PRESSED
+  AUDIO_KEY_PRESSED,
+
+  AUDIO_NOTIFICATION_TONE_FIRST,
+  AUDIO_NOTIFICATION_TONE_LAST = AUDIO_NOTIFICATION_TONE_FIRST + NOTIFICATION_TONE_COUNT - 1,
 };
 
 extern uint8_t  audioToPlay;
@@ -176,7 +184,7 @@ extern uint8_t  receiverConfigStatusCode; //1 on success, 2 on fail
 
 //---- Telemetry --------------------------
 
-#define NUM_CUSTOM_TELEMETRY  10
+#define NUM_CUSTOM_TELEMETRY  6
 
 extern int16_t  telemetryReceivedValue[NUM_CUSTOM_TELEMETRY]; //stores the raw received telemetry
 extern int16_t  telemetryMaxReceivedValue[NUM_CUSTOM_TELEMETRY]; //for stats
@@ -754,6 +762,19 @@ enum {
   WIDGET_DISP_COUNT
 };
 
+//------------------------------------------------
+// structure for custom notifications
+//------------------------------------------------
+
+typedef struct {
+  uint8_t swtch;
+  uint8_t tone;
+  bool    showPopup;
+  char    text[11]; //10 chars + Null
+} notification_params_t;
+
+#define NUM_CUSTOM_NOTIFICATIONS  10
+
 ///===============================================
 /// STRUCTURE FOR ENTIRE MODEL INFORMATION.
 /// THIS NESTS THE PREVIOUS STRUCTURES 
@@ -814,6 +835,9 @@ typedef struct {
   //--- Safety checks
   bool   checkThrottle;
   int8_t switchWarn[MAX_NUM_PHYSICAL_SWITCHES]; //-1 means no checks
+  
+  //--- Notifications
+  notification_params_t CustomNotification[NUM_CUSTOM_NOTIFICATIONS];
   
   //--- Output channels
   channel_params_t Channel[NUM_RC_CHANNELS];
