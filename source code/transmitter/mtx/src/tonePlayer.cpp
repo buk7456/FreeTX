@@ -58,49 +58,68 @@
 //--- Sounds ---
 
 // "txbattlow:d=4,o=5,b=290:4p,4c6,32p,4a#,32p,4g."
-static const uint16_t PROGMEM battLowSound[]  = {
+const uint16_t battLowSound[] PROGMEM  = {
   290,NOTE_C6,4,NOTE_REST,32,NOTE_AS5,4,NOTE_REST,32,NOTE_G5,4
 }; 
 
 // "warn:d=4,o=4,b=120:16p,8e5"
-static const uint16_t PROGMEM warnSound[] = {
+const uint16_t warnSound[] PROGMEM = {
   120,NOTE_REST,16,NOTE_E5,8
 };
 
 // "shortBeep:d=4,o=4,b=250:16d5"
-static const uint16_t PROGMEM shortBeepSound[] = {
+const uint16_t shortBeepSound[] PROGMEM = {
   250,NOTE_D5,16
 }; 
 
 // "timerElapsed:d=4,o=5,b=210:16p,16b6,16p,8b6" 
-static const uint16_t PROGMEM timerElapsedSound[] = {
+const uint16_t timerElapsedSound[] PROGMEM = {
   210,NOTE_REST,16,NOTE_B6,16,NOTE_REST,16,NOTE_B6,8
 }; 
 
 // "idle:d=4,o=5,b=90:8p,32c5,32g4,32c5"
-static const uint16_t PROGMEM inactivitySound[] = {
+const uint16_t inactivitySound[] PROGMEM = {
   90,NOTE_REST,8,NOTE_C5,32,NOTE_G4,32,NOTE_C5,32
 }; 
 
 // "telemWarn:d=4,o=5,b=120:8p,4a#4"
-static const uint16_t PROGMEM telemWarnSound[] = {
+const uint16_t telemWarnSound[] PROGMEM = {
   120,NOTE_REST,8,NOTE_AS4,4
 }; 
 
 // "telemMute:d=4,o=4,b=160:8p,16c5,16e5"
-static const uint16_t PROGMEM telemMuteSound[] = {
+const uint16_t telemMuteSound[] PROGMEM = {
   160,NOTE_REST,8,NOTE_C5,16,NOTE_E5,16
 }; 
 
 // "bind:d=4,o=5,b=75:32d#5,32g5,32a#5,16d6"
-static const uint16_t PROGMEM bindSound[] = {
+const uint16_t bindSound[] PROGMEM = {
   75,NOTE_DS5,32,NOTE_G5,32,NOTE_AS5,32,NOTE_D6,16
 }; 
 
 // "trimMove:d=4,o=4,b=250:16a#7"
-static const uint16_t PROGMEM trimMovedSound[] = {
+const uint16_t trimMovedSound[] PROGMEM = {
   250,NOTE_AS7,16
 }; 
+
+// notifications tones
+//if you add more, change NOTIFICATION_TONE_COUNT to match
+/*
+  tone:d=4,o=5,b=125:32p,16b6,8e7,16b7
+  tone:d=4,o=5,b=125:32p,16f#7,16e7,16d#7,16c#7,16b6,16c#7,16d#7,16e7,16f#7
+  tone:d=4,o=5,b=125:32p,16e7,16p,16e7
+  tone:d=4,o=5,b=125:32p,16g6,32p,16c7
+  tone:d=4,o=5,b=125:32p,16a6,16e7,16c#7
+  tone:d=4,o=5,b=125:32p,8g#7,8c#7,8g#7,8c#7
+*/
+const uint16_t notificationTone[][32] PROGMEM = {
+  {125, NOTE_REST, 32, NOTE_B6, 16, NOTE_E7, 8, NOTE_B7, 16},
+  {125, NOTE_REST, 32, NOTE_FS7, 16, NOTE_E7, 16, NOTE_DS7, 16, NOTE_CS7, 16, NOTE_B6, 16, NOTE_CS7, 16, NOTE_DS7, 16, NOTE_E7, 16, NOTE_FS7, 16},
+  {125, NOTE_REST, 32, NOTE_E7, 16, NOTE_REST, 16, NOTE_E7, 16},
+  {125, NOTE_REST, 32, NOTE_G6, 16, NOTE_REST, 32, NOTE_C7, 16},
+  {125, NOTE_REST, 32, NOTE_A6, 16, NOTE_E7, 16, NOTE_CS7, 16},
+  {125, NOTE_REST, 32, NOTE_GS7, 8, NOTE_CS7, 8, NOTE_GS7, 8, NOTE_CS7, 8}
+};
 
 //--- Function declarations ---
 
@@ -138,7 +157,9 @@ void beginTone(int16_t iPin, const uint16_t* toneArray, size_t iSize)
 
 void playback()
 {
-  if(!isPlaying || millis() < endTimeOfNote)
+  uint32_t currTime = millis();
+  
+  if(!isPlaying || currTime < endTimeOfNote)
     return;
 
   if(postn >= size) //end reached, stop
@@ -147,9 +168,12 @@ void playback()
   {
     noTone(pin);
     int32_t note = pgm_read_word(songStart + postn);
+    /* 
     int32_t wholenote = (60 * 1000L / bpm) * 4;  // time for whole note in milliseconds
-    int32_t duration  = wholenote / pgm_read_word(songStart + postn + 1);
-    endTimeOfNote = millis() + duration;
+    int32_t duration  = wholenote / pgm_read_word(songStart + postn + 1); 
+    */
+    int32_t duration = (bpm == 0) ? 0 : (240000L / (bpm * pgm_read_word(songStart + postn + 1)));
+    endTimeOfNote = currTime + duration;
     postn += 2;
     if(note)
       tone(pin, note, duration);
@@ -178,44 +202,28 @@ void playTones()
   if(audioToPlay != lastAudioToPlay) //init playback with the specified audio
   {
     lastAudioToPlay = audioToPlay;
-    switch(audioToPlay)
+    if(audioToPlay == AUDIO_SAFETY_WARN)
+      beginTone(PIN_BUZZER, warnSound, sizeof(warnSound)/sizeof(warnSound[0]));
+    else if(audioToPlay == AUDIO_BATTERY_WARN)
+      beginTone(PIN_BUZZER, battLowSound, sizeof(battLowSound)/sizeof(battLowSound[0])); 
+    else if(audioToPlay == AUDIO_TIMER_ELAPSED) 
+      beginTone(PIN_BUZZER, timerElapsedSound, sizeof(timerElapsedSound)/sizeof(timerElapsedSound[0]));
+    else if(audioToPlay == AUDIO_KEY_PRESSED || audioToPlay == AUDIO_SWITCH_MOVED) 
+      beginTone(PIN_BUZZER, shortBeepSound, sizeof(shortBeepSound)/sizeof(shortBeepSound[0])); 
+    else if(audioToPlay == AUDIO_INACTIVITY) 
+      beginTone(PIN_BUZZER, inactivitySound, sizeof(inactivitySound)/sizeof(inactivitySound[0]));
+    else if(audioToPlay == AUDIO_TELEM_WARN) 
+      beginTone(PIN_BUZZER, telemWarnSound, sizeof(telemWarnSound)/sizeof(telemWarnSound[0]));
+    else if(audioToPlay == AUDIO_TELEM_MUTE_CHANGED) 
+      beginTone(PIN_BUZZER, telemMuteSound, sizeof(telemMuteSound)/sizeof(telemMuteSound[0]));
+    else if(audioToPlay == AUDIO_BIND_SUCCESS) 
+      beginTone(PIN_BUZZER, bindSound, sizeof(bindSound)/sizeof(bindSound[0]));
+    else if(audioToPlay == AUDIO_TRIM_MOVED) 
+      beginTone(PIN_BUZZER, trimMovedSound, sizeof(trimMovedSound)/sizeof(trimMovedSound[0]));
+    else if(audioToPlay >= AUDIO_NOTIFICATION_TONE_FIRST && audioToPlay <= AUDIO_NOTIFICATION_TONE_LAST)
     {
-      case AUDIO_SAFETY_WARN:   
-        beginTone(PIN_BUZZER, warnSound, sizeof(warnSound)/sizeof(warnSound[0])); 
-        break;
-        
-      case AUDIO_BATTERY_WARN:    
-        beginTone(PIN_BUZZER, battLowSound, sizeof(battLowSound)/sizeof(battLowSound[0])); 
-        break;
-        
-      case AUDIO_TIMER_ELAPSED:   
-        beginTone(PIN_BUZZER, timerElapsedSound, sizeof(timerElapsedSound)/sizeof(timerElapsedSound[0])); 
-        break;
-        
-      case AUDIO_KEY_PRESSED: 
-      case AUDIO_SWITCH_MOVED:    
-        beginTone(PIN_BUZZER, shortBeepSound, sizeof(shortBeepSound)/sizeof(shortBeepSound[0])); 
-        break;
-        
-      case AUDIO_INACTIVITY:
-        beginTone(PIN_BUZZER, inactivitySound, sizeof(inactivitySound)/sizeof(inactivitySound[0]));
-        break;
-        
-      case AUDIO_TELEM_WARN:
-        beginTone(PIN_BUZZER, telemWarnSound, sizeof(telemWarnSound)/sizeof(telemWarnSound[0]));
-        break;
-        
-      case AUDIO_TELEM_MUTE_CHANGED:
-        beginTone(PIN_BUZZER, telemMuteSound, sizeof(telemMuteSound)/sizeof(telemMuteSound[0]));
-        break;
-        
-      case AUDIO_BIND_SUCCESS:
-        beginTone(PIN_BUZZER, bindSound, sizeof(bindSound)/sizeof(bindSound[0]));
-        break;
-        
-      case AUDIO_TRIM_MOVED:
-        beginTone(PIN_BUZZER, trimMovedSound, sizeof(trimMovedSound)/sizeof(trimMovedSound[0]));
-        break;
+      uint8_t i = audioToPlay - AUDIO_NOTIFICATION_TONE_FIRST;
+      beginTone(PIN_BUZZER, notificationTone[i], sizeof(notificationTone[0])/sizeof(notificationTone[0][0]));
     }
   }
   else //Playback. Automatically stops once all notes have been played
@@ -230,4 +238,3 @@ void stopTones()
 {
   stopPlayback();
 }
-
