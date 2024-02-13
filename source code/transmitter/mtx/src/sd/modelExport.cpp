@@ -414,10 +414,14 @@ void exportModelData(File& file)
   for(uint8_t idx = 0; idx < NUM_COUNTERS; idx++)
   {
     counter_params_t *counter = &Model.Counter[idx];
-    if(idx > 0 && counter->clock == SRC_NONE)
+
+    if(idx > 0 && counter->clock == CTRL_SW_NONE && isEmptyStr(counter->name, sizeof(counter->name)))
       continue;
+
     writeKeyValue_Char(file, 0, key_Counter, NULL);
     writeKeyValue_S32(file, 1, key_Number, idx + 1);
+
+    writeKeyValue_Char(file, 1, key_Name, counter->name);
 
     getControlSwitchName_Clean(tempBuff, counter->clock, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_Clock, tempBuff);
@@ -442,8 +446,10 @@ void exportModelData(File& file)
     for(uint8_t idx = 0; idx < NUM_FLIGHT_MODES; idx++)
     {
       flight_mode_t *fmd = &Model.FlightMode[idx];
-      if(idx > 0 && fmd->swtch == SRC_NONE)
+
+      if(idx > 0 && fmd->swtch == CTRL_SW_NONE && isEmptyStr(fmd->name, sizeof(fmd->name)))
         continue;
+      
       writeKeyValue_Char(file, 0, key_FlightMode, NULL);
       writeKeyValue_S32(file, 1, key_Number, idx + 1);
       writeKeyValue_Char(file, 1, key_Name, fmd->name);
@@ -548,5 +554,29 @@ void exportModelData(File& file)
       writeKeyValue_S32(file, 1, key_GaugeMax, widget->gaugeMax);
     }
   }
-  
+
+  file.println(F("# ------ Notifications ------"));
+
+  for(uint8_t idx = 0; idx < NUM_CUSTOM_NOTIFICATIONS; idx++)
+  {
+    notification_params_t *notification = &Model.CustomNotification[idx];
+
+    if(idx > 0 && notification->swtch == CTRL_SW_NONE && isEmptyStr(notification->text, sizeof(notification->text)))
+      continue;
+
+    writeKeyValue_Char(file, 0, key_Notification, NULL);
+    writeKeyValue_S32(file, 1, key_Number, idx + 1);
+
+    getControlSwitchName_Clean(tempBuff, notification->swtch, sizeof(tempBuff));
+    writeKeyValue_Char(file, 1, key_Switch, tempBuff);
+
+    writeKey_helper(file, 1, key_Tone);
+    file.print(F("Tone"));
+    file.print(notification->tone - AUDIO_NOTIFICATION_TONE_FIRST + 1);
+    file.println();
+
+    writeKeyValue_bool(file, 1, key_ShowPopup, notification->showPopup);
+
+    writeKeyValue_Char(file, 1, key_Text, notification->text);
+  }
 }
