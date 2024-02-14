@@ -835,8 +835,6 @@ void extractConfig_Notifications()
       if(notification->tone < AUDIO_NOTIFICATION_TONE_FIRST) notification->tone = AUDIO_NOTIFICATION_TONE_FIRST;
       if(notification->tone > AUDIO_NOTIFICATION_TONE_LAST) notification->tone = AUDIO_NOTIFICATION_TONE_LAST;
     }
-    else if(MATCH_P(keyBuff[1], key_ShowPopup))
-      readValue_bool(valueBuff, &notification->showPopup);
   }
   else
     hasEncounteredInvalidParam = true;
