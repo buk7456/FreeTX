@@ -593,7 +593,6 @@ void resetNotificationParams(uint8_t idx)
   
   Model.CustomNotification[idx].swtch = CTRL_SW_NONE;
   Model.CustomNotification[idx].tone = AUDIO_NOTIFICATION_TONE_FIRST;
-  Model.CustomNotification[idx].showPopup = true;
   Model.CustomNotification[idx].text[0] = '\0';
 }
 
