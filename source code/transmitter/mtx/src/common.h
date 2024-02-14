@@ -133,7 +133,7 @@ enum {
 
 //---- Audio ------------------------------
 
-#define NOTIFICATION_TONE_COUNT 6
+#define NOTIFICATION_TONE_COUNT 5
 
 enum {  
   AUDIO_NONE, 
@@ -496,6 +496,7 @@ enum {
 //------------------------------------------------
 // structure for counter data
 //------------------------------------------------
+
 typedef struct {
   char     name[7];   //6 chars + Null 
   uint8_t  clock;     //the control switch that clocks the counter
@@ -625,6 +626,7 @@ enum {
 //------------------------------------------------
 // structure for channel params
 //------------------------------------------------
+
 typedef struct {
   char     name[7];       //6 chars + null
   int8_t   curve;         //-1 means none, 0 to .. are custom curves
@@ -640,6 +642,7 @@ typedef struct {
 //------------------------------------------------
 // structure for custom telemetry
 //------------------------------------------------
+
 typedef struct {
   char     name[9];        //8 chars + Null. If no name, the telemetry doesn't then exist
   char     unitsName[5];   //4 chars + null
@@ -709,7 +712,6 @@ typedef struct {
 
 #define NUM_FLIGHT_MODES 5
 
-
 //------------------------------------------------
 // structure for timer parameters
 //------------------------------------------------
@@ -730,6 +732,7 @@ extern uint32_t timerElapsedTime[NUM_TIMERS];
 //------------------------------------------------
 // structure for home screen widget data
 //------------------------------------------------
+
 typedef struct {
   uint8_t type;
   uint8_t src;
@@ -769,8 +772,7 @@ enum {
 typedef struct {
   uint8_t swtch;
   uint8_t tone;
-  bool    showPopup;
-  char    text[11]; //10 chars + Null
+  char    text[13]; //12 chars + Null
 } notification_params_t;
 
 #define NUM_CUSTOM_NOTIFICATIONS  10

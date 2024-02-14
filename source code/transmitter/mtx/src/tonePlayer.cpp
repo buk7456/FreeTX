@@ -107,7 +107,6 @@ const uint16_t trimMovedSound[] PROGMEM = {
 /*
   tone:d=4,o=5,b=125:32p,16b6,8e7,16b7
   tone:d=4,o=5,b=125:32p,16f#7,16e7,16d#7,16c#7,16b6,16c#7,16d#7,16e7,16f#7
-  tone:d=4,o=5,b=125:32p,16e7,16p,16e7
   tone:d=4,o=5,b=125:32p,16g6,32p,16c7
   tone:d=4,o=5,b=125:32p,16a6,16e7,16c#7
   tone:d=4,o=5,b=125:32p,8g#7,8c#7,8g#7,8c#7
@@ -115,7 +114,6 @@ const uint16_t trimMovedSound[] PROGMEM = {
 const uint16_t notificationTone[][32] PROGMEM = {
   {125, NOTE_REST, 32, NOTE_B6, 16, NOTE_E7, 8, NOTE_B7, 16},
   {125, NOTE_REST, 32, NOTE_FS7, 16, NOTE_E7, 16, NOTE_DS7, 16, NOTE_CS7, 16, NOTE_B6, 16, NOTE_CS7, 16, NOTE_DS7, 16, NOTE_E7, 16, NOTE_FS7, 16},
-  {125, NOTE_REST, 32, NOTE_E7, 16, NOTE_REST, 16, NOTE_E7, 16},
   {125, NOTE_REST, 32, NOTE_G6, 16, NOTE_REST, 32, NOTE_C7, 16},
   {125, NOTE_REST, 32, NOTE_A6, 16, NOTE_E7, 16, NOTE_CS7, 16},
   {125, NOTE_REST, 32, NOTE_GS7, 8, NOTE_CS7, 8, NOTE_GS7, 8, NOTE_CS7, 8}

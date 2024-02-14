@@ -5282,23 +5282,19 @@ void handleMainUI()
         
         display.setCursor(0, 20);
         display.print(F("Switch:"));
-        display.setCursor(60, 20);
+        display.setCursor(54, 20);
         getControlSwitchName(txtBuff, tempSwtch, sizeof(txtBuff));
         display.print(txtBuff);
         
         display.setCursor(0, 29);
         display.print(F("Tone:"));
-        display.setCursor(60, 29);
+        display.setCursor(54, 29);
         display.print("Tone");
         display.print(notification->tone - AUDIO_NOTIFICATION_TONE_FIRST + 1);
         
         display.setCursor(0, 38);
-        display.print(F("Popup:"));
-        drawCheckbox(60, 38, notification->showPopup);
-
-        display.setCursor(0, 47);
         display.print(F("Text:"));
-        display.setCursor(60, 47);
+        display.setCursor(54, 38);
         if(isEmptyStr(notification->text, sizeof(notification->text)))
           display.print(F("--"));
         else
@@ -5308,15 +5304,15 @@ void handleMainUI()
         //draw cursor
         if(focusedItem == 1) 
           drawCursor(0, 9);
-        else if(focusedItem < 6)
-          drawCursor(52, (focusedItem * 9) + 2);
+        else if(focusedItem < 5)
+          drawCursor(46, (focusedItem * 9) + 2);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
-        display.drawBitmap(120, 0, focusedItem == 6 ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
+        display.drawBitmap(120, 0, focusedItem == 5 ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
 
         //change focus
-        changeFocusOnUpDown(6);
+        changeFocusOnUpDown(5);
         toggleEditModeOnSelectClicked();
         
         //---- edit params
@@ -5356,11 +5352,9 @@ void handleMainUI()
             audioToPlay = notification->tone;
           }
         }
-        else if(focusedItem == 4)//enable popup
-          notification->showPopup = incDec(notification->showPopup, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 5 && isEditMode) //edit text
+        else if(focusedItem == 4 && isEditMode) //edit text
           isEditTextDialog = true;
-        else if(focusedItem == 6 && isEditMode) //context menu
+        else if(focusedItem == 5 && isEditMode) //context menu
         {
           changeToScreen(CONTEXT_MENU_NOTIFICATIONS);
           //assign from temp
@@ -8174,11 +8168,11 @@ void handleMainUI()
       changeToScreen(SCREEN_HOME);
   }
 
-  //-------------- Custom notifications -----------------
-  notificationHandler();
-
   //-------------- Toasts -------------------------------
   drawToast();
+  
+  //-------------- Custom notifications -----------------
+  notificationHandler();
   
   //-------------- Debug print --------------------------
   if(Sys.DBG_showLoopTime)
@@ -8556,7 +8550,7 @@ void drawToast()
   
   //Table for easing the slide up/down animation.
   //t ranges from 0 to 1. Here it is actually the ratio (currTime - startTime)/transitionDuration
-  //Values have been multiplied by 10 (distance is 10 pixels) and rounded to zero decimal places.
+  //Values have been multiplied by distance to move and rounded to zero decimal places.
   static const uint8_t transitionLUT[] PROGMEM = {
     // 0,2,4,5,6,7,8,9,10,10//quadratic 1-pow(1-t,2)
     // 0,1,3,4,5,6,7,7,8,8,9,9,9,10,10,10,10,10,10,10,10 //cubic 1-pow(1-t,3) 
@@ -8564,19 +8558,19 @@ void drawToast()
   };
   
   uint8_t numElem = sizeof(transitionLUT)/sizeof(transitionLUT[0]);
-  const int16_t transitionDuration = 400; //in milliseconds
+  const int16_t transitionDuration = 300; //in milliseconds
   uint32_t currTime = millis();
-  uint32_t sttTime = toastStartTime;
+  uint32_t startTime = toastStartTime;
   uint32_t endTime = toastEndTime + transitionDuration * 2;
   
-  if(currTime >= sttTime && currTime < endTime)
+  if(currTime >= startTime && currTime < endTime)
   {
     uint8_t ypos = 53;
     if(Sys.animationsEnabled)
     {
       uint8_t idxLUT = numElem - 1;
-      if(currTime < sttTime + transitionDuration)
-        idxLUT = ((currTime - sttTime) * (numElem - 1)) / transitionDuration;
+      if(currTime < startTime + transitionDuration)
+        idxLUT = ((currTime - startTime) * (numElem - 1)) / transitionDuration;
       else if((currTime + transitionDuration) > endTime) //slide down
         idxLUT = ((endTime - currTime) * (numElem - 1)) / transitionDuration;
       ypos = 63 - pgm_read_byte(&transitionLUT[idxLUT]);
@@ -9001,15 +8995,41 @@ void validatePassword(uint8_t nextScreen, uint8_t prevScreen)
 
 //--------------------------------------------------------------------------------------------------
 
-void drawNotificationOverlay(uint8_t idx)
+void drawNotificationOverlay(uint8_t idx, uint32_t startTime, uint32_t endTime)
 {
-  display.fillRect(24, 24, 80, 16, WHITE);
-  display.drawRoundRect(25, 25, 78, 14, Sys.useRoundRect ? 3 : 0, BLACK);
-  uint8_t txtWidthPix = 6 * strlen(Model.CustomNotification[idx].text); 
-  uint8_t xpos = 36 + (66 - txtWidthPix) / 2; //middle align text
-  display.setCursor(xpos, 28);
-  display.print(Model.CustomNotification[idx].text);
-  display.drawBitmap(26, 26, icon_info, 10, 12, BLACK);
+  //Table for easing the slide up/down animation.
+  //t ranges from 0 to 1. Here it is actually the ratio (currTime - startTime)/transitionDuration
+  //Values have been multiplied by distance to move and rounded to zero decimal places.
+  static const uint8_t transitionLUT[] PROGMEM = {
+    0,2,4,6,7,8,9,9,10,10,10,10,10,10,10,10 //quartic 1-pow(1-t,4)
+  };
+  
+  const uint8_t numElem = sizeof(transitionLUT)/sizeof(transitionLUT[0]);
+  const int16_t transitionDuration = 300; //in milliseconds
+  
+  uint32_t currTime = millis();
+  if(currTime >= startTime && currTime < endTime)
+  {
+    uint8_t ypos = 53;
+    if(Sys.animationsEnabled)
+    {
+      uint8_t idxLUT = numElem - 1;
+      if(currTime < startTime + transitionDuration) //slide up
+        idxLUT = ((currTime - startTime) * (numElem - 1)) / transitionDuration;
+      else if((currTime + transitionDuration) > endTime) //slide down
+        idxLUT = ((endTime - currTime) * (numElem - 1)) / transitionDuration;
+      ypos = 63 - pgm_read_byte(&transitionLUT[idxLUT]);
+    }
+
+    uint8_t txtWidthPix = 6 * strlen(Model.CustomNotification[idx].text); 
+    uint8_t xpos = (128 - txtWidthPix) / 2; //middle align text
+    display.drawRoundRect(xpos - 5, ypos, txtWidthPix + 9, 11, Sys.useRoundRect ? 4 : 0, WHITE);
+    display.fillRoundRect(xpos - 4, ypos + 1, txtWidthPix + 7, 9, Sys.useRoundRect ? 3 : 0, BLACK);
+    display.setCursor(xpos, ypos + 2);
+    display.setTextColor(WHITE);
+    display.print(Model.CustomNotification[idx].text);
+    display.setTextColor(BLACK);
+  }
 }
 
 //--------------------------------------------------------------------------------------------------

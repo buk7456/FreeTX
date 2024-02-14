@@ -575,8 +575,6 @@ void exportModelData(File& file)
     file.print(notification->tone - AUDIO_NOTIFICATION_TONE_FIRST + 1);
     file.println();
 
-    writeKeyValue_bool(file, 1, key_ShowPopup, notification->showPopup);
-
     writeKeyValue_Char(file, 1, key_Text, notification->text);
   }
 }

@@ -64,7 +64,7 @@ int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEna
 uint8_t incDecSource(uint8_t val, uint8_t flag);
 uint8_t incDecControlSwitch(uint8_t val, uint8_t flag);
 
-void drawNotificationOverlay(uint8_t idx); //implemented in the resolution specific UI file
+void drawNotificationOverlay(uint8_t idx, uint32_t startTime, uint32_t endTime); //implemented in the resolution specific UI file
 
 
 #endif
