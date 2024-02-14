@@ -607,10 +607,10 @@ void notificationHandler()
     uint8_t notificationId;
   } queue_t;
 
-  const uint8_t MAX_QUEUE_SIZE = 5; //maximum length of the queue
+  const uint8_t MAX_QUEUE_SIZE = 3; //maximum length of the queue. Keep it small
   static queue_t queue[MAX_QUEUE_SIZE];
 
-  static uint8_t prevId = 0xff;
+  static uint8_t lastId = 0xff;
   static bool lastState[NUM_CUSTOM_NOTIFICATIONS];
 
   static bool initialised = false;
@@ -633,7 +633,7 @@ void notificationHandler()
     {
       lastState[i] = checkSwitchCondition(Model.CustomNotification[i].swtch);
     }
-    prevId = 0xff;
+    lastId = 0xff;
   }
 
   //determine the queue's current size
@@ -644,7 +644,8 @@ void notificationHandler()
       queueSize++;
   }
 
-  //--- Enqueue
+  //--- Add to the queue
+  
   for(uint8_t i = 0; i < NUM_CUSTOM_NOTIFICATIONS; i++)
   {
     uint8_t sw = Model.CustomNotification[i].swtch;
@@ -652,7 +653,7 @@ void notificationHandler()
     if(state && !lastState[i]) //just went on
     {
       lastState[i] = true;
-      //add to the queue if not already queued and the queue is not full. We enqueue at the end.
+      //Add to the queue if not already queued and the queue is not full. Enqueue at rear
       if(queueSize < MAX_QUEUE_SIZE)
       {
         bool alreadyQueued = false;
@@ -664,6 +665,7 @@ void notificationHandler()
             break;
           }
         }
+        
         if(!alreadyQueued)
         {
           queue[queueSize].notificationId = i;
@@ -671,24 +673,24 @@ void notificationHandler()
         }
       }
     }
-    else if(!state) //went off
+    if(!state) //went off
     {
       lastState[i] = false;
     }
   }
 
   //--- Process queue
-  //here, queue item 0 is considered the head
-
-  if(queueSize)
+  //Here, queue item 0 is considered the head
+  
+  if(queueSize > 0)
   {
     static bool toneStarted = false;
     static uint32_t startTime;
     static uint32_t endTime;
 
-    if(prevId != queue[0].notificationId)
+    if(lastId != queue[0].notificationId)
     {
-      prevId = queue[0].notificationId;
+      lastId = queue[0].notificationId;
       startTime = millis();
       endTime = startTime + 3000;
       toneStarted = false;
@@ -696,19 +698,12 @@ void notificationHandler()
     
     if(millis() < endTime)
     {
-      //Show notification
-      //The notification self-dismisses or when a key is pressed.
-      if(Model.CustomNotification[queue[0].notificationId].showPopup
-         && !isEmptyStr(Model.CustomNotification[queue[0].notificationId].text, sizeof(Model.CustomNotification[0].text)))
+      //show notification
+      if(!isEmptyStr(Model.CustomNotification[queue[0].notificationId].text, sizeof(Model.CustomNotification[0].text)))
       {
-        drawNotificationOverlay(queue[0].notificationId); 
-        if(pressedButton == KEY_SELECT || pressedButton == KEY_UP || pressedButton == KEY_DOWN)
-        {
-          killButtonEvents();
-          endTime = millis();
-        }
+        drawNotificationOverlay(queue[0].notificationId, startTime, endTime); 
       }
-      //Play the specified melody
+      //play the specified melody
       if(!toneStarted)
       {
         toneStarted = true;
@@ -717,8 +712,9 @@ void notificationHandler()
     }
     else 
     {
-      //Dequeue
-      //shift elements to the left, then write defaults at the last position
+      //--- Dequeue
+      //Item 0 has been processed, remove it.
+      //Here we shift array elements to the left by one position.
       for(uint8_t i = 0; i < MAX_QUEUE_SIZE - 1; i++)
       {
         queue[i] = queue[i + 1];
@@ -727,7 +723,7 @@ void notificationHandler()
       //decrement the count
       queueSize--;
       //reset other variables
-      prevId = 0xff;
+      lastId = 0xff;
     }
   }
 }
