@@ -35,18 +35,16 @@ The major components are listed below.
 <img src="doc/img4.jpg" width="400"/>
 </p>
 
-## Video
-Here is a video showcasing some of the features.
-<br>
-<br>
-[![Features overview - FreeTX](doc/yt.jpg)](https://youtu.be/rDpRMRE8av0)
-
 ## User guide
 [Mixer](doc/mixer.md)
 <br>[Custom curves](doc/custom_curves.md)
 <br>[Logical switches](doc/logical_switches.md)
 <br>[Telemetry](doc/telemetry.md)
 <br>[Receiver binding and configuration](doc/receiver_config.md)
+
+## Demonstration videos
+[![Features overview - FreeTX](doc/yt.jpg)](https://www.youtube.com/watch?v=rDpRMRE8av0) 
+[![RF link test - FreeTX](doc/yt2.jpg)](https://www.youtube.com/watch?v=9EZkyRHkMpg)
 
 ## Frequently Asked Questions
 [Got a question? See the FAQ first.](doc/faq.md)
