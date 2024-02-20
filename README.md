@@ -27,7 +27,7 @@ Three buttons are used for navigation; Up, Select, Down. Long press Select to go
 The transmiter and receiver schematics can be found in the 'schematics' folder. 
 The major components are listed below.
 - 1x Atmega2560 microcontroller, 2x Atmega328p microcontrollers.
-- 2x SX1276/77/78/79 or RFM95 based Lora modules. However any module can possibly be used.
+- 2x SX1276/77/78/79 or RFM95 based Lora modules. Other modules can possibly be used with modifications to the source code.
 - 128x64 KS0108 based LCD. Any 128x64 LCD can however be used (provide own driver code).
 
 <p align="left">
