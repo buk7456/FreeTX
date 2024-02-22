@@ -407,12 +407,12 @@ void doSerialCommunication()
       {
         if(sensorID == Model.Telemetry[idx].identifier)
         {
-          //store the last received value
-          if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
-            telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
-          //write the current value
           telemetryReceivedValue[idx] = joinBytes(tmpBuff[buffIdx + 1], tmpBuff[buffIdx + 2]);
-          telemetryLastReceivedTime[idx] = millis();
+          if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
+          {
+            telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
+            telemetryLastReceivedTime[idx] = millis();
+          }
         }
       }
     }
@@ -426,12 +426,12 @@ void doSerialCommunication()
     {
       if(Model.Telemetry[idx].identifier == 0x70)
       {
-        //store the last received value
+				telemetryReceivedValue[idx] = lqi;
         if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
+        {
           telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
-        //write the current value
-        telemetryReceivedValue[idx] = lqi;
-        telemetryLastReceivedTime[idx] = millis();
+          telemetryLastReceivedTime[idx] = millis();
+        }
       }
     }
   }
@@ -449,9 +449,8 @@ void handleTelemetry()
     {
       if(Model.Telemetry[idx].identifier == 0x30)
       {
-        if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
-          telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
         telemetryReceivedValue[idx] = mixSources[SRC_VIRTUAL_FIRST] / 5;
+        telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
         telemetryLastReceivedTime[idx] = millis();
       }
     }
