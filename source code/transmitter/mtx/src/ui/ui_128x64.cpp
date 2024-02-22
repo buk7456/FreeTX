@@ -29,12 +29,12 @@ enum {
 };
 
 char const extrasMenu[][20] PROGMEM = { 
-  "Custom curves", "Functn generators", "Logical switches", "Counters", "Timers", "Safety checks",
-  "Notifications", "Trim setup", "Flight modes"
+  "Custom curves", "Functn generators", "Logical switches", "Timers", "Counters", "Notifications", 
+  "Safety checks", "Trim setup", "Flight modes"
 };
 enum {
   EXTRAS_MENU_CUSTOM_CURVES, EXTRAS_MENU_FUNCTION_GENERATORS, EXTRAS_MENU_LOGICAL_SWITCHES,
-  EXTRAS_MENU_COUNTERS, EXTRAS_MENU_TIMERS, EXTRAS_MENU_SAFETY_CHECKS, EXTRAS_MENU_NOTIFICATION_SETUP, 
+  EXTRAS_MENU_TIMERS, EXTRAS_MENU_COUNTERS, EXTRAS_MENU_NOTIFICATION_SETUP, EXTRAS_MENU_SAFETY_CHECKS,
   EXTRAS_MENU_TRIM_SETUP, EXTRAS_MENU_FLIGHT_MODES
 };
 
@@ -297,9 +297,9 @@ void drawToast();
 void drawTelemetryValue(uint8_t xpos, uint8_t ypos, uint8_t idx, int16_t rawVal, bool blink);
 void printTelemParam(uint8_t xpos, uint8_t ypos, uint8_t idx, int32_t val);
 void printFullScreenMsg(const char* str);
-void printHHMMSS(uint32_t millisecs);
+void printHHMMSS(int32_t millisecs);
 void printVoltage(int16_t millivolts);
-void printSeconds(uint16_t decisecs);
+void printSeconds(int16_t decisecs);
 void printModelName(char* buff, uint8_t modelIdx);
 void printTimerValue(uint8_t idx);
 void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEmpty, bool trimStr, bool isSecureMode);
@@ -4218,7 +4218,7 @@ void handleMainUI()
                     else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counter value
                       ls->val2 = incDec(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_FAST);
                     else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timer value
-                      ls->val2 = incDec(ls->val2, 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                      ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
                     else //telemetry value
                       ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
                   }
@@ -7691,7 +7691,8 @@ void handleMainUI()
     case SCREEN_ABOUT:
       {
         drawHeader(mainMenu[MAIN_MENU_ABOUT]);
-        printFullScreenMsg(PSTR("\nFW ver:" _SKETCHVERSION "\n(c)2022-2023\nBuk7456\n\ngithub.com/buk7456" ));
+
+        printFullScreenMsg(PSTR("FW version: " _SKETCHVERSION "\n(c) 2023 Buk7456" "\nhttps://github.com/" "\nbuk7456/FreeTX"));
         
         display.drawBitmap(61, 61, icon_down_arrow_small, 5, 3, BLACK);
         
@@ -8280,9 +8281,14 @@ void printFullScreenMsg(const char* str)
 
 //--------------------------------------------------------------------------------------------------
 
-void printHHMMSS(uint32_t millisecs)
+void printHHMMSS(int32_t millisecs)
 {
-  //Prints the time as mm:ss or hh:mm:ss
+  if(millisecs < 0)
+  {
+    display.print(F("-"));
+    millisecs = -millisecs;
+  }
+
   uint32_t hh, mm, ss;
   ss = millisecs / 1000;
   hh = ss / 3600;
@@ -8349,8 +8355,13 @@ void printVoltage(int16_t millivolts)
 
 //--------------------------------------------------------------------------------------------------
 
-void printSeconds(uint16_t decisecs)
+void printSeconds(int16_t decisecs)
 {
+  if(decisecs < 0)
+  {
+    display.print(F("-"));
+    decisecs = -decisecs;
+  }
   display.print(decisecs / 10);
   display.print(F("."));
   display.print(decisecs % 10);
