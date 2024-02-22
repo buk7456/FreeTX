@@ -486,7 +486,16 @@ void computeChannelOutputs()
           }
           else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timers
           {
-            _val1 = timerElapsedTime[ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS)];
+            uint8_t tmrIdx = ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS);
+            if(Model.Timer[tmrIdx].initialMinutes == 0) //a count up timer
+            {
+              _val1 = timerElapsedTime[tmrIdx];
+            }
+            else //count down timer
+            {
+              _val1 = (int32_t)Model.Timer[tmrIdx].initialMinutes * 60000;
+              _val1 -= timerElapsedTime[tmrIdx];
+            }
             _val2 = (int32_t)ls->val2 * 1000;
           }
           else //telemetry
