@@ -1037,240 +1037,292 @@ void handleMainUI()
         
         widget_params_t *widget = &Model.Widget[thisWidgetIdx];
         
-        uint8_t numItems = 1; //initial val
         display.setCursor(8, 9);
         display.print(F("Widget"));
         display.print(thisWidgetIdx + 1);
         display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
+
+        //dynamic list
+        enum {
+          ITEM_TYPE,
+          ITEM_SRC,
+          ITEM_DISP,
+          ITEM_GAUGE_MIN,
+          ITEM_GAUGE_MAX,
+
+          ITEM_COUNT
+        };
         
-        //type 
-        numItems++;
-        display.setCursor(0, 20);
-        display.print(F("Type:"));
-        display.setCursor(48, 20);
-        display.print(findStringInIdStr(enum_WidgetType, widget->type));
-        
-        //src
-        numItems++;
-        display.setCursor(0, 29);
-        display.print(F("Src:"));
-        display.setCursor(48, 29);
-        if(widget->type == WIDGET_TYPE_TELEMETRY)
+        uint8_t listItemIDs[ITEM_COUNT];
+        uint8_t listItemCount = 0;
+
+        //add items to list
+        for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
         {
-          if(widget->src == WIDGET_SRC_AUTO) 
-            display.print(findStringInIdStr(enum_WidgetSource, WIDGET_SRC_AUTO));
-          else 
-            display.print(Model.Telemetry[widget->src].name);
-        }
-        else if(widget->type == WIDGET_TYPE_OUTPUTS)
-        {
-          display.print(F("Ch"));
-          display.print(widget->src + 1);
-          if(!isEmptyStr(Model.Channel[widget->src].name, sizeof(Model.Channel[0].name)))
+          if(widget->type == WIDGET_TYPE_TIMERS 
+            || widget->type == WIDGET_TYPE_COUNTERS
+            || (widget->type == WIDGET_TYPE_TELEMETRY && widget->src == WIDGET_SRC_AUTO))
           {
-            display.print(F(" "));
-            display.print(Model.Channel[widget->src].name);
+            if(i == ITEM_DISP || i == ITEM_GAUGE_MIN || i == ITEM_GAUGE_MAX)
+              continue;
           }
-        }
-        else if(widget->type == WIDGET_TYPE_MIXSOURCES)
-        {
-          getSrcName(txtBuff, widget->src, sizeof(txtBuff));
-          display.print(txtBuff);
-        }
-        else if(widget->type == WIDGET_TYPE_COUNTERS)
-        {
-          if(!isEmptyStr(Model.Counter[widget->src].name, sizeof(Model.Counter[0].name)))
-            display.print(Model.Counter[widget->src].name);
-          else
+          if(widget->disp == WIDGET_DISP_NUMERICAL)
           {
-            display.print(F("Counter"));
-            display.print(widget->src + 1);
+            if(i == ITEM_GAUGE_MIN || i == ITEM_GAUGE_MAX)
+              continue;
           }
-        }
-        else if(widget->type == WIDGET_TYPE_TIMERS)
-        {
-          display.print(F("Timer"));
-          display.print(widget->src + 1);
-          if(!isEmptyStr(Model.Timer[widget->src].name, sizeof(Model.Timer[0].name)))
-          {
-            display.print(F(" "));
-            display.print(Model.Timer[widget->src].name);
-          }
+          listItemIDs[listItemCount++] = i;
         }
 
-        //dynamic printables
-        if((widget->type == WIDGET_TYPE_TELEMETRY && widget->src != WIDGET_SRC_AUTO) 
-          || widget->type == WIDGET_TYPE_MIXSOURCES || widget->type == WIDGET_TYPE_OUTPUTS)
-        {
-          //disp
-          numItems++;
-          display.setCursor(0, 38);
-          display.print(F("Disp:"));
-          display.setCursor(48, 38);
-          display.print(findStringInIdStr(enum_WidgetDisplay, widget->disp));
-
-          //gaugeMin
-          if(widget->disp == WIDGET_DISP_GAUGE || widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
-          {
-            numItems++;
-            display.setCursor(0, 47);
-            display.print((widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED) ? F("Left:") : F("Min:"));
-            display.setCursor(48, 47);
-            if(widget->type == WIDGET_TYPE_TELEMETRY)
-            {
-              printTelemParam(display.getCursorX(), display.getCursorY(), widget->src, widget->gaugeMin);
-              display.print(Model.Telemetry[widget->src].unitsName);
-            }
-            else if(widget->type == WIDGET_TYPE_OUTPUTS || widget->type == WIDGET_TYPE_MIXSOURCES)
-              display.print(widget->gaugeMin);
-            
-            numItems++;
-            display.setCursor(0, 56);
-            display.print((widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED) ? F("Right:") : F("Max:"));
-            display.setCursor(48, 56);
-            if(widget->type == WIDGET_TYPE_TELEMETRY)
-            {
-              printTelemParam(display.getCursorX(), display.getCursorY(), widget->src, widget->gaugeMax);
-              display.print(Model.Telemetry[widget->src].unitsName);
-            }
-            else if(widget->type == WIDGET_TYPE_OUTPUTS || widget->type == WIDGET_TYPE_MIXSOURCES)
-              display.print(widget->gaugeMax);
-          }
-        }
-        
-        //context menu
-        uint8_t contextMenu = numItems + 1;
-        display.fillRect(120, 0, 8, 7, WHITE);
-        display.drawBitmap(120, 0, focusedItem == contextMenu ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
-        
-        //cursor
-        if(focusedItem == 1)
-          drawCursor(0, 9);
-        else if(focusedItem != contextMenu)
-          drawCursor(40, (focusedItem * 9) + 2);
-        
-        changeFocusOnUpDown(numItems + 1); //1 added for context menu
+        //handle navigation
+        uint8_t numFocusable = listItemCount + 2; //+1 for title focus, +1 for context menu focus
+        changeFocusOnUpDown(numFocusable); 
         toggleEditModeOnSelectClicked();
-
-        //edit items
-        if(focusedItem == 1) //change to next widget
-          thisWidgetIdx = incDec(thisWidgetIdx, 0, NUM_WIDGETS - 1, INCDEC_WRAP, INCDEC_SLOW);
-        else if(focusedItem == 2) //type
+        static uint8_t topItem = 1;
+        if(focusedItem == 1 || focusedItem == numFocusable) //title focus or context menu focus
+          topItem = 1;
+        else if(focusedItem > 1)
         {
-          uint8_t prevType = widget->type;
-          widget->type = incDec(widget->type, 0, WIDGET_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
-          if(widget->type != prevType)
-          {
-            widget->disp = WIDGET_DISP_NUMERICAL;
-            widget->gaugeMin = -100;
-            widget->gaugeMax = 100;
-            if(widget->type == WIDGET_TYPE_TELEMETRY)
-            {
-              widget->src = WIDGET_SRC_AUTO;
-              widget->gaugeMin = 0;
-            }
-            if(widget->type == WIDGET_TYPE_MIXSOURCES)
-              widget->src = SRC_NONE;
-            if(widget->type == WIDGET_TYPE_OUTPUTS 
-               || widget->type == WIDGET_TYPE_COUNTERS 
-               || widget->type == WIDGET_TYPE_TIMERS)
-            {
-              widget->src = 0;
-            }
-          }
+          if(focusedItem - 1 < topItem)
+            topItem = focusedItem - 1;
+          while(focusedItem - 1 >= topItem + 5)
+            topItem++;
         }
-        else if(focusedItem == 3) //src
-        {
-          if(widget->type == WIDGET_TYPE_TELEMETRY)
-          {
-            //skip empty telemetry (non-extant sensors)
-            //use an array to hold extant sensors
-            uint8_t srcQQ[NUM_CUSTOM_TELEMETRY + 1]; //1 added for auto
-            uint8_t srcCnt = 0;
-            for(uint8_t i = 0; i < sizeof(srcQQ) - 1; i++)
-            {
-              if(isEmptyStr(Model.Telemetry[i].name, sizeof(Model.Telemetry[0].name)))
-                continue;
-              srcQQ[srcCnt] = i;
-              srcCnt++;
-            }
-            srcQQ[srcCnt] = WIDGET_SRC_AUTO;
-            srcCnt++;
 
-            uint8_t idxQQ = 0;
-            for(uint8_t i = 0; i < srcCnt; i++) //search for a match
-            {
-              if(srcQQ[i] == widget->src)
-              {
-                idxQQ = i;
-                break;
-              }
-            }
-            idxQQ = incDec(idxQQ, 0, srcCnt - 1, INCDEC_WRAP, INCDEC_SLOW);
-            uint8_t prevSrc = widget->src;
-            widget->src = srcQQ[idxQQ];
-            if(widget->src != prevSrc)
-            {
-              widget->gaugeMin = 0;
-              widget->gaugeMax = 100;
-            }
-          }
-          else if(widget->type == WIDGET_TYPE_MIXSOURCES)
-          {
-            //detect moved source
-            uint8_t movedSrc = procMovedSource(getMovedSource());
-            if(movedSrc != SRC_NONE)
-              widget->src = movedSrc;
-            //inc dec
-            widget->src = incDecSource(widget->src, INCDEC_FLAG_MIX_SRC);
-          }
-          else if(widget->type == WIDGET_TYPE_OUTPUTS)
-            widget->src = incDec(widget->src, 0, NUM_RC_CHANNELS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
-          else if(widget->type == WIDGET_TYPE_COUNTERS)
-            widget->src = incDec(widget->src, 0, NUM_COUNTERS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
-          else if(widget->type == WIDGET_TYPE_TIMERS)
-            widget->src = incDec(widget->src, 0, NUM_TIMERS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
-        }
-        else if(focusedItem == 4) //disp
+        //fill list and edit items
+        for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
         {
-          uint8_t prevDisp =  widget->disp;
-          do {
-            widget->disp = incDec(widget->disp, 0, WIDGET_DISP_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
-          } while(widget->type == WIDGET_TYPE_TELEMETRY && widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED);
+          uint8_t ypos = 20 + line*9;
+          if(focusedItem - 1 == topItem + line)
+            drawCursor(40, ypos);
           
-          if(widget->disp != prevDisp)
+          uint8_t itemID = listItemIDs[topItem - 1 + line];
+          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          
+          display.setCursor(0, ypos);
+          switch(itemID)
           {
-            if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
-            {
-              if(widget->gaugeMin > 0)
-                widget->gaugeMin = 0 - widget->gaugeMin;
-              widget->gaugeMax = 0 - widget->gaugeMin;
-            }
+            case ITEM_TYPE:
+              {
+                display.print(F("Type:"));
+                display.setCursor(48, ypos);
+                display.print(findStringInIdStr(enum_WidgetType, widget->type));
+                if(edit)
+                {
+                  uint8_t prevType = widget->type;
+                  widget->type = incDec(widget->type, 0, WIDGET_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                  if(widget->type != prevType)
+                  {
+                    widget->disp = WIDGET_DISP_NUMERICAL;
+                    widget->gaugeMin = -100;
+                    widget->gaugeMax = 100;
+                    if(widget->type == WIDGET_TYPE_TELEMETRY)
+                    {
+                      widget->src = WIDGET_SRC_AUTO;
+                      widget->gaugeMin = 0;
+                    }
+                    if(widget->type == WIDGET_TYPE_MIXSOURCES)
+                      widget->src = SRC_NONE;
+                    if(widget->type == WIDGET_TYPE_OUTPUTS 
+                      || widget->type == WIDGET_TYPE_COUNTERS 
+                      || widget->type == WIDGET_TYPE_TIMERS)
+                    {
+                      widget->src = 0;
+                    }
+                  }
+                }
+              }
+              break;
+            
+            case ITEM_SRC:
+              {
+                display.print(F("Src:"));
+                display.setCursor(48, ypos);
+                if(widget->type == WIDGET_TYPE_TELEMETRY)
+                {
+                  if(widget->src == WIDGET_SRC_AUTO) 
+                    display.print(findStringInIdStr(enum_WidgetSource, WIDGET_SRC_AUTO));
+                  else 
+                    display.print(Model.Telemetry[widget->src].name);
+                  if(edit)
+                  {
+                    //skip empty telemetry (non-extant sensors)
+                    //use an array to hold extant sensors
+                    uint8_t srcQQ[NUM_CUSTOM_TELEMETRY + 1]; //1 added for auto
+                    uint8_t srcCnt = 0;
+                    for(uint8_t i = 0; i < sizeof(srcQQ) - 1; i++)
+                    {
+                      if(isEmptyStr(Model.Telemetry[i].name, sizeof(Model.Telemetry[0].name)))
+                        continue;
+                      srcQQ[srcCnt] = i;
+                      srcCnt++;
+                    }
+                    srcQQ[srcCnt] = WIDGET_SRC_AUTO;
+                    srcCnt++;
+        
+                    uint8_t idxQQ = 0;
+                    for(uint8_t i = 0; i < srcCnt; i++) //search for a match
+                    {
+                      if(srcQQ[i] == widget->src)
+                      {
+                        idxQQ = i;
+                        break;
+                      }
+                    }
+                    idxQQ = incDec(idxQQ, 0, srcCnt - 1, INCDEC_WRAP, INCDEC_SLOW);
+                    uint8_t prevSrc = widget->src;
+                    widget->src = srcQQ[idxQQ];
+                    if(widget->src != prevSrc)
+                    {
+                      widget->gaugeMin = 0;
+                      widget->gaugeMax = 100;
+                    }
+                  }
+                }
+                else if(widget->type == WIDGET_TYPE_OUTPUTS)
+                {
+                  display.print(F("Ch"));
+                  display.print(widget->src + 1);
+                  if(!isEmptyStr(Model.Channel[widget->src].name, sizeof(Model.Channel[0].name)))
+                  {
+                    display.print(F(" "));
+                    display.print(Model.Channel[widget->src].name);
+                  }
+                  if(edit)
+                    widget->src = incDec(widget->src, 0, NUM_RC_CHANNELS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+                }
+                else if(widget->type == WIDGET_TYPE_MIXSOURCES)
+                {
+                  getSrcName(txtBuff, widget->src, sizeof(txtBuff));
+                  display.print(txtBuff);
+                  if(edit)
+                  {
+                    //detect moved source
+                    uint8_t movedSrc = procMovedSource(getMovedSource());
+                    if(movedSrc != SRC_NONE)
+                      widget->src = movedSrc;
+                    //inc dec
+                    widget->src = incDecSource(widget->src, INCDEC_FLAG_MIX_SRC);
+                  }
+                }
+                else if(widget->type == WIDGET_TYPE_COUNTERS)
+                {
+                  if(!isEmptyStr(Model.Counter[widget->src].name, sizeof(Model.Counter[0].name)))
+                    display.print(Model.Counter[widget->src].name);
+                  else
+                  {
+                    display.print(F("Counter"));
+                    display.print(widget->src + 1);
+                  }
+                  if(edit)
+                    widget->src = incDec(widget->src, 0, NUM_COUNTERS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+                }
+                else if(widget->type == WIDGET_TYPE_TIMERS)
+                {
+                  display.print(F("Timer"));
+                  display.print(widget->src + 1);
+                  if(!isEmptyStr(Model.Timer[widget->src].name, sizeof(Model.Timer[0].name)))
+                  {
+                    display.print(F(" "));
+                    display.print(Model.Timer[widget->src].name);
+                  }
+                  if(edit)
+                    widget->src = incDec(widget->src, 0, NUM_TIMERS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+                }
+              }
+              break;
+            
+            case ITEM_DISP:
+              {
+                display.print(F("Disp:"));
+                display.setCursor(48, ypos);
+                display.print(findStringInIdStr(enum_WidgetDisplay, widget->disp));
+                if(edit)
+                {
+                  uint8_t prevDisp =  widget->disp;
+                  do {
+                    widget->disp = incDec(widget->disp, 0, WIDGET_DISP_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                  } while(widget->type == WIDGET_TYPE_TELEMETRY && widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED);
+                  
+                  if(widget->disp != prevDisp)
+                  {
+                    if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
+                    {
+                      if(widget->gaugeMin > 0)
+                        widget->gaugeMin = 0 - widget->gaugeMin;
+                      widget->gaugeMax = 0 - widget->gaugeMin;
+                    }
+                  }
+                }
+              }
+              break;
+            
+            case ITEM_GAUGE_MIN:
+              {
+                display.print((widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED) ? F("Left:") : F("Min:"));
+                display.setCursor(48, ypos);
+                if(widget->type == WIDGET_TYPE_TELEMETRY)
+                {
+                  printTelemParam(display.getCursorX(), display.getCursorY(), widget->src, widget->gaugeMin);
+                  display.print(Model.Telemetry[widget->src].unitsName);
+                }
+                else if(widget->type == WIDGET_TYPE_OUTPUTS || widget->type == WIDGET_TYPE_MIXSOURCES)
+                  display.print(widget->gaugeMin);
+                if(edit)
+                {
+                  if(widget->type == WIDGET_TYPE_TELEMETRY)
+                    widget->gaugeMin = incDec(widget->gaugeMin, -30000, widget->gaugeMax, INCDEC_NOWRAP, INCDEC_FAST);
+                  else if(widget->type == WIDGET_TYPE_MIXSOURCES || widget->type == WIDGET_TYPE_OUTPUTS)
+                    widget->gaugeMin = incDec(widget->gaugeMin, -100, widget->gaugeMax, INCDEC_NOWRAP, INCDEC_NORMAL);
+                  if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
+                    widget->gaugeMax = 0 - widget->gaugeMin;
+                }
+              }
+              break;
+            
+            case ITEM_GAUGE_MAX:
+              {
+                display.print((widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED) ? F("Right:") : F("Max:"));
+                display.setCursor(48, ypos);
+                if(widget->type == WIDGET_TYPE_TELEMETRY)
+                {
+                  printTelemParam(display.getCursorX(), display.getCursorY(), widget->src, widget->gaugeMax);
+                  display.print(Model.Telemetry[widget->src].unitsName);
+                }
+                else if(widget->type == WIDGET_TYPE_OUTPUTS || widget->type == WIDGET_TYPE_MIXSOURCES)
+                  display.print(widget->gaugeMax);
+                if(edit)
+                {
+                  if(widget->type == WIDGET_TYPE_TELEMETRY)
+                    widget->gaugeMax = incDec(widget->gaugeMax, widget->gaugeMin, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                  else if(widget->type == WIDGET_TYPE_MIXSOURCES || widget->type == WIDGET_TYPE_OUTPUTS)
+                    widget->gaugeMax = incDec(widget->gaugeMax, widget->gaugeMin, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+                  if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
+                    widget->gaugeMin = 0 - widget->gaugeMax;
+                }
+              }
+              break;
           }
-        }
-        else if(focusedItem == 5) //gaugeMin
-        {
-          if(widget->type == WIDGET_TYPE_TELEMETRY)
-            widget->gaugeMin = incDec(widget->gaugeMin, -30000, widget->gaugeMax, INCDEC_NOWRAP, INCDEC_FAST);
-          else if(widget->type == WIDGET_TYPE_MIXSOURCES || widget->type == WIDGET_TYPE_OUTPUTS)
-            widget->gaugeMin = incDec(widget->gaugeMin, -100, widget->gaugeMax, INCDEC_NOWRAP, INCDEC_NORMAL);
-          if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
-            widget->gaugeMax = 0 - widget->gaugeMin;
-        }
-        else if(focusedItem == 6) //gaugeMax
-        {
-          if(widget->type == WIDGET_TYPE_TELEMETRY)
-            widget->gaugeMax = incDec(widget->gaugeMax, widget->gaugeMin, 30000, INCDEC_NOWRAP, INCDEC_FAST);
-          else if(widget->type == WIDGET_TYPE_MIXSOURCES || widget->type == WIDGET_TYPE_OUTPUTS)
-            widget->gaugeMax = incDec(widget->gaugeMax, widget->gaugeMin, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
-          if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
-            widget->gaugeMin = 0 - widget->gaugeMax;
         }
         
+        //scrollbar
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
+        
+        //draw context menu icon
+        display.fillRect(120, 0, 8, 7, WHITE);
+        display.drawBitmap(120, 0, focusedItem == numFocusable ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
+
         //open context menu
-        if(focusedItem == contextMenu && clickedButton == KEY_SELECT)
+        if(focusedItem == numFocusable && isEditMode)
           changeToScreen(CONTEXT_MENU_WIDGETS);
         
+        //change to next widget
+        if(focusedItem == 1)
+        {          
+          drawCursor(0, 9);
+          thisWidgetIdx = incDec(thisWidgetIdx, 0, NUM_WIDGETS - 1, INCDEC_WRAP, INCDEC_SLOW);
+        }
+
         //exit
         if(heldButton == KEY_SELECT)
           changeToScreen(SCREEN_HOME);
@@ -2320,7 +2372,7 @@ void handleMainUI()
               drawCursor(32, ypos);
             
             uint8_t itemID = listItemIDs[topItem - 1 + line];
-            bool edit = (itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+            bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
             
             display.setCursor(0, ypos);
             switch(itemID)
@@ -4030,7 +4082,7 @@ void handleMainUI()
             drawCursor(52, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -4514,7 +4566,7 @@ void handleMainUI()
             drawCursor(70, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -4846,7 +4898,7 @@ void handleMainUI()
             drawCursor(58, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
