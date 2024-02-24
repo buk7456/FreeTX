@@ -426,7 +426,7 @@ void doSerialCommunication()
     {
       if(Model.Telemetry[idx].identifier == 0x70)
       {
-				telemetryReceivedValue[idx] = lqi;
+        telemetryReceivedValue[idx] = lqi;
         if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
         {
           telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
