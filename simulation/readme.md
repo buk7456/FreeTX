@@ -1,6 +1,2 @@
 This folder contains the simulation file for use with SimulIDE circuit simulator.  
-Below is a screenshot of the simulation running on Windows OS.  
-  
-<p align="left">
-<img src="img.png"/>
-</p>
+A Proteus VSM project file is also provided.
