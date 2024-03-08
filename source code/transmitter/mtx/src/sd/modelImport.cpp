@@ -460,8 +460,14 @@ void extractConfig_FunctionGenerators()
       readValue_bool(valueBuff, &fgen->reverseModulator);
     else if(MATCH_P(keyBuff[1], key_PhaseMode))
       findIdInIdStr(enum_FuncgenPhaseMode, valueBuff, fgen->phaseMode);
-    else if(MATCH_P(keyBuff[1], key_PhaseAngle))
-      fgen->phaseAngle = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_Phase))
+      fgen->phase = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_WidthMode))
+      findIdInIdStr(enum_FuncgenWidthMode, valueBuff, fgen->widthMode);
+    else if(MATCH_P(keyBuff[1], key_Width))
+      fgen->width = getTimeFromTimeStr(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_Period))
+      fgen->period = getTimeFromTimeStr(valueBuff);
   }
   else
     hasEncounteredInvalidParam = true;
