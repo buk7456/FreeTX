@@ -504,7 +504,7 @@ void resetFuncgenParams(uint8_t idx)
   Model.Funcgen[idx].modulatorSrc = SRC_NONE;
   Model.Funcgen[idx].reverseModulator = false;
   Model.Funcgen[idx].phaseMode = FUNCGEN_PHASEMODE_AUTO; 
-  Model.Funcgen[idx].phaseAngle = 0;
+  Model.Funcgen[idx].phase = 0;
 }
 
 //--------------------------------------------------------------------------------------------------
