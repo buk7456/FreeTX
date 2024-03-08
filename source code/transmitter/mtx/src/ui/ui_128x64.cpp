@@ -1097,7 +1097,7 @@ void handleMainUI()
             drawCursor(40, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -2685,7 +2685,7 @@ void handleMainUI()
             drawCursor(52, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
+          bool edit = (focusedItem != contextMenu && itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -4082,7 +4082,7 @@ void handleMainUI()
             drawCursor(52, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -4499,11 +4499,23 @@ void handleMainUI()
         
         funcgen_t *fgen = &Model.Funcgen[thisFgenIdx];
         
-        if(fgen->periodMode == FUNCGEN_PERIODMODE_VARIABLE && fgen->period1 >= fgen->period2)
+        if(fgen->waveform == FUNCGEN_WAVEFORM_PULSE)
         {
-          if(fgen->period1 >= 600)
-            fgen->period1 = 599;
-          fgen->period2 = fgen->period1 + 1;
+          if(fgen->widthMode == FUNCGEN_PULSE_WIDTH_FIXED && fgen->width >= fgen->period)
+          {
+            if(fgen->width >= 600)
+              fgen->width = 599;
+            fgen->period = fgen->width + 1;
+          }
+        }
+        else
+        {
+          if(fgen->periodMode == FUNCGEN_PERIODMODE_VARIABLE && fgen->period1 >= fgen->period2)
+          {
+            if(fgen->period1 >= 600)
+              fgen->period1 = 599;
+            fgen->period2 = fgen->period1 + 1;
+          }
         }
         
         display.setCursor(8, 9);
@@ -4516,8 +4528,11 @@ void handleMainUI()
           ITEM_PERIOD_MODE,
           ITEM_PERIOD1,
           ITEM_PERIOD2,
+          ITEM_WIDTH_MODE,
           ITEM_MODULATOR_SRC,
-          ITEM_INVERT_MODULATOR,
+          ITEM_REVERSE_MODULATOR,
+          ITEM_WIDTH,
+          ITEM_PERIOD, 
           ITEM_PHASE_MODE,
           ITEM_PHASE,
           
@@ -4530,16 +4545,37 @@ void handleMainUI()
         //add item Ids to the list of Ids
         for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
         {
-          if(fgen->periodMode == FUNCGEN_PERIODMODE_FIXED)
+          if(fgen->waveform == FUNCGEN_WAVEFORM_PULSE)
           {
-            if(i == ITEM_PERIOD2 || i == ITEM_MODULATOR_SRC || i == ITEM_INVERT_MODULATOR)
+            if(i == ITEM_PERIOD_MODE || i == ITEM_PERIOD1 || i == ITEM_PERIOD2)
               continue;
+            if(fgen->widthMode == FUNCGEN_PULSE_WIDTH_FIXED)
+            {
+              if(i == ITEM_MODULATOR_SRC || i == ITEM_REVERSE_MODULATOR)
+                continue;
+            }
+            if(fgen->widthMode == FUNCGEN_PULSE_WIDTH_VARIABLE)
+            {
+              if(i == ITEM_WIDTH)
+                continue;
+            }
           }
-          if(fgen->periodMode == FUNCGEN_PERIODMODE_VARIABLE || fgen->waveform == FUNCGEN_WAVEFORM_RANDOM)
+          else
           {
-            if(i == ITEM_PHASE_MODE || i == ITEM_PHASE)
+            if(i == ITEM_WIDTH_MODE || i == ITEM_WIDTH || i == ITEM_PERIOD)
               continue;
+            if(fgen->periodMode == FUNCGEN_PERIODMODE_FIXED)
+            {
+              if(i == ITEM_PERIOD2 || i == ITEM_MODULATOR_SRC || i == ITEM_REVERSE_MODULATOR)
+                continue;
+            }
+            if(fgen->periodMode == FUNCGEN_PERIODMODE_VARIABLE /*|| fgen->waveform == FUNCGEN_WAVEFORM_RANDOM*/)
+            {
+              if(i == ITEM_PHASE_MODE || i == ITEM_PHASE)
+                continue;
+            }
           }
+
           listItemIDs[listItemCount++] = i;
         }
         
@@ -4566,7 +4602,7 @@ void handleMainUI()
             drawCursor(70, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -4577,7 +4613,9 @@ void handleMainUI()
                 display.setCursor(78, ypos);
                 display.print(findStringInIdStr(enum_FuncgenWaveform, fgen->waveform));
                 if(edit)
+                {
                   fgen->waveform = incDec(fgen->waveform, 0, FUNCGEN_WAVEFORM_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                }
               }
               break;
               
@@ -4593,7 +4631,7 @@ void handleMainUI()
                   fgen->periodMode = incDec(fgen->periodMode, 0, FUNCGEN_PERIODMODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               }
               break;
-              
+
             case ITEM_PERIOD1:
               {
                 if(fgen->waveform == FUNCGEN_WAVEFORM_RANDOM)
@@ -4615,7 +4653,7 @@ void handleMainUI()
                 if(edit)
                 {
                   uint16_t max = 600;
-                  if(fgen->waveform != FUNCGEN_WAVEFORM_RANDOM && fgen->periodMode == FUNCGEN_PERIODMODE_VARIABLE)
+                  if(fgen->periodMode == FUNCGEN_PERIODMODE_VARIABLE)
                     max = fgen->period2 - 1;
                   fgen->period1 = incDec(fgen->period1, 1, max, INCDEC_NOWRAP, INCDEC_SLOW_START);
                 }
@@ -4634,10 +4672,45 @@ void handleMainUI()
                   fgen->period2 = incDec(fgen->period2, fgen->period1 + 1, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
               }
               break;
+
+            case ITEM_WIDTH_MODE:
+              {
+                display.print(F("Width mode:"));
+                display.setCursor(78, ypos);
+                display.print(findStringInIdStr(enum_FuncgenWidthMode, fgen->widthMode));
+                if(edit)
+                  fgen->widthMode = incDec(fgen->widthMode, 0, FUNCGEN_PULSE_WIDTH_MODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+              }
+              break;
+              
+            case ITEM_WIDTH:
+              {
+                display.print(F("Width:"));
+                display.setCursor(78, ypos);
+                printSeconds(fgen->width);
+                if(edit)
+                  fgen->width = incDec(fgen->width, 1, fgen->period - 1, INCDEC_NOWRAP, INCDEC_SLOW_START);
+              }
+              break;
+            
+            case ITEM_PERIOD:
+              {
+                display.print(F("Period:"));
+                display.setCursor(78, ypos);
+                printSeconds(fgen->period);
+                if(edit)
+                {
+                  uint16_t min = 1;
+                  if(fgen->widthMode == FUNCGEN_PULSE_WIDTH_FIXED)
+                    min = fgen->width + 1;
+                  fgen->period = incDec(fgen->period, min, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                }
+              }
+              break;
             
             case ITEM_MODULATOR_SRC:
               {
-                display.print(F("Control:"));
+                display.print(F("Modulator:"));
                 display.setCursor(78, ypos);
                 getSrcName(txtBuff, fgen->modulatorSrc, sizeof(txtBuff));
                 display.print(txtBuff);
@@ -4652,7 +4725,7 @@ void handleMainUI()
               }
               break;
               
-            case ITEM_INVERT_MODULATOR:
+            case ITEM_REVERSE_MODULATOR:
               {
                 display.print(F("Reverse:"));
                 drawCheckbox(78, ypos, fgen->reverseModulator);
@@ -4679,8 +4752,8 @@ void handleMainUI()
                   display.print(F("[Sync]"));
                 else if(fgen->phaseMode == FUNCGEN_PHASEMODE_FIXED)
                 {
-                  display.print(fgen->phaseAngle);
-                  display.write(248);
+                  display.print(fgen->phase);
+                  display.write(248); //degree symbol
                 }
                 
                 if(edit)
@@ -4692,7 +4765,7 @@ void handleMainUI()
                     isEditMode = false;
                   }
                   else if(fgen->phaseMode == FUNCGEN_PHASEMODE_FIXED)
-                    fgen->phaseAngle = incDec(fgen->phaseAngle, 0, 360, INCDEC_NOWRAP, INCDEC_NORMAL);
+                    fgen->phase = incDec(fgen->phase, 0, 360, INCDEC_NOWRAP, INCDEC_NORMAL);
                 }
               }
               break;
@@ -4898,7 +4971,7 @@ void handleMainUI()
             drawCursor(58, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -5814,7 +5887,7 @@ void handleMainUI()
             drawCursor(58, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool isFocused = (itemID == listItemIDs[focusedItem - 2]) ? true : false;
+          bool isFocused = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2]) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
