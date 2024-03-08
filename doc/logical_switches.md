@@ -38,7 +38,6 @@ L2
 Functn: Pulse
 Width:  1.0s
 Period: 2.0s
-Delay:  --
 
 ``` 
 Then in the mixer, we simply use L2 as the input source and L1 as the control switch for the mix, to
@@ -63,10 +62,67 @@ Functn:   a>x
 Value1:   SwH
 Value2:   0
 Delay:    0.5s
-Duration: --
 
 Timer1
 ------
 Switch:  L1
 Reset:   L2
 ```
+
+### Example 4: Throttle timer (simple)
+When the throttle is moved beyond a certain threshold, the timer runs.  
+Also if we have a throttle cut function on say SwA, we want the timer to only run when throttle cut is inactive.  
+Assume the throttle source is the Y1 axis.
+
+```txt
+L1
+---
+Functn: a>x
+Value1: Y1
+Value2: -90
+
+L2
+---
+Functn:   AND
+Value1:   L1
+Value2:   SwA_down
+
+Timer1
+------
+Switch:  L2
+```
+
+### Example 5: Throttle timer (advanced)
+Suppose we instead want the speed at which the timer runs to be proportional to the throttle value.  
+Also if we have a throttle cut function on say SwA, we want the timer to only run when throttle cut is inactive.  
+Assume our throttle source is the Y1 axis.  
+We can achieve this behaviour using a function generator and logical switches as follows.
+
+```txt
+Fgen1
+-----
+Waveform:  Pulse
+WidthMode: Variable
+Modulator: Y1
+Reverse:   False
+Period:    1.0s
+
+L1
+---
+Functn: a>x
+Value1: Fgen1
+Value2: 0
+
+L2
+---
+Functn:   AND
+Value1:   L1
+Value2:   SwA_down
+
+Timer1
+------
+Switch:  L2
+```
+
+If desired, we can also include a custom curve through a virtual channel, to compensate for the real world
+nonlinear relationship between Current draw and throttle value. 
