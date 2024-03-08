@@ -384,14 +384,31 @@ enum {
 //------------------------------------------------
 
 typedef struct {
+
   uint8_t  waveform;
-  uint8_t  periodMode;
-  uint16_t period1;  // in tenths of a second
-  uint16_t period2; // in tenths of a second
+
+  union {
+    uint8_t  periodMode;   //for waveforms sine, square, triangle, sawtoot, and random
+    uint8_t  widthMode;    //for pulse waveform
+  };
+
+  //time is in tenths of a second
+  union {
+    uint16_t period1; 
+    uint16_t width; //for pulse waveform
+  };
+
+  union {
+    uint16_t period2; 
+    uint16_t period;  //for pulse waveform
+  };
+
   uint8_t  modulatorSrc;
   bool     reverseModulator;
+
   uint8_t  phaseMode; 
-  uint16_t phaseAngle; //0 to 360 degrees
+  uint16_t phase;
+
 } funcgen_t;
 
 #define NUM_FUNCGEN 5
@@ -401,13 +418,14 @@ enum {
   FUNCGEN_WAVEFORM_SQUARE,
   FUNCGEN_WAVEFORM_TRIANGLE,
   FUNCGEN_WAVEFORM_SAWTOOTH,
+  FUNCGEN_WAVEFORM_PULSE,
   FUNCGEN_WAVEFORM_RANDOM,
   
   FUNCGEN_WAVEFORM_COUNT
 };
 
 enum { 
-  FUNCGEN_PHASEMODE_AUTO, //auto phase compensation for smoothly transitioning to new period
+  FUNCGEN_PHASEMODE_AUTO, //automatic phase compensation for smoothly transitioning to new period
   FUNCGEN_PHASEMODE_FIXED, //no compensation
   
   FUNCGEN_PHASEMODE_COUNT
@@ -418,6 +436,13 @@ enum {
   FUNCGEN_PERIODMODE_FIXED, 
   
   FUNCGEN_PERIODMODE_COUNT
+};
+
+enum {
+  FUNCGEN_PULSE_WIDTH_VARIABLE,
+  FUNCGEN_PULSE_WIDTH_FIXED,
+
+  FUNCGEN_PULSE_WIDTH_MODE_COUNT
 };
 
 //-----------------------------------------------
