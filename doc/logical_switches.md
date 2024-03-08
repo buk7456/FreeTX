@@ -125,4 +125,4 @@ Switch:  L2
 ```
 
 If desired, we can also include a custom curve through a virtual channel, to compensate for the real world
-nonlinear relationship between Current draw and throttle value. 
+nonlinear relationship between current draw and throttle value. 
