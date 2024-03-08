@@ -4,7 +4,7 @@ As this is a DIY project, I did not make any detailed mechanical CAD; only a pla
 
 ### Does it support protocol x?
 Out of the box, no; there are just too many different and incompatible protocols.  
-You can modifiy the firmware and hardware to support any protocol or module you want. There are also a number of DIY projects that address this problem specifically, and interfacing to them wouldn't be difficult. 
+You can modify the firmware and hardware to support any protocol or module you want. There are also a number of DIY projects that address this problem specifically, and interfacing to them wouldn't be difficult. 
 
 ### Is the RF link stable and what is the range?
 The RF link is stable enough. Keep in mind that this implementation is not designed for security, and is neither interference nor jamming free.  
