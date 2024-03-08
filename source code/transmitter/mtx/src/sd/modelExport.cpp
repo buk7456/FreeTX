@@ -249,16 +249,26 @@ void exportModelData(File& file)
     writeKeyValue_Char(file, 0, key_Funcgen, NULL);
     writeKeyValue_S32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Waveform, findStringInIdStr(enum_FuncgenWaveform, fgen->waveform));
-    writeKeyValue_Char(file, 1, key_PeriodMode, findStringInIdStr(enum_FuncgenPeriodMode, fgen->periodMode));
-    writeKeyValue_TimeSeconds(file, 1, key_Period1, fgen->period1);
-    writeKeyValue_TimeSeconds(file, 1, key_Period2, fgen->period2);
-    
+
+    if(fgen->waveform == FUNCGEN_WAVEFORM_PULSE)
+    {
+      writeKeyValue_Char(file, 1, key_WidthMode, findStringInIdStr(enum_FuncgenWidthMode, fgen->widthMode));
+      writeKeyValue_TimeSeconds(file, 1, key_Width, fgen->width);
+      writeKeyValue_TimeSeconds(file, 1, key_Period, fgen->period);
+    }
+    else
+    {
+      writeKeyValue_Char(file, 1, key_PeriodMode, findStringInIdStr(enum_FuncgenPeriodMode, fgen->periodMode));
+      writeKeyValue_TimeSeconds(file, 1, key_Period1, fgen->period1);
+      writeKeyValue_TimeSeconds(file, 1, key_Period2, fgen->period2);
+    }
+
     getSrcName(tempBuff, fgen->modulatorSrc, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_ModulatorSrc, tempBuff);
 
     writeKeyValue_bool(file, 1, key_ReverseModulator, fgen->reverseModulator);
     writeKeyValue_Char(file, 1, key_PhaseMode, findStringInIdStr(enum_FuncgenPhaseMode, fgen->phaseMode));
-    writeKeyValue_S32(file, 1, key_PhaseAngle, fgen->phaseAngle);
+    writeKeyValue_S32(file, 1, key_Phase, fgen->phase);
   }
   
   file.println(F("# ------ Mixer ------"));
