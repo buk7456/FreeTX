@@ -1138,31 +1138,54 @@ int16_t generateWaveform(uint8_t idx, int32_t _currTime)
   if(idx >= NUM_FUNCGEN)
     return 0;
   
+  int16_t result = 0;
+  
   funcgen_t *fgen = &Model.Funcgen[idx];
   
   int32_t period;
-  if(fgen->periodMode == FUNCGEN_PERIODMODE_FIXED)
-    period = (int32_t)fgen->period1 * 100;
-  else //variable period
+  if(fgen->waveform == FUNCGEN_WAVEFORM_PULSE)
   {
-    int32_t m = fgen->reverseModulator ? 0 - mixSources[fgen->modulatorSrc] : mixSources[fgen->modulatorSrc];
-    period = (((m + 500) * (fgen->period2 - fgen->period1)) / 10) + ((int32_t)fgen->period1 * 100);
+    period = (int32_t)fgen->period * 100;
+  }
+  else
+  {
+    if(fgen->periodMode == FUNCGEN_PERIODMODE_FIXED)
+      period = (int32_t)fgen->period1 * 100;
+    else //variable period
+    {
+      int32_t m = fgen->reverseModulator ? 0 - mixSources[fgen->modulatorSrc] : mixSources[fgen->modulatorSrc];
+      period = (((m + 500) * (fgen->period2 - fgen->period1)) / 10) + ((int32_t)fgen->period1 * 100);
+    }
   }
   
   static int32_t oldPeriod[NUM_FUNCGEN];
   static int32_t timeOffset[NUM_FUNCGEN];
   
   int32_t timeInstance = 0; 
-  int16_t result = 0;
   
   if(isSyncWaveform[idx])
   {
     isSyncWaveform[idx] = false;
     timeOffset[idx] = 0;
   }
+
+  bool phaseCompensate = false;
   
-  if((fgen->periodMode == FUNCGEN_PERIODMODE_FIXED && fgen->phaseMode == FUNCGEN_PHASEMODE_AUTO)
-     || fgen->periodMode == FUNCGEN_PERIODMODE_VARIABLE)
+  if(fgen->waveform == FUNCGEN_WAVEFORM_PULSE)
+  {
+    if(fgen->phaseMode == FUNCGEN_PHASEMODE_AUTO)
+      phaseCompensate = true;
+  }
+  else
+  {
+    if((fgen->periodMode == FUNCGEN_PERIODMODE_FIXED && fgen->phaseMode == FUNCGEN_PHASEMODE_AUTO) 
+      || fgen->periodMode == FUNCGEN_PERIODMODE_VARIABLE)
+    {
+      phaseCompensate = true;
+    }
+  }
+
+  if(phaseCompensate)
   {
     // Smoothly transition to new period when the period is being adjusted.
     // We add some time offset so that we maintain the next ratio of timeInstance/period upon change.
@@ -1184,8 +1207,7 @@ int16_t generateWaveform(uint8_t idx, int32_t _currTime)
   }
   else //fixed phase
   {
-    timeOffset[idx] = ((int32_t) fgen->phaseAngle * period) / 360;
-    
+    timeOffset[idx] = ((int32_t) fgen->phase * period) / 360;
     if(_currTime >= timeOffset[idx])
       timeInstance = (_currTime - timeOffset[idx]) % period;
     else
@@ -1246,7 +1268,29 @@ int16_t generateWaveform(uint8_t idx, int32_t _currTime)
         result = timeInstance < (period/2) ? 500 : -500;
       }
       break;
-    
+
+    case FUNCGEN_WAVEFORM_PULSE:
+      {
+        if(fgen->widthMode == FUNCGEN_PULSE_WIDTH_FIXED)
+          result = (timeInstance < ((int32_t)fgen->width * 100)) ? 500 : -500;
+        else if(fgen->widthMode == FUNCGEN_PULSE_WIDTH_VARIABLE)
+        {
+          //duty cycle is only updated at the end of the PWM cycle to prevent glitches.
+          static int32_t prevTimeInstance[NUM_FUNCGEN];
+          static int16_t modulatorValue[NUM_FUNCGEN];
+          if(timeInstance < prevTimeInstance[idx])
+          {
+            modulatorValue[idx] = mixSources[fgen->modulatorSrc];
+            if(fgen->reverseModulator)
+              modulatorValue[idx] = 0 - modulatorValue[idx];
+          }
+          prevTimeInstance[idx] = timeInstance;
+          int32_t highTime = ((modulatorValue[idx] + 500) * period) / 1000;
+          result = (timeInstance < highTime) ? 500 : -500;
+        }
+      }
+      break;
+
     case FUNCGEN_WAVEFORM_RANDOM:
       {
         static bool isExpired[NUM_FUNCGEN];
@@ -1256,7 +1300,7 @@ int16_t generateWaveform(uint8_t idx, int32_t _currTime)
           isExpired[idx] = false;
           lastResult[idx] = random(-500, 500);
         }
-        if(timeInstance > (period/2))
+        if(timeInstance >= (period/2))
           isExpired[idx] = true;
         
         result = lastResult[idx];
