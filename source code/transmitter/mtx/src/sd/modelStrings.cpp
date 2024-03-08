@@ -27,6 +27,7 @@ const id_string_t enum_FuncgenWaveform[] PROGMEM = {
   {FUNCGEN_WAVEFORM_SQUARE, "Square"},
   {FUNCGEN_WAVEFORM_TRIANGLE, "Triangle"},
   {FUNCGEN_WAVEFORM_SAWTOOTH, "Sawtooth"},
+  {FUNCGEN_WAVEFORM_PULSE, "Pulse"},
   {FUNCGEN_WAVEFORM_RANDOM, "Random"},
   {0, ""}
 };
@@ -34,6 +35,12 @@ const id_string_t enum_FuncgenWaveform[] PROGMEM = {
 const id_string_t enum_FuncgenPeriodMode[] PROGMEM = {
   {FUNCGEN_PERIODMODE_VARIABLE, "Variable"},
   {FUNCGEN_PERIODMODE_FIXED, "Fixed"},
+  {0, ""}
+};
+
+const id_string_t enum_FuncgenWidthMode[] PROGMEM = {
+  {FUNCGEN_PULSE_WIDTH_VARIABLE, "Variable"},
+  {FUNCGEN_PULSE_WIDTH_FIXED, "Fixed"},
   {0, ""}
 };
 
@@ -227,7 +234,10 @@ const char key_Period2[] PROGMEM = "Period2";
 const char key_ModulatorSrc[] PROGMEM = "ModulatorSrc";
 const char key_ReverseModulator[] PROGMEM = "ReverseModulator";
 const char key_PhaseMode[] PROGMEM = "PhaseMode";
-const char key_PhaseAngle[] PROGMEM = "PhaseAngle";
+const char key_Phase[] PROGMEM = "Phase";
+const char key_WidthMode[] PROGMEM = "WidthMode";
+const char key_Width[] PROGMEM = "Width";
+const char key_Period[] PROGMEM = "Period";
 
 const char key_Mixer[] PROGMEM = "Mixer";
 // const char key_Name[] PROGMEM = "Name";
