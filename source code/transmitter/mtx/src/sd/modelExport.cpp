@@ -104,6 +104,7 @@ void exportModelData(File& file)
   memset(tempBuff, 0, sizeof(tempBuff));
   
   file.println(F("##### Model configuration file #####"));
+  file.println(F("##### Exported from version " _SKETCHVERSION " #####"));
 
   writeKeyValue_Char(file, 0, key_ModelName, Model.name);
   writeKeyValue_Char(file, 0, key_ModelType, findStringInIdStr(enum_ModelType, Model.type));
