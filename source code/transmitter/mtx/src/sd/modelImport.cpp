@@ -17,6 +17,9 @@ bool hasEncounteredInvalidParam = false; //for basic error detection only
 char keyBuff[3][MAX_STR_SIZE];
 char valueBuff[MAX_STR_SIZE];
 
+// uint16_t dbgLineNumber = 0;
+// uint16_t dbgfirstErrorAt = 0;
+
 //--------------------------- Parser ---------------------------------------------------------------
 
 // Reads in the file line by line, extracts the keys and values to the appropriate buffers and skipping 
@@ -33,7 +36,10 @@ void parser(File& file)
     if(c == '\r') //skip carriage return
       continue;
     if(c == '\n')
+    {
+      // dbgLineNumber++;
       break;
+    }
     if(count < sizeof(lineBuff) - 1)
       lineBuff[count++] = c;
   }
@@ -259,6 +265,8 @@ void extractConfig_SwitchWarning()
   uint8_t idx = getSrcId(keyBuff[1]) - SRC_SW_PHYSICAL_FIRST;
   if(idx < MAX_NUM_PHYSICAL_SWITCHES)
     findIdInIdStr(enum_SwitchWarn, valueBuff, Model.switchWarn[idx]);
+  else
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_Telemetry()
@@ -266,7 +274,7 @@ void extractConfig_Telemetry()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  if(idx < NUM_CUSTOM_TELEMETRY)
+  else if(idx < NUM_CUSTOM_TELEMETRY)
   {
     telemetry_params_t* tlm = &Model.Telemetry[idx];
     if(MATCH_P(keyBuff[1], key_Name))
@@ -291,6 +299,8 @@ void extractConfig_Telemetry()
       readValue_bool(valueBuff, &tlm->recordMaximum);
     else if(MATCH_P(keyBuff[1], key_RecordMinimum))
       readValue_bool(valueBuff, &tlm->recordMinimum);
+    else
+      hasEncounteredInvalidParam = true;
   }
   else
     hasEncounteredInvalidParam = true;
@@ -301,7 +311,7 @@ void extractConfig_Timers()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  if(idx < NUM_TIMERS)
+  else if(idx < NUM_TIMERS)
   {
     timer_params_t* tmr = &Model.Timer[idx];
     if(MATCH_P(keyBuff[1], key_Name))
@@ -316,6 +326,8 @@ void extractConfig_Timers()
       readValue_bool(valueBuff, &tmr->isPersistent);
     else if(MATCH_P(keyBuff[1], key_PersistVal))
       tmr->persistVal = atoi_with_prefix(valueBuff);
+    else
+      hasEncounteredInvalidParam = true;
   }
   else
     hasEncounteredInvalidParam = true;
@@ -327,6 +339,8 @@ void extractConfig_X1Trim()
     findIdInIdStr(enum_TrimState, valueBuff, Model.X1Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.X1Trim.commonTrim = atoi_with_prefix(valueBuff);
+  else
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_Y1Trim()
@@ -335,6 +349,8 @@ void extractConfig_Y1Trim()
     findIdInIdStr(enum_TrimState, valueBuff, Model.Y1Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.Y1Trim.commonTrim = atoi_with_prefix(valueBuff);
+  else
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_X2Trim()
@@ -343,6 +359,8 @@ void extractConfig_X2Trim()
     findIdInIdStr(enum_TrimState, valueBuff, Model.X2Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.X2Trim.commonTrim = atoi_with_prefix(valueBuff);
+  else
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_Y2Trim()
@@ -351,6 +369,8 @@ void extractConfig_Y2Trim()
     findIdInIdStr(enum_TrimState, valueBuff, Model.Y2Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
     Model.Y2Trim.commonTrim = atoi_with_prefix(valueBuff);
+  else
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_RudDualRate()
@@ -365,6 +385,8 @@ void extractConfig_RudDualRate()
     Model.RudDualRate.expo2 = atoi_with_prefix(valueBuff);
   else if(MATCH_P(keyBuff[1], key_Switch))
     Model.RudDualRate.swtch = getControlSwitchID(valueBuff);
+  else
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_AilDualRate()
@@ -379,6 +401,8 @@ void extractConfig_AilDualRate()
     Model.AilDualRate.expo2 = atoi_with_prefix(valueBuff);
   else if(MATCH_P(keyBuff[1], key_Switch))
     Model.AilDualRate.swtch = getControlSwitchID(valueBuff);
+  else
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_EleDualRate()
@@ -393,6 +417,8 @@ void extractConfig_EleDualRate()
     Model.EleDualRate.expo2 = atoi_with_prefix(valueBuff);
   else if(MATCH_P(keyBuff[1], key_Switch))
     Model.EleDualRate.swtch = getControlSwitchID(valueBuff);
+  else
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_ThrottleCurve()
@@ -436,6 +462,8 @@ void extractConfig_ThrottleCurve()
   }
   else if(MATCH_P(keyBuff[1], key_Smooth))
     readValue_bool(valueBuff, &crv->smooth);
+  else
+    hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_FunctionGenerators()
@@ -443,7 +471,7 @@ void extractConfig_FunctionGenerators()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  if(idx < NUM_FUNCGEN)
+  else if(idx < NUM_FUNCGEN)
   {
     funcgen_t* fgen = &Model.Funcgen[idx];
     if(MATCH_P(keyBuff[1], key_Waveform))
@@ -468,6 +496,8 @@ void extractConfig_FunctionGenerators()
       fgen->width = getTimeFromTimeStr(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Period))
       fgen->period = getTimeFromTimeStr(valueBuff);
+    else
+      hasEncounteredInvalidParam = true;
   }
   else
     hasEncounteredInvalidParam = true;
@@ -478,7 +508,7 @@ void extractConfig_Mixer()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  if(idx < NUM_MIXSLOTS)
+  else if(idx < NUM_MIXSLOTS)
   {
     mixer_params_t* mxr = &Model.Mixer[idx];
     if(MATCH_P(keyBuff[1], key_Name))
@@ -540,6 +570,8 @@ void extractConfig_Mixer()
       mxr->slowUp = getTimeFromTimeStr(valueBuff);
     else if(MATCH_P(keyBuff[1], key_SlowDown))
       mxr->slowDown = getTimeFromTimeStr(valueBuff);
+    else
+      hasEncounteredInvalidParam = true;
   }
   else
     hasEncounteredInvalidParam = true;
@@ -550,7 +582,7 @@ void extractConfig_CustomCurves()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  if(idx < NUM_CUSTOM_CURVES)
+  else if(idx < NUM_CUSTOM_CURVES)
   {
     custom_curve_t* crv = &Model.CustomCurve[idx];
     if(MATCH_P(keyBuff[1], key_Name))
@@ -593,6 +625,8 @@ void extractConfig_CustomCurves()
     }
     else if(MATCH_P(keyBuff[1], key_Smooth))
       readValue_bool(valueBuff, &crv->smooth);
+    else
+      hasEncounteredInvalidParam = true;
   }
   else
     hasEncounteredInvalidParam = true;
@@ -603,7 +637,7 @@ void extractConfig_LogicalSwitches()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  if(idx < NUM_LOGICAL_SWITCHES)
+  else if(idx < NUM_LOGICAL_SWITCHES)
   {
     logical_switch_t* ls = &Model.LogicalSwitch[idx];
     if(MATCH_P(keyBuff[1], key_Func))
@@ -647,6 +681,8 @@ void extractConfig_LogicalSwitches()
     {
       ls->val4 = getTimeFromTimeStr(valueBuff);
     }
+    else
+      hasEncounteredInvalidParam = true;
   }
   else
     hasEncounteredInvalidParam = true;
@@ -657,7 +693,7 @@ void extractConfig_Counters()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  if(idx < NUM_COUNTERS)
+  else if(idx < NUM_COUNTERS)
   {
     counter_params_t* counter = &Model.Counter[idx];
     if(MATCH_P(keyBuff[1], key_Name))
@@ -676,6 +712,8 @@ void extractConfig_Counters()
       readValue_bool(valueBuff, &counter->isPersistent);
     else if(MATCH_P(keyBuff[1], key_PersistVal))
       counter->persistVal = atoi_with_prefix(valueBuff);
+    else
+      hasEncounteredInvalidParam = true;
   }
   else
     hasEncounteredInvalidParam = true;
@@ -686,7 +724,7 @@ void extractConfig_FlightModes()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  if(idx < NUM_FLIGHT_MODES)
+  else if(idx < NUM_FLIGHT_MODES)
   {
     flight_mode_t* fmd = &Model.FlightMode[idx];
     if(MATCH_P(keyBuff[1], key_Name))
@@ -703,6 +741,8 @@ void extractConfig_FlightModes()
       fmd->y2Trim = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_TransitionTime))
       fmd->transitionTime = getTimeFromTimeStr(valueBuff);
+    else
+      hasEncounteredInvalidParam = true;
   }
   else
     hasEncounteredInvalidParam = true;
@@ -713,7 +753,7 @@ void extractConfig_Channels()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  if(idx < NUM_RC_CHANNELS)
+  else if(idx < NUM_RC_CHANNELS)
   {
     channel_params_t* ch = &Model.Channel[idx];
     if(MATCH_P(keyBuff[1], key_Name))
@@ -760,6 +800,8 @@ void extractConfig_Channels()
       ch->endpointL = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_EndpointR))
       ch->endpointR = atoi_with_prefix(valueBuff);
+    else
+      hasEncounteredInvalidParam = true;
   }
   else
     hasEncounteredInvalidParam = true;
@@ -770,7 +812,7 @@ void extractConfig_Widgets()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  if(idx < NUM_WIDGETS)
+  else if(idx < NUM_WIDGETS)
   {
     widget_params_t* widget = &Model.Widget[idx];
     if(MATCH_P(keyBuff[1], key_Type))
@@ -818,6 +860,8 @@ void extractConfig_Widgets()
       widget->gaugeMin = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_GaugeMax))
       widget->gaugeMax = atoi_with_prefix(valueBuff);
+    else
+      hasEncounteredInvalidParam = true;
   }
   else
     hasEncounteredInvalidParam = true;
@@ -828,7 +872,7 @@ void extractConfig_Notifications()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  if(idx < NUM_CUSTOM_NOTIFICATIONS)
+  else if(idx < NUM_CUSTOM_NOTIFICATIONS)
   {
     notification_params_t *notification = &Model.CustomNotification[idx];
     if(MATCH_P(keyBuff[1], key_Text))
@@ -841,6 +885,8 @@ void extractConfig_Notifications()
       if(notification->tone < AUDIO_NOTIFICATION_TONE_FIRST) notification->tone = AUDIO_NOTIFICATION_TONE_FIRST;
       if(notification->tone > AUDIO_NOTIFICATION_TONE_LAST) notification->tone = AUDIO_NOTIFICATION_TONE_LAST;
     }
+    else
+      hasEncounteredInvalidParam = true;
   }
   else
     hasEncounteredInvalidParam = true;
@@ -910,10 +956,11 @@ void importModelData(File& file)
     else if(MATCH_P(keyBuff[0], key_Channel)) extractConfig_Channels();
     else if(MATCH_P(keyBuff[0], key_Widget)) extractConfig_Widgets();
     else if(MATCH_P(keyBuff[0], key_Notification)) extractConfig_Notifications();
-    else
-    {
+    else 
       hasEncounteredInvalidParam = true;
-    }
+    
+    // if(hasEncounteredInvalidParam && dbgfirstErrorAt == 0)
+      // dbgfirstErrorAt = dbgLineNumber;
   }
   
   //show message if errors were encountered
