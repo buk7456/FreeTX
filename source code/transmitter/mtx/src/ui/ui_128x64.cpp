@@ -290,7 +290,7 @@ void drawAnimatedSprite(uint8_t x, uint8_t y, const uint8_t* const bitmapTable[]
                         uint8_t frameCount, uint16_t frameTime, uint32_t timeOffset);
 void drawHorizontalBarChart(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t valMin, int16_t valMax);
 void drawHorizontalBarChartZeroCentered(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t range);
-void drawTrimSlider(uint8_t x, uint8_t y, int8_t val, uint8_t range, bool horizontal);
+void drawTrimSlider(uint8_t x, uint8_t y, int8_t val, uint8_t range, uint8_t id);
 void drawDialogCopyMove(const char* str, uint8_t srcIdx, uint8_t destIdx, bool isCopy);
 void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src);
 void drawToast();
@@ -679,28 +679,28 @@ void handleMainUI()
           if(Model.X1Trim.trimState != TRIM_DISABLED) 
           {
             int8_t val = Model.X1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x1Trim : Model.X1Trim.commonTrim;
-            drawTrimSlider(14, 60, val, 40, true);
+            drawTrimSlider(14, 62, val, 40, 0);
           }
           if(Model.Y1Trim.trimState != TRIM_DISABLED)
           {
             int8_t val = Model.Y1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].y1Trim : Model.Y1Trim.commonTrim;
-            drawTrimSlider(3, 15, val, 40, false);
+            drawTrimSlider(1, 15, val, 40, 1);
           }
           if(Model.X2Trim.trimState != TRIM_DISABLED)
           {
             int8_t val = Model.X2Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x2Trim : Model.X2Trim.commonTrim;
-            drawTrimSlider(73, 60, val, 40, true);
+            drawTrimSlider(73, 62, val, 40, 2);
           }
           if(Model.Y2Trim.trimState != TRIM_DISABLED)
           {
             int8_t val = Model.Y2Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].y2Trim : Model.Y2Trim.commonTrim;
-            drawTrimSlider(124, 15, val, 40, false);
+            drawTrimSlider(126, 15, val, 40, 3);
           }
         }
         
         //------------ Model name, flight modes -------------
         //Model name
-        display.setCursor(14, 9);
+        display.setCursor(14, 8);
         printModelName(Model.name, Sys.activeModelIdx);
 
         //Flightmode
@@ -729,14 +729,14 @@ void handleMainUI()
             strlcpy(txtBuff, Model.FlightMode[activeFmdIdx].name, sizeof(txtBuff));
           //print right aligned
           uint8_t len = strlen(txtBuff) + 2; //add 2 for brackets 
-          display.setCursor(115 - len * 6, 9);
+          display.setCursor(115 - len * 6, 8);
           display.print(F("("));
           display.print(txtBuff);
           display.print(F(")"));
         }
         
         //separator line
-        display.drawHLine(14, 18, 100, BLACK);
+        display.drawHLine(14, 17, 100, BLACK);
         
         //------------ Widgets ------------------
         
@@ -771,7 +771,7 @@ void handleMainUI()
         }
         
         //draw the widgets
-        uint8_t ypos = 21;
+        uint8_t ypos = 20;
         uint8_t printCount = 0;
         uint8_t tlmCntr = 0;
         for(uint8_t i = 0; i < NUM_WIDGETS; i++)
@@ -791,7 +791,7 @@ void handleMainUI()
             uint8_t xpos = 14;
             if(telemetryMuteAlarms && Model.Telemetry[idx].alarmCondition != TELEMETRY_ALARM_CONDITION_NONE)
             {
-              display.drawBitmap(12, ypos + 1, icon_mute_tiny, 6, 5, BLACK);
+              display.drawBitmap(11, ypos + 1, icon_mute_small, 7, 5, BLACK);
               xpos = 20;
             }
             display.setCursor(xpos, ypos);
@@ -879,10 +879,10 @@ void handleMainUI()
           if(hasPrinted)
           {
             printCount++;
-            ypos += 9;
+            ypos += 8;
           }
-          //check if no more space on the screen
-          if(printCount == 4)
+          //abort if no more space on the screen
+          if(printCount == 5)
             break;
         }
         
@@ -8655,25 +8655,23 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
 
 //--------------------------------------------------------------------------------------------------
 
-void drawTrimSlider(uint8_t x, uint8_t y, int8_t val, uint8_t range, bool horizontal)
+void drawTrimSlider(uint8_t x, uint8_t y, int8_t val, uint8_t range, uint8_t id)
 {
-  if(horizontal)
+  if(id == 0 || id == 2)
   {
     display.drawHLine(x, y, range + 1, BLACK);
-    x = ((int16_t) x + range/2 - 3) + val;
-    display.fillRect(x, y - 3, 7, 7, WHITE);
-    display.drawRoundRect(x, y - 3, 7, 7, 2, BLACK);
-    if(val >= 0) display.drawVLine(x + 4, y - 1, 3, BLACK);
-    if(val <= 0) display.drawVLine(x + 2, y - 1, 3, BLACK);
+    display.drawPixel(x + range/2, y, WHITE);
+    uint8_t xqq = ((int16_t) x + range/2 - 1) + val;
+    display.drawHLine(xqq, y + 1, 3, BLACK);
+    display.drawPixel(xqq + 1, y, BLACK);
   }
   else
   {
     display.drawVLine(x, y, range + 1, BLACK);
-    y = ((int16_t) y + range/2 - 3) - val;
-    display.fillRect(x - 3, y, 7, 7, WHITE);
-    display.drawRoundRect(x - 3, y, 7, 7, 2, BLACK);
-    if(val >= 0) display.drawHLine(x - 1, y + 2, 3, BLACK);
-    if(val <= 0) display.drawHLine(x - 1, y + 4, 3, BLACK);
+    display.drawPixel(x, y + range/2, WHITE);
+    uint8_t yqq = ((int16_t) y + range/2 - 1) - val;
+    display.drawVLine((id == 1) ? (x - 1) : (x + 1), yqq, 3, BLACK);
+    display.drawPixel(x, yqq + 1, BLACK);
   }
 }
 
