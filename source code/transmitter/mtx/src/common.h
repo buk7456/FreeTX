@@ -384,28 +384,22 @@ enum {
 //------------------------------------------------
 
 typedef struct {
-
   uint8_t  waveform;
-
   union {
     uint8_t  periodMode;   //for waveforms sine, square, triangle, sawtoot, and random
     uint8_t  widthMode;    //for pulse waveform
   };
-
   //time is in tenths of a second
   union {
     uint16_t period1; 
     uint16_t width; //for pulse waveform
   };
-
   union {
     uint16_t period2; 
     uint16_t period;  //for pulse waveform
   };
-
   uint8_t  modulatorSrc;
   bool     reverseModulator;
-
   uint8_t  phaseMode; 
   uint16_t phase;
 
@@ -766,7 +760,7 @@ typedef struct {
   int16_t gaugeMax;
 } widget_params_t;
 
-#define NUM_WIDGETS  4
+#define NUM_WIDGETS  5
 
 enum {
   WIDGET_TYPE_TELEMETRY,

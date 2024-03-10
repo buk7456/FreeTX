@@ -85,8 +85,8 @@
   
 #if NUM_WIDGETS < 2
   #error At least 2 widgets 
-#elif NUM_WIDGETS > 4
-  #error At most 4 widgets
+#elif NUM_WIDGETS > 5
+  #error At most 5 widgets
 #endif
 
 #if NUM_TIMERS < 1
