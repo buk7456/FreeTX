@@ -2,7 +2,8 @@
 #include <SPI.h>
 #include <SD.h>
 
-#include "../mtx.h"
+#include "../../config.h"
+#include "../common.h"
 #include "modelStrings.h"
 #include "modelExport.h"
 
