@@ -1,5 +1,5 @@
 # FreeTX
-Remotely operate model airplanes, multicopters, helicopters, boats, cars, engineering vehicles, robots, etc.
+Open source radio control system for almost anything. 
 <p align="left">
 <img src="doc/tx_views.jpg"/>
 </p>
