@@ -1,8 +1,16 @@
 
 #include "Arduino.h"
 
+#include "../config.h"
+#include "common.h"
+#include "crc.h"
+#include "inputs.h"
+#include "mathHelpers.h"
+#include "mixer.h"
+#include "ee/eestore.h"
+#include "sd/sdStore.h"
+#include "ui/ui.h"
 #include "mtx.h"
-#include "ui/ui.h" 
 
 uint32_t loopStartTime; //in microseconds
 
