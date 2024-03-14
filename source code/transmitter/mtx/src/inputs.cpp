@@ -1,6 +1,7 @@
 #include "Arduino.h"
 
-#include "mtx.h"
+#include "../config.h"
+#include "common.h"
 #include "inputs.h"
 
 int16_t deadzoneAndMap(int16_t input, int16_t minVal, int16_t centreVal, int16_t maxVal, int16_t deadzn, int16_t mapMin, int16_t mapMax);

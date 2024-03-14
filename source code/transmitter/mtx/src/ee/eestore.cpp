@@ -22,9 +22,15 @@
 #include <EEPROM.h>
 #include <Wire.h>
 
+#include "../../config.h"
+#include "../common.h"
+#include "../crc.h"
+#include "../inputs.h"
+#include "../ui/ui.h"
 #include "../mtx.h"
-#include "../ui/ui.h" 
 #include "../templates.h"
+
+#include "eestore.h"
 
 #include "External_EEPROM.h" 
 ExternalEEPROM myMem;

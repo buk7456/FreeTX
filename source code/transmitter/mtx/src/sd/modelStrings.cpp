@@ -1,6 +1,6 @@
 #include "Arduino.h"
 
-#include "../mtx.h"
+#include "../common.h"
 #include "modelStrings.h"
 
 bool idNotFoundInIdStr = false;

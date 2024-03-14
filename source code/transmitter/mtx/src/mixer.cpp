@@ -1,6 +1,7 @@
 #include "Arduino.h"
 
-#include "mtx.h"
+#include "common.h"
+#include "mathHelpers.h"
 #include "mixer.h"
 
 int16_t calcExpo(int16_t input, int16_t expo);
