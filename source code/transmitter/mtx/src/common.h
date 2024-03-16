@@ -762,7 +762,7 @@ typedef struct {
   int16_t gaugeMax;
 } widget_params_t;
 
-#define NUM_WIDGETS  5
+#define NUM_WIDGETS  4
 
 enum {
   WIDGET_TYPE_TELEMETRY,
