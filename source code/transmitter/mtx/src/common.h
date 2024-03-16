@@ -137,7 +137,6 @@ enum {
 
 enum {  
   AUDIO_NONE, 
-  
   AUDIO_BATTERY_WARN, 
   AUDIO_SAFETY_WARN, 
   AUDIO_TIMER_ELAPSED, 
@@ -146,13 +145,11 @@ enum {
   AUDIO_TELEM_MUTE_CHANGED,
   AUDIO_BIND_SUCCESS,
   AUDIO_TRIM_MOVED,
-
   AUDIO_SWITCH_MOVED,
-  
   AUDIO_KEY_PRESSED,
-
   AUDIO_NOTIFICATION_TONE_FIRST,
   AUDIO_NOTIFICATION_TONE_LAST = AUDIO_NOTIFICATION_TONE_FIRST + NOTIFICATION_TONE_COUNT - 1,
+  AUDIO_SCREENSHOT_CAPTURED,
 };
 
 extern uint8_t  audioToPlay;
@@ -211,6 +208,8 @@ extern uint32_t thisLoopNum; //main loop counter
 
 //---- Debug -------------------------------
 extern uint32_t DBG_loopTime;
+
+extern uint8_t screenshotSwtch;
 
 
 //====================== SYSTEM PARAMETERS =========================================================
@@ -308,6 +307,9 @@ typedef struct {
   bool     DBG_showLoopTime;
   bool     DBG_simulateTelemetry; //fakes telemetry value on sensor ID 0x30
   bool     DBG_disableInterlacing; 
+
+  //--- screenshots
+  uint16_t screenshotSeqNo;
   
 } sys_params_t;
 

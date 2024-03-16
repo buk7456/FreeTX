@@ -16,14 +16,17 @@
 #include "../lcd/LCDKS0108.h"
 #endif
 
-
 //limit to 128kiB files
 #define FILE_SIZE_LIMIT_BYTES 131072
 
 bool hasSDcard = false;
 
+//NOTE THAT ONLY 8.3 NAMES ARE SUPPORTED
+
 const char* model_backup_directory = "MODELS/";
 // const char* model_backup_directory = "/";
+
+const char* screenshot_directory = "SCRNSHOT/";
 
 File modelDir;
 bool isModelDirectoryOpen = false; //keeps track of open status
@@ -37,14 +40,14 @@ void sdStoreInit()
   else
     return;
   
-  //create the backup directory if it does not exist
-  modelDir = SD.open(model_backup_directory);
-  if(!modelDir)
-  {
+  //create the backup directory
+  if(!SD.exists(model_backup_directory))
     SD.mkdir(model_backup_directory);
-  }
-  //close
-  modelDir.close();
+
+  //create the screenshots directory 
+  if(!SD.exists(screenshot_directory))
+    SD.mkdir(screenshot_directory);
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -61,7 +64,7 @@ bool sdBackupModel(const char *name)
   if(!hasSDcard)
     return false;
 
-  if(isModelDirectoryOpen) //close first as we can only open one thing at a time
+  if(isModelDirectoryOpen) //close first if open
   {
     modelDir.close();
     isModelDirectoryOpen = false;
@@ -108,7 +111,7 @@ bool sdRestoreModel(const char *name)
   strlcpy(fullNameStr, model_backup_directory, sizeof(fullNameStr));
   strlcat(fullNameStr, name, sizeof(fullNameStr));
   
-  if(isModelDirectoryOpen) //close first as we can only open one thing at a time
+  if(isModelDirectoryOpen) //close first if open
   {
     modelDir.close();
     isModelDirectoryOpen = false;
@@ -261,7 +264,7 @@ bool sdSimilarModelExists(const char *name)
   if(!hasSDcard)
     return false;
 
-  if(isModelDirectoryOpen) //close first as we can only open one thing at a time
+  if(isModelDirectoryOpen) //close first if open
   {
     modelDir.close();
     isModelDirectoryOpen = false;
@@ -279,15 +282,14 @@ bool sdSimilarModelExists(const char *name)
   return false;
 }
 
-//--------------------------------------------------------------------------------------------------
-//--------------------------- Splash screen functionality ------------------------------------------
-
-const char* splash_full_name_str = "IMAGES/SPLASH";
+//--------------------------- Splash screen -------------------------------------------------------
 
 void sdShowSplashScreen()
 {
   if(!hasSDcard)
     return;
+
+  static const char* splash_full_name_str = "IMAGES/SPLASH";
   
   //abort if it doesnt exist
   if(!SD.exists(splash_full_name_str))
@@ -338,4 +340,95 @@ void sdShowSplashScreen()
     //delay to make it noticeable
     delay(2500);
   }
+}
+
+//----------------------------Screenshot ----------------------------------------------------------
+
+bool sdWriteScreenshot()
+{
+  if(!hasSDcard)
+    return false;
+
+  #if defined (UI_128X64)
+  static const uint8_t bmpHeader[] PROGMEM = {
+    0x42, 0x4d, 0x3e, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x00, 0x28, 0x00,
+    0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0x00
+  };
+  #endif
+
+  if(isModelDirectoryOpen) //close first if open
+  {
+    modelDir.close();
+    isModelDirectoryOpen = false;
+  }
+
+  //make a name for the file. Sequential numbering is used.
+  char fullNameStr[30]; //includes the path. Example Folder/img001.bmp
+  memset(fullNameStr, 0, sizeof(fullNameStr));
+  strlcpy(fullNameStr, screenshot_directory, sizeof(fullNameStr));
+  strlcat_P(fullNameStr, PSTR("img"), sizeof(fullNameStr));
+  uint8_t digits = 1;
+  uint16_t num = Sys.screenshotSeqNo;
+  while(num >= 10)
+  {
+    num /= 10;
+    digits++;
+  }
+  while(digits < 3)
+  {
+    strlcat_P(fullNameStr, PSTR("0"), sizeof(fullNameStr));
+    digits++;
+  }
+  char temp[6];
+  memset(temp, 0, sizeof(temp));
+  itoa(Sys.screenshotSeqNo, temp, 10);
+  strlcat(fullNameStr, temp, sizeof(fullNameStr));
+  strlcat_P(fullNameStr, PSTR(".bmp"), sizeof(fullNameStr));
+  
+  //remove the file if it exists, so we start afresh
+  if(SD.exists(fullNameStr))
+    SD.remove(fullNameStr);
+  
+  File myFile = SD.open(fullNameStr, FILE_WRITE);
+  if(myFile)
+  {
+
+  #if defined(UI_128X64)
+    //write the header
+    for(uint8_t i = 0; i < sizeof(bmpHeader); i++)
+    {
+      myFile.write(pgm_read_byte(bmpHeader + i));
+    }
+
+    //write the pixel data
+    for(int8_t y = 63; y >= 0; y--)
+    {
+      for(uint8_t _byte = 0; _byte < 16; _byte++)
+      {
+        uint8_t val = 0;
+        for(int8_t _bit = 7; _bit >= 0; _bit--)
+        {
+          uint8_t x = (_byte * 8) + (7 -_bit);
+          val |= (display.getPixel(x, y) << _bit);
+        }
+        myFile.write(~val);
+      }
+    }
+
+  #endif
+
+    //close the file
+    myFile.close(); 
+    
+    //update the sequence number
+    Sys.screenshotSeqNo++;
+    if(Sys.screenshotSeqNo > 999)
+      Sys.screenshotSeqNo = 0;
+    
+    return true;
+  }
+
+  return false;
 }

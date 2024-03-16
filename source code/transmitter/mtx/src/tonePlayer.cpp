@@ -57,50 +57,55 @@
 
 //--- Sounds ---
 
-// "txbattlow:d=4,o=5,b=290:4p,4c6,32p,4a#,32p,4g."
+// txbattlow:d=4,o=5,b=290:4p,4c6,32p,4a#,32p,4g.
 const uint16_t battLowSound[] PROGMEM  = {
   290,NOTE_C6,4,NOTE_REST,32,NOTE_AS5,4,NOTE_REST,32,NOTE_G5,4
 }; 
 
-// "warn:d=4,o=4,b=120:16p,8e5"
+// warn:d=4,o=4,b=120:16p,8e5
 const uint16_t warnSound[] PROGMEM = {
   120,NOTE_REST,16,NOTE_E5,8
 };
 
-// "shortBeep:d=4,o=4,b=250:16d5"
+// shortBeep:d=4,o=4,b=250:16d5
 const uint16_t shortBeepSound[] PROGMEM = {
   250,NOTE_D5,16
 }; 
 
-// "timerElapsed:d=4,o=5,b=210:16p,16b6,16p,8b6" 
+// timerElapsed:d=4,o=5,b=210:16p,16b6,16p,8b6
 const uint16_t timerElapsedSound[] PROGMEM = {
   210,NOTE_REST,16,NOTE_B6,16,NOTE_REST,16,NOTE_B6,8
 }; 
 
-// "idle:d=4,o=5,b=90:8p,32c5,32g4,32c5"
+// idle:d=4,o=5,b=90:8p,32c5,32g4,32c5
 const uint16_t inactivitySound[] PROGMEM = {
   90,NOTE_REST,8,NOTE_C5,32,NOTE_G4,32,NOTE_C5,32
 }; 
 
-// "telemWarn:d=4,o=5,b=120:8p,4a#4"
+// telemWarn:d=4,o=5,b=120:8p,4a#4
 const uint16_t telemWarnSound[] PROGMEM = {
   120,NOTE_REST,8,NOTE_AS4,4
 }; 
 
-// "telemMute:d=4,o=4,b=160:8p,16c5,16e5"
+// telemMute:d=4,o=4,b=160:8p,16c5,16e5
 const uint16_t telemMuteSound[] PROGMEM = {
   160,NOTE_REST,8,NOTE_C5,16,NOTE_E5,16
 }; 
 
-// "bind:d=4,o=5,b=75:32d#5,32g5,32a#5,16d6"
+// bind:d=4,o=5,b=75:32d#5,32g5,32a#5,16d6
 const uint16_t bindSound[] PROGMEM = {
   75,NOTE_DS5,32,NOTE_G5,32,NOTE_AS5,32,NOTE_D6,16
 }; 
 
-// "trimMove:d=4,o=4,b=250:16a#7"
+// trimMove:d=4,o=4,b=250:16a#7
 const uint16_t trimMovedSound[] PROGMEM = {
   250,NOTE_AS7,16
 }; 
+
+// tone:d=4,o=5,b=125:32p,32c#4,32d4
+const uint16_t screenshotSound[] PROGMEM = {
+  125, NOTE_REST, 32, NOTE_CS4, 32, NOTE_D4, 32
+};
 
 // notifications tones
 //if you add more, change NOTIFICATION_TONE_COUNT to match
@@ -223,6 +228,8 @@ void playTones()
       uint8_t i = audioToPlay - AUDIO_NOTIFICATION_TONE_FIRST;
       beginTone(PIN_BUZZER, notificationTone[i], sizeof(notificationTone[0])/sizeof(notificationTone[0][0]));
     }
+    else if(audioToPlay == AUDIO_SCREENSHOT_CAPTURED) 
+      beginTone(PIN_BUZZER, screenshotSound, sizeof(screenshotSound)/sizeof(screenshotSound[0]));
   }
   else //Playback. Automatically stops once all notes have been played
     playback();

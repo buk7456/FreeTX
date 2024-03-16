@@ -66,5 +66,7 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag);
 
 void drawNotificationOverlay(uint8_t idx, uint32_t startTime, uint32_t endTime); //implemented in the resolution specific UI file
 
+void screenshotHandler();
+
 
 #endif

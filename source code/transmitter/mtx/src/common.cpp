@@ -170,6 +170,8 @@ uint32_t thisLoopNum = 0;
 
 uint32_t DBG_loopTime;
 
+uint8_t screenshotSwtch = CTRL_SW_NONE;
+
 //--------------------------------------------------------------------------------------------------
 
 void resetSystemParams()
@@ -251,6 +253,8 @@ void resetSystemParams()
   Sys.DBG_showLoopTime = false;
   Sys.DBG_simulateTelemetry = false;
   Sys.DBG_disableInterlacing = false;
+
+  Sys.screenshotSeqNo = 0;
 }
 
 //--------------------------------------------------------------------------------------------------

@@ -198,6 +198,7 @@ enum {
   SCREEN_INTERNAL_EEPROM_DUMP,
   SCREEN_EXTERNAL_EEPROM_DUMP,
   SCREEN_CHARACTER_SET,
+  SCREEN_SCREENSHOT_CONFIG,
   CONFIRMATION_FACTORY_RESET,
   
   //---- Receiver ----
@@ -532,6 +533,9 @@ void handleSafetyWarnUI()  //blocking function
       audioTriggered = false;
       return; 
     }
+    
+    //screenshot
+    screenshotHandler();
     
     //call tone player function
     playTones();
@@ -7166,6 +7170,7 @@ void handleMainUI()
           ITEM_SHOW_CHARACTER_SET,
           ITEM_DUMP_INTERNAL_EEPROM,
           ITEM_DUMP_EXTERNAL_EEPROM,
+          ITEM_CONFIGURE_SCREENSHOTS,
           ITEM_FACTORY_RESET,
           
           ITEM_COUNT
@@ -7285,6 +7290,14 @@ void handleMainUI()
                 display.print(F("[View char set]")); 
                 if(isFocused && clickedButton == KEY_SELECT)
                   changeToScreen(SCREEN_CHARACTER_SET);
+              }
+              break;
+              
+            case ITEM_CONFIGURE_SCREENSHOTS:
+              {
+                display.print(F("[Screenshot config]"));
+                if(isFocused && clickedButton == KEY_SELECT)
+                  changeToScreen(SCREEN_SCREENSHOT_CONFIG);
               }
               break;
               
@@ -7505,6 +7518,58 @@ void handleMainUI()
         {
           thisPage = 1;
           changeToScreen(SCREEN_DEBUG);
+        }
+      }
+      break;
+      
+    case SCREEN_SCREENSHOT_CONFIG:
+      {
+        drawHeader(PSTR("Screenshot config"));
+        
+        //use a temporary variable for the swtch and assign later 
+        //to avoid unintended action while scrolling through the options
+        static uint8_t tempSwtch;
+        static bool tempInitialised = false;
+        if(!tempInitialised)
+        {
+          tempSwtch = screenshotSwtch;
+          tempInitialised = true;
+        }
+        
+        display.setCursor(0, 9);
+        display.print(F("Switch: "));
+        display.setCursor(66, 9);
+        getControlSwitchName(txtBuff, tempSwtch, sizeof(txtBuff));
+        display.print(txtBuff);
+        
+        display.setCursor(0, 22);
+        display.print(F("These settings apply\nto this session only."));
+        
+        display.setCursor(0, 56);
+        display.print(F("Seq no. "));
+        display.print(Sys.screenshotSeqNo);
+        
+        drawCursor(58, focusedItem * 9);
+        
+        changeFocusOnUpDown(1);
+        toggleEditModeOnSelectClicked();
+        
+        if(focusedItem == 1)
+          tempSwtch = incDecControlSwitch(tempSwtch, INCDEC_FLAG_PHY_SW);
+        
+        //assign from temp
+        if(!isEditMode || (buttonCode == 0 && millis() - buttonReleaseTime >= 500))
+        {
+          screenshotSwtch = tempSwtch;
+          tempInitialised = false;
+        }
+          
+        if(heldButton == KEY_SELECT)
+        {
+          changeToScreen(SCREEN_DEBUG);
+          //assign from temp
+          screenshotSwtch = tempSwtch;
+          tempInitialised = false;
         }
       }
       break;
@@ -8319,6 +8384,9 @@ void handleMainUI()
     display.print(tt%10); 
   }
 
+  //-------------- Screenshot --------------------------
+  screenshotHandler();
+  
   //-------------- Show on physical lcd -----------------
   if(Sys.DBG_disableInterlacing) //override
     display.setInterlace(false);
