@@ -6,6 +6,7 @@
 #include "../mathHelpers.h"
 #include "../inputs.h"
 #include "../mixer.h"
+#include "../sd/sdstore.h"
 #include "uiCommon.h"
 
 bool isEditMode = false;
@@ -728,3 +729,20 @@ void notificationHandler()
   }
 }
 
+//-------------------------------------------------------------------------------------------------
+
+void screenshotHandler()
+{
+  static bool lastState = false;
+  bool state = (screenshotSwtch != CTRL_SW_NONE && checkSwitchCondition(screenshotSwtch));
+  if(state && !lastState) //just went on
+  {
+    lastState = true;
+    if(sdWriteScreenshot())
+      audioToPlay = AUDIO_SCREENSHOT_CAPTURED;
+  }
+  if(!state) //went off
+  {
+    lastState = false;
+  }
+}
