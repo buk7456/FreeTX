@@ -712,7 +712,7 @@ void handleMainUI()
         
         //------------ Model name, flight modes -------------
         //Model name
-        display.setCursor(14, 8);
+        display.setCursor(14, 9);
         printModelName(Model.name, Sys.activeModelIdx);
 
         //Flightmode
@@ -741,14 +741,14 @@ void handleMainUI()
             strlcpy(txtBuff, Model.FlightMode[activeFmdIdx].name, sizeof(txtBuff));
           //print right aligned
           uint8_t len = strlen(txtBuff) + 2; //add 2 for brackets 
-          display.setCursor(115 - len * 6, 8);
+          display.setCursor(115 - len * 6, 9);
           display.print(F("("));
           display.print(txtBuff);
           display.print(F(")"));
         }
         
         //separator line
-        display.drawHLine(14, 17, 100, BLACK);
+        display.drawHLine(14, 18, 100, BLACK);
         
         //------------ Widgets ------------------
         
@@ -783,7 +783,7 @@ void handleMainUI()
         }
         
         //draw the widgets
-        uint8_t ypos = 20;
+        uint8_t ypos = 21;
         uint8_t printCount = 0;
         uint8_t tlmCntr = 0;
         for(uint8_t i = 0; i < NUM_WIDGETS; i++)
@@ -891,10 +891,10 @@ void handleMainUI()
           if(hasPrinted)
           {
             printCount++;
-            ypos += 8;
+            ypos += 9;
           }
           //abort if no more space on the screen
-          if(printCount == 5)
+          if(printCount == 4)
             break;
         }
         
@@ -7542,12 +7542,8 @@ void handleMainUI()
         getControlSwitchName(txtBuff, tempSwtch, sizeof(txtBuff));
         display.print(txtBuff);
         
-        display.setCursor(0, 22);
-        display.print(F("These settings apply\nto this session only."));
-        
-        display.setCursor(0, 56);
-        display.print(F("Seq no. "));
-        display.print(Sys.screenshotSeqNo);
+        display.setCursor(0, 46);
+        display.print(F("(These settings are\ntemporary.)"));
         
         drawCursor(58, focusedItem * 9);
         
@@ -7558,7 +7554,7 @@ void handleMainUI()
           tempSwtch = incDecControlSwitch(tempSwtch, INCDEC_FLAG_PHY_SW);
         
         //assign from temp
-        if(!isEditMode || (buttonCode == 0 && millis() - buttonReleaseTime >= 500))
+        if(!isEditMode || (buttonCode == 0 && millis() - buttonReleaseTime >= 1000))
         {
           screenshotSwtch = tempSwtch;
           tempInitialised = false;
