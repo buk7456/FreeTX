@@ -9,5 +9,6 @@ uint16_t sdGetModelCount();
 bool sdSimilarModelExists(const char *name);
 bool sdGetModelName(char *buff, uint16_t idx, uint8_t lenBuff);
 void sdShowSplashScreen();
+bool sdWriteScreenshot();
 
 #endif
