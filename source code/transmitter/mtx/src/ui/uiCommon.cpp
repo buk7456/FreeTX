@@ -734,12 +734,18 @@ void notificationHandler()
 void screenshotHandler()
 {
   static bool lastState = false;
+  static bool isFirstRun = true; //helps prevent nuisance screenshot when initially setting up the switch
   bool state = (screenshotSwtch != CTRL_SW_NONE && checkSwitchCondition(screenshotSwtch));
   if(state && !lastState) //just went on
   {
     lastState = true;
-    if(sdWriteScreenshot())
-      audioToPlay = AUDIO_SCREENSHOT_CAPTURED;
+    if(isFirstRun)
+      isFirstRun = false;
+    else
+    {
+      if(sdWriteScreenshot())
+        audioToPlay = AUDIO_SCREENSHOT_CAPTURED;
+    }
   }
   if(!state) //went off
   {
