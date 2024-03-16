@@ -107,6 +107,7 @@ void setup()
   randomSeed(battVoltsNow);
   reinitialiseMixerCalculations();
   loopStartTime = micros();
+
 }
 
 //==================================================================================================
