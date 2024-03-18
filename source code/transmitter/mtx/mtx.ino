@@ -6,6 +6,7 @@
   - The warning "Low memory available, stability problems may occur" can be ignored as long as
     there is at least 800 bytes available for local variables.
   
-  Authors
-  buk7456 <buk7456@gmail.com>
+  Authors:
+  Buk7456 (original author)
+  
 ***************************************************************************************************/
