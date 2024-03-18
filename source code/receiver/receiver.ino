@@ -3,7 +3,7 @@
   Target mcu: Atmega328p
   Compiles on Arduino 1.8.x or later
   
-  Authors
-  buk7456 <buk7456@gmail.com>
+  Authors:
+  Buk7456 (original author)
 
 ***************************************************************************************************/
