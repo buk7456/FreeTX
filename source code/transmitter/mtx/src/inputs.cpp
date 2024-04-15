@@ -6,7 +6,7 @@
 
 int16_t deadzoneAndMap(int16_t input, int16_t minVal, int16_t centreVal, int16_t maxVal, int16_t deadzn, int16_t mapMin, int16_t mapMax);
 
-const uint8_t swPin[MAX_NUM_PHYSICAL_SWITCHES][2] = {
+const uint8_t swPin[NUM_PHYSICAL_SWITCHES][2] = {
   {PIN_SWA_UP, PIN_SWA_DN},
   {PIN_SWB_UP, PIN_SWB_DN},
   {PIN_SWC_UP, PIN_SWC_DN},
@@ -17,11 +17,24 @@ const uint8_t swPin[MAX_NUM_PHYSICAL_SWITCHES][2] = {
   {PIN_SWH_UP, PIN_SWH_DN}
 };
 
+const uint8_t stickAxisPin[NUM_STICK_AXES] = {
+  PIN_X1_AXIS,
+  PIN_Y1_AXIS,
+  PIN_Z1_AXIS,
+  PIN_X2_AXIS,
+  PIN_Y2_AXIS,
+  PIN_Z2_AXIS,
+  PIN_X3_AXIS,
+  PIN_Y3_AXIS,
+  PIN_X4_AXIS,
+  PIN_Y4_AXIS
+};
+
 //==================================================================================================
 
 void initialiseSwitches()
 {
-  for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++)
+  for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
   {
     pinMode(swPin[i][0], INPUT_PULLUP);
     pinMode(swPin[i][1], INPUT_PULLUP);
@@ -39,7 +52,7 @@ void readSwitchesAndButtons()
   read = !read;
   if(read)
   {
-    for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++)
+    for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
     {
       swState[i] = SWUPPERPOS;
       if(Sys.swType[i] == SW_2POS) 
@@ -81,7 +94,7 @@ void readSwitchesAndButtons()
   
   //-- play audio when switches are moved --
   uint8_t switchesSum = 0;
-  for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++)
+  for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
   {
     switchesSum += swState[i];
   }
@@ -188,92 +201,49 @@ void readSticks()
   if(isCalibratingSticks)
     return;
 
-  x1AxisIn = analogRead(PIN_X1_AXIS);
-  y1AxisIn = analogRead(PIN_Y1_AXIS);
-  x2AxisIn = analogRead(PIN_X2_AXIS);
-  y2AxisIn = analogRead(PIN_Y2_AXIS);
-  x3AxisIn = analogRead(PIN_X3_AXIS);
-  y3AxisIn = analogRead(PIN_Y3_AXIS);
-  x4AxisIn = analogRead(PIN_X4_AXIS);
-  y4AxisIn = analogRead(PIN_Y4_AXIS);
-  
-  knobAIn = analogRead(PIN_KNOB_A);
-  knobBIn = analogRead(PIN_KNOB_B);
+  //Read stick axes
 
-  //add deadzone to sticks centers
-  
-  if(Sys.x1AxisType == STICK_AXIS_SELF_CENTERING)
-    x1AxisIn  = deadzoneAndMap(x1AxisIn, Sys.x1AxisMin, Sys.x1AxisCenter, Sys.x1AxisMax, Sys.x1AxisDeadzone, -500, 500);
-  else
+  for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
   {
-    x1AxisIn = map(x1AxisIn, Sys.x1AxisMin, Sys.x1AxisMax, -500, 500);
-    x1AxisIn = constrain(x1AxisIn, -500, 500);
+    stick_axis_params_t *axis = &Sys.StickAxis[i];
+    if(axis->type == STICK_AXIS_ABSENT)
+    {
+      stickAxisIn[i] = 0;
+    }
+    else
+    {
+      stickAxisIn[i] = analogRead(stickAxisPin[i]);
+      if(axis->type == STICK_AXIS_SELF_CENTERING)
+      {
+        stickAxisIn[i] = deadzoneAndMap(stickAxisIn[i], axis->minVal, axis->centerVal, axis->maxVal, 
+                                        axis->deadzone, -500, 500);
+      }
+      else if(axis->type == STICK_AXIS_NON_CENTERING)
+      {
+        stickAxisIn[i] = map(stickAxisIn[i], axis->minVal, axis->maxVal, -500, 500);
+        stickAxisIn[i] = constrain(stickAxisIn[i], -500, 500);
+      }
+    }
   }
-    
-  if(Sys.y1AxisType == STICK_AXIS_SELF_CENTERING)
-    y1AxisIn  = deadzoneAndMap(y1AxisIn, Sys.y1AxisMin, Sys.y1AxisCenter, Sys.y1AxisMax, Sys.y1AxisDeadzone, -500, 500);
-  else
-  {
-    y1AxisIn = map(y1AxisIn, Sys.y1AxisMin, Sys.y1AxisMax, -500, 500);
-    y1AxisIn = constrain(y1AxisIn, -500, 500);
-  }
-    
-  if(Sys.x2AxisType == STICK_AXIS_SELF_CENTERING)
-    x2AxisIn = deadzoneAndMap(x2AxisIn, Sys.x2AxisMin, Sys.x2AxisCenter, Sys.x2AxisMax, Sys.x2AxisDeadzone, -500, 500);
-  else
-  {
-    x2AxisIn = map(x2AxisIn, Sys.x2AxisMin, Sys.x2AxisMax, -500, 500);
-    x2AxisIn = constrain(x2AxisIn, -500, 500);
-  }
-  
-  if(Sys.y2AxisType == STICK_AXIS_SELF_CENTERING)
-    y2AxisIn = deadzoneAndMap(y2AxisIn, Sys.y2AxisMin, Sys.y2AxisCenter, Sys.y2AxisMax, Sys.y2AxisDeadzone, -500, 500);
-  else
-  {
-    y2AxisIn = map(y2AxisIn, Sys.y2AxisMin, Sys.y2AxisMax, -500, 500);
-    y2AxisIn = constrain(y2AxisIn, -500, 500);
-  }
-  
-  if(Sys.x3AxisType == STICK_AXIS_SELF_CENTERING)
-    x3AxisIn = deadzoneAndMap(x3AxisIn, Sys.x3AxisMin, Sys.x3AxisCenter, Sys.x3AxisMax, Sys.x3AxisDeadzone, -500, 500);
-  else
-  {
-    x3AxisIn = map(x3AxisIn, Sys.x3AxisMin, Sys.x3AxisMax, -500, 500);
-    x3AxisIn = constrain(x3AxisIn, -500, 500);
-  }
-  
-  if(Sys.y3AxisType == STICK_AXIS_SELF_CENTERING)
-    y3AxisIn = deadzoneAndMap(y3AxisIn, Sys.y3AxisMin, Sys.y3AxisCenter, Sys.y3AxisMax, Sys.y3AxisDeadzone, -500, 500);
-  else
-  {
-    y3AxisIn = map(y3AxisIn, Sys.y3AxisMin, Sys.y3AxisMax, -500, 500);
-    y3AxisIn = constrain(y3AxisIn, -500, 500);
-  }
-  
-  if(Sys.x4AxisType == STICK_AXIS_SELF_CENTERING)
-    x4AxisIn = deadzoneAndMap(x4AxisIn, Sys.x4AxisMin, Sys.x4AxisCenter, Sys.x4AxisMax, Sys.x4AxisDeadzone, -500, 500);
-  else
-  {
-    x4AxisIn = map(x4AxisIn, Sys.x4AxisMin, Sys.x4AxisMax, -500, 500);
-    x4AxisIn = constrain(x4AxisIn, -500, 500);
-  }
-  
-  if(Sys.y4AxisType == STICK_AXIS_SELF_CENTERING)
-    y4AxisIn = deadzoneAndMap(y4AxisIn, Sys.y4AxisMin, Sys.y4AxisCenter, Sys.y4AxisMax, Sys.y4AxisDeadzone, -500, 500);
-  else
-  {
-    y4AxisIn = map(y4AxisIn, Sys.y4AxisMin, Sys.y4AxisMax, -500, 500);
-    y4AxisIn = constrain(y4AxisIn, -500, 500);
-  }
-  
-  //add deadband at extremes of knobs for stability
+
+  //Read knobs, add deadband at extremes to prevent jitter
+
+  knobAIn = analogRead(PIN_KNOB_A);
   knobAIn = map(knobAIn, 20, 1003, -500, 500); 
   knobAIn = constrain(knobAIn, -500, 500);
+
+  knobBIn = analogRead(PIN_KNOB_B);
   knobBIn = map(knobBIn, 20, 1003, -500, 500); 
   knobBIn = constrain(knobBIn, -500, 500);
 
   //play audio whenever knob crosses center 
-  enum {POS_SIDE = 0, CENTER = 1, NEG_SIDE = 2};
+
+  enum {
+    NEG_SIDE,
+    CENTER, 
+    POS_SIDE, 
+  };
+
   static uint8_t knobARegion = CENTER;
   static uint8_t knobBRegion = CENTER;
   
@@ -295,25 +265,18 @@ void readSticks()
   else if(knobBIn > 25) knobBRegion = POS_SIDE;
   else if(knobBIn < -25) knobBRegion = NEG_SIDE;
   
-  //detect inactivity
-  static int16_t lastSticksSum = 0;
-  int16_t sticksSum = 0;
-  sticksSum += x1AxisIn;
-  sticksSum += y1AxisIn;
-  sticksSum += x2AxisIn;
-  sticksSum += y2AxisIn;
-  sticksSum += x3AxisIn;
-  sticksSum += y3AxisIn;
-  sticksSum += x4AxisIn;
-  sticksSum += y4AxisIn;
-  sticksSum += knobAIn;
-  sticksSum += knobBIn;
-  if(abs(sticksSum - lastSticksSum) > 50) //5% of 1000
+  //Detect inactivity
+  static int16_t lastSum = 0;
+  int16_t sum = 0;
+  for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
+    sum += stickAxisIn[i];
+  sum += knobAIn;
+  sum += knobBIn;
+  if(abs(sum - lastSum) > 50) //5% of 1000
   {
-    lastSticksSum = sticksSum;
+    lastSum = sum;
     inputsLastMoved = millis();
   }
-
 }
 
 //====================================Helpers=======================================================
@@ -342,79 +305,30 @@ void calibrateSticks(uint8_t stage)
   {
     case CALIBRATE_INIT:
     {
-      //set values to lowest
-      Sys.x1AxisMin = 1023; Sys.x1AxisMax = 0;
-      Sys.y1AxisMin = 1023; Sys.y1AxisMax = 0;
-      Sys.x2AxisMin = 1023; Sys.x2AxisMax = 0;
-      Sys.y2AxisMin = 1023; Sys.y2AxisMax = 0;
-      Sys.x3AxisMin = 1023; Sys.x3AxisMax = 0;
-      Sys.y3AxisMin = 1023; Sys.y3AxisMax = 0;
-      Sys.x4AxisMin = 1023; Sys.x4AxisMax = 0;
-      Sys.y4AxisMin = 1023; Sys.y4AxisMax = 0;
+      //set min to highest and max to lowest
+      for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
+      {
+        Sys.StickAxis[i].minVal = 1023;
+        Sys.StickAxis[i].maxVal = 0;
+      }
     }
     break;
     
     case CALIBRATE_MOVE:
     {
+      //get min, max, center
       int16_t reading;
-      
-      //---- get min, max, center
-      
-      reading = analogRead(PIN_X1_AXIS);
-      Sys.x1AxisCenter = reading;
-      if(reading < Sys.x1AxisMin)
-        Sys.x1AxisMin = reading;
-      else if(reading > Sys.x1AxisMax)
-        Sys.x1AxisMax = reading;
-      
-      reading = analogRead(PIN_Y1_AXIS);
-      Sys.y1AxisCenter = reading;
-      if(reading < Sys.y1AxisMin)
-        Sys.y1AxisMin = reading;
-      else if(reading > Sys.y1AxisMax)
-        Sys.y1AxisMax = reading;
-      
-      reading = analogRead(PIN_X2_AXIS);
-      Sys.x2AxisCenter  = reading;
-      if(reading < Sys.x2AxisMin)
-        Sys.x2AxisMin = reading;
-      else if(reading > Sys.x2AxisMax)
-        Sys.x2AxisMax = reading;
-      
-      reading  = analogRead(PIN_Y2_AXIS);
-      Sys.y2AxisCenter = reading;
-      if(reading < Sys.y2AxisMin)
-        Sys.y2AxisMin = reading;
-      else if(reading > Sys.y2AxisMax)
-        Sys.y2AxisMax = reading;
-      
-      reading = analogRead(PIN_X3_AXIS);
-      Sys.x3AxisCenter  = reading;
-      if(reading < Sys.x3AxisMin)
-        Sys.x3AxisMin = reading;
-      else if(reading > Sys.x3AxisMax)
-        Sys.x3AxisMax = reading;
-      
-      reading  = analogRead(PIN_Y3_AXIS);
-      Sys.y3AxisCenter = reading;
-      if(reading < Sys.y3AxisMin)
-        Sys.y3AxisMin = reading;
-      else if(reading > Sys.y3AxisMax)
-        Sys.y3AxisMax = reading;
-      
-      reading = analogRead(PIN_X4_AXIS);
-      Sys.x4AxisCenter  = reading;
-      if(reading < Sys.x4AxisMin)
-        Sys.x4AxisMin = reading;
-      else if(reading > Sys.x4AxisMax)
-        Sys.x4AxisMax = reading;
-      
-      reading  = analogRead(PIN_Y4_AXIS);
-      Sys.y4AxisCenter = reading;
-      if(reading < Sys.y4AxisMin)
-        Sys.y4AxisMin = reading;
-      else if(reading > Sys.y4AxisMax)
-        Sys.y4AxisMax = reading;
+      for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
+      {
+        if(Sys.StickAxis[i].type == STICK_AXIS_ABSENT)
+          continue;
+        reading = analogRead(stickAxisPin[i]);
+        Sys.StickAxis[i].centerVal = reading;
+        if(reading < Sys.StickAxis[i].minVal)
+          Sys.StickAxis[i].minVal = reading;
+        else if(reading > Sys.StickAxis[i].maxVal)
+          Sys.StickAxis[i].maxVal = reading;
+      }
     }
     break;
     
@@ -422,40 +336,13 @@ void calibrateSticks(uint8_t stage)
     {
       //Add slight deadband(about 1.5%) at each stick ends to stabilise readings at ends
       //For a range of 0 to 5V, min max are 0.07V and 4.92V
-      
       int16_t deadBand; 
-      
-      deadBand = (Sys.x1AxisMax - Sys.x1AxisMin) / 64;
-      Sys.x1AxisMax -= deadBand;
-      Sys.x1AxisMin += deadBand;
-      
-      deadBand = (Sys.y1AxisMax - Sys.y1AxisMin) / 64;
-      Sys.y1AxisMax -= deadBand;
-      Sys.y1AxisMin += deadBand;
-
-      deadBand = (Sys.x2AxisMax - Sys.x2AxisMin) / 64;
-      Sys.x2AxisMax -= deadBand;
-      Sys.x2AxisMin += deadBand;
-      
-      deadBand = (Sys.y2AxisMax - Sys.y2AxisMin) / 64;
-      Sys.y2AxisMax -= deadBand;
-      Sys.y2AxisMin += deadBand;
-      
-      deadBand = (Sys.x3AxisMax - Sys.x3AxisMin) / 64;
-      Sys.x3AxisMax -= deadBand;
-      Sys.x3AxisMin += deadBand;
-      
-      deadBand = (Sys.y3AxisMax - Sys.y3AxisMin) / 64;
-      Sys.y3AxisMax -= deadBand;
-      Sys.y3AxisMin += deadBand;
-      
-      deadBand = (Sys.x4AxisMax - Sys.x4AxisMin) / 64;
-      Sys.x4AxisMax -= deadBand;
-      Sys.x4AxisMin += deadBand;
-      
-      deadBand = (Sys.y4AxisMax - Sys.y4AxisMin) / 64;
-      Sys.y4AxisMax -= deadBand;
-      Sys.y4AxisMin += deadBand;
+      for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
+      {
+        deadBand = (Sys.StickAxis[i].maxVal -Sys.StickAxis[i].minVal) / 64;
+        Sys.StickAxis[i].maxVal -= deadBand;
+        Sys.StickAxis[i].minVal += deadBand;
+      }
     }
     break;
   }
