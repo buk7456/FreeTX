@@ -270,7 +270,7 @@ We can, if necessary, set Ch8 to 'Digital' mode in the receiver output configura
 
 ### Example 18: Servo tester
 We can program a simple servo tester that repeatedly moves a servo back and forth.
-<br>In the inputs screen, navigate to Function generator page and select desired movement type. 
+<br>In the extras menu, navigate to Function generator and select the desired movement type. 
 <br>Then in the mixer, assuming the servo is connected to Ch8,
 ```txt
 1. Ch8  Add  Fgen1 (Weight 100)
