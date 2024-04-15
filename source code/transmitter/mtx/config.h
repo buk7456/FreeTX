@@ -12,7 +12,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define _SKETCHVERSION "1.0.1"
+#define _SKETCHVERSION "1.0.2"
 
 //===========================================================================
 //============================= LCD and UI ==================================
@@ -38,6 +38,9 @@
 #define PIN_Y3_AXIS      A10
 #define PIN_X4_AXIS      A13
 #define PIN_Y4_AXIS      A12
+
+#define PIN_Z1_AXIS      A9
+#define PIN_Z2_AXIS      A8
 
 #define PIN_KNOB_A       A4
 #define PIN_KNOB_B       A5
