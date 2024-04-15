@@ -4,7 +4,7 @@
 
 #include "../common.h"
 #include "../ui/ui.h" 
-#include "modelStrings.h"
+#include "../stringDefs.h"
 #include "modelImport.h"
 
 bool isEndOfFile = false;
@@ -263,7 +263,7 @@ void extractConfig_ThrottleWarning()
 void extractConfig_SwitchWarning()
 {
   uint8_t idx = getSrcId(keyBuff[1]) - SRC_SW_PHYSICAL_FIRST;
-  if(idx < MAX_NUM_PHYSICAL_SWITCHES)
+  if(idx < NUM_PHYSICAL_SWITCHES)
     findIdInIdStr(enum_SwitchWarn, valueBuff, Model.switchWarn[idx]);
   else
     hasEncounteredInvalidParam = true;
@@ -758,20 +758,6 @@ void extractConfig_Channels()
     channel_params_t* ch = &Model.Channel[idx];
     if(MATCH_P(keyBuff[1], key_Name))
       strlcpy(ch->name, valueBuff, sizeof(ch->name));
-    else if(MATCH_P(keyBuff[1], key_Curve))
-    {
-      char tempBuff[MAX_STR_SIZE];
-      tempBuff[0] = '\0';
-      strlcpy(tempBuff, findStringInIdStr(enum_ChannelCurve, -1), sizeof(tempBuff));
-      if(MATCH(tempBuff, valueBuff))
-        ch->curve = -1;
-      else
-      {
-        uint8_t crvIdx = atoi_with_prefix(valueBuff) - 1;
-        if(crvIdx < NUM_CUSTOM_CURVES)
-          ch->curve = crvIdx;
-      }
-    }
     else if(MATCH_P(keyBuff[1], key_Reverse))
       readValue_bool(valueBuff, &ch->reverse);
     else if(MATCH_P(keyBuff[1], key_Subtrim))
