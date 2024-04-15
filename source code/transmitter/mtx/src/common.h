@@ -40,10 +40,6 @@ uint16_t joinBytes(uint8_t highByte, uint8_t lowByte);
 bool isEmptyStr(char* buff, uint8_t lenBuff);
 void trimWhiteSpace(char* buff, uint8_t lenBuff);
 
-void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff);
-void getControlSwitchName(char* buff, uint8_t idx, uint8_t lenBuff);
-void getControlSwitchName_Clean(char* buff, uint8_t idx, uint8_t lenBuff);
-
 //====================== MISC =====================================================================
 
 //---- Output channels -------------------
@@ -57,20 +53,18 @@ extern int16_t  channelOut[NUM_RC_CHANNELS];  //Range is -500 to 500
 
 //---- Sticks and pots -------------------
 
-extern int16_t x1AxisIn;
-extern int16_t y1AxisIn; 
-extern int16_t x2AxisIn;
-extern int16_t y2AxisIn;
-extern int16_t x3AxisIn;
-extern int16_t y3AxisIn; 
-extern int16_t x4AxisIn;
-extern int16_t y4AxisIn;
+// Leave as is unless you've physically added or removed the corresponding pins in the schematics
+// If you must change this, you also need to add the axis names manually
+#define NUM_STICK_AXES 10
+
+extern int16_t stickAxisIn[NUM_STICK_AXES];
 
 extern int16_t knobAIn;
 extern int16_t knobBIn;
 
 extern bool isCalibratingSticks;
-enum{
+enum {
+  //calibration stages
   CALIBRATE_INIT,
   CALIBRATE_MOVE,
   CALIBRATE_DEADBAND
@@ -79,9 +73,9 @@ enum{
 //---- Physical Switches -----------------
 
 /* Leave as is unless you've physically added or removed the corresponding pins in the schematics */
-#define MAX_NUM_PHYSICAL_SWITCHES  8 
+#define NUM_PHYSICAL_SWITCHES  8 
 
-extern uint8_t swState[MAX_NUM_PHYSICAL_SWITCHES];
+extern uint8_t swState[NUM_PHYSICAL_SWITCHES];
 enum {  
   //Switch states
   SWUPPERPOS = 0, 
@@ -220,43 +214,44 @@ extern uint8_t screenshotSwtch;
   - Adding new fields or parameters does corrupt the system data. This is no big deal however.
 */
 
+//------------------------------------------------
+// structure for stick axis data
+//------------------------------------------------
+
+typedef struct {
+  int16_t minVal; 
+  int16_t centerVal; 
+  int16_t maxVal;
+  uint8_t deadzone;
+  uint8_t type;
+} stick_axis_params_t;
+
+enum {
+  //stick axis types
+  STICK_AXIS_SELF_CENTERING,
+  STICK_AXIS_NON_CENTERING,
+  STICK_AXIS_ABSENT,
+  
+  STICK_AXIS_TYPE_COUNT
+};
+
+//================================================
+// Structure for the entire system data. This is
+// also the data we store to the eeprom.
+//================================================
+
 typedef struct {
   uint8_t  activeModelIdx;
 
   //--- sticks axes
-  int16_t  x1AxisMin, x1AxisCenter, x1AxisMax;
-  int16_t  y1AxisMin, y1AxisCenter, y1AxisMax;
-  int16_t  x2AxisMin, x2AxisCenter, x2AxisMax;
-  int16_t  y2AxisMin, y2AxisCenter, y2AxisMax;
-  int16_t  x3AxisMin, x3AxisCenter, x3AxisMax;
-  int16_t  y3AxisMin, y3AxisCenter, y3AxisMax;
-  int16_t  x4AxisMin, x4AxisCenter, x4AxisMax;
-  int16_t  y4AxisMin, y4AxisCenter, y4AxisMax;
-  
-  uint8_t  x1AxisType;
-  uint8_t  y1AxisType;
-  uint8_t  x2AxisType;
-  uint8_t  y2AxisType;
-  uint8_t  x3AxisType;
-  uint8_t  y3AxisType;
-  uint8_t  x4AxisType;
-  uint8_t  y4AxisType;
-  
-  uint8_t  x1AxisDeadzone;
-  uint8_t  y1AxisDeadzone;
-  uint8_t  x2AxisDeadzone;
-  uint8_t  y2AxisDeadzone;
-  uint8_t  x3AxisDeadzone;
-  uint8_t  y3AxisDeadzone;
-  uint8_t  x4AxisDeadzone;
-  uint8_t  y4AxisDeadzone;
+  stick_axis_params_t StickAxis[NUM_STICK_AXES];
 
   //--- stick mode
   //used for default assignment when creating new models
   uint8_t  defaultStickMode;
 
   //--- switches
-  uint8_t  swType[MAX_NUM_PHYSICAL_SWITCHES];
+  uint8_t  swType[NUM_PHYSICAL_SWITCHES];
   
   //--- battery
   int16_t  battVoltsMin; //millivolts
@@ -315,14 +310,6 @@ typedef struct {
 
 extern sys_params_t Sys;
 
-enum {
-  //stick axis types
-  STICK_AXIS_SELF_CENTERING,
-  STICK_AXIS_NON_CENTERING,
-  
-  STICK_AXIS_TYPE_COUNT
-};
-
 enum { 
   //Switch types
   SW_ABSENT,
@@ -353,7 +340,6 @@ enum {
   //same order as in the UI
   BACKLIGHT_TIMEOUT_5SEC,
   BACKLIGHT_TIMEOUT_15SEC,
-  BACKLIGHT_TIMEOUT_30SEC,
   BACKLIGHT_TIMEOUT_1MIN,
   BACKLIGHT_TIMEOUT_5MIN,
   BACKLIGHT_TIMEOUT_15MIN,
@@ -589,7 +575,7 @@ enum {
 
   //up, mid, down, !up, !mid, !down
   CTRL_SW_PHYSICAL_FIRST,
-  CTRL_SW_PHYSICAL_LAST = CTRL_SW_PHYSICAL_FIRST + (MAX_NUM_PHYSICAL_SWITCHES * 6) - 1,
+  CTRL_SW_PHYSICAL_LAST = CTRL_SW_PHYSICAL_FIRST + (NUM_PHYSICAL_SWITCHES * 6) - 1,
   
   CTRL_SW_LOGICAL_FIRST,
   CTRL_SW_LOGICAL_LAST = CTRL_SW_LOGICAL_FIRST + NUM_LOGICAL_SWITCHES - 1,
@@ -611,19 +597,24 @@ enum {
   SRC_AIL, 
   SRC_ELE, 
   
-  SRC_X1_AXIS, 
-  SRC_Y1_AXIS,
-  SRC_X2_AXIS,
-  SRC_Y2_AXIS,
-  SRC_X3_AXIS, 
-  SRC_Y3_AXIS,
-  SRC_X4_AXIS,
-  SRC_Y4_AXIS,
+  SRC_STICK_AXIS_FIRST,
+  SRC_STICK_AXIS_LAST = SRC_STICK_AXIS_FIRST + NUM_STICK_AXES - 1,
+
+  SRC_X1 = SRC_STICK_AXIS_FIRST,
+  SRC_Y1 = SRC_STICK_AXIS_FIRST + 1,
+  SRC_Z1 = SRC_STICK_AXIS_FIRST + 2,
+  SRC_X2 = SRC_STICK_AXIS_FIRST + 3,
+  SRC_Y2 = SRC_STICK_AXIS_FIRST + 4,
+  SRC_Z2 = SRC_STICK_AXIS_FIRST + 5,
+  SRC_X3 = SRC_STICK_AXIS_FIRST + 6,
+  SRC_Y3 = SRC_STICK_AXIS_FIRST + 7,
+  SRC_X4 = SRC_STICK_AXIS_FIRST + 8,
+  SRC_Y4 = SRC_STICK_AXIS_FIRST + 9,
   
   SRC_KNOB_A, 
   SRC_KNOB_B,
   
-  SRC_RAW_ANALOG_FIRST = SRC_X1_AXIS,
+  SRC_RAW_ANALOG_FIRST = SRC_STICK_AXIS_FIRST,
   SRC_RAW_ANALOG_LAST = SRC_KNOB_B,
   
   SRC_100PERC, 
@@ -632,7 +623,7 @@ enum {
   SRC_FUNCGEN_LAST = SRC_FUNCGEN_FIRST + NUM_FUNCGEN - 1,
   
   SRC_SW_PHYSICAL_FIRST,
-  SRC_SW_PHYSICAL_LAST = SRC_SW_PHYSICAL_FIRST + MAX_NUM_PHYSICAL_SWITCHES - 1,
+  SRC_SW_PHYSICAL_LAST = SRC_SW_PHYSICAL_FIRST + NUM_PHYSICAL_SWITCHES - 1,
   
   SRC_SW_LOGICAL_FIRST,
   SRC_SW_LOGICAL_LAST = SRC_SW_LOGICAL_FIRST + NUM_LOGICAL_SWITCHES - 1,
@@ -650,7 +641,6 @@ enum {
 
 typedef struct {
   char     name[7];       //6 chars + null
-  int8_t   curve;         //-1 means none, 0 to .. are custom curves
   bool     reverse; 
   int8_t   subtrim;       //-20 to 20
   uint8_t  overrideSwitch;
@@ -857,7 +847,7 @@ typedef struct {
   
   //--- Safety checks
   bool   checkThrottle;
-  int8_t switchWarn[MAX_NUM_PHYSICAL_SWITCHES]; //-1 means no checks
+  int8_t switchWarn[NUM_PHYSICAL_SWITCHES]; //-1 means no checks
   
   //--- Notifications
   notification_params_t CustomNotification[NUM_CUSTOM_NOTIFICATIONS];
