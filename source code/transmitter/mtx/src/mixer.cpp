@@ -141,15 +141,9 @@ void computeChannelOutputs()
   ///----------- MIX SOURCES ARRAY INITIALIZATIONS --------
 
   //Mix source raw sticks
-  mixSources[SRC_X1_AXIS] = x1AxisIn;
-  mixSources[SRC_Y1_AXIS] = y1AxisIn;
-  mixSources[SRC_X2_AXIS] = x2AxisIn;
-  mixSources[SRC_Y2_AXIS] = y2AxisIn;
-  mixSources[SRC_X3_AXIS] = x3AxisIn;
-  mixSources[SRC_Y3_AXIS] = y3AxisIn;
-  mixSources[SRC_X4_AXIS] = x4AxisIn;
-  mixSources[SRC_Y4_AXIS] = y4AxisIn;
-  
+  for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
+    mixSources[SRC_STICK_AXIS_FIRST + i] = stickAxisIn[i];
+
   //Mix source knobs
   mixSources[SRC_KNOB_A] = knobAIn;
   mixSources[SRC_KNOB_B] = knobBIn;
@@ -189,7 +183,7 @@ void computeChannelOutputs()
     mixSources[SRC_THR] = linearInterpolate(_xxQQ, _yyQQ, Model.ThrottleCurve.numPoints, mixSources[Model.thrSrcRaw]);
 
   //Mix source switches
-  for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++)
+  for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
   {
     if(Sys.swType[i] == SW_2POS)
       mixSources[SRC_SW_PHYSICAL_FIRST + i] = (swState[i] == SWLOWERPOS) ? 500 : -500;
@@ -372,28 +366,28 @@ void computeChannelOutputs()
       if(src == SRC_AIL) src = Model.ailSrcRaw;
       if(src == SRC_ELE) src = Model.eleSrcRaw;
 
-      if(src == SRC_X1_AXIS)
+      if(src == SRC_X1)
       {
         if(Model.X1Trim.trimState == TRIM_FLIGHT_MODE)
           operand += ((int16_t) flightModeTrim[0] * mxr->weight) / 100; 
         else if(Model.X1Trim.trimState == TRIM_COMMON)
           operand += ((int16_t) Model.X1Trim.commonTrim * 5 * mxr->weight) / 100;
       }
-      else if(src == SRC_Y1_AXIS)
+      else if(src == SRC_Y1)
       {
         if(Model.Y1Trim.trimState == TRIM_FLIGHT_MODE)
           operand += ((int16_t) flightModeTrim[1] * mxr->weight) / 100; 
         else if(Model.Y1Trim.trimState == TRIM_COMMON)
           operand += ((int16_t) Model.Y1Trim.commonTrim * 5 * mxr->weight) / 100;
       }
-      else if(src == SRC_X2_AXIS)
+      else if(src == SRC_X2)
       {
         if(Model.X2Trim.trimState == TRIM_FLIGHT_MODE)
           operand += ((int16_t) flightModeTrim[2] * mxr->weight) / 100; 
         else if(Model.X2Trim.trimState == TRIM_COMMON)
           operand += ((int16_t) Model.X2Trim.commonTrim * 5 * mxr->weight) / 100;
       }
-      else if(src == SRC_Y2_AXIS)
+      else if(src == SRC_Y2)
       {
         if(Model.Y2Trim.trimState == TRIM_FLIGHT_MODE)
           operand += ((int16_t) flightModeTrim[3] * mxr->weight) / 100; 
@@ -797,23 +791,6 @@ void computeChannelOutputs()
   for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
   {
     channelOut[i] = mixSources[SRC_CH1 + i];
-    //curve
-    if(Model.Channel[i].curve != -1)
-    {
-      uint8_t _crvIdx = Model.Channel[i].curve;
-      uint8_t _numPts = Model.CustomCurve[_crvIdx].numPoints;
-      int16_t _xx[MAX_NUM_POINTS_CUSTOM_CURVE];
-      int16_t _yy[MAX_NUM_POINTS_CUSTOM_CURVE];
-      for(uint8_t pt = 0; pt < _numPts; pt++)
-      {
-        _xx[pt] = 5 * Model.CustomCurve[_crvIdx].xVal[pt];
-        _yy[pt] = 5 * Model.CustomCurve[_crvIdx].yVal[pt];
-      }
-      if(Model.CustomCurve[_crvIdx].smooth)
-        channelOut[i] = cubicHermiteInterpolate(_xx, _yy, _numPts, channelOut[i]);
-      else
-        channelOut[i] = linearInterpolate(_xx, _yy, _numPts, channelOut[i]);
-    }
     //reverse
     if(Model.Channel[i].reverse) 
       channelOut[i] = 0 - channelOut[i]; 
