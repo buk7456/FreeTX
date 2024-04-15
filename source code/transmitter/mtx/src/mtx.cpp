@@ -207,7 +207,7 @@ void controlBacklight()
   if(Sys.backlightWakeup == BACKLIGHT_WAKEUP_ACTIVITY)
     elapsed = millis() - inputsLastMoved;
   
-  static const uint16_t durTable[] PROGMEM = {5, 15, 30, 60, 300, 900, 0};
+  static const uint16_t durTable[] PROGMEM = {5, 15, 60, 300, 900, 0};
   uint32_t duration = (uint32_t) 1000 * pgm_read_word(&durTable[Sys.backlightTimeout]);
 
   if(elapsed < duration || Sys.backlightTimeout == BACKLIGHT_TIMEOUT_NEVER)

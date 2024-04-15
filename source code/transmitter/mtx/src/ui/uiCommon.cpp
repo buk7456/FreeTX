@@ -117,11 +117,27 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
     if(i < MIXSOURCES_COUNT) //mix sources
     {
       if(!(flag & INCDEC_FLAG_MIX_SRC))
-        continue;
+      {
+        if(!(flag & INCDEC_FLAG_MIX_SRC_RAW_ANALOG))
+          continue;
+      }
+      if(flag & INCDEC_FLAG_MIX_SRC_RAW_ANALOG)
+      {
+        if(i < SRC_RAW_ANALOG_FIRST || i > SRC_RAW_ANALOG_LAST)
+          continue;
+      }
       if(Model.type == MODEL_TYPE_OTHER && (i == SRC_RUD || i == SRC_AIL || i == SRC_ELE || i == SRC_THR))
         continue;
-      if(i >= SRC_SW_PHYSICAL_FIRST && i <= SRC_SW_PHYSICAL_LAST && Sys.swType[i - SRC_SW_PHYSICAL_FIRST] == SW_ABSENT)
-        continue;
+      if(i >= SRC_SW_PHYSICAL_FIRST && i <= SRC_SW_PHYSICAL_LAST)
+      {
+        if(Sys.swType[i - SRC_SW_PHYSICAL_FIRST] == SW_ABSENT)
+          continue;
+      }
+      if(i >= SRC_STICK_AXIS_FIRST && i <= SRC_STICK_AXIS_LAST)
+      {
+        if(Sys.StickAxis[i - SRC_STICK_AXIS_FIRST].type == STICK_AXIS_ABSENT)
+          continue;
+      }
     }
     else if(i < MIXSOURCES_COUNT + NUM_COUNTERS) //counters
     {
@@ -146,6 +162,9 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
     srcQQ[srcCnt] = i;
     srcCnt++;
   }
+
+  if(srcCnt == 0)
+    return val;
   
   uint8_t idxQQ = 0;
   for(uint8_t i = 0; i < srcCnt; i++) //search for a match
@@ -215,6 +234,9 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
     ctrlQQ[ctrlCnt] = i;
     ctrlCnt++;
   }
+
+  if(ctrlCnt == 0)
+    return val;
 
   uint8_t idxQQ = 0;
   for(uint8_t i = 0; i < ctrlCnt; i++) //search for a match
@@ -343,7 +365,7 @@ uint8_t getMovedControlSwitch()
   //Only UP, MID, DOWN allowed. Inverse of these, and also the logical switches don't apply here.
   if(!Sys.autoSelectMovedControl)
     return CTRL_SW_NONE;
-  static bool lastState[MAX_NUM_PHYSICAL_SWITCHES * 6]; 
+  static bool lastState[NUM_PHYSICAL_SWITCHES * 6]; 
   uint8_t movedSw = CTRL_SW_NONE;
   static uint32_t lastLoopNum;
   for(uint8_t i = CTRL_SW_PHYSICAL_FIRST; i <= CTRL_SW_PHYSICAL_LAST; i++)
@@ -374,7 +396,7 @@ uint8_t getMovedSource()
   if(!Sys.autoSelectMovedControl)
     return SRC_NONE;
   //use array to hold values for the valid sources
-  const uint8_t srcCnt = (SRC_RAW_ANALOG_LAST - SRC_RAW_ANALOG_FIRST + 1) + MAX_NUM_PHYSICAL_SWITCHES;
+  const uint8_t srcCnt = (SRC_RAW_ANALOG_LAST - SRC_RAW_ANALOG_FIRST + 1) + NUM_PHYSICAL_SWITCHES;
   uint8_t  srcQQ[srcCnt];
   static int8_t lastValQQ[srcCnt];
   //populate array

@@ -3,16 +3,16 @@
 
 #include "../../config.h"
 #include "../common.h"
+#include "../stringDefs.h"
 #include "../crc.h"
-#include "../ee/eestore.h"
 #include "../inputs.h"
 #include "../mathHelpers.h"
 #include "../mixer.h"
 #include "../mtx.h"
-#include "../sd/sdStore.h"
-#include "../sd/modelStrings.h"
 #include "../templates.h"
 #include "../tonePlayer.h"
+#include "../ee/eestore.h"
+#include "../sd/sdStore.h"
 #include "bitmaps.h"
 #include "ui.h"
 #include "uiCommon.h"
@@ -59,23 +59,6 @@ char const advancedMenu[][20] PROGMEM = {
 enum {
   ADVANCED_MENU_STICKS, ADVANCED_MENU_SWITCHES, ADVANCED_MENU_BATTERY, ADVANCED_MENU_SECURITY,
   ADVANCED_MENU_MISC, ADVANCED_MENU_DEBUG
-};
-
-//----------------------------
-
-//RF power level strings. Max 9 chars per string
-char const rfPowerStr[][10] PROGMEM = {  
-  "Low", "Medium", "Max"
-};
-
-//Backlight timeout strings. Max 9 chars per string
-char const backlightTimeoutStr[][10] PROGMEM = { 
-  "5s", "15s", "30s", "1min", "5min", "15min", "Never"
-};
-
-//Backlight timeout strings. Max 9 chars per string
-char const backlightWakeupStr[][10] PROGMEM = { 
-  "Keys", "Actvty"
 };
 
 //---------------------------- Main UI states ------------------------------------------------------
@@ -241,36 +224,39 @@ uint8_t destMixIdx = 0;
 //channel outputs
 uint8_t thisChIdx = 0;
 
-//counters
-uint8_t thisCounterIdx = 0;
-uint8_t destCounterIdx = 0;
-
-//function generators
-uint8_t thisFgenIdx = 0;
-uint8_t destFgenIdx = 0;
-
-//telemetry 
-uint8_t thisTelemIdx = 0;
-
-//logical switch
-uint8_t thisLsIdx = 0;
-uint8_t destLsIdx = 0;
-
 //custom curves
 uint8_t thisCrvIdx = 0;
 uint8_t destCrvIdx = 0;
 uint8_t thisCrvPt = 0;
 
-//widgets
-uint8_t thisWidgetIdx = 0;
-uint8_t destWidgetIdx = 0;
+//function generators
+uint8_t thisFgenIdx = 0;
+uint8_t destFgenIdx = 0;
+
+//logical switch
+uint8_t thisLsIdx = 0;
+uint8_t destLsIdx = 0;
 
 //timers
 uint8_t thisTimerIdx = 0;
 
+//counters
+uint8_t thisCounterIdx = 0;
+uint8_t destCounterIdx = 0;
+
 //notifications
 uint8_t thisNotificationIdx = 0;
 uint8_t destNotificationIdx = 0;
+
+//flight modes
+uint8_t thisFmdIdx = 0;
+
+//telemetry 
+uint8_t thisTelemIdx = 0;
+
+//widgets
+uint8_t thisWidgetIdx = 0;
+uint8_t destWidgetIdx = 0;
 
 //others 
 bool isRequestingStickCalibration = false;
@@ -317,6 +303,7 @@ void contextMenuInitialise();
 void contextMenuAddItem(const char* str, uint8_t itemID);
 void contextMenuDraw();
 uint8_t contextMenuGetItemCount();
+void resetPages();
 
 //==================================================================================================
 
@@ -438,28 +425,23 @@ void handleSafetyWarnUI()  //blocking function
     bool isThrottleWarn = false;
     if(Model.checkThrottle && (Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER))
     {
-      uint8_t axisType[] = {
-        Sys.x1AxisType, Sys.y1AxisType, Sys.x2AxisType, Sys.y2AxisType,
-        Sys.x3AxisType, Sys.y3AxisType, Sys.x4AxisType, Sys.y4AxisType,
-        STICK_AXIS_NON_CENTERING, STICK_AXIS_NON_CENTERING
-      };
-      
-      int16_t valIn[] = {
-        x1AxisIn, y1AxisIn, x2AxisIn, y2AxisIn,
-        x3AxisIn, y3AxisIn, x4AxisIn, y4AxisIn,
-        knobAIn, knobBIn
-      };
-      
-      uint8_t idx = Model.thrSrcRaw - SRC_RAW_ANALOG_FIRST;
-      if(axisType[idx] == STICK_AXIS_SELF_CENTERING && (valIn[idx] > 0 || valIn[idx] < 0 ))
+      if(Model.thrSrcRaw >= SRC_STICK_AXIS_FIRST && Model.thrSrcRaw <= SRC_STICK_AXIS_LAST)
+      {
+        uint8_t idx = Model.thrSrcRaw - SRC_STICK_AXIS_FIRST;
+        if(Sys.StickAxis[idx].type == STICK_AXIS_SELF_CENTERING && (stickAxisIn[idx] > 0 || stickAxisIn[idx] < 0))
+          isThrottleWarn = true;
+        else if(Sys.StickAxis[idx].type == STICK_AXIS_NON_CENTERING && stickAxisIn[idx] > -450)
+          isThrottleWarn = true;
+      }
+      else if(Model.thrSrcRaw == SRC_KNOB_A && knobAIn > -450)
         isThrottleWarn = true;
-      if(axisType[idx] == STICK_AXIS_NON_CENTERING && valIn[idx] > - 450)
+      else if(Model.thrSrcRaw == SRC_KNOB_B && knobBIn > -450)
         isThrottleWarn = true;
     }
 
     //Check switch positions
     uint8_t numSwitchWarnings = 0;
-    for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++)
+    for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
     {
       if(Model.switchWarn[i] == -1 || Sys.swType[i] == SW_ABSENT) //dont check
         continue;
@@ -731,7 +713,7 @@ void handleMainUI()
         {
           if(isEmptyStr(Model.FlightMode[activeFmdIdx].name, sizeof(Model.FlightMode[0].name)))
           {
-            strlcpy_P(txtBuff, PSTR("FMD"), sizeof(txtBuff));
+            strlcpy_P(txtBuff, PSTR("Fmd"), sizeof(txtBuff));
             char suffix[5];
             memset(suffix, 0, sizeof(suffix));
             itoa(activeFmdIdx + 1, suffix, 10);
@@ -936,6 +918,8 @@ void handleMainUI()
         {
           if(lastScreen == CONTEXT_MENU_OUTPUTS) //start in the page that has the channel we want to view
             thisPage = (thisChIdx + 10) / 10;
+          else
+            thisPage = 1;
           viewInitialised = true;
         }
 
@@ -1706,6 +1690,7 @@ void handleMainUI()
           restoreCounterRegisters();
           //exit
           changeToScreen(SCREEN_MODEL);
+          resetPages();
         }
         if(contextMenuSelectedItemID == ITEM_DELETE_MODEL)
           changeToScreen(CONFIRMATION_MODEL_DELETE);
@@ -1785,6 +1770,7 @@ void handleMainUI()
           eeSaveModelData(Sys.activeModelIdx);
           // changeToScreen(SCREEN_MODEL);
           changeToScreen(DIALOG_RENAME_MODEL);
+          resetPages();
         }
         
         if(heldButton == KEY_SELECT) //exit
@@ -1927,6 +1913,7 @@ void handleMainUI()
             restoreCounterRegisters();
             //exit
             changeToScreen(SCREEN_MODEL);
+            resetPages();
           }
           else
           {
@@ -1958,7 +1945,7 @@ void handleMainUI()
             nameEmpty = true;
           else
           {
-            //Force conforming to 8.3 naming rules. ### TODO add some more checks
+            //Force conforming to 8.3 naming rules. Basic checks only
             
             // Strip leading periods
             uint8_t k = 0;
@@ -2073,6 +2060,7 @@ void handleMainUI()
           thisModelIdx = Sys.activeModelIdx; 
           //exit
           changeToScreen(SCREEN_MODEL);
+          resetPages();
         }
         else if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT)
         {
@@ -2111,6 +2099,7 @@ void handleMainUI()
           reinitialiseMixerCalculations();
           //exit
           changeToScreen(SCREEN_MODEL);
+          resetPages();
         }
         else if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT)
           changeToScreen(SCREEN_MODEL);
@@ -2224,8 +2213,7 @@ void handleMainUI()
                 *qqSrcRaw[idx] = movedSrc;
             }
             //inc dec
-            *qqSrcRaw[idx] = incDec(*qqSrcRaw[idx], SRC_RAW_ANALOG_FIRST, 
-                                             SRC_RAW_ANALOG_LAST, INCDEC_NOWRAP, INCDEC_SLOW);
+            *qqSrcRaw[idx] = incDecSource(*qqSrcRaw[idx], INCDEC_FLAG_MIX_SRC_RAW_ANALOG);
           }
 
           //--- Draw text
@@ -2405,8 +2393,7 @@ void handleMainUI()
                         Model.thrSrcRaw = movedSrc;
                     }
                     //inc dec
-                    Model.thrSrcRaw = incDec(Model.thrSrcRaw, SRC_RAW_ANALOG_FIRST, 
-                                                     SRC_RAW_ANALOG_LAST, INCDEC_NOWRAP, INCDEC_SLOW);
+                    Model.thrSrcRaw = incDecSource(Model.thrSrcRaw, INCDEC_FLAG_MIX_SRC_RAW_ANALOG);
                   }
                 }
                 break;
@@ -2506,31 +2493,26 @@ void handleMainUI()
           strlcpy_P(txtBuff, PSTR("Sticks"), sizeof(txtBuff));
           display.print(txtBuff);
           display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
-          
-          uint8_t qqSrc[] = {
-            SRC_X1_AXIS, SRC_Y1_AXIS, SRC_X2_AXIS, SRC_Y2_AXIS,
-            SRC_X3_AXIS, SRC_Y3_AXIS, SRC_X4_AXIS, SRC_Y4_AXIS
-          };
-          int16_t qqVal[]  = {
-            x1AxisIn, y1AxisIn, x2AxisIn, y2AxisIn,
-            x3AxisIn, y3AxisIn, x4AxisIn, y4AxisIn
-          };
-          
-          for(uint8_t i = 0; i < sizeof(qqSrc); i++)
+
+          uint8_t cntr = 0;
+          for(uint8_t i = 0; i < NUM_STICK_AXES && i < 10; i++)
           {
+            if(Sys.StickAxis[i].type == STICK_AXIS_ABSENT)
+              continue;
             uint8_t xpos = 0;
-            uint8_t ypos = 20 + i*9;
-            if(i >= 4)
+            uint8_t ypos = 20 + cntr*9;
+            if(cntr >= 5)
             {
               xpos = 69;
-              ypos = 20 + (i-4)*9;
+              ypos = 20 + (cntr-5)*9;
             }
             display.setCursor(xpos, ypos);
-            getSrcName(txtBuff, qqSrc[i], sizeof(txtBuff));
+            getSrcName(txtBuff, SRC_STICK_AXIS_FIRST + i, sizeof(txtBuff));
             display.print(txtBuff);
             display.print(F(":"));
             display.setCursor(display.getCursorX() + 6, ypos);
-            display.print(qqVal[i]/5);
+            display.print(stickAxisIn[i]/5);
+            cntr++;
           }
         }
         
@@ -2568,7 +2550,7 @@ void handleMainUI()
           
           //show switches
           uint8_t cntr = 0;
-          for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++)
+          for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
           {
             if(Sys.swType[i] == SW_ABSENT)
               continue;
@@ -2616,11 +2598,20 @@ void handleMainUI()
           tempMixerOutput = mxr->output;
           tempInitialised = true;
         }
+        
+        display.setCursor(8, 9);
+        display.print(F("Mix"));
+        display.print(thisMixIdx + 1);
+        if(!isEmptyStr(mxr->name, sizeof(mxr->name)))
+        {
+          display.setCursor(display.getCursorX() + 6, 9);
+          display.print(mxr->name);
+        }
+        display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
 
         //--- Dynamic list ---
         
         enum {
-          ITEM_MIX_NO,
           ITEM_MIX_OUTPUT,
           ITEM_MIX_SWITCH,
           ITEM_MIX_OPERATION,
@@ -2647,7 +2638,7 @@ void handleMainUI()
         {
           if(mxr->operation == MIX_HOLD)
           {
-            if(i != ITEM_MIX_NO && i != ITEM_MIX_OUTPUT && i != ITEM_MIX_SWITCH && i!= ITEM_MIX_OPERATION)
+            if(i != ITEM_MIX_OUTPUT && i != ITEM_MIX_SWITCH && i!= ITEM_MIX_OPERATION)
               continue;
           }
           if(i == ITEM_MIX_FLIGHT_MODE)
@@ -2659,8 +2650,6 @@ void handleMainUI()
           listItemIDs[listItemCount++] = i;
         }
         
-        //add context menu
-        uint8_t contextMenu = listItemCount + 1;
         
         //initialise the view
         static uint8_t topItem;
@@ -2675,52 +2664,34 @@ void handleMainUI()
         }
         
         //handle navigatation
-        
         focusedItem = lastFocusedItem;
-        changeFocusOnUpDown(listItemCount + 1); //add 1 for the context menu access
+        uint8_t numFocusable = listItemCount + 2; //+1 for title focus, +1 for context menu focus
+        changeFocusOnUpDown(numFocusable); 
         toggleEditModeOnSelectClicked();
-        
-        if(focusedItem < topItem)
-          topItem = focusedItem;
-        while(focusedItem >= topItem + 7)
-          topItem++;
-        if(focusedItem == contextMenu)
+        if(focusedItem == 1 || focusedItem == numFocusable) //title focus or context menu focus
           topItem = 1;
-        
+        else if(focusedItem > 1)
+        {
+          if(focusedItem - 1 < topItem)
+            topItem = focusedItem - 1;
+          while(focusedItem - 1 >= topItem + 5)
+            topItem++;
+        }
         lastFocusedItem = focusedItem;
         
         //fill list and edit items
-        for(uint8_t line = 0; line < 7 && line < listItemCount; line++)
+        for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
         {
-          uint8_t ypos = 8 + line*8;
-          if(focusedItem == topItem + line)
+          uint8_t ypos = 20 + line*9;
+          if(focusedItem - 1 == topItem + line)
             drawCursor(52, ypos);
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem != contextMenu && itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
           {
-            case ITEM_MIX_NO:
-              {
-                display.print(F("Mix no:"));
-                display.setCursor(60, ypos);
-                display.print(F("#"));
-                display.print(thisMixIdx + 1);
-                display.setCursor(90, ypos);
-                display.print(mxr->name);
-                if(edit) 
-                {
-                  //assign from temp
-                  mxr->output = tempMixerOutput;
-                  tempInitialised = false;
-                  //change to another mix
-                  thisMixIdx = incDec(thisMixIdx, 0, NUM_MIXSLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
-                }
-              }
-              break;
-              
             case ITEM_MIX_OUTPUT:
               {
                 display.print(F("Output:"));
@@ -2730,7 +2701,7 @@ void handleMainUI()
                 if(tempMixerOutput >= SRC_CH1 && tempMixerOutput < SRC_CH1 + NUM_RC_CHANNELS)
                 {
                   uint8_t chIdx = tempMixerOutput - SRC_CH1;
-                  display.setCursor(90, ypos);
+                  display.setCursor(display.getCursorX() + 6, ypos);
                   display.print(Model.Channel[chIdx].name);
                 }
                 if(edit)
@@ -2850,14 +2821,12 @@ void handleMainUI()
               {
                 display.print(F("Trim  :"));
                 display.setCursor(60, ypos);
-                
                 uint8_t input = mxr->input;
                 if(input == SRC_RUD) input = Model.rudSrcRaw;
                 if(input == SRC_THR) input = Model.thrSrcRaw;
                 if(input == SRC_AIL) input = Model.ailSrcRaw;
                 if(input == SRC_ELE) input = Model.eleSrcRaw;
-                
-                if(input == SRC_X1_AXIS || input == SRC_Y1_AXIS || input == SRC_X2_AXIS || input == SRC_Y2_AXIS)
+                if(input ==  SRC_X1 || input == SRC_Y1 || input == SRC_X2 || input == SRC_Y2)
                 {
                   drawCheckbox(60, ypos, mxr->trimEnabled);
                   if(edit)
@@ -2936,11 +2905,11 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(127, 8, listItemCount, topItem, 7, 7 * 8);
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
         
         //Show context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
-        display.drawBitmap(120, 0, focusedItem == contextMenu ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
+        display.drawBitmap(120, 0, focusedItem == numFocusable ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
         
         //Assign from temp
         if(!isEditMode || (buttonCode == 0 && millis() - buttonReleaseTime > 1000))
@@ -2948,9 +2917,23 @@ void handleMainUI()
           mxr->output = tempMixerOutput;
           tempInitialised = false;
         }
-
+        
+        //change to next mix
+        if(focusedItem == 1)
+        {
+          drawCursor(0, 9);
+          if(isEditMode)
+          {
+            //assign from temp
+            mxr->output = tempMixerOutput;
+            tempInitialised = false;
+            //change to another mix
+            thisMixIdx = incDec(thisMixIdx, 0, NUM_MIXSLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
+          }
+        }
+        
         //Open context menu
-        if(focusedItem == contextMenu && clickedButton == KEY_SELECT)
+        if(focusedItem == numFocusable && clickedButton == KEY_SELECT)
         {
           changeToScreen(CONTEXT_MENU_MIXER);
           viewInitialised = false;
@@ -3000,7 +2983,7 @@ void handleMainUI()
           uint8_t idx = item - 1;
           drawCheckbox(25, ypos, Model.Mixer[thisMixIdx].flightMode & (1 << idx));
           display.setCursor(35, ypos);
-          display.print(F("FMD"));
+          display.print(F("Fmd"));
           display.print(idx + 1);
           display.print(F(" "));
           display.print(Model.FlightMode[idx].name);
@@ -3365,7 +3348,7 @@ void handleMainUI()
       {
         isEditMode = true;
         destMixIdx = incDec(destMixIdx, 0, NUM_MIXSLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
-        drawDialogCopyMove(PSTR("Mix#"), thisMixIdx, destMixIdx, theScreen == DIALOG_COPY_MIX);
+        drawDialogCopyMove(PSTR("Mix"), thisMixIdx, destMixIdx, theScreen == DIALOG_COPY_MIX);
         if(clickedButton == KEY_SELECT)
         {
           if(theScreen == DIALOG_COPY_MIX)
@@ -3480,52 +3463,38 @@ void handleMainUI()
 
         //--- draw ---
         
-        display.setCursor(0, 8);
-        display.print(F("Channel:"));
-        display.setCursor(62, 8);
+        display.setCursor(8, 9);
         display.print(F("Ch"));
         display.print(thisChIdx + 1);
-        display.setCursor(display.getCursorX() + 6, 8);
         if(!isEmptyStr(ch->name, sizeof(ch->name)))
-          display.print(ch->name);
-        
-        display.setCursor(0, 16);
-        display.print(F("Curve:"));
-        display.setCursor(62, 16);
-        if(ch->curve == -1)
-          display.print(F("--"));
-        else
         {
-          if(isEmptyStr(Model.CustomCurve[ch->curve].name, sizeof(Model.CustomCurve[0].name)))
-          {
-            display.print(F("Crv"));
-            display.print(ch->curve + 1);
-          }
-          else
-            display.print(Model.CustomCurve[ch->curve].name);
+          display.setCursor(display.getCursorX() + 6, 9);
+          display.print(ch->name);
         }
+        display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
         
-        display.setCursor(0, 24);
+        
+        display.setCursor(0, 20);
         display.print(F("Reverse:"));
-        drawCheckbox(62, 24, ch->reverse);
+        drawCheckbox(62, 20, ch->reverse);
 
-        display.setCursor(0, 32);
+        display.setCursor(0, 29);
         display.print(F("Subtrim:"));
-        display.setCursor(62, 32);
+        display.setCursor(62, 29);
         display.print(ch->subtrim);
 
-        display.setCursor(0, 40);
+        display.setCursor(0, 38);
         display.print(F("Override:"));
-        display.setCursor(62, 40);
+        display.setCursor(62, 38);
         getControlSwitchName(txtBuff, ch->overrideSwitch, sizeof(txtBuff));
         display.print(txtBuff);
-        display.setCursor(98, 40);
+        display.setCursor(98, 38);
         if(ch->overrideSwitch == CTRL_SW_NONE) display.print(F("--"));
         else display.print(ch->overrideVal);
         
-        display.setCursor(0, 48);
+        display.setCursor(0, 47);
         display.print(F("Failsafe:"));
-        display.setCursor(62, 48);
+        display.setCursor(62, 47);
         if(ch->failsafe < -100)
           display.print(findStringInIdStr(enum_ChannelFailsafe, ch->failsafe));
         else
@@ -3540,39 +3509,38 @@ void handleMainUI()
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
-        display.drawBitmap(120, 0, focusedItem == 10 ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
+        display.drawBitmap(120, 0, focusedItem == 9 ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
         
         //show the cursor
-        if(focusedItem <= 4) drawCursor(54, focusedItem * 8);
-        else if(focusedItem == 5) drawCursor(54, 40);
-        else if(focusedItem == 6) drawCursor(90, 40);
-        else if(focusedItem == 7) drawCursor(54, 48);
-        else if(focusedItem == 8) drawCursor(54, 56);
-        else if(focusedItem == 9) drawCursor(90, 56);
+        if(focusedItem == 1) drawCursor(0, 9);
+        else if(focusedItem <= 3) drawCursor(54, 20 + (focusedItem - 2) * 9);
+        else if(focusedItem == 4) drawCursor(54, 38);
+        else if(focusedItem == 5) drawCursor(90, 38);
+        else if(focusedItem == 6) drawCursor(54, 47);
+        else if(focusedItem == 7) drawCursor(54, 56);
+        else if(focusedItem == 8) drawCursor(90, 56);
 
-        changeFocusOnUpDown(10);
+        changeFocusOnUpDown(9);
         toggleEditModeOnSelectClicked();
         
         //edit items
         if(focusedItem == 1)
           thisChIdx = incDec(thisChIdx, 0, NUM_RC_CHANNELS - 1, INCDEC_WRAP, INCDEC_SLOW); 
         else if(focusedItem == 2)
-          ch->curve = incDec(ch->curve, -1, NUM_CUSTOM_CURVES - 1, INCDEC_NOWRAP, INCDEC_SLOW);
-        else if(focusedItem == 3)
           ch->reverse = incDec(ch->reverse, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 4)
+        else if(focusedItem == 3)
           ch->subtrim = incDec(ch->subtrim, -20, 20, INCDEC_NOWRAP, INCDEC_SLOW);
-        else if(focusedItem == 5 && isEditMode)
+        else if(focusedItem == 4 && isEditMode)
           ch->overrideSwitch = incDecControlSwitch(ch->overrideSwitch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
-        else if(focusedItem == 6 && ch->overrideSwitch != CTRL_SW_NONE)
+        else if(focusedItem == 5 && ch->overrideSwitch != CTRL_SW_NONE)
           ch->overrideVal = incDec(ch->overrideVal, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
-        else if(focusedItem == 7)
+        else if(focusedItem == 6)
           ch->failsafe = incDec(ch->failsafe, -102, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
-        else if(focusedItem == 8)
+        else if(focusedItem == 7)
           ch->endpointL = incDec(ch->endpointL, -100, 0, INCDEC_NOWRAP, INCDEC_NORMAL);
-        else if(focusedItem == 9)
+        else if(focusedItem == 8)
           ch->endpointR = incDec(ch->endpointR, 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
-        else if(focusedItem == 10 && isEditMode) //context menu
+        else if(focusedItem == 9 && isEditMode) //context menu
           changeToScreen(CONTEXT_MENU_OUTPUTS);
 
         //Exit
@@ -5302,7 +5270,7 @@ void handleMainUI()
         enum {
           ITEM_SAFETY_CHECK_THROTTLE,
           ITEM_SAFETY_CHECK_SW_FIRST,
-          ITEM_SAFETY_CHECK_SW_LAST = ITEM_SAFETY_CHECK_SW_FIRST + MAX_NUM_PHYSICAL_SWITCHES - 1,
+          ITEM_SAFETY_CHECK_SW_LAST = ITEM_SAFETY_CHECK_SW_FIRST + NUM_PHYSICAL_SWITCHES - 1,
           
           ITEM_COUNT
         };
@@ -5426,7 +5394,7 @@ void handleMainUI()
         display.setCursor(0, 29);
         display.print(F("Tone:"));
         display.setCursor(54, 29);
-        display.print("Tone");
+        display.print(F("Tone"));
         display.print(notification->tone - AUDIO_NOTIFICATION_TONE_FIRST + 1);
         
         display.setCursor(0, 38);
@@ -5566,7 +5534,7 @@ void handleMainUI()
       {
         drawHeader(extrasMenu[EXTRAS_MENU_TRIM_SETUP]);
         
-        uint8_t axis[4] = {SRC_X1_AXIS, SRC_Y1_AXIS, SRC_X2_AXIS, SRC_Y2_AXIS};
+        uint8_t axis[4] = {SRC_X1, SRC_Y1, SRC_X2, SRC_Y2};
         trim_params_t* trim[4] = {&Model.X1Trim, &Model.Y1Trim, &Model.X2Trim, &Model.Y2Trim};
 
         for(uint8_t i = 0; i < 4; i++)
@@ -5600,7 +5568,6 @@ void handleMainUI()
       
     case SCREEN_FLIGHT_MODES:
       {
-        static uint8_t thisFmdIdx = 0;
         flight_mode_t *fmd = &Model.FlightMode[thisFmdIdx];
         
         if(isEditTextDialog)
@@ -5613,7 +5580,7 @@ void handleMainUI()
         
         //-- draw --
         display.setCursor(8, 9);
-        display.print(F("FMD"));
+        display.print(F("Fmd"));
         display.print(thisFmdIdx + 1);
         display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
         
@@ -6298,8 +6265,7 @@ void handleMainUI()
         display.setCursor(0, 18);
         display.print(F("RF power:"));
         display.setCursor(72, 18);
-        strlcpy_P(txtBuff, rfPowerStr[Sys.rfPower], sizeof(txtBuff));
-        display.print(txtBuff);
+        display.print(findStringInIdStr(enum_RFpower, Sys.rfPower));
 
         changeFocusOnUpDown(2);
         toggleEditModeOnSelectClicked();
@@ -6407,14 +6373,12 @@ void handleMainUI()
           display.setCursor(0, 27);
           display.print(F("Timeout:"));
           display.setCursor(78, 27);
-          strlcpy_P(txtBuff, backlightTimeoutStr[Sys.backlightTimeout], sizeof(txtBuff));
-          display.print(txtBuff);
+          display.print(findStringInIdStr(enum_BacklightTimeout, Sys.backlightTimeout));
           
           display.setCursor(0, 36);
           display.print(F("Wake up:"));
           display.setCursor(78, 36);
-          strlcpy_P(txtBuff, backlightWakeupStr[Sys.backlightWakeup], sizeof(txtBuff));
-          display.print(txtBuff);
+          display.print(findStringInIdStr(enum_BacklightWakeup, Sys.backlightWakeup));
           
           display.setCursor(0, 45);
           display.print(F("Key filter:"));
@@ -6633,49 +6597,31 @@ void handleMainUI()
           isEditMode = false;
           page = (lastScreen == SCREEN_HOME) ? PAGE_AXIS_TYPE : PAGE_START;
         }
-        
-        uint8_t  axis[] = {
-          SRC_X1_AXIS, SRC_Y1_AXIS, SRC_X2_AXIS, SRC_Y2_AXIS,
-          SRC_X3_AXIS, SRC_Y3_AXIS, SRC_X4_AXIS, SRC_Y4_AXIS
-        };
-        
-        uint8_t* axisType[] = {
-          &Sys.x1AxisType, &Sys.y1AxisType, &Sys.x2AxisType, &Sys.y2AxisType,
-          &Sys.x3AxisType, &Sys.y3AxisType, &Sys.x4AxisType, &Sys.y4AxisType
-        };
-        
-        uint8_t* axisDeadzone[] = {
-          &Sys.x1AxisDeadzone, &Sys.y1AxisDeadzone, &Sys.x2AxisDeadzone, &Sys.y2AxisDeadzone,
-          &Sys.x3AxisDeadzone, &Sys.y3AxisDeadzone, &Sys.x4AxisDeadzone, &Sys.y4AxisDeadzone
-        };
-        
-        int16_t  axisIn[] = {
-          x1AxisIn, y1AxisIn, x2AxisIn, y2AxisIn,
-          x3AxisIn, y3AxisIn, x4AxisIn, y4AxisIn
-        };
-        
-        uint8_t numItems = sizeof(axisIn) / sizeof(axisIn[0]);
+
+        uint8_t numItems = NUM_STICK_AXES;
 
         switch(page)
         {
           case PAGE_START:
             {
               display.setCursor(0, 9);
-              display.print(F("Calibration:"));
-              display.setCursor(84, 9);
+              display.print(F("Calibrtn:"));
+              display.setCursor(78, 9);
               display.print(F("[Start]"));
               
               display.setCursor(0, 18);
+              display.print(F("Deadzone:"));
+              display.setCursor(78, 18);
+              display.print(F("[Adjust]"));
+              
+              display.setCursor(0, 27);
               display.print(F("Deflt mode:"));
-              display.setCursor(84, 18);
-              if(Sys.defaultStickMode == STICK_MODE_RTAE) display.print(F("RTAE"));
-              if(Sys.defaultStickMode == STICK_MODE_AERT) display.print(F("AERT"));
-              if(Sys.defaultStickMode == STICK_MODE_REAT) display.print(F("REAT"));
-              if(Sys.defaultStickMode == STICK_MODE_ATRE) display.print(F("ATRE"));
+              display.setCursor(78, 27);
+              display.print(findStringInIdStr(enum_StickMode, Sys.defaultStickMode));
               
-              drawCursor(76, focusedItem * 9);
+              drawCursor(70, focusedItem * 9);
               
-              changeFocusOnUpDown(2);
+              changeFocusOnUpDown(3);
               toggleEditModeOnSelectClicked();
               
               if(focusedItem == 1 && isEditMode)
@@ -6683,7 +6629,12 @@ void handleMainUI()
                 page = PAGE_AXIS_TYPE;
                 isEditMode = false;
               }
-              else if(focusedItem == 2)
+              else if(focusedItem == 2 && isEditMode)
+              {
+                page = PAGE_ADJUST_DEADZONE;
+                isEditMode = false;
+              }
+              else if(focusedItem == 3)
                 Sys.defaultStickMode = incDec(Sys.defaultStickMode, 0, STICK_MODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               
               if(heldButton == KEY_SELECT)
@@ -6720,15 +6671,12 @@ void handleMainUI()
                 
                 display.setCursor(0, ypos);
                 uint8_t idx = item - 1;
-                getSrcName(txtBuff, axis[idx], sizeof(txtBuff));
+                getSrcName(txtBuff, SRC_STICK_AXIS_FIRST + idx, sizeof(txtBuff));
                 display.print(txtBuff);
                 display.print(F(":"));
                 
                 display.setCursor(30, ypos);
-                if(*axisType[idx] == STICK_AXIS_SELF_CENTERING)
-                  display.print(F("Self centering"));
-                else
-                  display.print(F("Non centering"));
+                display.print(findStringInIdStr(enum_StickAxisType, Sys.StickAxis[idx].type));
               }
               
               //Draw scroll bar
@@ -6752,7 +6700,7 @@ void handleMainUI()
               //edit params
               uint8_t idx = focusedItem - 1;
               if(idx < numItems)
-                *axisType[idx] = incDec(*axisType[idx], 0, STICK_AXIS_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+                Sys.StickAxis[idx].type = incDec(Sys.StickAxis[idx].type, 0, STICK_AXIS_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
               
               if(focusedItem == numItems + 1 && isEditMode)
               {
@@ -6813,16 +6761,17 @@ void handleMainUI()
                 if(focusedItem == item)
                   drawCursor(22, ypos);
                 
-                display.setCursor(0, ypos);
                 uint8_t idx = item - 1;
-                getSrcName(txtBuff, axis[idx], sizeof(txtBuff));
+
+                display.setCursor(0, ypos);
+                getSrcName(txtBuff, SRC_STICK_AXIS_FIRST + idx, sizeof(txtBuff));
                 display.print(txtBuff);
                 display.print(F(":"));
                 
                 display.setCursor(30, ypos);
-                if(*axisType[idx] == STICK_AXIS_SELF_CENTERING)
+                if(Sys.StickAxis[idx].type == STICK_AXIS_SELF_CENTERING)
                 {
-                  display.print(*axisDeadzone[idx]);
+                  display.print(Sys.StickAxis[idx].deadzone);
                   display.print(F("%"));
                 }
                 else
@@ -6830,7 +6779,7 @@ void handleMainUI()
                 
                 display.setCursor(66, ypos);
                 display.print(F("("));
-                display.print(axisIn[idx]/5);
+                display.print(stickAxisIn[idx]/5);
                 display.print(F(")"));
               }
               
@@ -6864,8 +6813,8 @@ void handleMainUI()
               
               //edit params
               uint8_t idx = focusedItem - 1;
-              if(idx < numItems && *axisType[idx] == STICK_AXIS_SELF_CENTERING)
-                *axisDeadzone[idx] = incDec(*axisDeadzone[idx], 0, 15, INCDEC_NOWRAP, INCDEC_SLOW);
+              if(idx < numItems && Sys.StickAxis[idx].type == STICK_AXIS_SELF_CENTERING)
+                Sys.StickAxis[idx].deadzone = incDec(Sys.StickAxis[idx].deadzone, 0, 15, INCDEC_NOWRAP, INCDEC_SLOW);
               
               if(focusedItem == numItems + 1 && isEditMode)
               {
@@ -6922,7 +6871,7 @@ void handleMainUI()
 
         //fill list
         uint8_t end = hasNextButton ? 5 : 6;
-        for(uint8_t line = 0; line < end && line < MAX_NUM_PHYSICAL_SWITCHES; line++)
+        for(uint8_t line = 0; line < end && line < NUM_PHYSICAL_SWITCHES; line++)
         {
           uint8_t ypos = 9 + line * 9;
           if(focusedItem == topItem + line)
@@ -6933,13 +6882,11 @@ void handleMainUI()
           display.write(65 + idx);
           display.print(F(":"));
           display.setCursor(72, ypos);
-          if(Sys.swType[idx] == SW_ABSENT) display.print(F("Absent"));
-          if(Sys.swType[idx] == SW_2POS) display.print(F("2POS"));
-          if(Sys.swType[idx] == SW_3POS) display.print(F("3POS"));
+          display.print(findStringInIdStr(enum_SwitchType, Sys.swType[idx]));
         }
         
         //Draw scroll bar
-        drawScrollBar(127, 8, MAX_NUM_PHYSICAL_SWITCHES, topItem, end, end * 9);
+        drawScrollBar(127, 8, NUM_PHYSICAL_SWITCHES, topItem, end, end * 9);
         
         //show the 'next' button
         if(hasNextButton)
@@ -6947,26 +6894,26 @@ void handleMainUI()
           drawDottedHLine(0, 54, 128, BLACK, WHITE);
           display.setCursor(90, 56);
           display.print(F("[Next]"));
-          if(focusedItem == MAX_NUM_PHYSICAL_SWITCHES + 1)
+          if(focusedItem == NUM_PHYSICAL_SWITCHES + 1)
             drawCursor(82, 56);
         }
         
         //Navigate
-        changeFocusOnUpDown(hasNextButton ? MAX_NUM_PHYSICAL_SWITCHES + 1 : MAX_NUM_PHYSICAL_SWITCHES);
+        changeFocusOnUpDown(hasNextButton ? NUM_PHYSICAL_SWITCHES + 1 : NUM_PHYSICAL_SWITCHES);
         toggleEditModeOnSelectClicked();
         if(focusedItem < topItem)
           topItem = focusedItem;
-        while(focusedItem >= topItem + end && focusedItem < MAX_NUM_PHYSICAL_SWITCHES + 1)
+        while(focusedItem >= topItem + end && focusedItem < NUM_PHYSICAL_SWITCHES + 1)
           topItem++;
         
         //Edit items
         uint8_t idx = focusedItem - 1;
-        if(idx < MAX_NUM_PHYSICAL_SWITCHES)
+        if(idx < NUM_PHYSICAL_SWITCHES)
           Sys.swType[idx] = incDec(Sys.swType[idx], 0, SW_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
 
         //exit
         if((heldButton == KEY_SELECT && !hasNextButton)
-           || (focusedItem == MAX_NUM_PHYSICAL_SWITCHES + 1 && clickedButton == KEY_SELECT))
+           || (focusedItem == NUM_PHYSICAL_SWITCHES + 1 && clickedButton == KEY_SELECT))
         {
           viewInitialised = false;
           eeSaveSysConfig();
@@ -7139,7 +7086,7 @@ void handleMainUI()
         else if(focusedItem == 3 && Sys.mixerTemplatesEnabled) 
         { 
           //there are 4P4 = 4! = 24 possible arrangements. So our range is 0 to 23.  
-          Sys.defaultChannelOrder = incDec(Sys.defaultChannelOrder, 0, 23, INCDEC_NOWRAP, INCDEC_SLOW);
+          Sys.defaultChannelOrder = incDec(Sys.defaultChannelOrder, 0, 23, INCDEC_WRAP, INCDEC_SLOW);
         }
 
         //exit
@@ -8394,6 +8341,24 @@ void handleMainUI()
 }
 
 //============================ Helpers =============================================================
+
+void resetPages()
+{
+  thisMixIdx = 0;
+  thisChIdx = 0;
+  thisCrvIdx = 0;
+  thisCrvPt = 0;
+  thisFgenIdx = 0;
+  thisLsIdx = 0;
+  thisTimerIdx = 0;
+  thisCounterIdx = 0;
+  thisNotificationIdx = 0;
+  thisFmdIdx = 0;
+  thisTelemIdx = 0;
+  thisWidgetIdx = 0;
+}
+
+//---------------------------------------------------------------------------------------------------
 
 void toggleEditModeOnSelectClicked()
 {

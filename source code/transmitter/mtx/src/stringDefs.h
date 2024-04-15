@@ -1,10 +1,8 @@
-#ifndef _MODELSTRINGS_H_
-#define _MODELSTRINGS_H_
+#ifndef _STRING_DEFS_H_
+#define _STRING_DEFS_H_
 
 #define MAX_STR_SIZE 21  //including null terminator
 
-// #define MATCH_P(str1, str2) (strcmp_P((str1), (str2)) == 0)
-// #define MATCH(str1, str2)   (strcmp((str1), (str2)) == 0)
 #define MATCH_P(str1, str2) (strcasecmp_P((str1), (str2)) == 0)
 #define MATCH(str1, str2)   (strcasecmp((str1), (str2)) == 0)
 
@@ -18,9 +16,23 @@ template <typename T> void findIdInIdStr(const id_string_t *idStr_P, const char 
 
 extern bool idNotFoundInIdStr; //for basic error detection only
 
+void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff);
+void getControlSwitchName(char* buff, uint8_t idx, uint8_t lenBuff);
+void getControlSwitchName_Clean(char* buff, uint8_t idx, uint8_t lenBuff);
+
 //---- Strings for the enumerations ----
 //Arrays of structs in PROGMEM
 
+//system related
+extern const id_string_t enum_RFpower[] PROGMEM;
+extern const id_string_t enum_SwitchType[] PROGMEM;
+extern const id_string_t enum_BacklightWakeup[] PROGMEM;
+extern const id_string_t enum_BacklightTimeout[] PROGMEM;
+extern const id_string_t enum_StickMode[] PROGMEM;
+extern const id_string_t enum_StickAxisType[] PROGMEM;
+extern const id_string_t enum_StickAxisName[] PROGMEM;
+
+//model related
 extern const id_string_t enum_ModelType[] PROGMEM;
 extern const id_string_t enum_TrimState[] PROGMEM;
 extern const id_string_t enum_FuncgenWaveform[] PROGMEM;
@@ -34,7 +46,6 @@ extern const id_string_t enum_MixerCurveType_Func[] PROGMEM;
 extern const id_string_t enum_LogicalSwitch_Func[] PROGMEM;
 extern const id_string_t enum_DirectionOfChange[] PROGMEM;
 extern const id_string_t enum_ChannelFailsafe[] PROGMEM;
-extern const id_string_t enum_ChannelCurve[] PROGMEM;
 extern const id_string_t enum_TelemetryAlarmCondition[] PROGMEM;
 extern const id_string_t enum_WidgetType[] PROGMEM;
 extern const id_string_t enum_WidgetSource[] PROGMEM;
@@ -156,7 +167,6 @@ extern const char key_SwitchWarn[] PROGMEM;
 
 extern const char key_Channel[] PROGMEM;
 // extern const char key_Name[] PROGMEM;
-extern const char key_Curve[] PROGMEM;
 extern const char key_Reverse[] PROGMEM;
 extern const char key_Subtrim[] PROGMEM;
 extern const char key_OverrideSwitch[] PROGMEM;

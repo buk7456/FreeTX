@@ -1,18 +1,81 @@
 #include "Arduino.h"
 
-#include "../common.h"
-#include "modelStrings.h"
+#include "common.h"
+#include "stringDefs.h"
 
 bool idNotFoundInIdStr = false;
 
 //---- Strings for the enumerations ----
 //Arrays of structs in PROGMEM
 
+//System related
+
+const id_string_t enum_RFpower[] PROGMEM = {
+  {RF_POWER_LOW, "Low"},
+  {RF_POWER_MEDIUM, "Medium"},
+  {RF_POWER_MAX, "Maximum"},
+  {0, ""} //indicates end so we omit passing sizeof(enum_ModelType)/sizeof(enum_ModelType[0])
+};
+
+const id_string_t enum_SwitchType[] PROGMEM = {
+  {SW_ABSENT, "Absent"},
+  {SW_2POS, "2pos"},
+  {SW_3POS, "3pos"},
+  {0, ""}
+};
+
+const id_string_t enum_BacklightWakeup[] PROGMEM = {
+  {BACKLIGHT_WAKEUP_KEYS, "Keys"},
+  {BACKLIGHT_WAKEUP_ACTIVITY, "Activity"},
+  {0, ""}
+};
+
+const id_string_t enum_BacklightTimeout[] PROGMEM = {
+  {BACKLIGHT_TIMEOUT_5SEC, "5s"},
+  {BACKLIGHT_TIMEOUT_15SEC, "15s"},
+  {BACKLIGHT_TIMEOUT_1MIN, "1min"},
+  {BACKLIGHT_TIMEOUT_5MIN, "5min"},
+  {BACKLIGHT_TIMEOUT_15MIN, "15min"},
+  {BACKLIGHT_TIMEOUT_NEVER, "Never"},
+  {0, ""}
+};
+
+const id_string_t enum_StickMode[] PROGMEM = {
+  {STICK_MODE_RTAE, "RTAE"},
+  {STICK_MODE_AERT, "AERT"},
+  {STICK_MODE_REAT, "REAT"},
+  {STICK_MODE_ATRE, "ATRE"},
+  {0, ""}
+};
+
+const id_string_t enum_StickAxisType[] PROGMEM = {
+  {STICK_AXIS_ABSENT, "Absent"},
+  {STICK_AXIS_SELF_CENTERING, "Self-centering"},
+  {STICK_AXIS_NON_CENTERING, "Non-centering"},
+  {0, ""}
+};
+
+const id_string_t enum_StickAxisName[] PROGMEM = {
+  {SRC_X1, "X1"},
+  {SRC_Y1, "Y1"},
+  {SRC_Z1, "Z1"},
+  {SRC_X2, "X2"},
+  {SRC_Y2, "Y2"},
+  {SRC_Z2, "Z2"},
+  {SRC_X3, "X3"},
+  {SRC_Y3, "Y3"},
+  {SRC_X4, "X4"},
+  {SRC_Y4, "Y4"},
+  {0, ""}
+};
+
+//Model related
+
 const id_string_t enum_ModelType[] PROGMEM = {
   {MODEL_TYPE_AIRPLANE, "Airplane"},
   {MODEL_TYPE_MULTICOPTER, "Multicopter"},
   {MODEL_TYPE_OTHER, "Other"},
-  {0, ""} //indicates end so we omit passing sizeof(enum_ModelType)/sizeof(enum_ModelType[0])
+  {0, ""} 
 };
 
 const id_string_t enum_TrimState[] PROGMEM = {
@@ -119,11 +182,6 @@ const id_string_t enum_DirectionOfChange[] PROGMEM = {
 const id_string_t enum_ChannelFailsafe[] PROGMEM = {
   {-102, "Hold"},
   {-101, "NoPulse"},
-  {0, ""}
-};
-
-const id_string_t enum_ChannelCurve[] PROGMEM = {
-  {-1, "None"},
   {0, ""}
 };
 
@@ -286,7 +344,6 @@ const char key_SwitchWarn[] PROGMEM = "SwitchWarn";
 
 const char key_Channel[] PROGMEM = "Channel";
 // const char key_Name[] PROGMEM = "Name";
-const char key_Curve[] PROGMEM = "Curve";
 const char key_Reverse[] PROGMEM = "Reverse";
 const char key_Subtrim[] PROGMEM = "Subtrim";
 const char key_OverrideSwitch[] PROGMEM = "OverrideSwitch";
@@ -371,4 +428,156 @@ template void findIdInIdStr<uint8_t>(const id_string_t *idStr_P, const char *sea
 template void findIdInIdStr<int8_t>(const id_string_t *idStr_P, const char *searchStr, int8_t&);
 template void findIdInIdStr<uint16_t>(const id_string_t *idStr_P, const char *searchStr, uint16_t&);
 template void findIdInIdStr<int16_t>(const id_string_t *idStr_P, const char *searchStr, int16_t&);
+
+//=================================================================================================
+
+void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff)
+{
+  switch(idx)
+  {
+    case SRC_NONE:    strlcpy_P(buff, PSTR("None"), lenBuff); break;
+    case SRC_KNOB_A:  strlcpy_P(buff, PSTR("KnobA"), lenBuff); break;
+    case SRC_KNOB_B:  strlcpy_P(buff, PSTR("KnobB"), lenBuff); break;
+    case SRC_100PERC: strlcpy_P(buff, PSTR("Max"), lenBuff); break;
+    case SRC_THR: strlcpy_P(buff, PSTR("Thr"), lenBuff); break;
+    case SRC_AIL: strlcpy_P(buff, Model.type == MODEL_TYPE_MULTICOPTER ? PSTR("Roll") : PSTR("Ail"), lenBuff); break;
+    case SRC_ELE: strlcpy_P(buff, Model.type == MODEL_TYPE_MULTICOPTER ? PSTR("Pitch") : PSTR("Ele"), lenBuff); break;
+    case SRC_RUD: strlcpy_P(buff, Model.type == MODEL_TYPE_MULTICOPTER ? PSTR("Yaw") : PSTR("Rud"), lenBuff); break;
+    default:
+    {
+      if(idx >= SRC_STICK_AXIS_FIRST && idx <= SRC_STICK_AXIS_LAST)
+      {
+        strlcpy(buff, findStringInIdStr(enum_StickAxisName, idx), lenBuff);
+        break;
+      }
+
+      char suffix[5]; //large enough to hold the range we want to convert
+      memset(suffix, 0, sizeof(suffix));
+      if(idx >= SRC_SW_PHYSICAL_FIRST && idx <= SRC_SW_PHYSICAL_LAST)
+      {
+        strlcpy_P(buff, PSTR("Sw"), lenBuff);
+        suffix[0] = 'A' + (idx - SRC_SW_PHYSICAL_FIRST);
+        strlcat(buff, suffix, lenBuff);
+      }
+      else if(idx >= SRC_FUNCGEN_FIRST && idx <= SRC_FUNCGEN_LAST)
+      {
+        strlcpy_P(buff, PSTR("Fgen"), lenBuff);
+        itoa((idx - SRC_FUNCGEN_FIRST) + 1, suffix, 10);
+        strlcat(buff, suffix, lenBuff);
+      }
+      else if(idx >= SRC_SW_LOGICAL_FIRST && idx <= SRC_SW_LOGICAL_LAST)
+      {
+        strlcpy_P(buff, PSTR("L"), lenBuff);
+        itoa((idx - SRC_SW_LOGICAL_FIRST) + 1, suffix, 10);
+        strlcat(buff, suffix, lenBuff);
+      }
+      else if(idx >= SRC_CH1 && idx < SRC_CH1 + NUM_RC_CHANNELS)
+      {
+        strlcpy_P(buff, PSTR("Ch"), lenBuff);
+        itoa((idx - SRC_CH1) + 1, suffix, 10);
+        strlcat(buff, suffix, lenBuff);
+      }
+      else if(idx >= SRC_VIRTUAL_FIRST && idx <= SRC_VIRTUAL_LAST)
+      {
+        strlcpy_P(buff, PSTR("Virt"), lenBuff);
+        itoa((idx - SRC_VIRTUAL_FIRST) + 1, suffix, 10);
+        strlcat(buff, suffix, lenBuff);
+      }
+      else if(idx < MIXSOURCES_COUNT + NUM_COUNTERS) //counters as sources
+      {
+        strlcpy_P(buff, PSTR("Counter"), lenBuff);
+        itoa((idx - MIXSOURCES_COUNT) + 1, suffix, 10);
+        strlcat(buff, suffix, lenBuff);
+      }
+      else if(idx < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timers as sources
+      {
+        strlcpy_P(buff, PSTR("Timer"), lenBuff);
+        itoa((idx - (MIXSOURCES_COUNT + NUM_COUNTERS)) + 1, suffix, 10);
+        strlcat(buff, suffix, lenBuff);
+      }
+      else //telemetry as sources
+      {
+        strlcpy(buff, Model.Telemetry[idx - (MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS)].name, lenBuff);
+      }
+    }
+  }
+}
+
+//=================================================================================================
+
+void getControlSwitchName(char* buff, uint8_t idx, uint8_t lenBuff)
+{
+  if(idx == CTRL_SW_NONE)
+  {
+    strlcpy_P(buff, PSTR("--"), lenBuff);
+    return;
+  }
+  
+  char suffix[4]; //large enough to hold the range we want to convert
+  memset(suffix, 0, sizeof(suffix));
+  if(idx >= CTRL_SW_PHYSICAL_FIRST && idx <= CTRL_SW_PHYSICAL_LAST)
+  {
+    bool isInvert = ((idx - CTRL_SW_PHYSICAL_FIRST) % 6) >= 3;
+    strlcpy_P(buff, isInvert ? PSTR("!Sw") : PSTR("Sw"), lenBuff);
+    suffix[0] = 'A' + ((idx - CTRL_SW_PHYSICAL_FIRST) / 6);
+    uint8_t pos = (idx - CTRL_SW_PHYSICAL_FIRST) % 3;
+    if(pos == 0) suffix[1] = 0x18; //up glyph
+    if(pos == 1) suffix[1] = '-';  //mid glyph
+    if(pos == 2) suffix[1] = 0x19; //down glyph
+    strlcat(buff, suffix, lenBuff);
+  }
+  else if(idx >= CTRL_SW_LOGICAL_FIRST && idx <= CTRL_SW_LOGICAL_LAST)
+  {
+    strlcpy_P(buff, PSTR("L"), lenBuff);
+    itoa((idx - CTRL_SW_LOGICAL_FIRST) + 1, suffix, 10); 
+    strlcat(buff, suffix, lenBuff);
+  }
+  else if(idx >= CTRL_SW_LOGICAL_FIRST_INVERT && idx <= CTRL_SW_LOGICAL_LAST_INVERT)
+  {
+    strlcpy_P(buff, PSTR("!L"), lenBuff);
+    itoa((idx - CTRL_SW_LOGICAL_FIRST_INVERT) + 1, suffix, 10); 
+    strlcat(buff, suffix, lenBuff);
+  }
+  else //flight modes as control switches
+  {
+    uint8_t i = idx - CTRL_SW_COUNT;
+    if(i < NUM_FLIGHT_MODES)
+      strlcpy_P(buff, PSTR("FMD"), lenBuff);
+    else
+    {
+      strlcpy_P(buff, PSTR("!FMD"), lenBuff);
+      i -= NUM_FLIGHT_MODES;
+    }
+    itoa(i + 1, suffix, 10);
+    strlcat(buff, suffix, lenBuff);
+  }
+}
+
+//=================================================================================================
+
+void getControlSwitchName_Clean(char* buff, uint8_t idx, uint8_t lenBuff)
+{
+  //This function substitutes non printable ascii characters and the "--" 
+  //in the switch name so we can write it to a human readable text file format
+  
+  if(idx == CTRL_SW_NONE)
+  {
+    strlcpy_P(buff, PSTR("None"), lenBuff);
+    return;
+  }
+  
+  getControlSwitchName(buff, idx, lenBuff);
+  
+  if(idx >= CTRL_SW_PHYSICAL_FIRST && idx <= CTRL_SW_PHYSICAL_LAST)
+  {
+    //search and replace
+    for(uint8_t i = 0; i < lenBuff - 1; i++)
+    {
+      uint8_t c = *(buff + i);
+      if(c == 0x18){ strlcpy_P(buff + i, PSTR("_Up"), lenBuff - i); break; }
+      if(c == '-') { strlcpy_P(buff + i, PSTR("_Mid"), lenBuff - i); break; }
+      if(c == 0x19){ strlcpy_P(buff + i, PSTR("_Down"), lenBuff - i); break; }
+    }
+  }
+}
 

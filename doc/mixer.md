@@ -222,7 +222,7 @@ The extend sequence is doors open, gear is lowered, doors close.
 <br>The retract sequence is doors open, gear retracts, doors close.
 <br>We can achieve the above using custom curves in combination with a slowed switch.
 
-##### Servo version
+#### Servo version
 Set up two custom curves as follows.
 ```txt
 Curve1
@@ -239,7 +239,7 @@ Then in the mixer, assuming gear door servos on Ch7, gear servos on Ch8, and usi
 2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)          //Apply curve1 for the door sequence
 3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)          //Apply curve2 for the gear sequence
 ```
-##### Retract actuator version
+#### Retract actuator version
 Most electric retract actuators require an on/off control signal, so this example is designed to work with these. 
 <br>Set up three custom curves as follows.
 ```txt

@@ -99,22 +99,15 @@ sys_params_t   Sys;
 model_params_t Model; 
 
 int16_t  channelOut[NUM_RC_CHANNELS];  
- 
-int16_t  x1AxisIn;
-int16_t  y1AxisIn; 
-int16_t  x2AxisIn;
-int16_t  y2AxisIn;
-int16_t  x3AxisIn;
-int16_t  y3AxisIn; 
-int16_t  x4AxisIn;
-int16_t  y4AxisIn;
 
+int16_t stickAxisIn[NUM_STICK_AXES];
+ 
 int16_t  knobAIn;
 int16_t  knobBIn;
 
 bool     isCalibratingSticks = false;
 
-uint8_t  swState[MAX_NUM_PHYSICAL_SWITCHES];
+uint8_t  swState[NUM_PHYSICAL_SWITCHES];
 
 uint8_t  activeFmdIdx = 0;
 
@@ -177,41 +170,31 @@ uint8_t screenshotSwtch = CTRL_SW_NONE;
 void resetSystemParams()
 {
   Sys.activeModelIdx = 0;
-  
-  Sys.x1AxisMin = 0, Sys.x1AxisCenter = 512, Sys.x1AxisMax = 1023;
-  Sys.y1AxisMin = 0, Sys.y1AxisCenter = 512, Sys.y1AxisMax = 1023;
-  Sys.x2AxisMin = 0, Sys.x2AxisCenter = 512, Sys.x2AxisMax = 1023;
-  Sys.y2AxisMin = 0, Sys.y2AxisCenter = 512, Sys.y2AxisMax = 1023;
-  Sys.x3AxisMin = 0, Sys.x3AxisCenter = 512, Sys.x3AxisMax = 1023;
-  Sys.y3AxisMin = 0, Sys.y3AxisCenter = 512, Sys.y3AxisMax = 1023;
-  Sys.x4AxisMin = 0, Sys.x4AxisCenter = 512, Sys.x4AxisMax = 1023;
-  Sys.y4AxisMin = 0, Sys.y4AxisCenter = 512, Sys.y4AxisMax = 1023;
-  
-  Sys.x1AxisType = STICK_AXIS_SELF_CENTERING;
-  Sys.y1AxisType = STICK_AXIS_NON_CENTERING;
-  Sys.x2AxisType = STICK_AXIS_SELF_CENTERING;
-  Sys.y2AxisType = STICK_AXIS_SELF_CENTERING;
-  Sys.x3AxisType = STICK_AXIS_SELF_CENTERING;
-  Sys.y3AxisType = STICK_AXIS_SELF_CENTERING;
-  Sys.x4AxisType = STICK_AXIS_SELF_CENTERING;
-  Sys.y4AxisType = STICK_AXIS_SELF_CENTERING;
 
-  Sys.x1AxisDeadzone = 3;
-  Sys.y1AxisDeadzone = 3;
-  Sys.x2AxisDeadzone = 3;
-  Sys.y2AxisDeadzone = 3;
-  Sys.x3AxisDeadzone = 3;
-  Sys.y3AxisDeadzone = 3;
-  Sys.x4AxisDeadzone = 3;
-  Sys.y4AxisDeadzone = 3;
-  
+  for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
+  {
+    if(SRC_STICK_AXIS_FIRST + i == SRC_Y1)
+      Sys.StickAxis[i].type = STICK_AXIS_NON_CENTERING;
+    else if(SRC_STICK_AXIS_FIRST + i == SRC_Z1)
+      Sys.StickAxis[i].type = STICK_AXIS_ABSENT;
+    else if(SRC_STICK_AXIS_FIRST + i == SRC_Z2)
+      Sys.StickAxis[i].type = STICK_AXIS_ABSENT;
+    else
+      Sys.StickAxis[i].type = STICK_AXIS_SELF_CENTERING;
+
+    Sys.StickAxis[i].minVal = 0;
+    Sys.StickAxis[i].centerVal = 512;
+    Sys.StickAxis[i].maxVal = 1023;
+    Sys.StickAxis[i].deadzone = 3;
+  }
+
   Sys.defaultStickMode = STICK_MODE_RTAE;
 
   Sys.battVoltsMin = 7200; 
   Sys.battVoltsMax = 8000; 
   Sys.battVfactor  = 1000; 
   
-  for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++) 
+  for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++) 
   {
     Sys.swType[i] = (i%4 == 2) ? SW_3POS : SW_2POS;
   }
@@ -239,7 +222,7 @@ void resetSystemParams()
   
   Sys.showMenuIcons = true;
   Sys.rememberMenuPosition = true;
-  Sys.useRoundRect = false;
+  Sys.useRoundRect = true;
   Sys.animationsEnabled = true;
   Sys.autohideTrims = false;
   Sys.showSplashScreen = true;
@@ -274,31 +257,31 @@ void resetModelParams()
   //--- raw sources for rud, thr, ail, ele inputs ---
   if(Sys.defaultStickMode == STICK_MODE_RTAE)
   {
-    Model.rudSrcRaw = SRC_X1_AXIS;
-    Model.thrSrcRaw = SRC_Y1_AXIS;
-    Model.ailSrcRaw = SRC_X2_AXIS;
-    Model.eleSrcRaw = SRC_Y2_AXIS;
+    Model.rudSrcRaw = SRC_X1;
+    Model.thrSrcRaw = SRC_Y1;
+    Model.ailSrcRaw = SRC_X2;
+    Model.eleSrcRaw = SRC_Y2;
   }
   if(Sys.defaultStickMode == STICK_MODE_AERT)
   {
-    Model.ailSrcRaw = SRC_X1_AXIS;
-    Model.eleSrcRaw = SRC_Y1_AXIS;
-    Model.rudSrcRaw = SRC_X2_AXIS;
-    Model.thrSrcRaw = SRC_Y2_AXIS;
+    Model.ailSrcRaw = SRC_X1;
+    Model.eleSrcRaw = SRC_Y1;
+    Model.rudSrcRaw = SRC_X2;
+    Model.thrSrcRaw = SRC_Y2;
   }
   if(Sys.defaultStickMode == STICK_MODE_REAT)
   {
-    Model.rudSrcRaw = SRC_X1_AXIS;
-    Model.eleSrcRaw = SRC_Y1_AXIS;
-    Model.ailSrcRaw = SRC_X2_AXIS;
-    Model.thrSrcRaw = SRC_Y2_AXIS;
+    Model.rudSrcRaw = SRC_X1;
+    Model.eleSrcRaw = SRC_Y1;
+    Model.ailSrcRaw = SRC_X2;
+    Model.thrSrcRaw = SRC_Y2;
   }
   if(Sys.defaultStickMode == STICK_MODE_ATRE)
   {
-    Model.ailSrcRaw = SRC_X1_AXIS;
-    Model.thrSrcRaw = SRC_Y1_AXIS;
-    Model.rudSrcRaw = SRC_X2_AXIS;
-    Model.eleSrcRaw = SRC_Y2_AXIS;
+    Model.ailSrcRaw = SRC_X1;
+    Model.thrSrcRaw = SRC_Y1;
+    Model.rudSrcRaw = SRC_X2;
+    Model.eleSrcRaw = SRC_Y2;
   }
 
   //--- rates and expo ---
@@ -343,7 +326,6 @@ void resetModelParams()
   for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
   {
     Model.Channel[i].name[0] = '\0';
-    Model.Channel[i].curve = -1;
     Model.Channel[i].reverse = false;
     Model.Channel[i].subtrim = 0;
     Model.Channel[i].overrideSwitch = CTRL_SW_NONE;
@@ -375,7 +357,7 @@ void resetModelParams()
   
   //--- safety checks ---
   Model.checkThrottle = true;
-  for(uint8_t i = 0; i < MAX_NUM_PHYSICAL_SWITCHES; i++)
+  for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
     Model.switchWarn[i] = 0; //Up position
   
   //--- notifications ---
@@ -653,12 +635,6 @@ bool verifyModelData()
     if(Model.Mixer[i].curveType >= MIX_CURVE_TYPE_COUNT)  isSane = false;
     if(Model.Mixer[i].operation >= MIX_OPERATOR_COUNT)  isSane = false;
   }
-  
-  for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-  {
-    if(Model.Channel[i].curve != -1 && Model.Channel[i].curve >= NUM_CUSTOM_CURVES)
-      isSane = false;
-  }
 
   for(uint8_t i = 0; i < NUM_CUSTOM_CURVES; i++)
   {
@@ -744,158 +720,3 @@ void trimWhiteSpace(char* buff, uint8_t lenBuff)
     buff[k++] = buff[i++];
   buff[k] = '\0';  //add a null terminator
 }
-
-//--------------------------------------------------------------------------------------------------
-
-void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff)
-{
-  switch(idx)
-  {
-    case SRC_NONE:    strlcpy_P(buff, PSTR("None"), lenBuff); break;
-    case SRC_X1_AXIS: strlcpy_P(buff, PSTR("X1"), lenBuff); break;
-    case SRC_Y1_AXIS: strlcpy_P(buff, PSTR("Y1"), lenBuff); break;
-    case SRC_X2_AXIS: strlcpy_P(buff, PSTR("X2"), lenBuff); break;
-    case SRC_Y2_AXIS: strlcpy_P(buff, PSTR("Y2"), lenBuff); break;
-    case SRC_X3_AXIS: strlcpy_P(buff, PSTR("X3"), lenBuff); break;
-    case SRC_Y3_AXIS: strlcpy_P(buff, PSTR("Y3"), lenBuff); break;
-    case SRC_X4_AXIS: strlcpy_P(buff, PSTR("X4"), lenBuff); break;
-    case SRC_Y4_AXIS: strlcpy_P(buff, PSTR("Y4"), lenBuff); break;
-    case SRC_KNOB_A:  strlcpy_P(buff, PSTR("KnobA"), lenBuff); break;
-    case SRC_KNOB_B:  strlcpy_P(buff, PSTR("KnobB"), lenBuff); break;
-    case SRC_100PERC: strlcpy_P(buff, PSTR("Max"), lenBuff); break;
-    case SRC_THR: strlcpy_P(buff, PSTR("Thr"), lenBuff); break;
-    case SRC_AIL: strlcpy_P(buff, Model.type == MODEL_TYPE_MULTICOPTER ? PSTR("Roll") : PSTR("Ail"), lenBuff); break;
-    case SRC_ELE: strlcpy_P(buff, Model.type == MODEL_TYPE_MULTICOPTER ? PSTR("Pitch") : PSTR("Ele"), lenBuff); break;
-    case SRC_RUD: strlcpy_P(buff, Model.type == MODEL_TYPE_MULTICOPTER ? PSTR("Yaw") : PSTR("Rud"), lenBuff); break;
-    default:
-    {
-      char suffix[5]; //large enough to hold the range we want to convert
-      memset(suffix, 0, sizeof(suffix));
-      if(idx >= SRC_SW_PHYSICAL_FIRST && idx <= SRC_SW_PHYSICAL_LAST)
-      {
-        strlcpy_P(buff, PSTR("Sw"), lenBuff);
-        suffix[0] = 'A' + (idx - SRC_SW_PHYSICAL_FIRST);
-        strlcat(buff, suffix, lenBuff);
-      }
-      else if(idx >= SRC_FUNCGEN_FIRST && idx <= SRC_FUNCGEN_LAST)
-      {
-        strlcpy_P(buff, PSTR("Fgen"), lenBuff);
-        itoa((idx - SRC_FUNCGEN_FIRST) + 1, suffix, 10);
-        strlcat(buff, suffix, lenBuff);
-      }
-      else if(idx >= SRC_SW_LOGICAL_FIRST && idx <= SRC_SW_LOGICAL_LAST)
-      {
-        strlcpy_P(buff, PSTR("L"), lenBuff);
-        itoa((idx - SRC_SW_LOGICAL_FIRST) + 1, suffix, 10);
-        strlcat(buff, suffix, lenBuff);
-      }
-      else if(idx >= SRC_CH1 && idx < SRC_CH1 + NUM_RC_CHANNELS)
-      {
-        strlcpy_P(buff, PSTR("Ch"), lenBuff);
-        itoa((idx - SRC_CH1) + 1, suffix, 10);
-        strlcat(buff, suffix, lenBuff);
-      }
-      else if(idx >= SRC_VIRTUAL_FIRST && idx <= SRC_VIRTUAL_LAST)
-      {
-        strlcpy_P(buff, PSTR("Virt"), lenBuff);
-        itoa((idx - SRC_VIRTUAL_FIRST) + 1, suffix, 10);
-        strlcat(buff, suffix, lenBuff);
-      }
-      else if(idx < MIXSOURCES_COUNT + NUM_COUNTERS) //counters as sources
-      {
-        strlcpy_P(buff, PSTR("Counter"), lenBuff);
-        itoa((idx - MIXSOURCES_COUNT) + 1, suffix, 10);
-        strlcat(buff, suffix, lenBuff);
-      }
-      else if(idx < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timers as sources
-      {
-        strlcpy_P(buff, PSTR("Timer"), lenBuff);
-        itoa((idx - (MIXSOURCES_COUNT + NUM_COUNTERS)) + 1, suffix, 10);
-        strlcat(buff, suffix, lenBuff);
-      }
-      else //telemetry as sources
-      {
-        strlcpy(buff, Model.Telemetry[idx - (MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS)].name, lenBuff);
-      }
-    }
-  }
-}
-
-//--------------------------------------------------------------------------------------------------
-
-void getControlSwitchName(char* buff, uint8_t idx, uint8_t lenBuff)
-{
-  if(idx == CTRL_SW_NONE)
-  {
-    strlcpy_P(buff, PSTR("--"), lenBuff);
-    return;
-  }
-  
-  char suffix[4]; //large enough to hold the range we want to convert
-  memset(suffix, 0, sizeof(suffix));
-  if(idx >= CTRL_SW_PHYSICAL_FIRST && idx <= CTRL_SW_PHYSICAL_LAST)
-  {
-    bool isInvert = ((idx - CTRL_SW_PHYSICAL_FIRST) % 6) >= 3;
-    strlcpy_P(buff, isInvert ? PSTR("!Sw") : PSTR("Sw"), lenBuff);
-    suffix[0] = 'A' + ((idx - CTRL_SW_PHYSICAL_FIRST) / 6);
-    uint8_t pos = (idx - CTRL_SW_PHYSICAL_FIRST) % 3;
-    if(pos == 0) suffix[1] = 0x18; //up glyph
-    if(pos == 1) suffix[1] = '-';  //mid glyph
-    if(pos == 2) suffix[1] = 0x19; //down glyph
-    strlcat(buff, suffix, lenBuff);
-  }
-  else if(idx >= CTRL_SW_LOGICAL_FIRST && idx <= CTRL_SW_LOGICAL_LAST)
-  {
-    strlcpy_P(buff, PSTR("L"), lenBuff);
-    itoa((idx - CTRL_SW_LOGICAL_FIRST) + 1, suffix, 10); 
-    strlcat(buff, suffix, lenBuff);
-  }
-  else if(idx >= CTRL_SW_LOGICAL_FIRST_INVERT && idx <= CTRL_SW_LOGICAL_LAST_INVERT)
-  {
-    strlcpy_P(buff, PSTR("!L"), lenBuff);
-    itoa((idx - CTRL_SW_LOGICAL_FIRST_INVERT) + 1, suffix, 10); 
-    strlcat(buff, suffix, lenBuff);
-  }
-  else //flight modes as control switches
-  {
-    uint8_t i = idx - CTRL_SW_COUNT;
-    if(i < NUM_FLIGHT_MODES)
-      strlcpy_P(buff, PSTR("FMD"), lenBuff);
-    else
-    {
-      strlcpy_P(buff, PSTR("!FMD"), lenBuff);
-      i -= NUM_FLIGHT_MODES;
-    }
-    itoa(i + 1, suffix, 10);
-    strlcat(buff, suffix, lenBuff);
-  }
-}
-
-//--------------------------------------------------------------------------------------------------
-
-void getControlSwitchName_Clean(char* buff, uint8_t idx, uint8_t lenBuff)
-{
-  //This function substitutes non printable ascii characters and the "--" 
-  //in the switch name so we can write it to a human readable text file format
-  
-  if(idx == CTRL_SW_NONE)
-  {
-    strlcpy_P(buff, PSTR("None"), lenBuff);
-    return;
-  }
-  
-  getControlSwitchName(buff, idx, lenBuff);
-  
-  if(idx >= CTRL_SW_PHYSICAL_FIRST && idx <= CTRL_SW_PHYSICAL_LAST)
-  {
-    //search and replace
-    for(uint8_t i = 0; i < lenBuff - 1; i++)
-    {
-      uint8_t c = *(buff + i);
-      if(c == 0x18){ strlcpy_P(buff + i, PSTR("_Up"), lenBuff - i); break; }
-      if(c == '-') { strlcpy_P(buff + i, PSTR("_Mid"), lenBuff - i); break; }
-      if(c == 0x19){ strlcpy_P(buff + i, PSTR("_Down"), lenBuff - i); break; }
-    }
-  }
-}
-
