@@ -4,7 +4,7 @@
 
 #include "../../config.h"
 #include "../common.h"
-#include "modelStrings.h"
+#include "../stringDefs.h"
 #include "modelExport.h"
 
 //----------------------------------- helpers ------------------------------------------------------
@@ -129,7 +129,7 @@ void exportModelData(File& file)
   if((Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER))
     writeKeyValue_bool(file, 0, key_CheckThrottle, Model.checkThrottle);
   writeKeyValue_Char(file, 0, key_SwitchWarn, NULL);
-  for(uint8_t idx = 0; idx < MAX_NUM_PHYSICAL_SWITCHES; idx++)
+  for(uint8_t idx = 0; idx < NUM_PHYSICAL_SWITCHES; idx++)
   {
     printIndention_helper(file, 1);
     getSrcName(tempBuff, SRC_SW_PHYSICAL_FIRST + idx, sizeof(tempBuff));
@@ -485,15 +485,7 @@ void exportModelData(File& file)
     writeKeyValue_Char(file, 0, key_Channel, NULL);
     writeKeyValue_S32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Name, ch->name);
-    if(ch->curve == -1)
-      writeKeyValue_Char(file, 1, key_Curve, findStringInIdStr(enum_ChannelCurve, ch->curve));
-    else
-    {
-      writeKey_helper(file, 1, key_Curve);
-      file.print(F("Crv"));
-      file.print(ch->curve + 1);
-      file.println();
-    }
+
     writeKeyValue_bool(file, 1, key_Reverse, ch->reverse);
     writeKeyValue_S32(file, 1, key_Subtrim, ch->subtrim);
 
