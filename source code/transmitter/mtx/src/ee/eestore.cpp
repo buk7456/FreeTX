@@ -480,13 +480,13 @@ uint8_t eeGetModelType(uint8_t modelIdx)
   if(isInternalEE(modelIdx))
   {
     uint16_t address = getModelAddressInternalEE(modelIdx);
-    address += sizeof(Model.name); //the type parameter immediately follows the model name
+    address += ((uint8_t*)&Model.type - (uint8_t*)&Model);
     result = EEPROM.read(address);
   }
   else if(hasExternalEE)
   {
     uint16_t address = getModelAddressExternalEE(modelIdx);
-    address += sizeof(Model.name); //the type parameter immediately follows the model name
+    address += ((uint8_t*)&Model.type - (uint8_t*)&Model);
     result = myMem.read(address);
   }
   return result;
