@@ -105,6 +105,16 @@
 //===========================================================================
 //============================= External EEPROM =============================
 //===========================================================================
+//Maximum supported is a 512kbit eeprom
+
+/* 
+//--- 24LC512
+//Total bytes (512*1024)/8 => 65536
+#define EXTERNAL_EEPROM_TOTAL_BYTES     65536
+#define EXTERNAL_EEPROM_PAGE_BYTES      32
+#define EXTERNAL_EEPROM_DEVICE_ADDRESS  0x0
+ */
+
 
 //--- 24LC256
 //Total bytes (256*1024)/8 => 32768
@@ -112,13 +122,6 @@
 #define EXTERNAL_EEPROM_PAGE_BYTES      32
 #define EXTERNAL_EEPROM_DEVICE_ADDRESS  0x0
 
-/* 
-//--- 24LC32
-//Total bytes (32*1024)/8 => 4096
-#define EXTERNAL_EEPROM_TOTAL_BYTES     4096
-#define EXTERNAL_EEPROM_PAGE_BYTES      32
-#define EXTERNAL_EEPROM_DEVICE_ADDRESS  0x7
- */
 
 #endif
 

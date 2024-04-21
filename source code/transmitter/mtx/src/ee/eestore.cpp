@@ -52,8 +52,8 @@ uint8_t maxModelsExternal = 0; //Computed at runtime. Just an initial value here
 bool hasExternalEE = false;
 
 bool isInternalEE(uint8_t modelIdx);
-uint16_t getModelAddressInternalEE(uint8_t modelIdx);
-uint16_t getModelAddressExternalEE(uint8_t modelIdx);
+uint32_t getModelAddressInternalEE(uint8_t modelIdx);
+uint32_t getModelAddressExternalEE(uint8_t modelIdx);
 void checkAndFormatEEPROM();
 
 //--------------------------------------------------------------------------------------------------
@@ -240,10 +240,6 @@ void checkAndFormatEEPROM()
     showMsg(PSTR("Preparing storage"));
     delay(2000);
     //clear
-    /* 
-    for(uint16_t i = ADDRESS_INT_EE_MODEL_DATA_START; i < EEPROM.length(); i++)
-      EEPROM.update(i, 0xFF); 
-    */
     //much faster way, though doesnt actually clear everything out
     for(uint8_t modelIdx = 0; modelIdx < maxModelsInternal; modelIdx++)
       eeDeleteModel(modelIdx);
@@ -304,10 +300,6 @@ void checkAndFormatEEPROM()
       showMsg(PSTR("Preparing storage"));
       delay(2000);
       //clear
-      /* 
-      for(uint16_t i = ADDRESS_EXT_EE_MODEL_DATA_START; i < myMem.length(); i++)
-        myMem.write(i, 0xFF); 
-      */
       //much faster way, though doesnt actually clear everything out
       for(uint8_t modelIdx = maxModelsInternal; modelIdx < maxNumOfModels; modelIdx++)
         eeDeleteModel(modelIdx);
@@ -400,8 +392,8 @@ void eeLazyWriteModelData(uint8_t modelIdx)
     lazyWriteInitialized = false;
   }
   
-  static uint16_t address = 0;
-  static uint16_t finalAddress = 0;
+  static uint32_t address = 0;
+  static uint32_t finalAddress = 0;
   
   if(!lazyWriteInitialized) //reset address counter
   {
@@ -418,13 +410,13 @@ void eeLazyWriteModelData(uint8_t modelIdx)
     if(isInternalEE(modelIdx))
     {
       uint8_t* ptr = (uint8_t*) &Model;
-      uint16_t i = address - getModelAddressInternalEE(modelIdx);
+      uint32_t i = address - getModelAddressInternalEE(modelIdx);
       EEPROM.update(address, *(ptr + i)); //address, value
     }
     else if(hasExternalEE)
     {
       uint8_t* ptr = (uint8_t*) &Model;
-      uint16_t i = address - getModelAddressExternalEE(modelIdx);
+      uint32_t i = address - getModelAddressExternalEE(modelIdx);
       myMem.write(address, *(ptr + i)); //address, value
     }
     //increment address
@@ -456,7 +448,7 @@ void eeGetModelName(char* buff, uint8_t modelIdx, uint8_t lenBuff)
 {
   if(isInternalEE(modelIdx))
   {
-    uint16_t address = getModelAddressInternalEE(modelIdx);
+    uint32_t address = getModelAddressInternalEE(modelIdx);
     for(uint8_t i = 0; i < sizeof(Model.name) && i < lenBuff - 1; i++) 
     {
       *(buff + i) = EEPROM.read(address + i);
@@ -464,7 +456,7 @@ void eeGetModelName(char* buff, uint8_t modelIdx, uint8_t lenBuff)
   }
   else if(hasExternalEE)
   {
-    uint16_t address = getModelAddressExternalEE(modelIdx);
+    uint32_t address = getModelAddressExternalEE(modelIdx);
     for(uint8_t i = 0; i < sizeof(Model.name) && i < lenBuff - 1; i++) 
     {
       *(buff + i) = myMem.read(address + i);
@@ -479,13 +471,13 @@ uint8_t eeGetModelType(uint8_t modelIdx)
   uint8_t result = 0xff;
   if(isInternalEE(modelIdx))
   {
-    uint16_t address = getModelAddressInternalEE(modelIdx);
+    uint32_t address = getModelAddressInternalEE(modelIdx);
     address += ((uint8_t*)&Model.type - (uint8_t*)&Model);
     result = EEPROM.read(address);
   }
   else if(hasExternalEE)
   {
-    uint16_t address = getModelAddressExternalEE(modelIdx);
+    uint32_t address = getModelAddressExternalEE(modelIdx);
     address += ((uint8_t*)&Model.type - (uint8_t*)&Model);
     result = myMem.read(address);
   }
@@ -510,7 +502,7 @@ void eeDeleteModel(uint8_t modelIdx)
   if(isInternalEE(modelIdx))
   {
     //simply remove name (all characters in name are set to 0xFF)
-    uint16_t address = getModelAddressInternalEE(modelIdx);
+    uint32_t address = getModelAddressInternalEE(modelIdx);
     uint8_t len = sizeof(Model.name)/sizeof(Model.name[0]);
     for(uint8_t i = 0; i < len - 1; i++) 
       EEPROM.update(address + i, 0xFF);
@@ -518,7 +510,7 @@ void eeDeleteModel(uint8_t modelIdx)
   else if(hasExternalEE)
   {
     //simply remove name (all characters in name are set to 0xFF)
-    uint16_t address = getModelAddressExternalEE(modelIdx);
+    uint32_t address = getModelAddressExternalEE(modelIdx);
     uint8_t len = sizeof(Model.name)/sizeof(Model.name[0]);
     for(uint8_t i = 0; i < len - 1; i++) 
       myMem.write(address + i, 0xFF);
@@ -527,16 +519,16 @@ void eeDeleteModel(uint8_t modelIdx)
 
 //--------------------------------------------------------------------------------------------------
 
-uint16_t getModelAddressInternalEE(uint8_t modelIdx)
+uint32_t getModelAddressInternalEE(uint8_t modelIdx)
 {
-  return ADDRESS_INT_EE_MODEL_DATA_START + (uint16_t)sizeof(Model) * modelIdx;
+  return ADDRESS_INT_EE_MODEL_DATA_START + (uint32_t)sizeof(Model) * modelIdx;
 }
 
 //--------------------------------------------------------------------------------------------------
 
-uint16_t getModelAddressExternalEE(uint8_t modelIdx)
+uint32_t getModelAddressExternalEE(uint8_t modelIdx)
 {
-  return ADDRESS_EXT_EE_MODEL_DATA_START + (uint16_t)sizeof(Model) * (modelIdx - maxModelsInternal);
+  return ADDRESS_EXT_EE_MODEL_DATA_START + (uint32_t)sizeof(Model) * (modelIdx - maxModelsInternal);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -557,25 +549,25 @@ bool eeHasExternalEE()
   return hasExternalEE;
 }
 
-uint16_t eeInternalEEGetSize()
+uint32_t eeInternalEEGetSize()
 {
   return EEPROM.length();
 }
 
-uint16_t eeExternalEEGetSize()
+uint32_t eeExternalEEGetSize()
 {
-  uint16_t size = 0;
+  uint32_t size = 0;
   if(hasExternalEE)
     size = myMem.length();
   return size;
 }
 
-uint8_t eeInternalEEReadByte(uint16_t address)
+uint8_t eeInternalEEReadByte(uint32_t address)
 {
   return EEPROM.read(address);
 }
 
-uint8_t eeExternalEEReadByte(uint16_t address)
+uint8_t eeExternalEEReadByte(uint32_t address)
 {
   uint8_t val = 0;
   if(hasExternalEE)

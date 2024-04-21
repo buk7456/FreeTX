@@ -18202,11 +18202,17 @@ K</text>
 <text x="14.478" y="298.958" size="1.778" layer="97">GND</text>
 <text x="14.478" y="301.498" size="1.778" layer="97">VBATT</text>
 <text x="10.16" y="281.94" size="2.54" layer="97" rot="R90">Power connector</text>
-<text x="7.112" y="265.938" size="1.27" layer="97">The max voltage here
-should not exceed 4.9V, 
-so the resistors in this
-voltage divider should 
-be sized appropriately</text>
+<text x="-0.508" y="253.238" size="1.27" layer="97">The max voltage here should not 
+exceed 4.95V, so the resistors
+should be sized appropriately.
+The optocoupler is simply acting
+as a switch. The usual voltage 
+divider formula still applies.
+Vsense=Vbat*R2/(R1+R2)
+E.g. for a 2s Li-ion Vbat max is
+8.4V, setting R1 3.3k and R2 4.7k
+gives good measurement.
+</text>
 <text x="62.23" y="261.62" size="1.778" layer="97">Power switch
 (Slide type)</text>
 <text x="14.478" y="306.578" size="1.778" layer="97">V_IN</text>
@@ -18215,7 +18221,7 @@ be sized appropriately</text>
 VBATT and V_IN can be 
 shorted together e.g. when using 
 2 series Li-ion cells.</text>
-<text x="205.74" y="309.88" size="2.54" layer="97">Z1</text>
+<text x="200.66" y="314.96" size="2.54" layer="97">Z1</text>
 <text x="0" y="208.28" size="2.54" layer="97">SWA</text>
 <text x="0" y="193.04" size="2.54" layer="97">SWB</text>
 <text x="0" y="177.8" size="2.54" layer="97">SWC</text>
@@ -18233,24 +18239,25 @@ shorted together e.g. when using
 <wire x1="3.81" y1="86.36" x2="3.81" y2="66.04" width="0.1524" layer="97"/>
 <wire x1="3.81" y1="50.546" x2="3.81" y2="30.48" width="0.1524" layer="97"/>
 <wire x1="3.81" y1="30.48" x2="5.08" y2="30.48" width="0.1524" layer="97"/>
-<text x="248.92" y="279.4" size="2.54" layer="97">ROLL</text>
-<text x="248.92" y="261.62" size="2.54" layer="97">PITCH</text>
-<text x="248.92" y="297.18" size="2.54" layer="97">THR</text>
-<text x="248.92" y="314.96" size="2.54" layer="97">YAW</text>
 <text x="248.92" y="172.72" size="2.54" layer="97">KNOB_A</text>
 <text x="248.92" y="154.94" size="2.54" layer="97">KNOB_B</text>
-<text x="205.74" y="292.1" size="2.54" layer="97">Z2</text>
-<text x="48.26" y="20.32" size="1.9304" layer="97" font="vector">NOTES:
+<text x="200.66" y="297.18" size="2.54" layer="97">Z2</text>
+<text x="45.72" y="2.54" size="1.9304" layer="97" font="vector">NOTES:
 - MCU pins marked with x have no arduino
   mapping. They can be used but they
   have no connector headers on arduino
   boards, hence have been avoided here.
 - For two position switches, the UP signal
   is left unconnected.
-- The Z axes are optional.
+- The Z1 and Z2 axes as well as X3,Y3,X4,Y4, 
+  BTN_A, BTN_B are optional.
 - Uart0 is used for firmware uploads
-- Uart1 for rf modules
-- Uart2 for sound modules</text>
+- Uart1 for interfacing with the secondary mcu 
+  (controlling the RF module).
+- Uart2 reserved for sound modules.
+- The I2C EEPROM recommended is 24LC256 or
+  24LC512. Any other lower capacity eeproms
+  can also be used, minimum being the 24LC32.</text>
 <text x="160.02" y="147.32" size="1.27" layer="97">x</text>
 <text x="160.02" y="144.78" size="1.27" layer="97">x</text>
 <text x="160.02" y="142.24" size="1.27" layer="97">x</text>
@@ -18272,6 +18279,15 @@ for TO-220 package</text>
 <text x="248.92" y="12.7" size="2.54" layer="97">UART2</text>
 <text x="185.42" y="50.8" size="2.54" layer="97">MICRO 
 SD CARD</text>
+<text x="248.92" y="297.18" size="2.54" layer="97">Y1</text>
+<text x="248.92" y="279.4" size="2.54" layer="97">X2</text>
+<text x="248.92" y="261.62" size="2.54" layer="97">Y2</text>
+<text x="248.92" y="243.84" size="2.54" layer="97">X3</text>
+<text x="248.92" y="226.06" size="2.54" layer="97">Y3</text>
+<text x="248.92" y="208.28" size="2.54" layer="97">X4</text>
+<text x="248.92" y="314.96" size="2.54" layer="97">X1</text>
+<text x="248.92" y="190.5" size="2.54" layer="97">Y4</text>
+<text x="160.02" y="254" size="1.27" layer="97">See footnote</text>
 </plain>
 <instances>
 <instance part="Q1" gate="G$1" x="76.2" y="210.82" smashed="yes" rot="R90">
@@ -18325,8 +18341,8 @@ SD CARD</text>
 <attribute name="VALUE" x="20.32" y="251.841" size="1.778" layer="96" rot="MR180"/>
 </instance>
 <instance part="R18" gate="G$1" x="233.68" y="83.82" smashed="yes" rot="MR270">
-<attribute name="NAME" x="228.092" y="87.6554" size="1.778" layer="95" rot="MR180"/>
-<attribute name="VALUE" x="229.108" y="85.09" size="1.778" layer="96" rot="MR180"/>
+<attribute name="NAME" x="235.712" y="85.1154" size="1.778" layer="95" rot="MR180"/>
+<attribute name="VALUE" x="235.966" y="82.55" size="1.778" layer="96" rot="MR180"/>
 </instance>
 <instance part="T2" gate="G$1" x="228.6" y="81.28" smashed="yes" rot="R270">
 <attribute name="NAME" x="226.06" y="77.724" size="1.778" layer="95" rot="R180"/>
@@ -18670,33 +18686,33 @@ SD CARD</text>
 <instance part="GND2" gate="1" x="17.78" y="2.54" smashed="yes">
 <attribute name="VALUE" x="15.24" y="0" size="1.778" layer="96"/>
 </instance>
-<instance part="SV18" gate="G$1" x="203.2" y="297.18" smashed="yes" rot="R180">
-<attribute name="VALUE" x="204.47" y="304.8" size="1.778" layer="96" rot="R180"/>
-<attribute name="NAME" x="204.47" y="291.338" size="1.778" layer="95" rot="R180"/>
+<instance part="SV18" gate="G$1" x="198.12" y="297.18" smashed="yes" rot="R180">
+<attribute name="VALUE" x="199.39" y="304.8" size="1.778" layer="96" rot="R180"/>
+<attribute name="NAME" x="199.39" y="291.338" size="1.778" layer="95" rot="R180"/>
 </instance>
-<instance part="SV19" gate="G$1" x="203.2" y="314.96" smashed="yes" rot="R180">
-<attribute name="VALUE" x="204.47" y="322.58" size="1.778" layer="96" rot="R180"/>
-<attribute name="NAME" x="204.47" y="309.118" size="1.778" layer="95" rot="R180"/>
+<instance part="SV19" gate="G$1" x="198.12" y="314.96" smashed="yes" rot="R180">
+<attribute name="VALUE" x="199.39" y="322.58" size="1.778" layer="96" rot="R180"/>
+<attribute name="NAME" x="199.39" y="309.118" size="1.778" layer="95" rot="R180"/>
 </instance>
-<instance part="GND33" gate="1" x="193.04" y="292.1" smashed="yes">
-<attribute name="VALUE" x="190.5" y="289.56" size="1.778" layer="96"/>
+<instance part="GND33" gate="1" x="187.96" y="292.1" smashed="yes">
+<attribute name="VALUE" x="185.42" y="289.56" size="1.778" layer="96"/>
 </instance>
-<instance part="GND34" gate="1" x="193.04" y="309.88" smashed="yes">
-<attribute name="VALUE" x="190.5" y="307.34" size="1.778" layer="96"/>
+<instance part="GND34" gate="1" x="187.96" y="309.88" smashed="yes">
+<attribute name="VALUE" x="185.42" y="307.34" size="1.778" layer="96"/>
 </instance>
-<instance part="P+9" gate="1" x="193.04" y="302.26" smashed="yes">
-<attribute name="VALUE" x="189.484" y="303.53" size="1.778" layer="96" rot="R270"/>
+<instance part="P+9" gate="1" x="187.96" y="302.26" smashed="yes">
+<attribute name="VALUE" x="184.404" y="303.53" size="1.778" layer="96" rot="R270"/>
 </instance>
-<instance part="C9" gate="G$1" x="187.96" y="294.64" smashed="yes" rot="R270">
-<attribute name="NAME" x="184.404" y="297.815" size="1.778" layer="95"/>
-<attribute name="VALUE" x="182.372" y="290.449" size="1.778" layer="96"/>
+<instance part="C9" gate="G$1" x="182.88" y="294.64" smashed="yes" rot="R270">
+<attribute name="NAME" x="179.324" y="297.815" size="1.778" layer="95"/>
+<attribute name="VALUE" x="177.292" y="290.449" size="1.778" layer="96"/>
 </instance>
-<instance part="C8" gate="G$1" x="185.42" y="312.42" smashed="yes" rot="R90">
-<attribute name="NAME" x="188.976" y="310.007" size="1.778" layer="95" rot="R180"/>
-<attribute name="VALUE" x="188.722" y="316.611" size="1.778" layer="96" rot="R180"/>
+<instance part="C8" gate="G$1" x="180.34" y="312.42" smashed="yes" rot="R90">
+<attribute name="NAME" x="183.896" y="310.007" size="1.778" layer="95" rot="R180"/>
+<attribute name="VALUE" x="183.642" y="316.611" size="1.778" layer="96" rot="R180"/>
 </instance>
-<instance part="P+10" gate="1" x="193.04" y="320.04" smashed="yes">
-<attribute name="VALUE" x="189.484" y="321.31" size="1.778" layer="96" rot="R270"/>
+<instance part="P+10" gate="1" x="187.96" y="320.04" smashed="yes">
+<attribute name="VALUE" x="184.404" y="321.31" size="1.778" layer="96" rot="R270"/>
 </instance>
 <instance part="C3" gate="G$1" x="68.58" y="182.88" smashed="yes">
 <attribute name="NAME" x="66.167" y="179.324" size="1.778" layer="95" rot="R90"/>
@@ -19162,18 +19178,18 @@ SD CARD</text>
 <segment>
 <pinref part="SV18" gate="G$1" pin="3"/>
 <pinref part="GND33" gate="1" pin="GND"/>
-<wire x1="195.58" y1="294.64" x2="193.04" y2="294.64" width="0.1524" layer="91"/>
+<wire x1="190.5" y1="294.64" x2="187.96" y2="294.64" width="0.1524" layer="91"/>
 <pinref part="C9" gate="G$1" pin="1"/>
-<wire x1="190.5" y1="294.64" x2="193.04" y2="294.64" width="0.1524" layer="91"/>
-<junction x="193.04" y="294.64"/>
+<wire x1="185.42" y1="294.64" x2="187.96" y2="294.64" width="0.1524" layer="91"/>
+<junction x="187.96" y="294.64"/>
 </segment>
 <segment>
 <pinref part="SV19" gate="G$1" pin="3"/>
 <pinref part="GND34" gate="1" pin="GND"/>
-<wire x1="195.58" y1="312.42" x2="193.04" y2="312.42" width="0.1524" layer="91"/>
+<wire x1="190.5" y1="312.42" x2="187.96" y2="312.42" width="0.1524" layer="91"/>
 <pinref part="C8" gate="G$1" pin="2"/>
-<wire x1="190.5" y1="312.42" x2="193.04" y2="312.42" width="0.1524" layer="91"/>
-<junction x="193.04" y="312.42"/>
+<wire x1="185.42" y1="312.42" x2="187.96" y2="312.42" width="0.1524" layer="91"/>
+<junction x="187.96" y="312.42"/>
 </segment>
 <segment>
 <pinref part="GND19" gate="1" pin="GND"/>
@@ -19373,12 +19389,12 @@ SD CARD</text>
 <segment>
 <pinref part="P+9" gate="1" pin="+5V"/>
 <pinref part="SV18" gate="G$1" pin="1"/>
-<wire x1="193.04" y1="299.72" x2="195.58" y2="299.72" width="0.1524" layer="91"/>
+<wire x1="187.96" y1="299.72" x2="190.5" y2="299.72" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="SV19" gate="G$1" pin="1"/>
 <pinref part="P+10" gate="1" pin="+5V"/>
-<wire x1="195.58" y1="317.5" x2="193.04" y2="317.5" width="0.1524" layer="91"/>
+<wire x1="190.5" y1="317.5" x2="187.96" y2="317.5" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="C3" gate="G$1" pin="1"/>
@@ -20344,12 +20360,12 @@ SD CARD</text>
 </segment>
 <segment>
 <pinref part="SV18" gate="G$1" pin="2"/>
-<wire x1="195.58" y1="297.18" x2="182.88" y2="297.18" width="0.1524" layer="91"/>
+<wire x1="190.5" y1="297.18" x2="177.8" y2="297.18" width="0.1524" layer="91"/>
 <pinref part="C9" gate="G$1" pin="2"/>
-<wire x1="182.88" y1="297.18" x2="180.34" y2="297.18" width="0.1524" layer="91"/>
-<wire x1="182.88" y1="294.64" x2="182.88" y2="297.18" width="0.1524" layer="91"/>
-<junction x="182.88" y="297.18"/>
-<label x="180.34" y="297.18" size="1.27" layer="95" rot="R180" xref="yes"/>
+<wire x1="177.8" y1="297.18" x2="175.26" y2="297.18" width="0.1524" layer="91"/>
+<wire x1="177.8" y1="294.64" x2="177.8" y2="297.18" width="0.1524" layer="91"/>
+<junction x="177.8" y="297.18"/>
+<label x="175.26" y="297.18" size="1.27" layer="95" rot="R180" xref="yes"/>
 </segment>
 </net>
 <net name="Z1_AXIS" class="0">
@@ -20360,12 +20376,12 @@ SD CARD</text>
 </segment>
 <segment>
 <pinref part="SV19" gate="G$1" pin="2"/>
-<wire x1="195.58" y1="314.96" x2="182.88" y2="314.96" width="0.1524" layer="91"/>
-<label x="180.34" y="314.96" size="1.27" layer="95" rot="R180" xref="yes"/>
+<wire x1="190.5" y1="314.96" x2="177.8" y2="314.96" width="0.1524" layer="91"/>
+<label x="175.26" y="314.96" size="1.27" layer="95" rot="R180" xref="yes"/>
 <pinref part="C8" gate="G$1" pin="1"/>
-<wire x1="182.88" y1="314.96" x2="180.34" y2="314.96" width="0.1524" layer="91"/>
-<wire x1="182.88" y1="312.42" x2="182.88" y2="314.96" width="0.1524" layer="91"/>
-<junction x="182.88" y="314.96"/>
+<wire x1="177.8" y1="314.96" x2="175.26" y2="314.96" width="0.1524" layer="91"/>
+<wire x1="177.8" y1="312.42" x2="177.8" y2="314.96" width="0.1524" layer="91"/>
+<junction x="177.8" y="314.96"/>
 </segment>
 </net>
 <net name="N$4" class="0">
