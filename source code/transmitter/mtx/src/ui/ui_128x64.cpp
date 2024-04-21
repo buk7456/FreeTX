@@ -7359,7 +7359,7 @@ void handleMainUI()
           needsUpdate = false;
           for(uint8_t idx = 0; idx < 32 && idx < sizeof(txtBuff); idx++)
           {
-            uint16_t addr = ((int32_t)page * 32) + idx;
+            uint32_t addr = ((int32_t)page * 32) + idx;
             if(theScreen == SCREEN_EXTERNAL_EEPROM_DUMP)
               txtBuff[idx] = eeExternalEEReadByte(addr);
             else
@@ -7378,8 +7378,8 @@ void handleMainUI()
           display.setCursor(0, line*8);
           //count the digits of the address
           uint8_t digits = 1;
-          uint16_t addr = ((int32_t)page * 32) + line * 4; //4 bytes per line
-          uint16_t num = addr;          
+          uint32_t addr = ((int32_t)page * 32) + line * 4; //4 bytes per line
+          uint32_t num = addr;          
           while(num >= 10)
           {
             num /= 10;
