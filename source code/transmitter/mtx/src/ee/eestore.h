@@ -20,10 +20,10 @@ void eeDeleteModel(uint8_t modelIdx);
 
 //mainly for debug purposes
 bool     eeHasExternalEE();
-uint16_t eeInternalEEGetSize();
-uint16_t eeExternalEEGetSize();
-uint8_t  eeInternalEEReadByte(uint16_t address);
-uint8_t  eeExternalEEReadByte(uint16_t address);
+uint32_t eeInternalEEGetSize();
+uint32_t eeExternalEEGetSize();
+uint8_t  eeInternalEEReadByte(uint32_t address);
+uint8_t  eeExternalEEReadByte(uint32_t address);
 void     eeFactoryReset();
 
 #endif
