@@ -3,8 +3,12 @@
 
 void eeStoreInit();
 
+bool eeStoreIsInitialised();
+
 void eeReadSysConfig();
 void eeSaveSysConfig();
+
+void eeLazyWriteSysConfig();
 
 void eeReadModelData(uint8_t modelIdx); 
 void eeSaveModelData(uint8_t modelIdx);

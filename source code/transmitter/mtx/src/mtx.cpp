@@ -136,6 +136,12 @@ void loop()
   //for 6hours, we would be making 450 writes to a certain eeprom cell, compared to 90 when limited.
   if(thisLoopNum % (100 / fixedLoopTime) == 0)
     eeLazyWriteModelData(Sys.activeModelIdx);
+
+  ///--- LAZY SAVE SYSTEM DATA TO EEPROM
+  //The cycle time set to about 5 minutes
+  const uint32_t intervalMillis = 300000UL / sizeof(Sys); 
+  if(thisLoopNum % (intervalMillis / fixedLoopTime) == 0)
+    eeLazyWriteSysConfig();
   
   ///--- LIMIT MAX RATE OF LOOP
   //This is done here for a more consistent timing of communications.
@@ -515,8 +521,12 @@ void handlePowerOff()
       analogWrite(PIN_LCD_BACKLIGHT, ((uint16_t) 255 * Sys.backlightLevel) / 100);
     delay(2000);
     //save changes
-    eeSaveSysConfig();
-    eeSaveModelData(Sys.activeModelIdx);
+    if(eeStoreIsInitialised())
+    {
+      eeSaveSysConfig();
+      eeSaveModelData(Sys.activeModelIdx);
+    }
+    showMsg(PSTR(""));
     //power off
     delay(100);
     pinMode(PIN_POWER_LATCH, INPUT);

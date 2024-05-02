@@ -223,6 +223,7 @@ void resetSystemParams()
   Sys.showMenuIcons = true;
   Sys.rememberMenuPosition = true;
   Sys.useRoundRect = true;
+  Sys.useDenserMenus = false;
   Sys.animationsEnabled = true;
   Sys.autohideTrims = false;
   Sys.showSplashScreen = true;

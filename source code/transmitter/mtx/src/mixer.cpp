@@ -1088,13 +1088,21 @@ int8_t adjustTrim(int8_t val, int8_t lowerLimit, int8_t upperLimit, uint8_t incB
   {    
     val--;
     if(Sys.soundTrims)
+    {
       audioToPlay = AUDIO_TRIM_MOVED;
+      if(val == 0)
+        audioToPlay = AUDIO_TRIM_CENTER;
+    }
   }
   else if((pressedButton == incButton || _heldBtn == incButton) && val < upperLimit)
   {
     val++;
     if(Sys.soundTrims)
+    {
       audioToPlay = AUDIO_TRIM_MOVED;
+      if(val == 0)
+        audioToPlay = AUDIO_TRIM_CENTER;
+    }
   }
   
   return val;

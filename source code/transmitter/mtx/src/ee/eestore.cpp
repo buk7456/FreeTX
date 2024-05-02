@@ -51,6 +51,8 @@ uint8_t maxModelsInternal = 1; //Computed at runtime. Just an initial value here
 uint8_t maxModelsExternal = 0; //Computed at runtime. Just an initial value here
 bool hasExternalEE = false;
 
+bool eeStoreInitExited = false;
+
 bool isInternalEE(uint8_t modelIdx);
 uint32_t getModelAddressInternalEE(uint8_t modelIdx);
 uint32_t getModelAddressExternalEE(uint8_t modelIdx);
@@ -61,6 +63,16 @@ void checkAndFormatEEPROM();
 void eeStoreInit()
 {
   maxModelsInternal = (EEPROM.length() - ADDRESS_INT_EE_MODEL_DATA_START) / sizeof(Model);
+
+  if(maxModelsInternal == 0)
+  {
+    showMsg(PSTR("------ERROR------\nNot enough memory\nfor model storage"));
+    while(1)
+    {
+      delay(30);
+      handlePowerOff();
+    }
+  }
   
   //External eeprom
   Wire.begin();
@@ -141,6 +153,9 @@ void eeStoreInit()
   
   //save sys
   eeSaveSysConfig();
+  
+  //set flag
+  eeStoreInitExited = true;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -314,6 +329,13 @@ void checkAndFormatEEPROM()
 
 //--------------------------------------------------------------------------------------------------
 
+bool eeStoreIsInitialised()
+{
+  return eeStoreInitExited;
+}
+
+//--------------------------------------------------------------------------------------------------
+
 void eeReadSysConfig()
 {
   EEPROM.get(ADDRESS_INT_EE_SYS_DATA_START, Sys);
@@ -347,6 +369,25 @@ void eeReadSysConfig()
 void eeSaveSysConfig()
 {
   EEPROM.put(ADDRESS_INT_EE_SYS_DATA_START, Sys);
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void eeLazyWriteSysConfig()
+{
+  //This function writes system config data one byte at a time so as to improve system perfomance,
+  //and to reduce wear and tear to the eeprom
+  
+  static uint32_t address = ADDRESS_INT_EE_SYS_DATA_START;
+  const uint32_t finalAddress = ADDRESS_INT_EE_SYS_DATA_START + sizeof(Sys) - 1;
+
+  uint8_t* ptr = (uint8_t*) &Sys;
+  uint32_t i = address - ADDRESS_INT_EE_SYS_DATA_START;
+  EEPROM.update(address, *(ptr + i)); //address, value
+  //increment address
+  address++;
+  if(address > finalAddress) //all writes completed, start over
+    address = ADDRESS_INT_EE_SYS_DATA_START;
 }
 
 //--------------------------------------------------------------------------------------------------
