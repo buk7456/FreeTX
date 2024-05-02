@@ -274,6 +274,7 @@ void changeFocusOnUpDown(uint8_t numItems);
 void toggleEditModeOnSelectClicked();
 void drawCursor(uint8_t xpos, uint8_t ypos);
 void drawHeader(const char* str);
+void drawHeader_Menu(const char* str);
 void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const icons[], uint8_t *topItem, uint8_t *highlightedItem);
 void drawDottedVLine(uint8_t x, uint8_t y, uint8_t len, uint8_t fgColor, uint8_t bgColor);
 void drawDottedHLine(uint8_t x, uint8_t y, uint8_t len, uint8_t fgColor, uint8_t bgColor);
@@ -285,7 +286,7 @@ void drawAnimatedSprite(uint8_t x, uint8_t y, const uint8_t* const bitmapTable[]
                         uint8_t frameCount, uint16_t frameTime, uint32_t timeOffset);
 void drawHorizontalBarChart(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t valMin, int16_t valMax);
 void drawHorizontalBarChartZeroCentered(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t range);
-void drawTrimSlider(uint8_t x, uint8_t y, int8_t val, uint8_t range, uint8_t id);
+void drawTrimSlider(uint8_t x, uint8_t y, int8_t val, uint8_t range, bool horizontal);
 void drawDialogCopyMove(const char* str, uint8_t srcIdx, uint8_t destIdx, bool isCopy);
 void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src);
 void drawToast();
@@ -673,22 +674,22 @@ void handleMainUI()
           if(Model.X1Trim.trimState != TRIM_DISABLED) 
           {
             int8_t val = Model.X1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x1Trim : Model.X1Trim.commonTrim;
-            drawTrimSlider(14, 62, val, 40, 0);
+            drawTrimSlider(14, 60, val, 40, true);
           }
           if(Model.Y1Trim.trimState != TRIM_DISABLED)
           {
             int8_t val = Model.Y1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].y1Trim : Model.Y1Trim.commonTrim;
-            drawTrimSlider(1, 15, val, 40, 1);
+            drawTrimSlider(3, 15, val, 40, false);
           }
           if(Model.X2Trim.trimState != TRIM_DISABLED)
           {
             int8_t val = Model.X2Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x2Trim : Model.X2Trim.commonTrim;
-            drawTrimSlider(73, 62, val, 40, 2);
+            drawTrimSlider(73, 60, val, 40, true);
           }
           if(Model.Y2Trim.trimState != TRIM_DISABLED)
           {
             int8_t val = Model.Y2Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].y2Trim : Model.Y2Trim.commonTrim;
-            drawTrimSlider(126, 15, val, 40, 3);
+            drawTrimSlider(124, 15, val, 40, false);
           }
         }
         
@@ -1415,7 +1416,7 @@ void handleMainUI()
     
     case SCREEN_MAIN_MENU:
       {
-        drawHeader(PSTR("Main menu"));
+        drawHeader_Menu(PSTR("Main menu"));
         
         static uint8_t topItem = 1, highlightedItem = 1;
         drawMenu(mainMenu, sizeof(mainMenu)/sizeof(mainMenu[0]), mainMenuIcons, &topItem, &highlightedItem);
@@ -1552,7 +1553,6 @@ void handleMainUI()
         if(heldButton == KEY_SELECT)
         {
           viewInitialised = false;//reset view
-          eeSaveSysConfig();
           changeToScreen(SCREEN_MAIN_MENU);
         }
       }
@@ -3584,7 +3584,7 @@ void handleMainUI()
     
     case SCREEN_EXTRAS_MENU:
       {
-        drawHeader(mainMenu[MAIN_MENU_EXTRAS]);
+        drawHeader_Menu(mainMenu[MAIN_MENU_EXTRAS]);
         
         static uint8_t topItem = 1, highlightedItem = 1;
         if(Model.type == MODEL_TYPE_OTHER) //### TODO better implementation. This hack hides flight mode entry.
@@ -6219,7 +6219,7 @@ void handleMainUI()
       
     case SCREEN_SYSTEM_MENU:
       {
-        drawHeader(mainMenu[MAIN_MENU_SYSTEM]);
+        drawHeader_Menu(mainMenu[MAIN_MENU_SYSTEM]);
         
         static uint8_t topItem = 1, highlightedItem = 1;
         drawMenu(systemMenu, sizeof(systemMenu)/sizeof(systemMenu[0]), NULL, &topItem, &highlightedItem);
@@ -6280,7 +6280,6 @@ void handleMainUI()
         //exit
         if(heldButton == KEY_SELECT)
         {
-          eeSaveSysConfig();
           changeToScreen(SCREEN_SYSTEM_MENU);
         }
       }
@@ -6346,7 +6345,6 @@ void handleMainUI()
         //exit
         if(heldButton == KEY_SELECT)
         {
-          eeSaveSysConfig();
           changeToScreen(SCREEN_SYSTEM_MENU);
         }
       }
@@ -6403,7 +6401,6 @@ void handleMainUI()
         //exit
         if(heldButton == KEY_SELECT)
         {
-          eeSaveSysConfig();
           changeToScreen(SCREEN_SYSTEM_MENU);
         }
       }
@@ -6416,6 +6413,7 @@ void handleMainUI()
         enum {
           ITEM_SHOW_MENU_ICONS,
           ITEM_KEEP_MENU_POSITION,
+          ITEM_USE_DENSER_MENUS,
           ITEM_USE_ROUND_CORNERS,
           ITEM_ENABLE_ANIMATIONS,
           ITEM_AUTOHIDE_TRIMS,
@@ -6480,6 +6478,13 @@ void handleMainUI()
                 if(edit) Sys.rememberMenuPosition = incDec(Sys.rememberMenuPosition, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
+
+            case ITEM_USE_DENSER_MENUS:
+              {
+                display.print(F("Denser menus:")); drawCheckbox(102, ypos, Sys.useDenserMenus);
+                if(edit) Sys.useDenserMenus = incDec(Sys.useDenserMenus, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
               
             case ITEM_USE_ROUND_CORNERS:
               {
@@ -6531,7 +6536,6 @@ void handleMainUI()
         //exit
         if(heldButton == KEY_SELECT)
         {
-          eeSaveSysConfig();
           changeToScreen(SCREEN_SYSTEM_MENU);
           viewInitialised = false;
         }
@@ -6546,7 +6550,7 @@ void handleMainUI()
       
     case SCREEN_ADVANCED_MENU:
       {
-        drawHeader(systemMenu[SYSTEM_MENU_ADVANCED]);
+        drawHeader_Menu(systemMenu[SYSTEM_MENU_ADVANCED]);
         
         static uint8_t topItem = 1, highlightedItem = 1;
         drawMenu(advancedMenu, sizeof(advancedMenu)/sizeof(advancedMenu[0]), NULL, &topItem, &highlightedItem);
@@ -6640,7 +6644,6 @@ void handleMainUI()
               if(heldButton == KEY_SELECT)
               {
                 initialised = false;
-                eeSaveSysConfig();
                 changeToScreen(SCREEN_ADVANCED_MENU);
               }
             }
@@ -6819,7 +6822,6 @@ void handleMainUI()
               if(focusedItem == numItems + 1 && isEditMode)
               {
                 //exit calibration
-                eeSaveSysConfig();
                 if(lastScreen == SCREEN_HOME)
                   changeToScreen(SCREEN_HOME);
                 viewInitialised = false;
@@ -6916,7 +6918,6 @@ void handleMainUI()
            || (focusedItem == NUM_PHYSICAL_SWITCHES + 1 && clickedButton == KEY_SELECT))
         {
           viewInitialised = false;
-          eeSaveSysConfig();
           changeToScreen(lastScreen);
           isRequestingSwitchesSetup = false;
         }
@@ -6995,7 +6996,6 @@ void handleMainUI()
         //exit
         if((heldButton == KEY_SELECT && !hasNextButton) || (focusedItem == 4 && clickedButton == KEY_SELECT))
         {
-          eeSaveSysConfig();
           batteryGaugeCalibrated = true;
           changeToScreen(lastScreen);
         }
@@ -7040,7 +7040,6 @@ void handleMainUI()
         //exit
         if(heldButton == KEY_SELECT)
         {
-          eeSaveSysConfig();
           changeToScreen(SCREEN_ADVANCED_MENU);
         }
       }
@@ -7092,7 +7091,6 @@ void handleMainUI()
         //exit
         if(heldButton == KEY_SELECT)
         {
-          eeSaveSysConfig();
           changeToScreen(SCREEN_ADVANCED_MENU);
         }
       }
@@ -7314,7 +7312,6 @@ void handleMainUI()
         //exit
         if(heldButton == KEY_SELECT)
         {
-          eeSaveSysConfig();
           changeToScreen(SCREEN_ADVANCED_MENU);
           viewInitialised = false;
           telemetryForceRequest = false;
@@ -7339,7 +7336,7 @@ void handleMainUI()
           viewInitialised = true;
           needsUpdate = true;
           page = 0;
-          //save model data first at once, as there could be pending writes
+          //save data first at once, as there could be pending writes
           showWaitMsg();
           stopTones();
           eeSaveModelData(Sys.activeModelIdx);
@@ -7472,6 +7469,14 @@ void handleMainUI()
     case SCREEN_SCREENSHOT_CONFIG:
       {
         drawHeader(PSTR("Screenshot config"));
+
+        if(!sdHasCard())
+        {
+          printFullScreenMsg(PSTR("SD card not found"));
+          if(heldButton == KEY_SELECT)
+            changeToScreen(SCREEN_DEBUG);
+          break;
+        }
         
         //use a temporary variable for the swtch and assign later 
         //to avoid unintended action while scrolling through the options
@@ -8408,6 +8413,9 @@ void printModelName(char* buff, uint8_t modelIdx)
 
 void printFullScreenMsg(const char* str)
 {
+  if(pgm_read_byte(str) == '\0')
+    return;
+
   uint8_t pos = 0; //position in string
   uint8_t numTextLines = 1;
   //get number of lines
@@ -8576,12 +8584,35 @@ void drawHeader(const char* str)
 
 //--------------------------------------------------------------------------------------------------
 
+void drawHeader_Menu(const char* str)
+{
+  if(Sys.useDenserMenus)
+    drawHeader(str);
+  else
+  {
+    strlcpy_P(txtBuff, str, sizeof(txtBuff));
+    uint8_t txtWidthPix = strlen(txtBuff) * 6;
+    uint8_t headingXOffset = (display.width() - txtWidthPix) / 2; //middle align heading
+    display.setCursor(headingXOffset, 0);
+    display.print(txtBuff);
+    display.drawHLine(0, 9, 128, BLACK);
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+
 void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const bitmapTable[], 
               uint8_t *topItem, uint8_t *highlightedItem)
 {
-  uint8_t numVisible = 5;
-  uint8_t lineHeight = 11;
-  uint8_t y0 = 11;
+  uint8_t numVisible = 4;
+  uint8_t lineHeight = 13;
+  uint8_t y0 = 14;
+  if(Sys.useDenserMenus)
+  {
+    numVisible = 5;
+    lineHeight = 11;
+    y0 = 11;
+  }
   
   //handle scenario of being called with invalid highlightedItem
   if(*highlightedItem > numItems) 
@@ -8607,7 +8638,7 @@ void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const bitm
     //highlight selection
     if(*highlightedItem == (*topItem + i))
     {
-      display.fillRoundRect(3, ypos - 2, 122, lineHeight, Sys.useRoundRect ? 4 : 0, BLACK);
+      display.fillRoundRect(3, Sys.useDenserMenus ? ypos - 2 : ypos - 3, 122, lineHeight, Sys.useRoundRect ? 4 : 0, BLACK);
       display.setTextColor(WHITE);
     }
     //show icons
@@ -8626,7 +8657,7 @@ void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const bitm
   }
   
   //scroll bar
-  drawScrollBar(127, 9, numItems, *topItem, numVisible, numVisible * lineHeight);
+  drawScrollBar(127, Sys.useDenserMenus ? 9 : 11, numItems, *topItem, numVisible, numVisible * lineHeight);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -8692,23 +8723,25 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
 
 //--------------------------------------------------------------------------------------------------
 
-void drawTrimSlider(uint8_t x, uint8_t y, int8_t val, uint8_t range, uint8_t id)
+void drawTrimSlider(uint8_t x, uint8_t y, int8_t val, uint8_t range, bool horizontal)
 {
-  if(id == 0 || id == 2)
+  if(horizontal)
   {
     display.drawHLine(x, y, range + 1, BLACK);
-    display.drawPixel(x + range/2, y, WHITE);
-    uint8_t xqq = ((int16_t) x + range/2 - 1) + val;
-    display.drawHLine(xqq, y + 1, 3, BLACK);
-    display.drawPixel(xqq + 1, y, BLACK);
+    x = ((int16_t) x + range/2 - 3) + val;
+    display.fillRect(x, y - 3, 7, 7, WHITE);
+    display.drawRoundRect(x, y - 3, 7, 7, 2, BLACK);
+    if(val >= 0) display.drawVLine(x + 4, y - 1, 3, BLACK);
+    if(val <= 0) display.drawVLine(x + 2, y - 1, 3, BLACK);
   }
   else
   {
     display.drawVLine(x, y, range + 1, BLACK);
-    display.drawPixel(x, y + range/2, WHITE);
-    uint8_t yqq = ((int16_t) y + range/2 - 1) - val;
-    display.drawVLine((id == 1) ? (x - 1) : (x + 1), yqq, 3, BLACK);
-    display.drawPixel(x, yqq + 1, BLACK);
+    y = ((int16_t) y + range/2 - 3) - val;
+    display.fillRect(x - 3, y, 7, 7, WHITE);
+    display.drawRoundRect(x - 3, y, 7, 7, 2, BLACK);
+    if(val >= 0) display.drawHLine(x - 1, y + 2, 3, BLACK);
+    if(val <= 0) display.drawHLine(x - 1, y + 4, 3, BLACK);
   }
 }
 
