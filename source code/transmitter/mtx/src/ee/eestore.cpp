@@ -51,6 +51,8 @@ uint8_t maxModelsInternal = 1; //Computed at runtime. Just an initial value here
 uint8_t maxModelsExternal = 0; //Computed at runtime. Just an initial value here
 bool hasExternalEE = false;
 
+bool eeStoreInitExited = false;
+
 bool isInternalEE(uint8_t modelIdx);
 uint32_t getModelAddressInternalEE(uint8_t modelIdx);
 uint32_t getModelAddressExternalEE(uint8_t modelIdx);
@@ -151,6 +153,9 @@ void eeStoreInit()
   
   //save sys
   eeSaveSysConfig();
+  
+  //set flag
+  eeStoreInitExited = true;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -320,6 +325,13 @@ void checkAndFormatEEPROM()
       myMem.put(ADDRESS_EXT_EE_FILE_SIGNATURE, fileSignature);
     }
   }
+}
+
+//--------------------------------------------------------------------------------------------------
+
+bool eeStoreIsInitialised()
+{
+  return eeStoreInitExited;
 }
 
 //--------------------------------------------------------------------------------------------------
