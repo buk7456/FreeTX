@@ -102,6 +102,11 @@ const uint16_t trimMovedSound[] PROGMEM = {
   250,NOTE_AS7,16
 }; 
 
+// trimCenter:d=4,o=4,b=250:16a7
+const uint16_t trimCenterSound[] PROGMEM = {
+  250,NOTE_A7,16
+}; 
+
 // tone:d=4,o=5,b=125:32p,32c#4,32d4
 const uint16_t screenshotSound[] PROGMEM = {
   125, NOTE_REST, 32, NOTE_CS4, 32, NOTE_D4, 32
@@ -223,6 +228,8 @@ void playTones()
       beginTone(PIN_BUZZER, bindSound, sizeof(bindSound)/sizeof(bindSound[0]));
     else if(audioToPlay == AUDIO_TRIM_MOVED) 
       beginTone(PIN_BUZZER, trimMovedSound, sizeof(trimMovedSound)/sizeof(trimMovedSound[0]));
+    else if(audioToPlay == AUDIO_TRIM_CENTER) 
+      beginTone(PIN_BUZZER, trimCenterSound, sizeof(trimCenterSound)/sizeof(trimCenterSound[0]));
     else if(audioToPlay >= AUDIO_NOTIFICATION_TONE_FIRST && audioToPlay <= AUDIO_NOTIFICATION_TONE_LAST)
     {
       uint8_t i = audioToPlay - AUDIO_NOTIFICATION_TONE_FIRST;
