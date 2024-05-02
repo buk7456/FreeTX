@@ -139,6 +139,7 @@ enum {
   AUDIO_TELEM_MUTE_CHANGED,
   AUDIO_BIND_SUCCESS,
   AUDIO_TRIM_MOVED,
+  AUDIO_TRIM_CENTER,
   AUDIO_SWITCH_MOVED,
   AUDIO_KEY_PRESSED,
   AUDIO_NOTIFICATION_TONE_FIRST,
@@ -287,6 +288,7 @@ typedef struct {
   bool     showMenuIcons;
   bool     rememberMenuPosition;
   bool     useRoundRect;
+  bool     useDenserMenus;
   bool     animationsEnabled;
   bool     autohideTrims;
   bool     useNumericalBatteryIndicator;
