@@ -3,6 +3,8 @@
 
 void eeStoreInit();
 
+bool eeStoreIsInitialised();
+
 void eeReadSysConfig();
 void eeSaveSysConfig();
 
