@@ -674,22 +674,22 @@ void handleMainUI()
           if(Model.X1Trim.trimState != TRIM_DISABLED) 
           {
             int8_t val = Model.X1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x1Trim : Model.X1Trim.commonTrim;
-            drawTrimSlider(14, 60, val, 40, true);
+            drawTrimSlider(14, 62, val, 40, true);
           }
           if(Model.Y1Trim.trimState != TRIM_DISABLED)
           {
             int8_t val = Model.Y1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].y1Trim : Model.Y1Trim.commonTrim;
-            drawTrimSlider(3, 15, val, 40, false);
+            drawTrimSlider(1, 15, val, 40, false);
           }
           if(Model.X2Trim.trimState != TRIM_DISABLED)
           {
             int8_t val = Model.X2Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x2Trim : Model.X2Trim.commonTrim;
-            drawTrimSlider(73, 60, val, 40, true);
+            drawTrimSlider(73, 62, val, 40, true);
           }
           if(Model.Y2Trim.trimState != TRIM_DISABLED)
           {
             int8_t val = Model.Y2Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].y2Trim : Model.Y2Trim.commonTrim;
-            drawTrimSlider(124, 15, val, 40, false);
+            drawTrimSlider(126, 15, val, 40, false);
           }
         }
         
@@ -8727,21 +8727,17 @@ void drawTrimSlider(uint8_t x, uint8_t y, int8_t val, uint8_t range, bool horizo
 {
   if(horizontal)
   {
+    uint8_t xqq = ((int16_t) x + range/2 - 1) + val;
+    display.drawRect(xqq, y - 1, 3, 3, BLACK);
     display.drawHLine(x, y, range + 1, BLACK);
-    x = ((int16_t) x + range/2 - 3) + val;
-    display.fillRect(x, y - 3, 7, 7, WHITE);
-    display.drawRoundRect(x, y - 3, 7, 7, 2, BLACK);
-    if(val >= 0) display.drawVLine(x + 4, y - 1, 3, BLACK);
-    if(val <= 0) display.drawVLine(x + 2, y - 1, 3, BLACK);
+    display.drawPixel(x + range/2, y, WHITE);
   }
   else
   {
+    uint8_t yqq = ((int16_t) y + range/2 - 1) - val;
+    display.drawRect(x - 1, yqq, 3, 3, BLACK);
     display.drawVLine(x, y, range + 1, BLACK);
-    y = ((int16_t) y + range/2 - 3) - val;
-    display.fillRect(x - 3, y, 7, 7, WHITE);
-    display.drawRoundRect(x - 3, y, 7, 7, 2, BLACK);
-    if(val >= 0) display.drawHLine(x - 1, y + 2, 3, BLACK);
-    if(val <= 0) display.drawHLine(x - 1, y + 4, 3, BLACK);
+    display.drawPixel(x, y + range/2, WHITE);
   }
 }
 
