@@ -521,8 +521,11 @@ void handlePowerOff()
       analogWrite(PIN_LCD_BACKLIGHT, ((uint16_t) 255 * Sys.backlightLevel) / 100);
     delay(2000);
     //save changes
-    eeSaveSysConfig();
-    eeSaveModelData(Sys.activeModelIdx);
+    if(eeStoreIsInitialised())
+    {
+      eeSaveSysConfig();
+      eeSaveModelData(Sys.activeModelIdx);
+    }
     showMsg(PSTR(""));
     //power off
     delay(100);
