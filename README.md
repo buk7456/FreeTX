@@ -1,5 +1,6 @@
 # FreeTX
-Open source radio control system for almost anything. 
+Open source radio control system for almost anything.  
+Remotely operate model airplanes, multicopters, helicopters, boats, land vehicles, robots, animatronics, etc.
 <p align="left">
 <img src="doc/tx_views.jpg"/>
 </p>
