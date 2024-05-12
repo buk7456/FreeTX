@@ -519,7 +519,7 @@ void handlePowerOff()
     showMsg(PSTR("Shutting down"));
     if(Sys.backlightEnabled)
       analogWrite(PIN_LCD_BACKLIGHT, ((uint16_t) 255 * Sys.backlightLevel) / 100);
-    delay(2000);
+    delay(1000);
     //save changes
     if(eeStoreIsInitialised())
     {
