@@ -43,7 +43,7 @@ Note:
 <br>If a servo is moving in wrong direction, reversing the direction in Outputs screen solves this.
 
 ### Example 1: Basic 4 channel
-Assuming Aileron servo in Ch1, Elevator servo in Ch2, Throttle in Ch3, Rudder servo in Ch4  
+Assuming Aileron servo in Ch1, Elevator servo in Ch2, Throttle in Ch3, Rudder servo in Ch4
 ```txt
 1. Ch1  Add  Ail (Weight 100)
 2. Ch2  Add  Ele (Weight -100)
@@ -362,4 +362,28 @@ Then in the mixer, assuming our servo is on Ch7,
 3. Ch7   RplW  Max   (Weight 0, SwE_Up) 
 4. Ch7   RplW  Ch7   (Weight 100, SlowUp 5s, SlowDown 5s, L2) 
 5. Ch7   RplW  Ch7   (Weight 100, SlowUp 2s, SlowDown 2s) 
+```
+
+### Example 21: Oscillation without using the built-in function generator
+Here is a way to create a crude oscillator from scratch.  
+Set up a custom curve that defines the shape of our arbitrary waveform. Forexample,
+```txt
+Curve1
+Type: 5 point
+Point(x,y): PtA(-100,0) PtB(-50,-100) PtC(0,0) PtD(50,100), PtE(100, 0)
+Smooth: True
+```
+Then define a logical switch as follows.
+```txt
+Logical switch L1
+Func:   a<x
+Value1: Virt1
+value2: 100
+``` 
+Then in the mixer, we make use of the 'slow' feature on the L1 mixer input.
+This essentially creates a sawtooth waveform on Virt1.
+Assuming our final output is on Ch1, we specify the input as Virt1 and apply the custom curve.
+```txt
+1. Virt1  Add  L1    (Weight 100, SlowUp 1s, SlowDown 0s)
+2. Ch1    Add  Virt1 (Weight 100, Custom Curve1)
 ```
