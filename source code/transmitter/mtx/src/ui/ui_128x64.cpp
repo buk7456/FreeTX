@@ -1186,7 +1186,7 @@ void handleMainUI()
                     display.print(Model.Channel[widget->src].name);
                   }
                   if(edit)
-                    widget->src = incDec(widget->src, 0, NUM_RC_CHANNELS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+                    widget->src = incDec(widget->src, 0, NUM_RC_CHANNELS - 1, INCDEC_WRAP, INCDEC_SLOW);
                 }
                 else if(widget->type == WIDGET_TYPE_MIXSOURCES)
                 {
@@ -1212,7 +1212,7 @@ void handleMainUI()
                     display.print(widget->src + 1);
                   }
                   if(edit)
-                    widget->src = incDec(widget->src, 0, NUM_COUNTERS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+                    widget->src = incDec(widget->src, 0, NUM_COUNTERS - 1, INCDEC_WRAP, INCDEC_SLOW);
                 }
                 else if(widget->type == WIDGET_TYPE_TIMERS)
                 {
@@ -1224,7 +1224,7 @@ void handleMainUI()
                     display.print(Model.Timer[widget->src].name);
                   }
                   if(edit)
-                    widget->src = incDec(widget->src, 0, NUM_TIMERS - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+                    widget->src = incDec(widget->src, 0, NUM_TIMERS - 1, INCDEC_WRAP, INCDEC_SLOW);
                 }
               }
               break;
@@ -1268,7 +1268,7 @@ void handleMainUI()
                 if(edit)
                 {
                   if(widget->type == WIDGET_TYPE_TELEMETRY)
-                    widget->gaugeMin = incDec(widget->gaugeMin, -30000, widget->gaugeMax, INCDEC_NOWRAP, INCDEC_FAST);
+                    widget->gaugeMin = incDec(widget->gaugeMin, -30000, widget->gaugeMax, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
                   else if(widget->type == WIDGET_TYPE_MIXSOURCES || widget->type == WIDGET_TYPE_OUTPUTS)
                     widget->gaugeMin = incDec(widget->gaugeMin, -100, widget->gaugeMax, INCDEC_NOWRAP, INCDEC_NORMAL);
                   if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
@@ -1291,7 +1291,7 @@ void handleMainUI()
                 if(edit)
                 {
                   if(widget->type == WIDGET_TYPE_TELEMETRY)
-                    widget->gaugeMax = incDec(widget->gaugeMax, widget->gaugeMin, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                    widget->gaugeMax = incDec(widget->gaugeMax, widget->gaugeMin, 30000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
                   else if(widget->type == WIDGET_TYPE_MIXSOURCES || widget->type == WIDGET_TYPE_OUTPUTS)
                     widget->gaugeMax = incDec(widget->gaugeMax, widget->gaugeMin, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
                   if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
@@ -2736,7 +2736,7 @@ void handleMainUI()
               
             case ITEM_MIX_INPUT:
               {
-                display.print(F("Input :"));
+                display.print(F("Input:"));
                 display.setCursor(60, ypos);
                 getSrcName(txtBuff, mxr->input, sizeof(txtBuff));
                 display.print(txtBuff);
@@ -2774,7 +2774,7 @@ void handleMainUI()
               
             case ITEM_MIX_CURVE_TYPE:
               {
-                display.print(F("Curve :"));
+                display.print(F("Curve:"));
                 display.setCursor(60, ypos);
                 display.print(findStringInIdStr(enum_MixerCurveType, mxr->curveType));
                 if(edit)
@@ -2819,7 +2819,7 @@ void handleMainUI()
               
             case ITEM_MIX_TRIM_ENABLED:
               {
-                display.print(F("Trim  :"));
+                display.print(F("Trim:"));
                 display.setCursor(60, ypos);
                 uint8_t input = mxr->input;
                 if(input == SRC_RUD) input = Model.rudSrcRaw;
@@ -2868,7 +2868,7 @@ void handleMainUI()
                 display.setCursor(60, ypos);
                 printSeconds(mxr->delayUp);
                 if(edit)
-                  mxr->delayUp = incDec(mxr->delayUp, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  mxr->delayUp = incDec(mxr->delayUp, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
               }
               break;
               
@@ -2878,27 +2878,27 @@ void handleMainUI()
                 display.setCursor(60, ypos);
                 printSeconds(mxr->delayDown);
                 if(edit)
-                  mxr->delayDown = incDec(mxr->delayDown, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  mxr->delayDown = incDec(mxr->delayDown, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
               }
               break;
               
             case ITEM_MIX_SLOW_UP:
               {
-                display.print(F("SlowUp:"));
+                display.print(F("Slow Up:"));
                 display.setCursor(60, ypos);
                 printSeconds(mxr->slowUp);
                 if(edit)
-                  mxr->slowUp = incDec(mxr->slowUp, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  mxr->slowUp = incDec(mxr->slowUp, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
               }
               break;
               
             case ITEM_MIX_SLOW_DOWN:
               {
-                display.print(F("SlowDn:"));
+                display.print(F("Slow Dn:"));
                 display.setCursor(60, ypos);
                 printSeconds(mxr->slowDown);
                 if(edit)
-                  mxr->slowDown = incDec(mxr->slowDown, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  mxr->slowDown = incDec(mxr->slowDown, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
               }
               break;
           }
@@ -4081,7 +4081,7 @@ void handleMainUI()
                 if(edit)
                 {
                   uint8_t oldGroup = getLSFuncGroup(ls->func);
-                  ls->func = incDec(ls->func, 0, LS_FUNC_COUNT - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+                  ls->func = incDec(ls->func, 0, LS_FUNC_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
                   uint8_t newGroup = getLSFuncGroup(ls->func);
                   if(newGroup != oldGroup) //reset values if group changed
                   {
@@ -4193,7 +4193,7 @@ void handleMainUI()
                       ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
                   }
                   else if(ls->func == LS_FUNC_PULSE)
-                    ls->val1 = incDec(ls->val1, 1, ls->val2 - 1, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                    ls->val1 = incDec(ls->val1, 1, ls->val2 - 1, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
                 }
               }
               break;
@@ -4248,11 +4248,11 @@ void handleMainUI()
                     if(ls->val1 < MIXSOURCES_COUNT)
                       ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -100 : 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
                     else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counter value
-                      ls->val2 = incDec(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_FAST);
+                      ls->val2 = incDec(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
                     else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timer value
-                      ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                      ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_FAST);
                     else //telemetry value
-                      ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                      ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
                   }
                   else if(ls->func <= LS_FUNC_GROUP4_LAST)
                   {
@@ -4273,7 +4273,7 @@ void handleMainUI()
                   else if(ls->func == LS_FUNC_TOGGLE) //change edge type
                     ls->val2 = incDec(ls->val2, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
                   else if(ls->func == LS_FUNC_PULSE) //adjust period
-                    ls->val2 = incDec(ls->val2, ls->val1 + 1, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                    ls->val2 = incDec(ls->val2, ls->val1 + 1, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
                 }
               }
               break;
@@ -4315,7 +4315,7 @@ void handleMainUI()
                   else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
                     ls->val3 = incDec(ls->val3, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
                   else //adjust delay
-                    ls->val3 = incDec(ls->val3, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                    ls->val3 = incDec(ls->val3, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
                 }
               }
               break;
@@ -4331,7 +4331,7 @@ void handleMainUI()
                 
                 if(edit && ls->func != LS_FUNC_NONE)
                 {
-                  ls->val4 = incDec(ls->val4, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  ls->val4 = incDec(ls->val4, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
                 }
               }
               break;
@@ -4626,7 +4626,7 @@ void handleMainUI()
                   if(fgen->periodMode == FUNCGEN_PERIODMODE_FIXED)
                     display.print(F("Period:"));
                   else
-                    display.print(F("Min period"));
+                    display.print(F("Min period:"));
                 }
                 display.setCursor(78, ypos);
                 printSeconds(fgen->period1);
@@ -4635,7 +4635,7 @@ void handleMainUI()
                   uint16_t max = 600;
                   if(fgen->periodMode == FUNCGEN_PERIODMODE_VARIABLE)
                     max = fgen->period2 - 1;
-                  fgen->period1 = incDec(fgen->period1, 1, max, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  fgen->period1 = incDec(fgen->period1, 1, max, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
                 }
               }
               break;
@@ -4649,7 +4649,7 @@ void handleMainUI()
                 display.setCursor(78, ypos);
                 printSeconds(fgen->period2);
                 if(edit)
-                  fgen->period2 = incDec(fgen->period2, fgen->period1 + 1, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  fgen->period2 = incDec(fgen->period2, fgen->period1 + 1, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
               }
               break;
 
@@ -4669,7 +4669,7 @@ void handleMainUI()
                 display.setCursor(78, ypos);
                 printSeconds(fgen->width);
                 if(edit)
-                  fgen->width = incDec(fgen->width, 1, fgen->period - 1, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  fgen->width = incDec(fgen->width, 1, fgen->period - 1, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
               }
               break;
             
@@ -4683,7 +4683,7 @@ void handleMainUI()
                   uint16_t min = 1;
                   if(fgen->widthMode == FUNCGEN_PULSE_WIDTH_FIXED)
                     min = fgen->width + 1;
-                  fgen->period = incDec(fgen->period, min, 600, INCDEC_NOWRAP, INCDEC_SLOW_START);
+                  fgen->period = incDec(fgen->period, min, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
                 }
               }
               break;
@@ -4983,7 +4983,7 @@ void handleMainUI()
                 display.setCursor(66, ypos);
                 display.print(counter->modulus);
                 if(edit)
-                  counter->modulus = incDec(counter->modulus, 2, 10000, INCDEC_NOWRAP, INCDEC_FAST);
+                  counter->modulus = incDec(counter->modulus, 2, 10000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
               }
               break;
             
@@ -5207,7 +5207,7 @@ void handleMainUI()
         else if(focusedItem == 4 && isEditMode)
           tmr->resetSwitch = incDecControlSwitch(tmr->resetSwitch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
         else if(focusedItem == 5)
-          tmr->initialMinutes = incDec(tmr->initialMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_NORMAL);
+          tmr->initialMinutes = incDec(tmr->initialMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
         else if(focusedItem == 6)
           tmr->isPersistent = incDec(tmr->isPersistent, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 7 && isEditMode)
@@ -5450,7 +5450,7 @@ void handleMainUI()
             prevTone = notification->tone;
             editStarted = false;
           }
-          notification->tone = incDec(notification->tone, AUDIO_NOTIFICATION_TONE_FIRST, AUDIO_NOTIFICATION_TONE_LAST, INCDEC_NOWRAP, INCDEC_SLOW);
+          notification->tone = incDec(notification->tone, AUDIO_NOTIFICATION_TONE_FIRST, AUDIO_NOTIFICATION_TONE_LAST, INCDEC_WRAP, INCDEC_SLOW);
           if(notification->tone != prevTone && buttonCode == 0 && millis() - buttonReleaseTime >= 500) 
           {
             prevTone = notification->tone;
@@ -5623,7 +5623,7 @@ void handleMainUI()
         else if(focusedItem == 3 && thisFmdIdx > 0 && isEditMode)
           fmd->swtch = incDecControlSwitch(fmd->swtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
         else if(focusedItem == 4)
-          fmd->transitionTime = incDec(fmd->transitionTime, 0, 50, INCDEC_NOWRAP, INCDEC_SLOW_START);
+          fmd->transitionTime = incDec(fmd->transitionTime, 0, 50, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
 
         //exit
         if(heldButton == KEY_SELECT)
@@ -6104,7 +6104,7 @@ void handleMainUI()
                   display.print(F("0"));
                 display.print(val);
                 if(edit)
-                  tlm->multiplier = incDec(tlm->multiplier, 1, 1000, INCDEC_NOWRAP, INCDEC_FAST);
+                  tlm->multiplier = incDec(tlm->multiplier, 1, 1000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
               }
               break;
             
@@ -6123,7 +6123,7 @@ void handleMainUI()
                 display.print(F("Offset:"));
                 printTelemParam(72, ypos, thisTelemIdx, tlm->offset);
                 if(edit)
-                  tlm->offset = incDec(tlm->offset, -30000, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                  tlm->offset = incDec(tlm->offset, -30000, 30000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
               }
               break;
 
@@ -6142,7 +6142,7 @@ void handleMainUI()
                 display.print(F("Thresh:"));
                 printTelemParam(72, ypos, thisTelemIdx, tlm->alarmThreshold);
                 if(edit)
-                  tlm->alarmThreshold = incDec(tlm->alarmThreshold, -30000, 30000, INCDEC_NOWRAP, INCDEC_FAST);
+                  tlm->alarmThreshold = incDec(tlm->alarmThreshold, -30000, 30000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
               }
               break;
             
@@ -6332,7 +6332,7 @@ void handleMainUI()
         if(focusedItem == 1)
           Sys.soundEnabled = incDec(Sys.soundEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 2)
-          Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_SLOW_START);
+          Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
         else if(focusedItem == 3)
           Sys.soundSwitches = incDec(Sys.soundSwitches, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 4)
@@ -6392,7 +6392,7 @@ void handleMainUI()
         else if(focusedItem == 2)
           Sys.backlightLevel = incDec(Sys.backlightLevel, 10, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
         else if(focusedItem == 3)
-          Sys.backlightTimeout = incDec(Sys.backlightTimeout, 0, BACKLIGHT_TIMEOUT_COUNT - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+          Sys.backlightTimeout = incDec(Sys.backlightTimeout, 0, BACKLIGHT_TIMEOUT_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
         else if(focusedItem == 4)
           Sys.backlightWakeup = incDec(Sys.backlightWakeup, 0, BACKLIGHT_WAKEUP_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
         else if(focusedItem == 5)
@@ -6991,7 +6991,7 @@ void handleMainUI()
           Sys.battVoltsMax = val * 10;
         }
         else if(focusedItem == 3)
-          Sys.battVfactor = incDec(Sys.battVfactor, 0, 2000, INCDEC_NOWRAP, INCDEC_FAST);
+          Sys.battVfactor = incDec(Sys.battVfactor, 0, 2000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
 
         //exit
         if((heldButton == KEY_SELECT && !hasNextButton) || (focusedItem == 4 && clickedButton == KEY_SELECT))
@@ -7346,7 +7346,7 @@ void handleMainUI()
         //handle navigation
         int16_t lastPage = page;
         isEditMode = true;
-        page = incDec(page, numPages - 1, 0, INCDEC_WRAP, INCDEC_SLOW_START);
+        page = incDec(page, numPages - 1, 0, INCDEC_WRAP, INCDEC_SLOW, INCDEC_NORMAL);
         if(page != lastPage)
           needsUpdate = true;
         
