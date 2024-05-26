@@ -23,30 +23,77 @@ bool     toastExpired = true;
 
 //--------------------------------------------------------------------------------------------------
 
-int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEnabled, uint8_t state)
+int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEnabled, uint8_t speed)
+{
+  return incDec(val, lowerLimit, upperLimit, wrapEnabled, speed, speed);
+}
+
+int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEnabled, uint8_t initialSpeed, uint8_t finalSpeed)
 {
   //Increments/decrements the passed value between the specified limits inclusive. 
   //If wrap is enabled, wraps around when either limit is reached.
   
   if(!isEditMode)
     return val;
-
-  uint8_t  _heldBtn = 0;
-  uint32_t _timeOffset = 0;
   
-  if(state == INCDEC_SLOW || state == INCDEC_SLOW_START)
+
+  uint8_t  heldBtnQQ = 0;
+  int16_t delta = 1;
+  uint8_t speed = initialSpeed;
+  uint32_t timeQQ = millis() - buttonStartTime;
+  uint32_t timeOffset = 0;
+  
+  if(initialSpeed == INCDEC_SLOW && finalSpeed == INCDEC_NORMAL)
   {
-    if((thisLoopNum - heldButtonEntryLoopNum) % divRoundClosest(120, fixedLoopTime) == 0) //about 8.3 items per second
-      _heldBtn = heldButton;
-    if(state == INCDEC_SLOW_START && millis() - buttonStartTime > (LONGPRESSDELAY + 2000UL))
+    if(timeQQ > 2000 + LONGPRESSDELAY)
     {
-      state = INCDEC_NORMAL; 
-      _timeOffset = 2000;
+      speed = INCDEC_NORMAL;
+      timeOffset = 2000;
     }
   }
-  
-  if(state == INCDEC_NORMAL || state == INCDEC_FAST)
-    _heldBtn = heldButton;
+  else if(initialSpeed == INCDEC_SLOW && finalSpeed == INCDEC_FAST)
+  {
+    if(timeQQ > 2000 + LONGPRESSDELAY)
+    {
+      speed = INCDEC_NORMAL;
+      timeOffset = 2000;
+    }
+    if(timeQQ > 6000 + LONGPRESSDELAY)
+    {
+      speed = INCDEC_FAST;
+      timeOffset = 6000;
+    }
+  }
+  else if(initialSpeed == INCDEC_NORMAL && finalSpeed == INCDEC_FAST)
+  {
+    if(timeQQ > 4000 + LONGPRESSDELAY)
+    {
+      speed = INCDEC_FAST;
+      timeOffset = 4000;
+    }
+  }
+
+  switch(speed)
+  {
+    case INCDEC_SLOW:
+      if((thisLoopNum - heldButtonEntryLoopNum) % divRoundClosest(120, fixedLoopTime) == 0) //about 8.3 items per second
+        heldBtnQQ = heldButton;
+      break;
+
+    case INCDEC_NORMAL:
+      delta = 1;
+      if(timeQQ > (2000 + LONGPRESSDELAY + timeOffset))
+        delta = 2;
+      heldBtnQQ = heldButton;
+      break;
+      
+    case INCDEC_FAST:
+      delta = 10;
+      if(timeQQ > (2000 + LONGPRESSDELAY + timeOffset))
+        delta = 100;
+      heldBtnQQ = heldButton;
+      break;
+  }
 
   //Default is KEY_UP increments, KEY_DOWN decrements
   uint8_t incrKey = KEY_UP;
@@ -61,26 +108,9 @@ int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEna
     incrKey = KEY_DOWN;
     decrKey = KEY_UP;
   }
-  
-  int16_t delta = 1;
-  if(state >= INCDEC_NORMAL && _heldBtn > 0)
-  {
-    uint32_t holdTime = millis() - (buttonStartTime + LONGPRESSDELAY);
-    if(holdTime > (2000UL + _timeOffset))
-    {
-      //only speed up when the fixedLoopTime is above 20, otherwise it might get too fast
-      //resulting in overly overshooting the desired value
-      if(fixedLoopTime >= 20)
-        delta = 2; 
-    }
-    if(holdTime > (4000UL + _timeOffset) && state == INCDEC_FAST)
-      delta = 10;
-    if(holdTime > (8000UL + _timeOffset) && state == INCDEC_FAST)
-      delta = 100;
-  }
 
   //inc dec
-  if(pressedButton == incrKey || _heldBtn == incrKey)
+  if(pressedButton == incrKey || heldBtnQQ == incrKey)
   {
     val += delta;
     if(val > upperLimit)
@@ -89,7 +119,7 @@ int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEna
       else val = upperLimit;
     }
   }
-  else if(pressedButton == decrKey || _heldBtn == decrKey)
+  else if(pressedButton == decrKey || heldBtnQQ == decrKey)
   {
     val -= delta;
     if(val < lowerLimit)
@@ -175,7 +205,7 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
       break;
     }
   }
-  idxQQ = incDec(idxQQ, 0, srcCnt - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+  idxQQ = incDec(idxQQ, 0, srcCnt - 1, INCDEC_WRAP, INCDEC_SLOW);
   return srcQQ[idxQQ];
 }
 
@@ -247,7 +277,7 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
       break;
     }
   }
-  idxQQ = incDec(idxQQ, 0, ctrlCnt - 1, INCDEC_NOWRAP, INCDEC_SLOW);
+  idxQQ = incDec(idxQQ, 0, ctrlCnt - 1, INCDEC_WRAP, INCDEC_SLOW);
   return ctrlQQ[idxQQ];
 }
 
