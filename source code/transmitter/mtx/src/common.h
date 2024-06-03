@@ -289,6 +289,7 @@ typedef struct {
   bool     rememberMenuPosition;
   bool     useRoundRect;
   bool     useDenserMenus;
+  bool     showDropShadows;
   bool     animationsEnabled;
   bool     autohideTrims;
   bool     useNumericalBatteryIndicator;
@@ -312,8 +313,7 @@ typedef struct {
 
 extern sys_params_t Sys;
 
-enum { 
-  //Switch types
+enum {
   SW_ABSENT,
   SW_2POS,
   SW_3POS,
@@ -322,7 +322,6 @@ enum {
 };
 
 enum {
-  //same order as in the UI
   RF_POWER_LOW,
   RF_POWER_MEDIUM,
   RF_POWER_MAX,
@@ -331,7 +330,6 @@ enum {
 };
 
 enum { 
-  //same order as in the UI
   BACKLIGHT_WAKEUP_KEYS, 
   BACKLIGHT_WAKEUP_ACTIVITY, 
   
@@ -339,12 +337,13 @@ enum {
 };
 
 enum {
-  //same order as in the UI
   BACKLIGHT_TIMEOUT_5SEC,
   BACKLIGHT_TIMEOUT_15SEC,
   BACKLIGHT_TIMEOUT_1MIN,
+  BACKLIGHT_TIMEOUT_2MIN,
   BACKLIGHT_TIMEOUT_5MIN,
-  BACKLIGHT_TIMEOUT_15MIN,
+  BACKLIGHT_TIMEOUT_10MIN,
+  BACKLIGHT_TIMEOUT_30MIN,
   BACKLIGHT_TIMEOUT_NEVER,
   
   BACKLIGHT_TIMEOUT_COUNT
