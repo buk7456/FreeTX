@@ -5166,7 +5166,7 @@ void handleMainUI()
         display.print(F("Initial:"));
         display.setCursor(60, 47);
         display.print(tmr->initialMinutes);
-        display.print(F(" min"));
+        display.print(F("min"));
         
         display.setCursor(0, 56);
         display.print(F("Persist:"));
@@ -6415,6 +6415,7 @@ void handleMainUI()
           ITEM_KEEP_MENU_POSITION,
           ITEM_USE_DENSER_MENUS,
           ITEM_USE_ROUND_CORNERS,
+          ITEM_SHOW_DROP_SHADOWS,
           ITEM_ENABLE_ANIMATIONS,
           ITEM_AUTOHIDE_TRIMS,
           ITEM_USE_NUMERICAL_BATTERY_INDICATOR,
@@ -6490,6 +6491,13 @@ void handleMainUI()
               {
                 display.print(F("Round corners:")); drawCheckbox(102, ypos, Sys.useRoundRect);
                 if(edit) Sys.useRoundRect = incDec(Sys.useRoundRect, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+            
+            case ITEM_SHOW_DROP_SHADOWS:
+              {
+                display.print(F("Drop shadows:")); drawCheckbox(102, ypos, Sys.showDropShadows);
+                if(edit) Sys.showDropShadows = incDec(Sys.showDropShadows, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
               
@@ -8812,9 +8820,26 @@ void drawBoundingBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color)
       display.drawHLine(xx, yy, 2, color);
       display.drawVLine((i % 2) ? (xx + 2) : (xx - 1), (i < 2) ? (yy + 1) : (yy - 2), 2, color);
     }
+    //drop shadow
+    if(Sys.showDropShadows)
+    {
+      display.drawHLine(x + 6, y + h, w - 10, color);
+      display.drawVLine(x + w, y + 6, h - 10, color);
+      display.drawHLine(x + w - 4, y + h - 1, 2, color);
+      display.drawVLine(x + w - 1, y + h - 4, 2, color);
+      display.drawPixel(x + w - 2, y + h - 2, color);
+    }
   }
   else
+  {
     display.drawRect(x, y, w, h, color);
+    //drop shadow
+    if(Sys.showDropShadows)
+    {
+      display.drawHLine(x + 2, y + h, w - 1, color);
+      display.drawVLine(x + w, y + 2, h - 1, color);
+    }
+  }
 }
 
 //--------------------------------------------------------------------------------------------------
