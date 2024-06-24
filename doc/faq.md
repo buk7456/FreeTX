@@ -28,7 +28,3 @@ I plan on working on this in the near future, but I haven't yet found a compelli
 ### SD card is not working or can't be detected.
 The card should be formatted with the FAT (FAT16 or FAT32) file system. Other file systems are not supported. Also try to keep
 the number of files on the card minimal.
-
-### I have discovered a bug or I have an issue. 
-Whereas I have done extensive testing for all features and fixed all known bugs and issues, I cannot guarantee total bug freeness.  
-In case you come across a bug or have an issue, you can file it here on GitHub under 'Issues'.
