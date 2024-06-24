@@ -8,7 +8,6 @@ int16_t calcExpo(int16_t input, int16_t expo);
 int16_t calcDifferential(int16_t input, int16_t diff);
 int32_t applySlow(int32_t currVal, int32_t targetVal, int32_t multiplier, uint32_t riseTime, uint32_t fallTime);
 int16_t weightAndOffset(int16_t input, int16_t weight, int16_t offset);
-int8_t  adjustTrim(int8_t val, int8_t lowerLimit, int8_t upperLimit, uint8_t incButton, uint8_t decButton);
 int16_t generateWaveform(uint8_t idx, int32_t _currTime);
 
 //mix sources array
@@ -41,7 +40,7 @@ void reinitialiseMixerCalculations()
 
 void computeChannelOutputs()
 {
-  if(isCalibratingSticks)
+  if(isCalibratingControls)
     return;
 
   if(isReinitialiseMixer)
@@ -63,7 +62,7 @@ void computeChannelOutputs()
   uint32_t currMillis = millis() - timeOffset;
 
   //--- Determine the activeFmdIdx 
-  //The first one found is considered, the subsequent ones are ignored even if their conditions are met
+  //The first one found true takes precedence; the subsequent ones are ignored even if their conditions are met
   activeFmdIdx = 0;
   for(uint8_t i = 0; i < NUM_FLIGHT_MODES; i++)
   {
@@ -82,12 +81,12 @@ void computeChannelOutputs()
      Model.X1Trim.commonTrim = adjustTrim( Model.X1Trim.commonTrim, -20, 20, KEY_X1_TRIM_UP, KEY_X1_TRIM_DOWN);
   else if(Model.X1Trim.trimState == TRIM_FLIGHT_MODE)
     fmd->x1Trim = adjustTrim(fmd->x1Trim, -20, 20, KEY_X1_TRIM_UP, KEY_X1_TRIM_DOWN);
-    //y1 axis
+  //y1 axis
   if(Model.Y1Trim.trimState == TRIM_COMMON)
      Model.Y1Trim.commonTrim = adjustTrim( Model.Y1Trim.commonTrim, -20, 20, KEY_Y1_TRIM_UP, KEY_Y1_TRIM_DOWN);
   else if(Model.Y1Trim.trimState == TRIM_FLIGHT_MODE)
     fmd->y1Trim = adjustTrim(fmd->y1Trim, -20, 20, KEY_Y1_TRIM_UP, KEY_Y1_TRIM_DOWN);
-    //x2 axis
+  //x2 axis
   if(Model.X2Trim.trimState == TRIM_COMMON)
     Model.X2Trim.commonTrim = adjustTrim( Model.X2Trim.commonTrim, -20, 20, KEY_X2_TRIM_UP, KEY_X2_TRIM_DOWN);
   else if(Model.X2Trim.trimState == TRIM_FLIGHT_MODE)
@@ -145,8 +144,8 @@ void computeChannelOutputs()
     mixSources[SRC_STICK_AXIS_FIRST + i] = stickAxisIn[i];
 
   //Mix source knobs
-  mixSources[SRC_KNOB_A] = knobAIn;
-  mixSources[SRC_KNOB_B] = knobBIn;
+  for(uint8_t i = 0; i < NUM_KNOBS; i++)
+    mixSources[SRC_KNOB_FIRST + i] = knobIn[i];
   
   //Mix source 100Perc
   mixSources[SRC_100PERC] = 500;
