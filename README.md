@@ -38,14 +38,13 @@ Three buttons are used for navigation; Up, Select, Down. Long press Select to go
 <br>[Telemetry](doc/telemetry.md)
 <br>[Receiver binding and configuration](doc/receiver_config.md)
 
-## Example implementation
+## Gallery
 <p align="left">
-<img src="doc/img6.jpg"/>
+<img src="doc/img6.jpg" width = "800"/>
 <img src="doc/img2.jpg" width="400"/>
 <img src="doc/img4.jpg" width="400"/>
 </p>
 
-### Demonstration videos
 [![Features overview - FreeTX](doc/yt.jpg)](https://www.youtube.com/watch?v=rDpRMRE8av0) 
 [![RF link test - FreeTX](doc/yt2.jpg)](https://www.youtube.com/watch?v=9EZkyRHkMpg)
 
