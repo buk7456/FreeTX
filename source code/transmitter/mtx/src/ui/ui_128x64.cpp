@@ -54,11 +54,12 @@ enum {
 };
 
 char const advancedMenu[][20] PROGMEM = { 
-  "Sticks", "Switches", "Battery", "Security", "Miscellaneous", "Debug"
+  "Sticks", "Knobs", "Switches", "Battery", "Security", "Miscellaneous", "Debug"
 };
 enum {
-  ADVANCED_MENU_STICKS, ADVANCED_MENU_SWITCHES, ADVANCED_MENU_BATTERY, ADVANCED_MENU_SECURITY,
-  ADVANCED_MENU_MISC, ADVANCED_MENU_DEBUG
+  ADVANCED_MENU_STICKS, ADVANCED_MENU_KNOBS, ADVANCED_MENU_SWITCHES, 
+  ADVANCED_MENU_BATTERY, ADVANCED_MENU_SECURITY,
+  ADVANCED_MENU_MISCELLANEOUS, ADVANCED_MENU_DEBUG
 };
 
 //---------------------------- Main UI states ------------------------------------------------------
@@ -173,10 +174,11 @@ enum {
   SCREEN_UNLOCK_ADVANCED_MENU,
   SCREEN_ADVANCED_MENU,
   SCREEN_STICKS,
+  SCREEN_KNOBS,
   SCREEN_SWITCHES,
   SCREEN_BATTERY,
   SCREEN_SECURITY,
-  SCREEN_MISC,
+  SCREEN_MISCELLANEOUS,
   SCREEN_DEBUG,
   SCREEN_INTERNAL_EEPROM_DUMP,
   SCREEN_EXTERNAL_EEPROM_DUMP,
@@ -260,10 +262,15 @@ uint8_t destWidgetIdx = 0;
 
 //others 
 bool isRequestingStickCalibration = false;
-bool batteryGaugeCalibrated = true;
+bool isRequestingKnobCalibration = false;
 bool isRequestingSwitchesSetup = false;
+bool batteryGaugeCalibrated = true;
 bool mainMenuLocked = true;
 const char* textViewerText;
+
+//onscreen trim
+bool isOnscreenTrimMode = false;
+uint8_t trimIdx = 0;
 
 //---------------------------- Function declarations -----------------------------------------------
 
@@ -286,7 +293,7 @@ void drawAnimatedSprite(uint8_t x, uint8_t y, const uint8_t* const bitmapTable[]
                         uint8_t frameCount, uint16_t frameTime, uint32_t timeOffset);
 void drawHorizontalBarChart(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t valMin, int16_t valMax);
 void drawHorizontalBarChartZeroCentered(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t range);
-void drawTrimSlider(uint8_t x, uint8_t y, int8_t val, uint8_t range, bool horizontal);
+void drawTrimSliders();
 void drawDialogCopyMove(const char* str, uint8_t srcIdx, uint8_t destIdx, bool isCopy);
 void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src);
 void drawToast();
@@ -321,8 +328,9 @@ void initialiseDisplay()
 void startInitialSetup()
 {
   isRequestingStickCalibration = true;
-  batteryGaugeCalibrated = false;
+  isRequestingKnobCalibration = true;
   isRequestingSwitchesSetup = true;
+  batteryGaugeCalibrated = false;
 }
 
 //============================ Generic messages ====================================================
@@ -398,7 +406,7 @@ void handleBatteryWarnUI()
 
 void handleSafetyWarnUI()  //blocking function
 {
-  if(isRequestingSwitchesSetup || isRequestingStickCalibration)
+  if(isRequestingSwitchesSetup || isRequestingStickCalibration || isRequestingKnobCalibration)
     return;
   
   while(1)
@@ -434,10 +442,12 @@ void handleSafetyWarnUI()  //blocking function
         else if(Sys.StickAxis[idx].type == STICK_AXIS_NON_CENTERING && stickAxisIn[idx] > -450)
           isThrottleWarn = true;
       }
-      else if(Model.thrSrcRaw == SRC_KNOB_A && knobAIn > -450)
-        isThrottleWarn = true;
-      else if(Model.thrSrcRaw == SRC_KNOB_B && knobBIn > -450)
-        isThrottleWarn = true;
+      else if(Model.thrSrcRaw >= SRC_KNOB_FIRST && Model.thrSrcRaw <= SRC_KNOB_LAST)
+      {
+        uint8_t idx = Model.thrSrcRaw - SRC_KNOB_FIRST;
+        if(knobIn[idx] > -450)
+          isThrottleWarn = true;
+      }
     }
 
     //Check switch positions
@@ -588,6 +598,12 @@ void handleMainUI()
           changeToScreen(SCREEN_STICKS);
           break; 
         }
+        
+        if(isRequestingKnobCalibration)
+        {
+          changeToScreen(SCREEN_KNOBS);
+          break; 
+        }
 
         if(isRequestingSwitchesSetup)
         {
@@ -603,7 +619,7 @@ void handleMainUI()
         
         if(!Sys.lockStartup || isEmptyStr(Sys.password, sizeof(Sys.password)))
           mainMenuLocked = false;
-        
+
         //--------------- Icons -----------------
         
         uint8_t icon_xpos = 127;
@@ -669,30 +685,9 @@ void handleMainUI()
         static uint32_t endTime; 
         if(buttonCode >= KEY_TRIM_FIRST && buttonCode <= KEY_TRIM_LAST)
           endTime = millis() + 3000UL;
-        if(!Sys.autohideTrims ||(Sys.autohideTrims && millis() < endTime))
-        {
-          if(Model.X1Trim.trimState != TRIM_DISABLED) 
-          {
-            int8_t val = Model.X1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x1Trim : Model.X1Trim.commonTrim;
-            drawTrimSlider(14, 62, val, 40, true);
-          }
-          if(Model.Y1Trim.trimState != TRIM_DISABLED)
-          {
-            int8_t val = Model.Y1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].y1Trim : Model.Y1Trim.commonTrim;
-            drawTrimSlider(1, 15, val, 40, false);
-          }
-          if(Model.X2Trim.trimState != TRIM_DISABLED)
-          {
-            int8_t val = Model.X2Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x2Trim : Model.X2Trim.commonTrim;
-            drawTrimSlider(73, 62, val, 40, true);
-          }
-          if(Model.Y2Trim.trimState != TRIM_DISABLED)
-          {
-            int8_t val = Model.Y2Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].y2Trim : Model.Y2Trim.commonTrim;
-            drawTrimSlider(126, 15, val, 40, false);
-          }
-        }
-        
+        if(!Sys.autohideTrims ||(Sys.autohideTrims && millis() < endTime) || isOnscreenTrimMode)
+          drawTrimSliders();
+
         //------------ Model name, flight modes -------------
         //Model name
         display.setCursor(14, 9);
@@ -882,24 +877,100 @@ void handleMainUI()
         }
         
         //-------------- handle keys ------------
-        
-        if(clickedButton == KEY_SELECT)
+
+        if(isOnscreenTrimMode)
         {
-          if(mainMenuLocked) changeToScreen(SCREEN_UNLOCK_MAIN_MENU);
-          else changeToScreen(SCREEN_MAIN_MENU);
+          if(heldButton == KEY_SELECT)
+          {
+            isOnscreenTrimMode = false;
+            killButtonEvents();
+            audioToPlay = AUDIO_TRIM_EXITED;
+          }
+
+          if(pressedButton == KEY_SELECT)
+          {
+            //suppress AUDIO_KEY_PRESSED
+            if(audioToPlay == AUDIO_KEY_PRESSED)
+              audioToPlay = AUDIO_NONE;
+          }
+
+          if(clickedButton == KEY_SELECT)
+          {
+            trimIdx++;
+            if(trimIdx > 3)
+              trimIdx = 0;
+            audioToPlay = AUDIO_TRIM_X1 + trimIdx;
+          }
+
+          flight_mode_t* fmd = &Model.FlightMode[activeFmdIdx];
+          
+          //Adjust trim values
+          switch(trimIdx)
+          {
+            case 0:
+              //x1 axis
+              if(Model.X1Trim.trimState == TRIM_COMMON)
+                Model.X1Trim.commonTrim = adjustTrim( Model.X1Trim.commonTrim, -20, 20, KEY_UP, KEY_DOWN);
+              else if(Model.X1Trim.trimState == TRIM_FLIGHT_MODE)
+                fmd->x1Trim = adjustTrim(fmd->x1Trim, -20, 20, KEY_UP, KEY_DOWN);
+              break;
+              
+            case 1:
+              //y1 axis
+              if(Model.Y1Trim.trimState == TRIM_COMMON)
+                 Model.Y1Trim.commonTrim = adjustTrim( Model.Y1Trim.commonTrim, -20, 20, KEY_UP, KEY_DOWN);
+              else if(Model.Y1Trim.trimState == TRIM_FLIGHT_MODE)
+                fmd->y1Trim = adjustTrim(fmd->y1Trim, -20, 20, KEY_UP, KEY_DOWN);
+              break;
+            
+            case 2:
+              //x2 axis
+              if(Model.X2Trim.trimState == TRIM_COMMON)
+                Model.X2Trim.commonTrim = adjustTrim( Model.X2Trim.commonTrim, -20, 20, KEY_UP, KEY_DOWN);
+              else if(Model.X2Trim.trimState == TRIM_FLIGHT_MODE)
+                fmd->x2Trim = adjustTrim(fmd->x2Trim, -20, 20, KEY_UP, KEY_DOWN);
+              break;
+              
+            case 3:
+              //y2 axis
+              if(Model.Y2Trim.trimState == TRIM_COMMON)
+                 Model.Y2Trim.commonTrim = adjustTrim(Model.Y2Trim.commonTrim, -20, 20, KEY_UP, KEY_DOWN);
+              else if(Model.Y2Trim.trimState == TRIM_FLIGHT_MODE)
+                fmd->y2Trim = adjustTrim(fmd->y2Trim, -20, 20, KEY_UP, KEY_DOWN);
+              break;
+          }
         }
-        else if(clickedButton == KEY_UP)
-          changeToScreen(SCREEN_CHANNEL_MONITOR);
-        else if(clickedButton == KEY_DOWN)
-          changeToScreen(CONTEXT_MENU_HOME_SCREEN);
-        
-        //mute audible telemetry alarms
-        if(heldButton == KEY_DOWN && millis() - buttonStartTime > 1000UL)
+        else
         {
-          killButtonEvents();
-          telemetryMuteAlarms = !telemetryMuteAlarms;
-          audioToPlay = AUDIO_TELEM_MUTE_CHANGED;
-          makeToast(telemetryMuteAlarms ? PSTR("Telemetry muted") : PSTR("Telemetry unmuted") , 2000, 0);
+          if(heldButton == KEY_UP)
+          {
+            isOnscreenTrimMode = true;
+            killButtonEvents();
+            audioToPlay = AUDIO_TRIM_ENTERED;
+          }
+
+          if(clickedButton == KEY_SELECT)
+          {
+            if(mainMenuLocked) 
+              changeToScreen(SCREEN_UNLOCK_MAIN_MENU);
+            else 
+              changeToScreen(SCREEN_MAIN_MENU);
+          }
+
+          if(clickedButton == KEY_UP)
+            changeToScreen(SCREEN_CHANNEL_MONITOR);
+
+          if(clickedButton == KEY_DOWN)
+            changeToScreen(CONTEXT_MENU_HOME_SCREEN);
+          
+          //mute audible telemetry alarms
+          if(heldButton == KEY_DOWN && millis() - buttonStartTime > 1000UL)
+          {
+            killButtonEvents();
+            telemetryMuteAlarms = !telemetryMuteAlarms;
+            audioToPlay = AUDIO_TELEM_MUTE_CHANGED;
+            makeToast(telemetryMuteAlarms ? PSTR("Telemetry muted") : PSTR("Telemetry unmuted") , 2000, 0);
+          }
         }
       }
       break;
@@ -2524,19 +2595,18 @@ void handleMainUI()
           display.print(txtBuff);
           display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
           
-          uint8_t qqSrc[] = {SRC_KNOB_A, SRC_KNOB_B};
-          int16_t qqVal[]  = {knobAIn, knobBIn};
-          for(uint8_t i = 0; i < sizeof(qqSrc); i++)
+          for(uint8_t i = 0; i < NUM_KNOBS; i++)
           {
+            if(Sys.Knob[i].type == KNOB_ABSENT)
+              continue;
             uint8_t xpos = 0;
             uint8_t ypos = 20 + i*9;
-            
             display.setCursor(xpos, ypos);
-            getSrcName(txtBuff, qqSrc[i], sizeof(txtBuff));
+            getSrcName(txtBuff, SRC_KNOB_FIRST + i, sizeof(txtBuff));
             display.print(txtBuff);
             display.print(F(":"));
             display.setCursor(display.getCursorX() + 6, ypos);
-            display.print(qqVal[i]/5);
+            display.print(knobIn[i]/5);
           }
         }
         
@@ -6568,11 +6638,12 @@ void handleMainUI()
         {
           uint8_t selectIdx = highlightedItem - 1;
           if(selectIdx == ADVANCED_MENU_STICKS) changeToScreen(SCREEN_STICKS);
+          if(selectIdx == ADVANCED_MENU_KNOBS) changeToScreen(SCREEN_KNOBS);
           if(selectIdx == ADVANCED_MENU_SWITCHES) changeToScreen(SCREEN_SWITCHES); 
           if(selectIdx == ADVANCED_MENU_BATTERY) changeToScreen(SCREEN_BATTERY);
           if(selectIdx == ADVANCED_MENU_DEBUG) changeToScreen(SCREEN_DEBUG);
           if(selectIdx == ADVANCED_MENU_SECURITY) changeToScreen(SCREEN_SECURITY);
-          if(selectIdx == ADVANCED_MENU_MISC) changeToScreen(SCREEN_MISC);
+          if(selectIdx == ADVANCED_MENU_MISCELLANEOUS) changeToScreen(SCREEN_MISCELLANEOUS);
         }
 
         //exit
@@ -6728,7 +6799,7 @@ void handleMainUI()
             
           case PAGE_MOVE_STICKS:
             {
-              isCalibratingSticks = true;
+              isCalibratingControls = true;
           
               printFullScreenMsg(PSTR("Move sticks fully,\nthen center them.\n"));
               calibrateSticks(CALIBRATE_MOVE);
@@ -6744,7 +6815,7 @@ void handleMainUI()
                 calibrateSticks(CALIBRATE_DEADBAND); 
                 //go to next page
                 page = PAGE_ADJUST_DEADZONE;
-                isCalibratingSticks = false;
+                isCalibratingControls = false;
               }
             }
             break;
@@ -6834,6 +6905,253 @@ void handleMainUI()
                   changeToScreen(SCREEN_HOME);
                 viewInitialised = false;
                 isRequestingStickCalibration = false;
+                initialised = false;
+              }
+            }
+            break;
+        }
+      }
+      break;
+      
+    case SCREEN_KNOBS:
+      {
+        drawHeader(advancedMenu[ADVANCED_MENU_KNOBS]);
+
+        enum {
+          PAGE_START,
+          PAGE_KNOB_TYPE,
+          PAGE_MOVE_KNOBS, 
+          PAGE_ADJUST_DEADZONE
+        };
+        
+        static uint8_t page = PAGE_START;
+        static bool initialised = false;
+
+        if(!initialised)
+        {
+          initialised = true;
+          focusedItem = 1;
+          isEditMode = false;
+          page = (lastScreen == SCREEN_HOME) ? PAGE_KNOB_TYPE : PAGE_START;
+        }
+
+        uint8_t numItems = NUM_KNOBS;
+
+        switch(page)
+        {
+          case PAGE_START:
+            {
+              display.setCursor(0, 9);
+              display.print(F("Calibrtn:"));
+              display.setCursor(78, 9);
+              display.print(F("[Start]"));
+              
+              display.setCursor(0, 18);
+              display.print(F("Deadzone:"));
+              display.setCursor(78, 18);
+              display.print(F("[Adjust]"));
+              
+              drawCursor(70, focusedItem * 9);
+              
+              changeFocusOnUpDown(2);
+              toggleEditModeOnSelectClicked();
+              
+              if(focusedItem == 1 && isEditMode)
+              {
+                page = PAGE_KNOB_TYPE;
+                isEditMode = false;
+              }
+              else if(focusedItem == 2 && isEditMode)
+              {
+                page = PAGE_ADJUST_DEADZONE;
+                isEditMode = false;
+              }
+              
+              if(heldButton == KEY_SELECT)
+              {
+                initialised = false;
+                changeToScreen(SCREEN_ADVANCED_MENU);
+              }
+            }
+            break;
+          
+          case PAGE_KNOB_TYPE:
+            {
+              display.setCursor(0, 9);
+              display.print(F("Type of knob"));
+              
+              //scrollable list
+              
+              static uint8_t topItem;
+              static bool viewInitialised = false;
+              if(!viewInitialised)
+              {
+                focusedItem = 1;
+                topItem = 1;
+                viewInitialised = true;
+              }
+              
+              for(uint8_t line = 0; line < 4 && line < numItems; line++)
+              {
+                uint8_t ypos = 18 + line * 9;
+                uint8_t item = topItem + line;
+                if(focusedItem == item)
+                  drawCursor(40, ypos);
+                
+                display.setCursor(0, ypos);
+                uint8_t idx = item - 1;
+                getSrcName(txtBuff, SRC_KNOB_FIRST + idx, sizeof(txtBuff));
+                display.print(txtBuff);
+                display.print(F(":"));
+                
+                display.setCursor(48, ypos);
+                display.print(findStringInIdStr(enum_KnobType, Sys.Knob[idx].type));
+              }
+              
+              //Draw scroll bar
+              drawScrollBar(127, 9, numItems, topItem, 4, 44);
+              
+              //'next' button
+              drawDottedHLine(0, 54, 128, BLACK, WHITE);
+              display.setCursor(90, 56);
+              display.print(F("[Next]"));
+              if(focusedItem == numItems + 1)
+                drawCursor(82, 56);
+              
+              //handle navigation
+              changeFocusOnUpDown(numItems + 1); //+1 for button focus
+              if(focusedItem < topItem)
+                topItem = focusedItem;
+              while(focusedItem >= topItem + 4 && focusedItem < numItems + 1)
+                topItem++;
+              toggleEditModeOnSelectClicked();
+              
+              //edit params
+              uint8_t idx = focusedItem - 1;
+              if(idx < numItems)
+                Sys.Knob[idx].type = incDec(Sys.Knob[idx].type, 0, KNOB_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+              
+              if(focusedItem == numItems + 1 && isEditMode)
+              {
+                //start the calibration
+                calibrateKnobs(CALIBRATE_INIT);
+                //go to next page
+                page = PAGE_MOVE_KNOBS;
+                isEditMode = false;
+                focusedItem = 1;
+                viewInitialised = false;
+              }
+            }
+            break;
+            
+          case PAGE_MOVE_KNOBS:
+            {
+              isCalibratingControls = true;
+          
+              printFullScreenMsg(PSTR("Move knobs fully,\nthen center them.\n"));
+              calibrateKnobs(CALIBRATE_MOVE);
+              
+              drawDottedHLine(0, 54, 128, BLACK, WHITE);
+              display.setCursor(90, 56);
+              display.print(F("[Next]"));
+              drawCursor(82, 56);
+              
+              if(clickedButton == KEY_SELECT)
+              {
+                //add dead band to extremes
+                calibrateKnobs(CALIBRATE_DEADBAND); 
+                //go to next page
+                page = PAGE_ADJUST_DEADZONE;
+                isCalibratingControls = false;
+              }
+            }
+            break;
+            
+          case PAGE_ADJUST_DEADZONE:
+            {
+              display.setCursor(0, 9);
+              display.print(F("Adjust deadzone"));
+              
+              //scrollable list
+              
+              static uint8_t topItem;
+              static bool viewInitialised = false;
+              if(!viewInitialised)
+              {
+                focusedItem = 1;
+                topItem = 1;
+                viewInitialised = true;
+              }
+              
+              for(uint8_t line = 0; line < 4 && line < numItems; line++)
+              {
+                uint8_t ypos = 18 + line * 9;
+                uint8_t item = topItem + line;
+                if(focusedItem == item)
+                  drawCursor(40, ypos);
+                
+                uint8_t idx = item - 1;
+
+                display.setCursor(0, ypos);
+                getSrcName(txtBuff, SRC_KNOB_FIRST + idx, sizeof(txtBuff));
+                display.print(txtBuff);
+                display.print(F(":"));
+                
+                display.setCursor(48, ypos);
+                if(Sys.Knob[idx].type == KNOB_CENTER_DETENT)
+                {
+                  display.print(Sys.Knob[idx].deadzone);
+                  display.print(F("%"));
+                }
+                else
+                  display.print(F("N/A"));
+                
+                display.setCursor(84, ypos);
+                display.print(F("("));
+                display.print(knobIn[idx]/5);
+                display.print(F(")"));
+              }
+              
+              //Draw scroll bar
+              drawScrollBar(127, 9, numItems, topItem, 4, 44);
+              
+              //'next' or 'finish' button
+              drawDottedHLine(0, 54, 128, BLACK, WHITE);
+              if(lastScreen == SCREEN_HOME)
+              {
+                display.setCursor(90, 56);
+                display.print(F("[Next]"));
+                if(focusedItem == numItems + 1)
+                  drawCursor(82, 56);
+              }
+              else 
+              {
+                display.setCursor(78, 56);
+                display.print(F("[Finish]"));
+                if(focusedItem == numItems + 1)
+                  drawCursor(70, 56);
+              }
+              
+              //handle navigation
+              changeFocusOnUpDown(numItems + 1); //+1 for button focus
+              if(focusedItem < topItem)
+                topItem = focusedItem;
+              while(focusedItem >= topItem + 4 && focusedItem < numItems + 1)
+                topItem++;
+              toggleEditModeOnSelectClicked();
+              
+              //edit params
+              uint8_t idx = focusedItem - 1;
+              if(idx < numItems && Sys.Knob[idx].type == KNOB_CENTER_DETENT)
+                Sys.Knob[idx].deadzone = incDec(Sys.Knob[idx].deadzone, 0, 15, INCDEC_NOWRAP, INCDEC_SLOW);
+              
+              if(focusedItem == numItems + 1 && isEditMode)
+              {
+                //exit calibration
+                if(lastScreen == SCREEN_HOME)
+                  changeToScreen(SCREEN_HOME);
+                viewInitialised = false;
+                isRequestingKnobCalibration = false;
                 initialised = false;
               }
             }
@@ -7053,9 +7371,9 @@ void handleMainUI()
       }
       break;
       
-    case SCREEN_MISC:
+    case SCREEN_MISCELLANEOUS:
       {
-        drawHeader(advancedMenu[ADVANCED_MENU_MISC]);
+        drawHeader(advancedMenu[ADVANCED_MENU_MISCELLANEOUS]);
         
         display.setCursor(0, 9);
         display.print(F("Autoslct input:"));
@@ -8731,21 +9049,69 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
 
 //--------------------------------------------------------------------------------------------------
 
-void drawTrimSlider(uint8_t x, uint8_t y, int8_t val, uint8_t range, bool horizontal)
+void drawTrimSliders()
 {
-  if(horizontal)
+  int8_t x[4] = {14, 1, 73, 126};
+  int8_t y[4] = {62, 15, 62, 15};
+
+  int8_t val[4];
+  val[0] = Model.X1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x1Trim : Model.X1Trim.commonTrim;
+  val[1] = Model.Y1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].y1Trim : Model.Y1Trim.commonTrim;
+  val[2] = Model.X2Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x2Trim : Model.X2Trim.commonTrim;
+  val[3] = Model.Y2Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].y2Trim : Model.Y2Trim.commonTrim;
+  
+  bool isDisabled[4];
+  isDisabled[0] = Model.X1Trim.trimState == TRIM_DISABLED;
+  isDisabled[1] = Model.Y1Trim.trimState == TRIM_DISABLED;
+  isDisabled[2] = Model.X2Trim.trimState == TRIM_DISABLED;
+  isDisabled[3] = Model.Y2Trim.trimState == TRIM_DISABLED;
+  
+  int8_t range = 40;
+  
+  for(uint8_t i = 0; i < 4; i++)
   {
-    uint8_t xqq = ((int16_t) x + range/2 - 1) + val;
-    display.drawRect(xqq, y - 1, 3, 3, BLACK);
-    display.drawHLine(x, y, range + 1, BLACK);
-    display.drawPixel(x + range/2, y, WHITE);
-  }
-  else
-  {
-    uint8_t yqq = ((int16_t) y + range/2 - 1) - val;
-    display.drawRect(x - 1, yqq, 3, 3, BLACK);
-    display.drawVLine(x, y, range + 1, BLACK);
-    display.drawPixel(x, y + range/2, WHITE);
+    bool invertColor = false;
+    if(isOnscreenTrimMode)
+    {
+      if(i == trimIdx) 
+        invertColor = true;
+      if(i == 0 || i == 2) 
+      { 
+        y[i] -= 2;
+        if(i == trimIdx)
+          display.fillRect(x[i] - 3, y[i] - 3, range + 7, 7, BLACK);
+      }
+      if(i == 1) 
+      {
+        x[i] += 2;
+        if(i == trimIdx)
+          display.fillRect(x[i] - 3, y[i] - 3, 7, range + 7, BLACK);
+      }
+      if(i == 3) 
+      {
+        x[i] -= 2;
+        if(i == trimIdx)
+          display.fillRect(x[i] - 3, y[i] - 3, 7, range + 7, BLACK);
+      }    
+    }
+    uint8_t fgColor = invertColor ? WHITE : BLACK;
+    uint8_t bgColor = invertColor ? BLACK : WHITE;
+    if(isDisabled[i])
+      continue;
+    if(i == 0 || i == 2)
+    {
+      uint8_t xqq = x[i] + range/2 - 1 + val[i];
+      display.drawRect(xqq, y[i] - 1, 3, 3, fgColor);
+      display.drawHLine(x[i], y[i], range + 1, fgColor);
+      display.drawPixel(x[i] + range/2, y[i], bgColor);
+    }
+    if(i == 1 || i == 3)
+    {
+      uint8_t yqq = y[i] + range/2 - 1 - val[i];
+      display.drawRect(x[i] - 1, yqq, 3, 3, fgColor);
+      display.drawVLine(x[i], y[i], range + 1, fgColor);
+      display.drawPixel(x[i], y[i] + range/2, bgColor);
+    }
   }
 }
 

@@ -71,6 +71,13 @@ const id_string_t enum_StickAxisName[] PROGMEM = {
   {0, ""}
 };
 
+const id_string_t enum_KnobType[] PROGMEM = {
+  {KNOB_ABSENT, "Absent"},
+  {KNOB_CENTER_DETENT, "Center detent"},
+  {KNOB_NO_CENTER_DETENT, "No detent"},
+  {0, ""}
+};
+
 //Model related
 
 const id_string_t enum_ModelType[] PROGMEM = {
@@ -438,8 +445,6 @@ void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff)
   switch(idx)
   {
     case SRC_NONE:    strlcpy_P(buff, PSTR("None"), lenBuff); break;
-    case SRC_KNOB_A:  strlcpy_P(buff, PSTR("KnobA"), lenBuff); break;
-    case SRC_KNOB_B:  strlcpy_P(buff, PSTR("KnobB"), lenBuff); break;
     case SRC_100PERC: strlcpy_P(buff, PSTR("Max"), lenBuff); break;
     case SRC_THR: strlcpy_P(buff, PSTR("Thr"), lenBuff); break;
     case SRC_AIL: strlcpy_P(buff, Model.type == MODEL_TYPE_MULTICOPTER ? PSTR("Roll") : PSTR("Ail"), lenBuff); break;
@@ -455,7 +460,13 @@ void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff)
 
       char suffix[5]; //large enough to hold the range we want to convert
       memset(suffix, 0, sizeof(suffix));
-      if(idx >= SRC_SW_PHYSICAL_FIRST && idx <= SRC_SW_PHYSICAL_LAST)
+      if(idx >= SRC_KNOB_FIRST && idx <= SRC_KNOB_LAST)
+      {
+        strlcpy_P(buff, PSTR("Knob"), lenBuff);
+        suffix[0] = 'A' + (idx - SRC_KNOB_FIRST);
+        strlcat(buff, suffix, lenBuff);
+      }
+      else if(idx >= SRC_SW_PHYSICAL_FIRST && idx <= SRC_SW_PHYSICAL_LAST)
       {
         strlcpy_P(buff, PSTR("Sw"), lenBuff);
         suffix[0] = 'A' + (idx - SRC_SW_PHYSICAL_FIRST);
