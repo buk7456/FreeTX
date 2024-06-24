@@ -56,13 +56,12 @@ extern int16_t  channelOut[NUM_RC_CHANNELS];  //Range is -500 to 500
 // Leave as is unless you've physically added or removed the corresponding pins in the schematics
 // If you must change this, you also need to add the axis names manually
 #define NUM_STICK_AXES 10
+#define NUM_KNOBS 2
 
 extern int16_t stickAxisIn[NUM_STICK_AXES];
+extern int16_t knobIn[NUM_KNOBS];
 
-extern int16_t knobAIn;
-extern int16_t knobBIn;
-
-extern bool isCalibratingSticks;
+extern bool isCalibratingControls;
 enum {
   //calibration stages
   CALIBRATE_INIT,
@@ -133,18 +132,26 @@ enum {
   AUDIO_NONE, 
   AUDIO_BATTERY_WARN, 
   AUDIO_SAFETY_WARN, 
-  AUDIO_TIMER_ELAPSED, 
-  AUDIO_INACTIVITY, 
   AUDIO_TELEM_WARN,
   AUDIO_TELEM_MUTE_CHANGED,
+  AUDIO_INACTIVITY, 
+  AUDIO_TIMER_ELAPSED,
   AUDIO_BIND_SUCCESS,
-  AUDIO_TRIM_MOVED,
-  AUDIO_TRIM_CENTER,
+  AUDIO_SCREENSHOT_CAPTURED,
   AUDIO_SWITCH_MOVED,
   AUDIO_KEY_PRESSED,
+
+  AUDIO_TRIM_MOVED,
+  AUDIO_TRIM_CENTER,
+  AUDIO_TRIM_ENTERED,
+  AUDIO_TRIM_EXITED,
+  AUDIO_TRIM_X1,
+  AUDIO_TRIM_Y1,
+  AUDIO_TRIM_X2,
+  AUDIO_TRIM_Y2,
+
   AUDIO_NOTIFICATION_TONE_FIRST,
   AUDIO_NOTIFICATION_TONE_LAST = AUDIO_NOTIFICATION_TONE_FIRST + NOTIFICATION_TONE_COUNT - 1,
-  AUDIO_SCREENSHOT_CAPTURED,
 };
 
 extern uint8_t  audioToPlay;
@@ -236,6 +243,17 @@ enum {
   STICK_AXIS_TYPE_COUNT
 };
 
+typedef stick_axis_params_t knob_params_t;
+
+enum {
+  //type of knob
+  KNOB_CENTER_DETENT,
+  KNOB_NO_CENTER_DETENT,
+  KNOB_ABSENT,
+
+  KNOB_TYPE_COUNT
+};
+
 //================================================
 // Structure for the entire system data. This is
 // also the data we store to the eeprom.
@@ -246,6 +264,9 @@ typedef struct {
 
   //--- sticks axes
   stick_axis_params_t StickAxis[NUM_STICK_AXES];
+
+  //---- knobs
+  knob_params_t Knob[NUM_KNOBS];
 
   //--- stick mode
   //used for default assignment when creating new models
@@ -602,21 +623,21 @@ enum {
   SRC_STICK_AXIS_LAST = SRC_STICK_AXIS_FIRST + NUM_STICK_AXES - 1,
 
   SRC_X1 = SRC_STICK_AXIS_FIRST,
-  SRC_Y1 = SRC_STICK_AXIS_FIRST + 1,
-  SRC_Z1 = SRC_STICK_AXIS_FIRST + 2,
-  SRC_X2 = SRC_STICK_AXIS_FIRST + 3,
-  SRC_Y2 = SRC_STICK_AXIS_FIRST + 4,
-  SRC_Z2 = SRC_STICK_AXIS_FIRST + 5,
-  SRC_X3 = SRC_STICK_AXIS_FIRST + 6,
-  SRC_Y3 = SRC_STICK_AXIS_FIRST + 7,
-  SRC_X4 = SRC_STICK_AXIS_FIRST + 8,
-  SRC_Y4 = SRC_STICK_AXIS_FIRST + 9,
-  
-  SRC_KNOB_A, 
-  SRC_KNOB_B,
+  SRC_Y1,
+  SRC_Z1,
+  SRC_X2,
+  SRC_Y2,
+  SRC_Z2,
+  SRC_X3,
+  SRC_Y3,
+  SRC_X4,
+  SRC_Y4,
+
+  SRC_KNOB_FIRST,
+  SRC_KNOB_LAST = SRC_KNOB_FIRST + NUM_KNOBS - 1,
   
   SRC_RAW_ANALOG_FIRST = SRC_STICK_AXIS_FIRST,
-  SRC_RAW_ANALOG_LAST = SRC_KNOB_B,
+  SRC_RAW_ANALOG_LAST = SRC_KNOB_LAST,
   
   SRC_100PERC, 
   
