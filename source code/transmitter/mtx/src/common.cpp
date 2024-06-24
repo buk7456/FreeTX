@@ -102,10 +102,9 @@ int16_t  channelOut[NUM_RC_CHANNELS];
 
 int16_t stickAxisIn[NUM_STICK_AXES];
  
-int16_t  knobAIn;
-int16_t  knobBIn;
+int16_t  knobIn[NUM_KNOBS];
 
-bool     isCalibratingSticks = false;
+bool     isCalibratingControls = false;
 
 uint8_t  swState[NUM_PHYSICAL_SWITCHES];
 
@@ -186,6 +185,15 @@ void resetSystemParams()
     Sys.StickAxis[i].centerVal = 512;
     Sys.StickAxis[i].maxVal = 1023;
     Sys.StickAxis[i].deadzone = 3;
+  }
+
+  for(uint8_t i = 0; i < NUM_KNOBS; i++)
+  {
+    Sys.Knob[i].minVal = 0;
+    Sys.Knob[i].centerVal = 512;
+    Sys.Knob[i].maxVal = 1023;
+    Sys.Knob[i].deadzone = 3;
+    Sys.Knob[i].type = KNOB_NO_CENTER_DETENT;
   }
 
   Sys.defaultStickMode = STICK_MODE_RTAE;
