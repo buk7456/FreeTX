@@ -30,6 +30,11 @@ const uint8_t stickAxisPin[NUM_STICK_AXES] = {
   PIN_Y4_AXIS
 };
 
+const uint8_t knobPin[NUM_KNOBS] = {
+  PIN_KNOB_A,
+  PIN_KNOB_B
+};
+
 //==================================================================================================
 
 void initialiseSwitches()
@@ -198,18 +203,15 @@ void killButtonEvents()
 
 void readSticks()
 {
-  if(isCalibratingSticks)
+  if(isCalibratingControls)
     return;
 
   //Read stick axes
-
   for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
   {
     stick_axis_params_t *axis = &Sys.StickAxis[i];
     if(axis->type == STICK_AXIS_ABSENT)
-    {
       stickAxisIn[i] = 0;
-    }
     else
     {
       stickAxisIn[i] = analogRead(stickAxisPin[i]);
@@ -226,52 +228,56 @@ void readSticks()
     }
   }
 
-  //Read knobs, add deadband at extremes to prevent jitter
+  //Read knobs
+  for(uint8_t i = 0; i < NUM_KNOBS; i++)
+  {
+    knob_params_t *knob = &Sys.Knob[i];
+    if(knob->type == KNOB_ABSENT)
+      knobIn[i] = 0;
+    else
+    {
+      knobIn[i] = analogRead(knobPin[i]);
+      if(knob->type == KNOB_CENTER_DETENT)
+      {
+        knobIn[i] = deadzoneAndMap(knobIn[i], knob->minVal, knob->centerVal, knob->maxVal, 
+                                   knob->deadzone, -500, 500);
+      }
+      else if(knob->type == KNOB_NO_CENTER_DETENT)
+      {
+        knobIn[i] = map(knobIn[i], knob->minVal, knob->maxVal, -500, 500); 
+        knobIn[i] = constrain(knobIn[i], -500, 500);
+      }
+    }
+  }
 
-  knobAIn = analogRead(PIN_KNOB_A);
-  knobAIn = map(knobAIn, 20, 1003, -500, 500); 
-  knobAIn = constrain(knobAIn, -500, 500);
-
-  knobBIn = analogRead(PIN_KNOB_B);
-  knobBIn = map(knobBIn, 20, 1003, -500, 500); 
-  knobBIn = constrain(knobBIn, -500, 500);
-
-  //play audio whenever knob crosses center 
-
+  //play audio whenever a knob crosses center 
   enum {
+    CENTER = 0,
     NEG_SIDE,
-    CENTER, 
     POS_SIDE, 
   };
+  static uint8_t knobRegion[NUM_KNOBS];
+  for(uint8_t i = 0; i < NUM_KNOBS; i++)
+  {
+    if((knobIn[i] > 0 && knobRegion[i] == NEG_SIDE) || (knobIn[i] < 0 && knobRegion[i] == POS_SIDE)) //crossed center
+    {
+      knobRegion[i] = CENTER;
+      if(Sys.soundKnobCenter)
+        audioToPlay = AUDIO_SWITCH_MOVED;
+    }
+    else if(knobIn[i] > 25) 
+      knobRegion[i] = POS_SIDE;
+    else if(knobIn[i] < -25) 
+      knobRegion[i] = NEG_SIDE;
+  }
 
-  static uint8_t knobARegion = CENTER;
-  static uint8_t knobBRegion = CENTER;
-  
-  if((knobAIn >= 0 && knobARegion == NEG_SIDE) || (knobAIn < 0 && knobARegion == POS_SIDE)) //crossed center
-  {
-    knobARegion = CENTER;
-    if(Sys.soundKnobCenter)
-      audioToPlay = AUDIO_SWITCH_MOVED;
-  }
-  else if(knobAIn > 25) knobARegion = POS_SIDE;
-  else if(knobAIn < -25) knobARegion = NEG_SIDE;
-  
-  if((knobBIn >= 0 && knobBRegion == NEG_SIDE) || (knobBIn < 0 && knobBRegion == POS_SIDE)) //crossed center
-  {
-    knobBRegion = CENTER;
-    if(Sys.soundKnobCenter)
-      audioToPlay = AUDIO_SWITCH_MOVED;
-  }
-  else if(knobBIn > 25) knobBRegion = POS_SIDE;
-  else if(knobBIn < -25) knobBRegion = NEG_SIDE;
-  
   //Detect inactivity
   static int16_t lastSum = 0;
   int16_t sum = 0;
   for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
     sum += stickAxisIn[i];
-  sum += knobAIn;
-  sum += knobBIn;
+  for(uint8_t i = 0; i < NUM_KNOBS; i++)
+    sum += knobIn[i];
   if(abs(sum - lastSum) > 50) //5% of 1000
   {
     lastSum = sum;
@@ -334,12 +340,12 @@ void calibrateSticks(uint8_t stage)
     
     case CALIBRATE_DEADBAND:
     {
-      //Add slight deadband(about 1.5%) at each stick ends to stabilise readings at ends
+      //Add slight deadband(about 1.5%) to stabilise readings at ends
       //For a range of 0 to 5V, min max are 0.07V and 4.92V
       int16_t deadBand; 
       for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
       {
-        deadBand = (Sys.StickAxis[i].maxVal -Sys.StickAxis[i].minVal) / 64;
+        deadBand = (Sys.StickAxis[i].maxVal - Sys.StickAxis[i].minVal) / 64;
         Sys.StickAxis[i].maxVal -= deadBand;
         Sys.StickAxis[i].minVal += deadBand;
       }
@@ -347,4 +353,56 @@ void calibrateSticks(uint8_t stage)
     break;
   }
 }
+
+//==================================================================================================
+
+void calibrateKnobs(uint8_t stage)
+{
+  switch(stage)
+  {
+    case CALIBRATE_INIT:
+    {
+      //set min to highest and max to lowest
+      for(uint8_t i = 0; i < NUM_KNOBS; i++)
+      {
+        Sys.Knob[i].minVal = 1023;
+        Sys.Knob[i].maxVal = 0;
+      }
+    }
+    break;
+    
+    case CALIBRATE_MOVE:
+    {
+      //get min, max, center
+      int16_t reading;
+      for(uint8_t i = 0; i < NUM_KNOBS; i++)
+      {
+        if(Sys.Knob[i].type == KNOB_ABSENT)
+          continue;
+        reading = analogRead(knobPin[i]);
+        Sys.Knob[i].centerVal = reading;
+        if(reading < Sys.Knob[i].minVal)
+          Sys.Knob[i].minVal = reading;
+        else if(reading > Sys.Knob[i].maxVal)
+          Sys.Knob[i].maxVal = reading;
+      }
+    }
+    break;
+    
+    case CALIBRATE_DEADBAND:
+    {
+      //Add slight deadband(about 1.5%) to stabilise readings at ends
+      //For a range of 0 to 5V, min max are 0.07V and 4.92V
+      int16_t deadBand; 
+      for(uint8_t i = 0; i < NUM_KNOBS; i++)
+      {
+        deadBand = (Sys.Knob[i].maxVal - Sys.Knob[i].minVal) / 64;
+        Sys.Knob[i].maxVal -= deadBand;
+        Sys.Knob[i].minVal += deadBand;
+      }
+    }
+    break;
+  }
+}
+
 
