@@ -168,6 +168,11 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
         if(Sys.StickAxis[i - SRC_STICK_AXIS_FIRST].type == STICK_AXIS_ABSENT)
           continue;
       }
+      if(i >= SRC_KNOB_FIRST && i <= SRC_KNOB_LAST)
+      {
+        if(Sys.Knob[i - SRC_KNOB_FIRST].type == KNOB_ABSENT)
+          continue;
+      }
     }
     else if(i < MIXSOURCES_COUNT + NUM_COUNTERS) //counters
     {
