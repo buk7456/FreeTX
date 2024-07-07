@@ -5,6 +5,7 @@ void initialiseDisplay();
 
 void showMsg(const char* str);
 void showWaitMsg();
+void showMuteMsg();
 
 void startInitialSetup();
 
@@ -19,5 +20,6 @@ void restoreCounterRegisters();
 #include "../lcd/LCDKS0108.h"
 extern LCDKS0108 display; //shared object
 #endif
+
 
 #endif
