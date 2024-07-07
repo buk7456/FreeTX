@@ -351,6 +351,14 @@ void showWaitMsg()
   display.display();
 }
 
+void showMuteMsg()
+{
+  display.clearDisplay();
+  display.drawBitmap(56, 24, icon_mute_large, 16, 16, BLACK);
+  display.setInterlace(false);
+  display.display();
+}
+
 //============================ Battery warning =====================================================
 
 void handleBatteryWarnUI()
@@ -1027,7 +1035,7 @@ void handleMainUI()
           display.print(channelOut[i] / 5);
         }
         //show scrollbar
-        drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
+        drawScrollBar(125, 9, numPages, thisPage, 1, 1 * 54);
 
         if(heldButton == KEY_SELECT)
         {
@@ -1163,6 +1171,9 @@ void handleMainUI()
           uint8_t ypos = 20 + line*9;
           if(focusedItem - 1 == topItem + line)
             drawCursor(40, ypos);
+          
+          if((topItem - 1 + line) >= listItemCount)
+            break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
           bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
@@ -1374,7 +1385,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -1602,7 +1613,7 @@ void handleMainUI()
         }
         
         //scroll bar
-        drawScrollBar(127, 9, maxNumOfModels, topItem, numVisible, numVisible * 9);
+        drawScrollBar(125, 9, maxNumOfModels, topItem, numVisible, numVisible * 9);
 
         //----- end of list ----------------------
         
@@ -2442,6 +2453,9 @@ void handleMainUI()
             if(focusedItem - 1 == topItem + line)
               drawCursor(32, ypos);
             
+            if((topItem - 1 + line) >= listItemCount)
+            break;
+            
             uint8_t itemID = listItemIDs[topItem - 1 + line];
             bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
             
@@ -2756,6 +2770,9 @@ void handleMainUI()
           if(focusedItem - 1 == topItem + line)
             drawCursor(52, ypos);
           
+          if((topItem - 1 + line) >= listItemCount)
+            break;
+    
           uint8_t itemID = listItemIDs[topItem - 1 + line];
           bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
           
@@ -2975,7 +2992,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
         
         //Show context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -3062,7 +3079,7 @@ void handleMainUI()
         //scroll bar
         uint8_t  y = Sys.useRoundRect ? y0 : y0 - 1;
         uint16_t h = Sys.useRoundRect ? numVisible * 9 - 2 : numVisible * 9;
-        drawScrollBar(112, y, NUM_FLIGHT_MODES, topItem, numVisible, h);
+        drawScrollBar(110, y, NUM_FLIGHT_MODES, topItem, numVisible, h);
         
         //--- edit items
         toggleEditModeOnSelectClicked();
@@ -3403,7 +3420,7 @@ void handleMainUI()
         //draw midpoint
         display.drawHLine(3, 35, 9 + 16*(count - 1) , BLACK); 
         //show scrollbar
-        drawScrollBar(127, 8, numPages, thisPage, 1, 1 * 56);
+        drawScrollBar(125, 8, numPages, thisPage, 1, 1 * 56);
 
         if(heldButton == KEY_SELECT)
         {
@@ -3496,7 +3513,7 @@ void handleMainUI()
               display.print(Model.Mixer[mixIdx].weight);
               
               //input 
-              display.setCursor(68, ypos);
+              display.setCursor(67, ypos);
               getSrcName(txtBuff, Model.Mixer[mixIdx].input, sizeof(txtBuff));
               display.print(txtBuff);
             }
@@ -3506,13 +3523,13 @@ void handleMainUI()
             {
               getControlSwitchName(txtBuff, Model.Mixer[mixIdx].swtch, sizeof(txtBuff));
               uint8_t len = strlen(txtBuff);
-              display.setCursor(127 - len * 6, ypos);
+              display.setCursor(126 - len * 6, ypos);
               display.print(txtBuff);
             }
           }
           
           //scrollbar
-          drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
+          drawScrollBar(125, 9, numPages, thisPage, 1, 1 * 54);
         }
 
         if(heldButton == KEY_SELECT)
@@ -4131,6 +4148,9 @@ void handleMainUI()
           if(focusedItem - 1 == topItem + line)
             drawCursor(52, ypos);
           
+          if((topItem - 1 + line) >= listItemCount)
+            break;
+          
           uint8_t itemID = listItemIDs[topItem - 1 + line];
           bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
           
@@ -4409,7 +4429,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -4533,7 +4553,7 @@ void handleMainUI()
             display.drawBitmap(display.getCursorX(), display.getCursorY(), icon_switch_is_off, 13, 8, BLACK);
         }
         //show scrollbar
-        drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
+        drawScrollBar(125, 9, numPages, thisPage, 1, 1 * 54);
 
         if(heldButton == KEY_SELECT)
         {
@@ -4650,6 +4670,9 @@ void handleMainUI()
           uint8_t ypos = 20 + line*9;
           if(focusedItem - 1 == topItem + line)
             drawCursor(70, ypos);
+          
+          if((topItem - 1 + line) >= listItemCount)
+            break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
           bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
@@ -4823,7 +4846,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -4937,7 +4960,7 @@ void handleMainUI()
         }
         
         //show scrollbar
-        drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
+        drawScrollBar(125, 9, numPages, thisPage, 1, 1 * 54);
 
         if(heldButton == KEY_SELECT) //exit
         {
@@ -5020,6 +5043,9 @@ void handleMainUI()
           if(focusedItem - 1 == topItem + line)
             drawCursor(58, ypos);
           
+          if((topItem - 1 + line) >= listItemCount)
+            break;
+          
           uint8_t itemID = listItemIDs[topItem - 1 + line];
           bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
           
@@ -5090,7 +5116,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -5389,6 +5415,9 @@ void handleMainUI()
           if(focusedItem == topItem + line)
             drawCursor(64, ypos);
           
+          if((topItem - 1 + line) >= listItemCount)
+            break;
+          
           uint8_t itemID = listItemIDs[topItem - 1 + line];
           bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
           
@@ -5420,7 +5449,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(127, 8, listItemCount, topItem, 6, 6 * 9);
+        drawScrollBar(125, 8, listItemCount, topItem, 6, 6 * 9);
 
         // Exit
         if(heldButton == KEY_SELECT)
@@ -5747,7 +5776,7 @@ void handleMainUI()
           }
         }
         //scroll bar
-        drawScrollBar(127, 9, NUM_CUSTOM_TELEMETRY, topItem, 6, 6 * 9 + 1);
+        drawScrollBar(125, 9, NUM_CUSTOM_TELEMETRY, topItem, 6, 6 * 9 + 1);
         //--- end of list ---
         
         if(focusedItem <= NUM_CUSTOM_TELEMETRY)
@@ -5935,6 +5964,9 @@ void handleMainUI()
           if(focusedItem - 1 == topItem + line)
             drawCursor(58, ypos);
           
+          if((topItem - 1 + line) >= listItemCount)
+            break;
+          
           uint8_t itemID = listItemIDs[topItem - 1 + line];
           bool isFocused = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2]) ? true : false;
           
@@ -5975,7 +6007,7 @@ void handleMainUI()
               
             case ITEM_LAST_RECEIVED_VAL:
               {
-                display.print(F("Last Val:"));
+                display.print(F("Last val:"));
                 drawTelemetryValue(66, ypos, page, telemetryLastReceivedValue[page], false);
               }
               break;
@@ -6023,7 +6055,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
         
         //change to next sensor
         if(focusedItem == 1)
@@ -6075,7 +6107,7 @@ void handleMainUI()
           if(isEditingName) 
             editTextDialog(PSTR("Sensor name"), tlm->name, sizeof(tlm->name), false, true, false);
           else if(isEditingUnits)
-            editTextDialog(PSTR("Specify units"),  tlm->unitsName, sizeof(tlm->unitsName), true, true, false);
+            editTextDialog(PSTR("Units"),  tlm->unitsName, sizeof(tlm->unitsName), true, true, false);
           break;
         }
         //reset
@@ -6109,7 +6141,10 @@ void handleMainUI()
         {
           uint8_t ypos = 8 + line*8;
           if(focusedItem == topItem + line)
-            drawCursor(64, ypos);
+            drawCursor(58, ypos);
+          
+          if((topItem - 1 + line) >= listItemCount)
+            break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
           bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
@@ -6120,7 +6155,7 @@ void handleMainUI()
             case ITEM_TELEMETRY_NAME:
               {
                 display.print(F("Name:"));
-                display.setCursor(72, ypos);
+                display.setCursor(66, ypos);
                 if(isEmptyStr(tlm->name, sizeof(tlm->name)))
                   display.print(F("--"));
                 else
@@ -6136,7 +6171,7 @@ void handleMainUI()
             case ITEM_TELEMETRY_UNITSNAME:
               {
                 display.print(F("Units:"));
-                display.setCursor(72, ypos);
+                display.setCursor(66, ypos);
                 if(isEmptyStr(tlm->unitsName, sizeof(tlm->unitsName)))
                   display.print(F("--"));
                 else 
@@ -6152,7 +6187,7 @@ void handleMainUI()
             case ITEM_TELEMETRY_IDENTIFIER: 
               {
                 display.print(F("ID:"));
-                display.setCursor(72, ypos);
+                display.setCursor(66, ypos);
                 display.print(F("0x"));
                 if(tlm->identifier < 16)
                   display.print(F("0"));
@@ -6165,7 +6200,7 @@ void handleMainUI()
             case ITEM_TELEMETRY_MULTIPLIER:
               {
                 display.print(F("Multplr:"));
-                display.setCursor(72, ypos);
+                display.setCursor(66, ypos);
                 int16_t val = tlm->multiplier;
                 display.print(val / 100);
                 display.print(F("."));
@@ -6181,7 +6216,7 @@ void handleMainUI()
             case ITEM_TELEMETRY_FACTOR10:
               {
                 display.print(F("Factor10:"));
-                display.setCursor(72, ypos);
+                display.setCursor(66, ypos);
                 display.print(tlm->factor10);
                 if(edit)
                   tlm->factor10 = incDec(tlm->factor10, -2, 2, INCDEC_NOWRAP, INCDEC_SLOW);
@@ -6191,7 +6226,7 @@ void handleMainUI()
             case ITEM_TELEMETRY_OFFSET:
               {
                 display.print(F("Offset:"));
-                printTelemParam(72, ypos, thisTelemIdx, tlm->offset);
+                printTelemParam(66, ypos, thisTelemIdx, tlm->offset);
                 if(edit)
                   tlm->offset = incDec(tlm->offset, -30000, 30000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
               }
@@ -6200,7 +6235,7 @@ void handleMainUI()
             case ITEM_TELEMETRY_ALARM_CONDITION:
               {
                 display.print(F("Alerts:"));
-                display.setCursor(72, ypos);
+                display.setCursor(66, ypos);
                 display.print(findStringInIdStr(enum_TelemetryAlarmCondition, tlm->alarmCondition));
                 if(edit)
                   tlm->alarmCondition = incDec(tlm->alarmCondition, 0, TELEMETRY_ALARM_CONDITION_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
@@ -6209,8 +6244,10 @@ void handleMainUI()
             
             case ITEM_TELEMETRY_ALARM_THRESHOLD:
               {
-                display.print(F("Thresh:"));
-                printTelemParam(72, ypos, thisTelemIdx, tlm->alarmThreshold);
+                display.print(F("Threshold:"));
+                printTelemParam(66, ypos, thisTelemIdx, tlm->alarmThreshold);
+                if(!isEmptyStr(tlm->unitsName, sizeof(tlm->unitsName)))
+                  display.print(tlm->unitsName);
                 if(edit)
                   tlm->alarmThreshold = incDec(tlm->alarmThreshold, -30000, 30000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
               }
@@ -6219,7 +6256,7 @@ void handleMainUI()
             case ITEM_TELEMETRY_SHOW_ON_HOME:
               {
                 display.print(F("On home:"));
-                drawCheckbox(72, ypos, tlm->showOnHome);
+                drawCheckbox(66, ypos, tlm->showOnHome);
                 if(edit)
                   tlm->showOnHome = incDec(tlm->showOnHome, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
@@ -6228,7 +6265,7 @@ void handleMainUI()
             case ITEM_TELEMETRY_RECORD_MAXIMUM:
               {
                 display.print(F("RecordMax:"));
-                drawCheckbox(72, ypos, tlm->recordMaximum);
+                drawCheckbox(66, ypos, tlm->recordMaximum);
                 if(edit)
                   tlm->recordMaximum = incDec(tlm->recordMaximum, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
@@ -6237,7 +6274,7 @@ void handleMainUI()
             case ITEM_TELEMETRY_RECORD_MINIMUM:
               {
                 display.print(F("RecordMin:"));
-                drawCheckbox(72, ypos, tlm->recordMinimum);
+                drawCheckbox(66, ypos, tlm->recordMinimum);
                 if(edit)
                   tlm->recordMinimum = incDec(tlm->recordMinimum, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
@@ -6246,7 +6283,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(127, 8, listItemCount, topItem, 7, 7 * 8);
+        drawScrollBar(125, 8, listItemCount, topItem, 7, 7 * 8);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -6487,6 +6524,7 @@ void handleMainUI()
           ITEM_USE_ROUND_CORNERS,
           ITEM_SHOW_DROP_SHADOWS,
           ITEM_ENABLE_ANIMATIONS,
+          ITEM_SCROLL_BAR_STYLE,
           ITEM_AUTOHIDE_TRIMS,
           ITEM_USE_NUMERICAL_BATTERY_INDICATOR,
           ITEM_SHOW_WELCOME_MSG,
@@ -6530,6 +6568,9 @@ void handleMainUI()
           if(focusedItem == topItem + line)
             drawCursor(94, ypos);
           
+          if((topItem - 1 + line) >= listItemCount)
+            break;
+          
           uint8_t itemID = listItemIDs[topItem - 1 + line];
           bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
           
@@ -6571,6 +6612,15 @@ void handleMainUI()
               }
               break;
               
+            case ITEM_SCROLL_BAR_STYLE:
+              {
+                display.print(F("Scrollbar style:")); 
+                display.setCursor(102, ypos);
+                display.print(Sys.scrollBarStyle);
+                if(edit) Sys.scrollBarStyle = incDec(Sys.scrollBarStyle, 1, 2, INCDEC_WRAP, INCDEC_SLOW);
+              }
+              break;
+              
             case ITEM_ENABLE_ANIMATIONS:
               {
                 display.print(F("Animations:")); drawCheckbox(102, ypos, Sys.animationsEnabled);
@@ -6609,7 +6659,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(127, 8, listItemCount, topItem, 6, 6 * 9);
+        drawScrollBar(125, 8, listItemCount, topItem, 6, 6 * 9);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -6762,7 +6812,7 @@ void handleMainUI()
               }
               
               //Draw scroll bar
-              drawScrollBar(127, 9, numItems, topItem, 4, 44);
+              drawScrollBar(125, 9, numItems, topItem, 4, 44);
               
               //'next' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -6866,7 +6916,7 @@ void handleMainUI()
               }
               
               //Draw scroll bar
-              drawScrollBar(127, 9, numItems, topItem, 4, 44);
+              drawScrollBar(125, 9, numItems, topItem, 4, 44);
               
               //'next' or 'finish' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -7009,7 +7059,7 @@ void handleMainUI()
               }
               
               //Draw scroll bar
-              drawScrollBar(127, 9, numItems, topItem, 4, 44);
+              drawScrollBar(125, 9, numItems, topItem, 4, 44);
               
               //'next' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -7113,7 +7163,7 @@ void handleMainUI()
               }
               
               //Draw scroll bar
-              drawScrollBar(127, 9, numItems, topItem, 4, 44);
+              drawScrollBar(125, 9, numItems, topItem, 4, 44);
               
               //'next' or 'finish' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -7214,7 +7264,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(127, 8, NUM_PHYSICAL_SWITCHES, topItem, end, end * 9);
+        drawScrollBar(125, 8, NUM_PHYSICAL_SWITCHES, topItem, end, end * 9);
         
         //show the 'next' button
         if(hasNextButton)
@@ -7339,11 +7389,11 @@ void handleMainUI()
         drawHeader(advancedMenu[ADVANCED_MENU_SECURITY]);
         
         drawCheckbox(8, 9, Sys.lockStartup);
-        display.setCursor(20, 9);
+        display.setCursor(18, 9);
         display.print(F("Lock startup"));
         
         drawCheckbox(8, 18, Sys.lockModels);
-        display.setCursor(20, 18);
+        display.setCursor(18, 18);
         display.print(F("Lock models"));
         
         display.setCursor(8, 27);
@@ -7489,6 +7539,9 @@ void handleMainUI()
           if(focusedItem == topItem + line)
             drawCursor(0, ypos);
           
+          if((topItem - 1 + line) >= listItemCount)
+            break;
+          
           uint8_t itemID = listItemIDs[topItem - 1 + line];
           bool isFocused = (itemID == listItemIDs[focusedItem - 1]) ? true : false;
           
@@ -7498,7 +7551,7 @@ void handleMainUI()
             case ITEM_SHOW_LOOP_TIME:
               {
                 drawCheckbox(display.getCursorX(), ypos, Sys.DBG_showLoopTime);
-                display.setCursor(display.getCursorX() + 12, ypos);
+                display.setCursor(display.getCursorX() + 10, ypos);
                 display.print(F("Show loop time"));
                 if(isFocused)
                 {
@@ -7511,7 +7564,7 @@ void handleMainUI()
             case ITEM_SIMULATE_TELEMETRY:
               {
                 drawCheckbox(display.getCursorX(), ypos, Sys.DBG_simulateTelemetry);
-                display.setCursor(display.getCursorX() + 12, ypos);
+                display.setCursor(display.getCursorX() + 10, ypos);
                 display.print(F("Simulate telemetry"));
                 if(isFocused)
                 {
@@ -7527,7 +7580,7 @@ void handleMainUI()
             case ITEM_DISABLE_INTERLACING:
               {
                 drawCheckbox(display.getCursorX(), ypos, Sys.DBG_disableInterlacing);
-                display.setCursor(display.getCursorX() + 12, ypos);
+                display.setCursor(display.getCursorX() + 10, ypos);
                 display.print(F("No LCD interlacing"));
                 if(isFocused)
                 {
@@ -7633,7 +7686,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(127, 8, listItemCount, topItem, 6, 6 * 9);
+        drawScrollBar(125, 8, listItemCount, topItem, 6, 6 * 9);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -7737,7 +7790,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(127, 0, numPages, page + 1, 1, 1 * 64);
+        drawScrollBar(125, 0, numPages, page + 1, 1, 1 * 64);
         
         //Exit
         if(heldButton == KEY_SELECT)
@@ -7781,7 +7834,7 @@ void handleMainUI()
         }
         
         //show scrollbar
-        drawScrollBar(127, 11, numPages, thisPage, 1, 1 * 53);
+        drawScrollBar(125, 11, numPages, thisPage, 1, 1 * 53);
         
         //Exit
         if(heldButton == KEY_SELECT)
@@ -8086,7 +8139,7 @@ void handleMainUI()
           }
           
           //Draw scroll bar
-          drawScrollBar(127, 9, numItems, topItem, 5, 5 * 9);
+          drawScrollBar(125, 9, numItems, topItem, 5, 5 * 9);
           
           //show the write button
           drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -8964,7 +9017,12 @@ void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const bitm
     //highlight selection
     if(*highlightedItem == (*topItem + i))
     {
-      display.fillRoundRect(3, Sys.useDenserMenus ? ypos - 2 : ypos - 3, 122, lineHeight, Sys.useRoundRect ? 4 : 0, BLACK);
+      display.fillRoundRect(3, 
+                            Sys.useDenserMenus ? ypos - 2 : ypos - 3, 
+                            numItems <= numVisible ? 122 : 121, 
+                            lineHeight, 
+                            Sys.useRoundRect ? 4 : 0, 
+                            BLACK);
       display.setTextColor(WHITE);
     }
     //show icons
@@ -8983,7 +9041,7 @@ void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const bitm
   }
   
   //scroll bar
-  drawScrollBar(127, Sys.useDenserMenus ? 9 : 11, numItems, *topItem, numVisible, numVisible * lineHeight);
+  drawScrollBar(125, Sys.useDenserMenus ? 9 : 11, numItems, *topItem, numVisible, numVisible * lineHeight);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -9043,7 +9101,17 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
     if((barYpos + barHeight) > (ypos + viewportHeight))
       barYpos -= 1;
     //draw
-    display.drawVLine(xpos, barYpos, barHeight, BLACK);
+    
+    if(Sys.scrollBarStyle == 1)
+    {
+      display.drawVLine(xpos + 1, barYpos, barHeight, BLACK);
+    }
+    else
+    {
+      display.drawVLine(xpos + 1, ypos, viewportHeight, BLACK);
+      display.drawRoundRect(xpos, barYpos, 3, barHeight, Sys.useRoundRect ? 1 : 0, BLACK);
+      display.drawVLine(xpos + 1, barYpos + 1, barHeight - 2, WHITE);
+    }
   }
 }
 
@@ -9694,7 +9762,7 @@ void contextMenuDraw()
   //scroll bar
   uint8_t  y = Sys.useRoundRect ? y0 - 1 : y0 - 2;
   uint16_t h = Sys.useRoundRect ? numVisible * 10 - 1 : numVisible * 10 + 1;
-  drawScrollBar(112, y, _contextMenuItemCount, contextMenuTopItem, numVisible, h);
+  drawScrollBar(111, y, _contextMenuItemCount, contextMenuTopItem, numVisible, h);
   
   //get the id of the item selected
   contextMenuSelectedItemID = 0xff;
