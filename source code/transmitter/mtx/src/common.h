@@ -316,6 +316,7 @@ typedef struct {
   bool     useNumericalBatteryIndicator;
   bool     showSplashScreen;
   bool     showWelcomeMsg;
+  uint8_t  scrollBarStyle;
   
   //--- misc
   bool     autoSelectMovedControl;
