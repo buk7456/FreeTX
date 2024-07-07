@@ -238,6 +238,7 @@ void resetSystemParams()
   Sys.showSplashScreen = true;
   Sys.showWelcomeMsg = true;
   Sys.useNumericalBatteryIndicator = false;
+  Sys.scrollBarStyle = 1;
   
   Sys.autoSelectMovedControl = true;
   Sys.mixerTemplatesEnabled = true;
