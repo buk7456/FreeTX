@@ -54,12 +54,27 @@ void setup()
   resetModelName();
   resetModelParams();
   
+  //start in silent mode if the Down key is held on boot
+  bool isSilentMode = false;
+  readSwitchesAndButtons();
+  while(buttonCode == KEY_DOWN)
+  {
+    isSilentMode = true;
+    turnOnBacklight();
+    showMuteMsg();
+    readSwitchesAndButtons();
+    delay(30);
+  }
+  
   //Initialise eeprom storage
   eeStoreInit();  //blocking
   
   //Load data from eeprom
   eeReadSysConfig();
   eeReadModelData(Sys.activeModelIdx);
+  
+  if(isSilentMode)
+    Sys.soundEnabled = false;
   
   //backlight
   if(Sys.backlightEnabled)
