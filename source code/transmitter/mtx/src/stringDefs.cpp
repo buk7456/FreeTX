@@ -196,8 +196,10 @@ const id_string_t enum_ChannelFailsafe[] PROGMEM = {
 
 const id_string_t enum_TelemetryAlarmCondition[] PROGMEM = {
   {TELEMETRY_ALARM_CONDITION_NONE, "Off"},
-  {TELEMETRY_ALARM_CONDITION_GREATER_THAN, ">Thresh"},
-  {TELEMETRY_ALARM_CONDITION_LESS_THAN, "<Thresh"},
+  {TELEMETRY_ALARM_CONDITION_GREATER_THAN, ">Threshold"},
+  {TELEMETRY_ALARM_CONDITION_LESS_THAN, "<Threshold"},
+  {TELEMETRY_ALARM_CONDITION_GREATER_THAN, ">Thresh"}, //legacy support
+  {TELEMETRY_ALARM_CONDITION_LESS_THAN, "<Thresh"}, //legacy support
   {0, ""}
 };
 
