@@ -14,7 +14,7 @@ const id_string_t enum_RFpower[] PROGMEM = {
   {RF_POWER_LOW, "Low"},
   {RF_POWER_MEDIUM, "Medium"},
   {RF_POWER_MAX, "Maximum"},
-  {0, ""} //indicates end so we omit passing sizeof(enum_ModelType)/sizeof(enum_ModelType[0])
+  {0, ""} //indicates end so we omit passing sizeof(enum_RFpower)/sizeof(enum_RFpower[0])
 };
 
 const id_string_t enum_SwitchType[] PROGMEM = {
