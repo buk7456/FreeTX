@@ -275,11 +275,11 @@ We can program a simple servo tester that repeatedly moves a servo back and fort
 ```txt
 1. Ch8  Add  Fgen1 (Weight 100)
 ```
-We can even use make the above interesting by adding the ability to switch between waveforms or patterns 
+We can also make it more interesting by adding the ability to switch between waveforms or patterns 
 via a switch. This is left as an exercise.
 
 ### Example 19: Random servo motion generator
-Suppose we have a model equipped with a turret. What we would like is to move the turret automatically but in a 
+Suppose we have a model equipped with a turret, or a figure. What we would like is to move it automatically but in a 
 random and intermittent manner, as we can't always be controlling it manually, for we only got one brain :)
 <br>We can easily achieve this behaviour with function genarators and logical switches as follows.
  
