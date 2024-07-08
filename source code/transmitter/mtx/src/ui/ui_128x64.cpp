@@ -6780,6 +6780,8 @@ void handleMainUI()
           
           case PAGE_AXIS_TYPE:
             {
+              isCalibratingControls = true;
+              
               display.setCursor(0, 9);
               display.print(F("Type of axis"));
               
@@ -6849,8 +6851,6 @@ void handleMainUI()
             
           case PAGE_MOVE_STICKS:
             {
-              isCalibratingControls = true;
-          
               printFullScreenMsg(PSTR("Move sticks fully,\nthen center them.\n"));
               calibrateSticks(CALIBRATE_MOVE);
               
@@ -7027,6 +7027,8 @@ void handleMainUI()
           
           case PAGE_KNOB_TYPE:
             {
+              isCalibratingControls = true;
+              
               display.setCursor(0, 9);
               display.print(F("Type of knob"));
               
@@ -7096,8 +7098,6 @@ void handleMainUI()
             
           case PAGE_MOVE_KNOBS:
             {
-              isCalibratingControls = true;
-          
               printFullScreenMsg(PSTR("Move knobs fully,\nthen center them.\n"));
               calibrateKnobs(CALIBRATE_MOVE);
               
