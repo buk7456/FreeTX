@@ -112,7 +112,6 @@ void readSwitchesAndButtons()
     lastSwitchesSum = switchesSum;
     inputsLastMoved = millis();
   }
-  
 }
 
 //==================================================================================================
@@ -262,7 +261,7 @@ void readSticks()
     if((knobIn[i] > 0 && knobRegion[i] == NEG_SIDE) || (knobIn[i] < 0 && knobRegion[i] == POS_SIDE)) //crossed center
     {
       knobRegion[i] = CENTER;
-      if(Sys.soundKnobCenter)
+      if(Sys.soundKnobCenter && !isCalibratingControls)
         audioToPlay = AUDIO_SWITCH_MOVED;
     }
     else if(knobIn[i] > 25) 
@@ -404,5 +403,3 @@ void calibrateKnobs(uint8_t stage)
     break;
   }
 }
-
-
