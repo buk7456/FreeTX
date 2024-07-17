@@ -6,7 +6,7 @@
 
 int16_t calcExpo(int16_t input, int16_t expo);
 int16_t calcDifferential(int16_t input, int16_t diff);
-int32_t applySlow(int32_t currVal, int32_t targetVal, int32_t multiplier, uint32_t riseTime, uint32_t fallTime);
+int32_t applySlow(int32_t currVal, int32_t targetVal, int32_t range, int32_t multiplier, uint32_t riseTime, uint32_t fallTime);
 int16_t weightAndOffset(int16_t input, int16_t weight, int16_t offset);
 int16_t generateWaveform(uint8_t idx, int32_t _currTime);
 
@@ -27,7 +27,7 @@ uint8_t hldOldState[NUM_MIXSLOTS];
 //array to store logical switches
 bool logicalSwitchState[NUM_LOGICAL_SWITCHES];
 
-bool isReinitialiseMixer = false;
+bool isReinitialiseMixer = true;
 
 //==================================================================================================
 
@@ -78,63 +78,63 @@ void computeChannelOutputs()
   //--- Get trim values
   //x1 axis
   if(Model.X1Trim.trimState == TRIM_COMMON)
-     Model.X1Trim.commonTrim = adjustTrim( Model.X1Trim.commonTrim, -20, 20, KEY_X1_TRIM_UP, KEY_X1_TRIM_DOWN);
+     Model.X1Trim.commonTrim = adjustTrim(0, Model.X1Trim.commonTrim, KEY_X1_TRIM_UP, KEY_X1_TRIM_DOWN);
   else if(Model.X1Trim.trimState == TRIM_FLIGHT_MODE)
-    fmd->x1Trim = adjustTrim(fmd->x1Trim, -20, 20, KEY_X1_TRIM_UP, KEY_X1_TRIM_DOWN);
+    fmd->x1Trim = adjustTrim(0, fmd->x1Trim, KEY_X1_TRIM_UP, KEY_X1_TRIM_DOWN);
   //y1 axis
   if(Model.Y1Trim.trimState == TRIM_COMMON)
-     Model.Y1Trim.commonTrim = adjustTrim( Model.Y1Trim.commonTrim, -20, 20, KEY_Y1_TRIM_UP, KEY_Y1_TRIM_DOWN);
+     Model.Y1Trim.commonTrim = adjustTrim(1, Model.Y1Trim.commonTrim, KEY_Y1_TRIM_UP, KEY_Y1_TRIM_DOWN);
   else if(Model.Y1Trim.trimState == TRIM_FLIGHT_MODE)
-    fmd->y1Trim = adjustTrim(fmd->y1Trim, -20, 20, KEY_Y1_TRIM_UP, KEY_Y1_TRIM_DOWN);
+    fmd->y1Trim = adjustTrim(1, fmd->y1Trim, KEY_Y1_TRIM_UP, KEY_Y1_TRIM_DOWN);
   //x2 axis
   if(Model.X2Trim.trimState == TRIM_COMMON)
-    Model.X2Trim.commonTrim = adjustTrim( Model.X2Trim.commonTrim, -20, 20, KEY_X2_TRIM_UP, KEY_X2_TRIM_DOWN);
+    Model.X2Trim.commonTrim = adjustTrim(2, Model.X2Trim.commonTrim, KEY_X2_TRIM_UP, KEY_X2_TRIM_DOWN);
   else if(Model.X2Trim.trimState == TRIM_FLIGHT_MODE)
-    fmd->x2Trim = adjustTrim(fmd->x2Trim, -20, 20, KEY_X2_TRIM_UP, KEY_X2_TRIM_DOWN);
+    fmd->x2Trim = adjustTrim(2, fmd->x2Trim, KEY_X2_TRIM_UP, KEY_X2_TRIM_DOWN);
   //y2 axis
   if(Model.Y2Trim.trimState == TRIM_COMMON)
-     Model.Y2Trim.commonTrim = adjustTrim(Model.Y2Trim.commonTrim, -20, 20, KEY_Y2_TRIM_UP, KEY_Y2_TRIM_DOWN);
+     Model.Y2Trim.commonTrim = adjustTrim(3, Model.Y2Trim.commonTrim, KEY_Y2_TRIM_UP, KEY_Y2_TRIM_DOWN);
   else if(Model.Y2Trim.trimState == TRIM_FLIGHT_MODE)
-    fmd->y2Trim = adjustTrim(fmd->y2Trim, -20, 20, KEY_Y2_TRIM_UP, KEY_Y2_TRIM_DOWN);
+    fmd->y2Trim = adjustTrim(3, fmd->y2Trim, KEY_Y2_TRIM_UP, KEY_Y2_TRIM_DOWN);
   
   //--- Flight mode trims fade-in
-  //No need to do very precise calculations here because the range of trim is comparatively small 
-  //as well as the specifiable transition time.
-  //Note that the transition time is the time it takes to move from -100% to 100% or vice versa.
-  
-  int16_t  flightModeTrim[4]; //used also in the mixer
-  static int16_t  oldFlightModeTrim[4];
+  //Note that the transition time is the time it takes to move from TRIM_MIN_VAL to TRIM_MAX_VAL or vice versa.
+  //We also use a multiplier here to improve precision.
+
+  static int32_t  fmdTrimValScaled[4];
+  static int32_t  slowFmdTrimValScaled[4];
   static uint32_t flightModeEntryTime;
   static uint8_t  lastFmdIdx;
+  const int32_t   scalingFactor = 4096;
   
+  fmdTrimValScaled[0] = (int32_t) fmd->x1Trim * scalingFactor;
+  fmdTrimValScaled[1] = (int32_t) fmd->y1Trim * scalingFactor;
+  fmdTrimValScaled[2] = (int32_t) fmd->x2Trim * scalingFactor;
+  fmdTrimValScaled[3] = (int32_t) fmd->y2Trim * scalingFactor;
+
   if(isReinitialiseMixer)
   {
     lastFmdIdx = activeFmdIdx;
-    oldFlightModeTrim[0] = fmd->x1Trim * 5;
-    oldFlightModeTrim[1] = fmd->y1Trim * 5;
-    oldFlightModeTrim[2] = fmd->x2Trim * 5;
-    oldFlightModeTrim[3] = fmd->y2Trim * 5;
+    slowFmdTrimValScaled[0] = fmdTrimValScaled[0];
+    slowFmdTrimValScaled[1] = fmdTrimValScaled[1];
+    slowFmdTrimValScaled[2] = fmdTrimValScaled[2];
+    slowFmdTrimValScaled[3] = fmdTrimValScaled[3];
   }
-  
-  flightModeTrim[0] = fmd->x1Trim * 5;
-  flightModeTrim[1] = fmd->y1Trim * 5;
-  flightModeTrim[2] = fmd->x2Trim * 5;
-  flightModeTrim[3] = fmd->y2Trim * 5;
 
   if(activeFmdIdx != lastFmdIdx)
   {  
-    lastFmdIdx = activeFmdIdx;
     flightModeEntryTime = currMillis;
+    lastFmdIdx = activeFmdIdx;
   }
   
-  if(currMillis - flightModeEntryTime < (fmd->transitionTime * 20)) //(100*(20/100)). Trim is 20% of full range
+  int16_t  fmdTrimVal[4]; //used inside the mixer loop
+  uint32_t tt = fmd->transitionTime * 100;
+  for(uint8_t i = 0; i < 4; i++)
   {
-    uint16_t tt = fmd->transitionTime * 100;
-    for(uint8_t i = 0; i < 4; i++)
-    {
-      flightModeTrim[i] = applySlow(oldFlightModeTrim[i], flightModeTrim[i], 1, tt, tt);
-      oldFlightModeTrim[i] = flightModeTrim[i];
-    }
+    if(currMillis - flightModeEntryTime < tt)
+      fmdTrimValScaled[i] = applySlow(slowFmdTrimValScaled[i], fmdTrimValScaled[i], 2 * TRIM_MAX_VAL, scalingFactor, tt, tt);
+    slowFmdTrimValScaled[i] = fmdTrimValScaled[i];
+    fmdTrimVal[i] = fmdTrimValScaled[i] / scalingFactor;
   }
 
   ///----------- MIX SOURCES ARRAY INITIALIZATIONS --------
@@ -205,7 +205,6 @@ void computeChannelOutputs()
   //Virtuals
   for(uint8_t i = 0; i < NUM_VIRTUAL_CHANNELS; i++)
     mixSources[SRC_VIRTUAL_FIRST + i] = 0;
-  
   
   ///------------------ MIXER LOOP ------------------------
   
@@ -298,7 +297,7 @@ void computeChannelOutputs()
     int32_t _op = _factor * operand;
     if(mxr->slowUp != 0 || mxr->slowDown != 0) //only compute when necessary
     {
-      _op = applySlow(slowCurrVal[mixIdx], _op, _factor, (uint32_t)mxr->slowUp * 100, (uint32_t)mxr->slowDown * 100);
+      _op = applySlow(slowCurrVal[mixIdx], _op, 2 * 500, _factor, (uint32_t)mxr->slowUp * 100, (uint32_t)mxr->slowDown * 100);
       slowCurrVal[mixIdx] = _op;
       operand = _op/_factor;
     }
@@ -364,34 +363,36 @@ void computeChannelOutputs()
       if(src == SRC_THR) src = Model.thrSrcRaw;
       if(src == SRC_AIL) src = Model.ailSrcRaw;
       if(src == SRC_ELE) src = Model.eleSrcRaw;
+      
+      // Mathematical formula is (trim/10)*5*(weight/100)
 
       if(src == SRC_X1)
       {
         if(Model.X1Trim.trimState == TRIM_FLIGHT_MODE)
-          operand += ((int16_t) flightModeTrim[0] * mxr->weight) / 100; 
+          operand += ((int32_t) fmdTrimVal[0] * 5 * mxr->weight) / 1000; 
         else if(Model.X1Trim.trimState == TRIM_COMMON)
-          operand += ((int16_t) Model.X1Trim.commonTrim * 5 * mxr->weight) / 100;
+          operand += ((int32_t) Model.X1Trim.commonTrim * 5 * mxr->weight) / 1000;
       }
       else if(src == SRC_Y1)
       {
         if(Model.Y1Trim.trimState == TRIM_FLIGHT_MODE)
-          operand += ((int16_t) flightModeTrim[1] * mxr->weight) / 100; 
+          operand += ((int32_t) fmdTrimVal[1] * 5 * mxr->weight) / 1000; 
         else if(Model.Y1Trim.trimState == TRIM_COMMON)
-          operand += ((int16_t) Model.Y1Trim.commonTrim * 5 * mxr->weight) / 100;
+          operand += ((int32_t) Model.Y1Trim.commonTrim * 5 * mxr->weight) / 1000;
       }
       else if(src == SRC_X2)
       {
         if(Model.X2Trim.trimState == TRIM_FLIGHT_MODE)
-          operand += ((int16_t) flightModeTrim[2] * mxr->weight) / 100; 
+          operand += ((int32_t) fmdTrimVal[2] * 5 * mxr->weight) / 1000; 
         else if(Model.X2Trim.trimState == TRIM_COMMON)
-          operand += ((int16_t) Model.X2Trim.commonTrim * 5 * mxr->weight) / 100;
+          operand += ((int32_t) Model.X2Trim.commonTrim * 5 * mxr->weight) / 1000;
       }
       else if(src == SRC_Y2)
       {
         if(Model.Y2Trim.trimState == TRIM_FLIGHT_MODE)
-          operand += ((int16_t) flightModeTrim[3] * mxr->weight) / 100; 
+          operand += ((int32_t) fmdTrimVal[3] * 5 * mxr->weight) / 1000; 
         else if(Model.Y2Trim.trimState == TRIM_COMMON)
-          operand += ((int16_t) Model.Y2Trim.commonTrim * 5 * mxr->weight) / 100;
+          operand += ((int32_t) Model.Y2Trim.commonTrim * 5 * mxr->weight) / 1000;
       }
     }
     
@@ -794,7 +795,7 @@ void computeChannelOutputs()
     if(Model.Channel[i].reverse) 
       channelOut[i] = 0 - channelOut[i]; 
     //subtrim
-    channelOut[i] += 5 * Model.Channel[i].subtrim; 
+    channelOut[i] += 5 * Model.Channel[i].subtrim / 10; 
     //override
     if(Model.Channel[i].overrideSwitch != CTRL_SW_NONE && checkSwitchCondition(Model.Channel[i].overrideSwitch))
       channelOut[i] = 5 * Model.Channel[i].overrideVal;
@@ -985,18 +986,18 @@ int16_t calcDifferential(int16_t input, int16_t diff)
 
 //==================================================================================================
 
-int32_t applySlow(int32_t currVal, int32_t targetVal, int32_t multiplier, uint32_t riseTime, uint32_t fallTime)
+int32_t applySlow(int32_t currVal, int32_t targetVal, int32_t range, int32_t multiplier, uint32_t riseTime, uint32_t fallTime)
 {
   if(currVal < targetVal && riseTime > 0)
   {
-    int32_t step = (multiplier * 1000L * fixedLoopTime) / riseTime;
+    int32_t step = (multiplier * range * fixedLoopTime) / riseTime;
     currVal += step;
     if(currVal > targetVal)
       currVal = targetVal;
   }
   else if(currVal > targetVal && fallTime > 0) 
   {
-    int32_t step = (multiplier * 1000L * fixedLoopTime) / fallTime;
+    int32_t step = (multiplier * range * fixedLoopTime) / fallTime;
     currVal -= step;
     if(currVal < targetVal)
       currVal = targetVal;
@@ -1074,33 +1075,110 @@ bool checkSwitchCondition(uint8_t sw)
 
 //==================================================================================================
 
-int8_t adjustTrim(int8_t val, int8_t lowerLimit, int8_t upperLimit, uint8_t incButton, uint8_t decButton)
+int16_t adjustTrim(uint8_t idx, int16_t val, uint8_t incButton, uint8_t decButton)
 {
+  if(idx >= 4)
+    return val;
+  
+  int16_t step = 0;
+
+  enum {
+    //the actual value should multiply well with our internal factor of 5
+    STEP_VAL_COARSE = 20,  //2.0
+    STEP_VAL_MEDIUM = 10,  //1.0
+    STEP_VAL_FINE = 2,     //0.2
+  };
+  
+  switch(Model.trimStep)
+  {
+    case TRIM_STEP_COARSE:  step = STEP_VAL_COARSE; break;   
+    case TRIM_STEP_MEDIUM:  step = STEP_VAL_MEDIUM; break;  
+    case TRIM_STEP_FINE:    step = STEP_VAL_FINE;  break;  
+  }
+
   uint8_t _heldBtn = 0;
-  uint8_t _holdDelay = 200;
-  if(millis() - buttonStartTime > 1000) //speed up
-    _holdDelay = 100;
-  if((thisLoopNum - heldButtonEntryLoopNum) % (_holdDelay / fixedLoopTime) == 0) 
+  uint8_t _repeatDelay = 200;
+  if(millis() - buttonStartTime > 1000 + LONGPRESSDELAY) //speed up
+  {
+    _repeatDelay = 100;
+    if((millis() - buttonStartTime > 3000 + LONGPRESSDELAY) && step == STEP_VAL_FINE)
+      step = STEP_VAL_MEDIUM;
+  }
+
+  if((thisLoopNum - heldButtonEntryLoopNum) % (_repeatDelay / fixedLoopTime) == 0) 
     _heldBtn = heldButton;
   
-  if((pressedButton == decButton || _heldBtn == decButton) && val > lowerLimit)
+  //briefly pause at the center
+  static bool paused[4];
+  static uint32_t pausedLoopNum[4];
+  if(val == 0 && _heldBtn && !paused[idx])
+  {
+    paused[idx] = true;
+    pausedLoopNum[idx] = thisLoopNum;
+  }
+  if(val != 0)
+  {
+    paused[idx] = false;
+  }
+  if(paused[idx])
+  {
+    if((thisLoopNum - pausedLoopNum[idx]) < ((uint32_t) LONGPRESSDELAY / fixedLoopTime))
+      _heldBtn = 0;
+  }
+  
+  //adjust value
+  if((pressedButton == decButton || _heldBtn == decButton))
   {    
-    val--;
+    bool limitReached = false;
+    val -= step;
+    if(step == STEP_VAL_MEDIUM || step == STEP_VAL_COARSE)
+    {
+      if(abs(val) < STEP_VAL_MEDIUM) //snap to center
+        val = 0;
+    }
+    if(val < TRIM_MIN_VAL)
+    {
+      val = TRIM_MIN_VAL;
+      limitReached = true;
+    }
     if(Sys.soundTrims)
     {
-      audioToPlay = AUDIO_TRIM_MOVED;
-      if(val == 0)
-        audioToPlay = AUDIO_TRIM_CENTER;
+      if(!limitReached)
+      {
+        audioTrimVal = val;
+        audioToPlay = AUDIO_TRIM_MOVED;
+        if(val == 0)
+          audioToPlay = AUDIO_TRIM_CENTER;
+      }
+      else
+        audioToPlay = AUDIO_NONE;
     }
   }
-  else if((pressedButton == incButton || _heldBtn == incButton) && val < upperLimit)
+  else if((pressedButton == incButton || _heldBtn == incButton))
   {
-    val++;
+    bool limitReached = false;
+    val += step;
+    if(step == STEP_VAL_MEDIUM || step == STEP_VAL_COARSE)
+    {
+      if(abs(val) < STEP_VAL_MEDIUM) //snap to center
+        val = 0;
+    }
+    if(val > TRIM_MAX_VAL)
+    {
+      val = TRIM_MAX_VAL;
+      limitReached = true;
+    }
     if(Sys.soundTrims)
     {
-      audioToPlay = AUDIO_TRIM_MOVED;
-      if(val == 0)
-        audioToPlay = AUDIO_TRIM_CENTER;
+      if(!limitReached)
+      {
+        audioTrimVal = val;
+        audioToPlay = AUDIO_TRIM_MOVED;
+        if(val == 0)
+          audioToPlay = AUDIO_TRIM_CENTER;
+      }
+      else
+        audioToPlay = AUDIO_NONE;
     }
   }
   
