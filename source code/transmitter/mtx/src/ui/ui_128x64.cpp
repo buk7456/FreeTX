@@ -892,7 +892,7 @@ void handleMainUI()
           {
             isOnscreenTrimMode = false;
             killButtonEvents();
-            audioToPlay = AUDIO_TRIM_EXITED;
+            audioToPlay = AUDIO_TRIM_MODE_EXITED;
           }
 
           if(pressedButton == KEY_SELECT)
@@ -907,7 +907,7 @@ void handleMainUI()
             trimIdx++;
             if(trimIdx > 3)
               trimIdx = 0;
-            audioToPlay = AUDIO_TRIM_X1 + trimIdx;
+            audioToPlay = AUDIO_TRIM_MODE_X1 + trimIdx;
           }
 
           flight_mode_t* fmd = &Model.FlightMode[activeFmdIdx];
@@ -918,33 +918,33 @@ void handleMainUI()
             case 0:
               //x1 axis
               if(Model.X1Trim.trimState == TRIM_COMMON)
-                Model.X1Trim.commonTrim = adjustTrim( Model.X1Trim.commonTrim, -20, 20, KEY_UP, KEY_DOWN);
+                Model.X1Trim.commonTrim = adjustTrim(0, Model.X1Trim.commonTrim, KEY_UP, KEY_DOWN);
               else if(Model.X1Trim.trimState == TRIM_FLIGHT_MODE)
-                fmd->x1Trim = adjustTrim(fmd->x1Trim, -20, 20, KEY_UP, KEY_DOWN);
+                fmd->x1Trim = adjustTrim(0, fmd->x1Trim, KEY_UP, KEY_DOWN);
               break;
               
             case 1:
               //y1 axis
               if(Model.Y1Trim.trimState == TRIM_COMMON)
-                 Model.Y1Trim.commonTrim = adjustTrim( Model.Y1Trim.commonTrim, -20, 20, KEY_UP, KEY_DOWN);
+                 Model.Y1Trim.commonTrim = adjustTrim(1, Model.Y1Trim.commonTrim, KEY_UP, KEY_DOWN);
               else if(Model.Y1Trim.trimState == TRIM_FLIGHT_MODE)
-                fmd->y1Trim = adjustTrim(fmd->y1Trim, -20, 20, KEY_UP, KEY_DOWN);
+                fmd->y1Trim = adjustTrim(1, fmd->y1Trim, KEY_UP, KEY_DOWN);
               break;
             
             case 2:
               //x2 axis
               if(Model.X2Trim.trimState == TRIM_COMMON)
-                Model.X2Trim.commonTrim = adjustTrim( Model.X2Trim.commonTrim, -20, 20, KEY_UP, KEY_DOWN);
+                Model.X2Trim.commonTrim = adjustTrim(2, Model.X2Trim.commonTrim, KEY_UP, KEY_DOWN);
               else if(Model.X2Trim.trimState == TRIM_FLIGHT_MODE)
-                fmd->x2Trim = adjustTrim(fmd->x2Trim, -20, 20, KEY_UP, KEY_DOWN);
+                fmd->x2Trim = adjustTrim(2, fmd->x2Trim, KEY_UP, KEY_DOWN);
               break;
               
             case 3:
               //y2 axis
               if(Model.Y2Trim.trimState == TRIM_COMMON)
-                 Model.Y2Trim.commonTrim = adjustTrim(Model.Y2Trim.commonTrim, -20, 20, KEY_UP, KEY_DOWN);
+                 Model.Y2Trim.commonTrim = adjustTrim(3, Model.Y2Trim.commonTrim, KEY_UP, KEY_DOWN);
               else if(Model.Y2Trim.trimState == TRIM_FLIGHT_MODE)
-                fmd->y2Trim = adjustTrim(fmd->y2Trim, -20, 20, KEY_UP, KEY_DOWN);
+                fmd->y2Trim = adjustTrim(3, fmd->y2Trim, KEY_UP, KEY_DOWN);
               break;
           }
         }
@@ -952,9 +952,12 @@ void handleMainUI()
         {
           if(heldButton == KEY_UP)
           {
-            isOnscreenTrimMode = true;
-            killButtonEvents();
-            audioToPlay = AUDIO_TRIM_ENTERED;
+            if(Sys.onscreenTrimEnabled)
+            {
+              isOnscreenTrimMode = true;
+              killButtonEvents();
+              audioToPlay = AUDIO_TRIM_MODE_ENTERED;
+            }
           }
 
           if(clickedButton == KEY_SELECT)
@@ -1022,17 +1025,26 @@ void handleMainUI()
           { 
             if(lastScreen == CONTEXT_MENU_OUTPUTS && i == thisChIdx)
             {
-              display.setCursor(65, 10 + (i - (startIdx + 5)) * 11);
+              display.setCursor(66, 10 + (i - (startIdx + 5)) * 11);
               display.write(0xB1);
-            }        
-            display.setCursor(71, 10 + (i - (startIdx + 5)) * 11);
+            }
+            display.setCursor(72, 10 + (i - (startIdx + 5)) * 11);
           }
           display.print(F("Ch"));          
           display.print(1 + i);  
           display.print(F(":"));
           if(i < 9)
             display.print(F(" "));
-          display.print(channelOut[i] / 5);
+          // display.print(channelOut[i] / 5);
+          //show as decimal value
+          int16_t val = channelOut[i];
+          display.print(val / 5);
+          val = abs(val);
+          if(val < 500)
+          {
+            display.print(F("."));
+            display.print((val % 5) * 2);
+          }
         }
         //show scrollbar
         drawScrollBar(125, 9, numPages, thisPage, 1, 1 * 54);
@@ -2251,15 +2263,26 @@ void handleMainUI()
         {  
           changeFocusOnUpDown(5);
           
-          rate_expo_t* qqRateExpo[3] = {&Model.RudDualRate, &Model.AilDualRate, &Model.EleDualRate};
           uint8_t qqPage[3] = {PAGE_RUD_CURVE, PAGE_AIL_CURVE, PAGE_ELE_CURVE};
           uint8_t qqSrc[3] = {SRC_RUD, SRC_AIL, SRC_ELE};
-          uint8_t* qqSrcRaw[3] = {&Model.rudSrcRaw, &Model.ailSrcRaw, &Model.eleSrcRaw};
-          int16_t qqValIn[3] = {mixSources[Model.rudSrcRaw], mixSources[Model.ailSrcRaw], mixSources[Model.eleSrcRaw]};
+          
+          rate_expo_t* qqRateExpo[3];
+          qqRateExpo[0] = &Model.RudDualRate;
+          qqRateExpo[1] = &Model.AilDualRate;
+          qqRateExpo[2] = &Model.EleDualRate;
+          
+          uint8_t* qqSrcRaw[3];
+          qqSrcRaw[0] = &Model.rudSrcRaw;
+          qqSrcRaw[1] = &Model.ailSrcRaw;
+          qqSrcRaw[2] = &Model.eleSrcRaw;
+          
+          int16_t qqValIn[3];
+          qqValIn[0] = mixSources[Model.rudSrcRaw];
+          qqValIn[1] = mixSources[Model.ailSrcRaw];
+          qqValIn[2] = mixSources[Model.eleSrcRaw];
           
           uint8_t idx = 0;
-          //find the idx
-          for(uint8_t i = 0; i < 3; i++)
+          for(uint8_t i = 0; i < 3; i++) //find the idx
           {
             if(qqPage[i] == page)
             {
@@ -3568,7 +3591,15 @@ void handleMainUI()
         display.setCursor(0, 29);
         display.print(F("Subtrim:"));
         display.setCursor(62, 29);
-        display.print(ch->subtrim);
+        int16_t val = ch->subtrim;
+        if(val < 0)
+        {
+          display.print(F("-"));
+          val = -val;
+        }
+        display.print(val / 10);
+        display.print(F("."));
+        display.print(val % 10);
 
         display.setCursor(0, 38);
         display.print(F("Override:"));
@@ -3616,7 +3647,12 @@ void handleMainUI()
         else if(focusedItem == 2)
           ch->reverse = incDec(ch->reverse, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 3)
-          ch->subtrim = incDec(ch->subtrim, -20, 20, INCDEC_NOWRAP, INCDEC_SLOW);
+        {
+          //restrict to multiples of 2
+          int16_t val = ch->subtrim / 2;
+          val = incDec(val, TRIM_MIN_VAL / 2, TRIM_MAX_VAL / 2, INCDEC_NOWRAP, INCDEC_NORMAL);
+          ch->subtrim = val * 2;
+        }
         else if(focusedItem == 4 && isEditMode)
           ch->overrideSwitch = incDecControlSwitch(ch->overrideSwitch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
         else if(focusedItem == 5 && ch->overrideSwitch != CTRL_SW_NONE)
@@ -5504,7 +5540,6 @@ void handleMainUI()
         else
           display.print(notification->text);
 
-
         //draw cursor
         if(focusedItem == 1) 
           drawCursor(0, 9);
@@ -5634,30 +5669,64 @@ void handleMainUI()
         drawHeader(extrasMenu[EXTRAS_MENU_TRIM_SETUP]);
         
         uint8_t axis[4] = {SRC_X1, SRC_Y1, SRC_X2, SRC_Y2};
-        trim_params_t* trim[4] = {&Model.X1Trim, &Model.Y1Trim, &Model.X2Trim, &Model.Y2Trim};
 
+        trim_params_t* trim[4];
+        trim[0] = &Model.X1Trim;
+        trim[1] = &Model.Y1Trim;
+        trim[2] = &Model.X2Trim;
+        trim[3] = &Model.Y2Trim;
+
+        int16_t fmdTrimVal[4];
+        fmdTrimVal[0] = Model.FlightMode[activeFmdIdx].x1Trim;
+        fmdTrimVal[1] = Model.FlightMode[activeFmdIdx].y1Trim;
+        fmdTrimVal[2] = Model.FlightMode[activeFmdIdx].x2Trim;
+        fmdTrimVal[3] = Model.FlightMode[activeFmdIdx].y2Trim;
+        
         for(uint8_t i = 0; i < 4; i++)
         {
           display.setCursor(0, 9 + i * 9);
           getSrcName(txtBuff, axis[i], sizeof(txtBuff));
           display.print(txtBuff);
-          display.print(F(" trim:"));
-          display.setCursor(66, 9 + i * 9);
+          display.print(F(":"));
+          display.setCursor(42, 9 + i * 9);
           display.print(findStringInIdStr(enum_TrimState, trim[i]->trimState));
+          display.setCursor(84, 9 + i * 9);
+          display.print(F("("));
+          int16_t val = 0;
+          if(trim[i]->trimState == TRIM_COMMON) 
+            val = trim[i]->commonTrim;
+          else if(trim[i]->trimState == TRIM_FLIGHT_MODE) 
+            val = fmdTrimVal[i];
+          if(val < 0)
+          {
+            display.print(F("-"));
+            val = -val;
+          }
+          display.print(val / 10);
+          display.print(F("."));
+          display.print(val % 10);
+          display.print(F(")"));
         }
         
-        changeFocusOnUpDown(4);
+        display.setCursor(0, 45);
+        display.print(F("Step:"));
+        display.setCursor(42, 45);
+        display.print(findStringInIdStr(enum_TrimStep, Model.trimStep));
+
+        changeFocusOnUpDown(5);
         toggleEditModeOnSelectClicked();
-        drawCursor(58, focusedItem * 9);
+        drawCursor(34, focusedItem * 9);
         
         //edit
-        if(isEditMode)
+        if(isEditMode && focusedItem <= 4)
         {
           uint8_t i = focusedItem - 1;
           do {
             trim[i]->trimState = incDec(trim[i]->trimState, 0, TRIM_STATE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
           } while(Model.type == MODEL_TYPE_OTHER && trim[i]->trimState == TRIM_FLIGHT_MODE);
         }
+        if(focusedItem == 5)
+          Model.trimStep = incDec(Model.trimStep, 0, TRIM_STEP_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
 
         //exit
         if(heldButton == KEY_SELECT)
@@ -6396,63 +6465,145 @@ void handleMainUI()
       {
         drawHeader(systemMenu[SYSTEM_MENU_SOUND]);
         
-        display.setCursor(0, 9);
-        display.print(F("Enable:"));
-        drawCheckbox(72, 9, Sys.soundEnabled);
+        enum {
+          ITEM_SOUND_ENABLED,
+          ITEM_INACTIVITY_MINUTES,
+          ITEM_SOUND_SWITCHES,
+          ITEM_SOUND_KNOBS,
+          ITEM_SOUND_KEYS,
+          ITEM_SOUND_TRIMS,
+          ITEM_TRIM_TONE_FREQ_MODE,
+          
+          ITEM_COUNT
+        };
         
-        if(Sys.soundEnabled)
+        uint8_t listItemIDs[ITEM_COUNT]; 
+        uint8_t listItemCount = 0;
+        
+        //add item Ids to the list of Ids
+        for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
         {
-          changeFocusOnUpDown(6);
-          
-          display.setCursor(0, 18);
-          display.print(F("Inactvty:"));
-          display.setCursor(72, 18);
-          if(Sys.inactivityMinutes == 0)
-            display.print(F("Off"));
-          else
-          {
-            display.print(Sys.inactivityMinutes);
-            display.print(F("min"));
-          }
-          
-          display.setCursor(0, 27);
-          display.print(F("Switches:"));
-          drawCheckbox(72, 27, Sys.soundSwitches);
-          
-          display.setCursor(0, 36);
-          display.print(F("Trims:"));
-          drawCheckbox(72, 36, Sys.soundTrims);
-          
-          display.setCursor(0, 45);
-          display.print(F("Knobs:"));
-          drawCheckbox(72, 45, Sys.soundKnobCenter);
-          
-          display.setCursor(0, 54);
-          display.print(F("Keys:"));
-          drawCheckbox(72, 54, Sys.soundKeys);
+          if(!Sys.soundEnabled && i > ITEM_SOUND_ENABLED)
+            continue;
+          listItemIDs[listItemCount++] = i;
         }
         
-        toggleEditModeOnSelectClicked();
-        drawCursor(64, focusedItem * 9);
+        //initialise
+        static uint8_t topItem;
+        static bool viewInitialised = false;
+        if(!viewInitialised)
+        {
+          focusedItem = 1;
+          topItem = 1;
+          viewInitialised = true;
+        }
         
-        //edit
-        if(focusedItem == 1)
-          Sys.soundEnabled = incDec(Sys.soundEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 2)
-          Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
-        else if(focusedItem == 3)
-          Sys.soundSwitches = incDec(Sys.soundSwitches, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 4)
-          Sys.soundTrims = incDec(Sys.soundTrims, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 5)
-          Sys.soundKnobCenter = incDec(Sys.soundKnobCenter, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 6)
-          Sys.soundKeys = incDec(Sys.soundKeys, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+        //handle navigation
+        changeFocusOnUpDown(listItemCount);
+        if(focusedItem < topItem)
+          topItem = focusedItem;
+        while(focusedItem >= topItem + 6)
+          topItem++;
+        
+        toggleEditModeOnSelectClicked();
+        
+        //fill list and edit items
+        for(uint8_t line = 0; line < 6 && line < listItemCount; line++)
+        {
+          uint8_t ypos = 9 + line*9;
+          if(focusedItem == topItem + line)
+            drawCursor(64, ypos);
+          
+          if((topItem - 1 + line) >= listItemCount)
+            break;
+          
+          uint8_t itemID = listItemIDs[topItem - 1 + line];
+          bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
+          
+          display.setCursor(0, ypos);
+          switch(itemID)
+          {
+            case ITEM_SOUND_ENABLED:
+              {
+                display.print(F("Enable:")); 
+                drawCheckbox(72, ypos, Sys.soundEnabled);
+                if(edit) 
+                  Sys.soundEnabled = incDec(Sys.soundEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+              
+            case ITEM_INACTIVITY_MINUTES:
+              {
+                display.print(F("Inactvty:"));
+                display.setCursor(72, ypos);
+                if(Sys.inactivityMinutes == 0)
+                  display.print(F("Off"));
+                else
+                {
+                  display.print(Sys.inactivityMinutes);
+                  display.print(F("min"));
+                }
+                if(edit)
+                  Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
+              }
+              break;
+              
+            case ITEM_SOUND_SWITCHES:
+              {
+                display.print(F("Switches:"));
+                drawCheckbox(72, ypos, Sys.soundSwitches);
+                if(edit)
+                  Sys.soundSwitches = incDec(Sys.soundSwitches, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+              
+            case ITEM_SOUND_KNOBS:
+              {
+                display.print(F("Knobs:"));
+                drawCheckbox(72, ypos, Sys.soundKnobCenter);
+                if(edit)
+                  Sys.soundKnobCenter = incDec(Sys.soundKnobCenter, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+              
+            case ITEM_SOUND_KEYS:
+              {
+                display.print(F("Keys:"));
+                drawCheckbox(72, ypos, Sys.soundKeys);
+                if(edit)
+                  Sys.soundKeys = incDec(Sys.soundKeys, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+              
+            case ITEM_SOUND_TRIMS:
+              {
+                display.print(F("Trims:"));
+                drawCheckbox(72, ypos, Sys.soundTrims);
+                if(edit)
+                  Sys.soundTrims = incDec(Sys.soundTrims, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+            
+            case ITEM_TRIM_TONE_FREQ_MODE:
+              {
+                display.print(F("Trim tone:"));
+                display.setCursor(72, ypos);
+                display.print(findStringInIdStr(enum_TrimToneFreqMode, Sys.trimToneFreqMode));
+                if(edit)
+                  Sys.trimToneFreqMode = incDec(Sys.trimToneFreqMode, 0, TRIM_TONE_FREQ_MODE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+              }
+              break;
+          }
+        }
+        
+        //Draw scroll bar
+        drawScrollBar(125, 8, listItemCount, topItem, 6, 6 * 9);
         
         //exit
         if(heldButton == KEY_SELECT)
         {
           changeToScreen(SCREEN_SYSTEM_MENU);
+          viewInitialised = false;
         }
       }
       break;
@@ -6522,11 +6673,10 @@ void handleMainUI()
           ITEM_KEEP_MENU_POSITION,
           ITEM_USE_DENSER_MENUS,
           ITEM_USE_ROUND_CORNERS,
-          ITEM_SHOW_DROP_SHADOWS,
           ITEM_ENABLE_ANIMATIONS,
-          ITEM_SCROLL_BAR_STYLE,
           ITEM_AUTOHIDE_TRIMS,
           ITEM_USE_NUMERICAL_BATTERY_INDICATOR,
+          ITEM_SCROLL_BAR_STYLE,
           ITEM_SHOW_WELCOME_MSG,
           ITEM_SHOW_SPLASH_SCREEN,
           
@@ -6604,14 +6754,7 @@ void handleMainUI()
                 if(edit) Sys.useRoundRect = incDec(Sys.useRoundRect, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
-            
-            case ITEM_SHOW_DROP_SHADOWS:
-              {
-                display.print(F("Drop shadows:")); drawCheckbox(102, ypos, Sys.showDropShadows);
-                if(edit) Sys.showDropShadows = incDec(Sys.showDropShadows, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-              }
-              break;
-              
+
             case ITEM_SCROLL_BAR_STYLE:
               {
                 display.print(F("Scrollbar style:")); 
@@ -7428,14 +7571,18 @@ void handleMainUI()
         display.setCursor(0, 9);
         display.print(F("Autoslct input:"));
         drawCheckbox(102, 9, Sys.autoSelectMovedControl);
-        
+
         display.setCursor(0, 18);
-        display.print(F("Mixer templts:"));
-        drawCheckbox(102, 18, Sys.mixerTemplatesEnabled);
+        display.print(F("On-screen trim:"));
+        drawCheckbox(102, 18, Sys.onscreenTrimEnabled);
         
         display.setCursor(0, 27);
+        display.print(F("Mixer templts:"));
+        drawCheckbox(102, 27, Sys.mixerTemplatesEnabled);
+        
+        display.setCursor(0, 36);
         display.print(F("Dflt Ch order:"));
-        display.setCursor(102, 27);
+        display.setCursor(102, 36);
         if(Sys.mixerTemplatesEnabled)
         {
           //make the string for the channel order
@@ -7449,16 +7596,18 @@ void handleMainUI()
         }
         else
           display.print(F("N/A"));
-        
-        changeFocusOnUpDown(3);
+
+        changeFocusOnUpDown(4);
         toggleEditModeOnSelectClicked();
         drawCursor(94, focusedItem * 9);
         
         if(focusedItem == 1)
           Sys.autoSelectMovedControl = incDec(Sys.autoSelectMovedControl, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 2)
+          Sys.onscreenTrimEnabled = incDec(Sys.onscreenTrimEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+        else if(focusedItem == 3)
           Sys.mixerTemplatesEnabled = incDec(Sys.mixerTemplatesEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 3 && Sys.mixerTemplatesEnabled) 
+        else if(focusedItem == 4 && Sys.mixerTemplatesEnabled) 
         { 
           //there are 4P4 = 4! = 24 possible arrangements. So our range is 0 to 23.  
           Sys.defaultChannelOrder = incDec(Sys.defaultChannelOrder, 0, 23, INCDEC_WRAP, INCDEC_SLOW);
@@ -8692,6 +8841,7 @@ void handleMainUI()
     
     default:
       changeToScreen(SCREEN_HOME);
+      break;
   }
 
   //-------------- Toasts -------------------------------
@@ -8705,10 +8855,10 @@ void handleMainUI()
   {
     // display.fillRect(102, 55, 26, 9, WHITE);
     display.setCursor(103, 56);
-    uint16_t tt = DBG_loopTime/100;
-    display.print(tt/10);
+    uint16_t tt = DBG_loopTime / 100;
+    display.print(tt / 10);
     display.print(F(".")); 
-    display.print(tt%10); 
+    display.print(tt % 10); 
   }
 
   //-------------- Screenshot --------------------------
@@ -9106,7 +9256,7 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
     {
       display.drawVLine(xpos + 1, barYpos, barHeight, BLACK);
     }
-    else
+    else if(Sys.scrollBarStyle == 2)
     {
       display.drawVLine(xpos + 1, ypos, viewportHeight, BLACK);
       display.drawRoundRect(xpos, barYpos, 3, barHeight, Sys.useRoundRect ? 1 : 0, BLACK);
@@ -9122,7 +9272,7 @@ void drawTrimSliders()
   int8_t x[4] = {14, 1, 73, 126};
   int8_t y[4] = {62, 15, 62, 15};
 
-  int8_t val[4];
+  int16_t val[4];
   val[0] = Model.X1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x1Trim : Model.X1Trim.commonTrim;
   val[1] = Model.Y1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].y1Trim : Model.Y1Trim.commonTrim;
   val[2] = Model.X2Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x2Trim : Model.X2Trim.commonTrim;
@@ -9134,7 +9284,8 @@ void drawTrimSliders()
   isDisabled[2] = Model.X2Trim.trimState == TRIM_DISABLED;
   isDisabled[3] = Model.Y2Trim.trimState == TRIM_DISABLED;
   
-  int8_t range = 40;
+  const int16_t range = TRIM_MAX_VAL - TRIM_MIN_VAL;
+  const int8_t fixedSize = 40;
   
   for(uint8_t i = 0; i < 4; i++)
   {
@@ -9147,38 +9298,39 @@ void drawTrimSliders()
       { 
         y[i] -= 2;
         if(i == trimIdx)
-          display.fillRect(x[i] - 3, y[i] - 3, range + 7, 7, BLACK);
+          display.fillRect(x[i] - 3, y[i] - 3, fixedSize + 7, 7, BLACK);
       }
       if(i == 1) 
       {
         x[i] += 2;
         if(i == trimIdx)
-          display.fillRect(x[i] - 3, y[i] - 3, 7, range + 7, BLACK);
+          display.fillRect(x[i] - 3, y[i] - 3, 7, fixedSize + 7, BLACK);
       }
       if(i == 3) 
       {
         x[i] -= 2;
         if(i == trimIdx)
-          display.fillRect(x[i] - 3, y[i] - 3, 7, range + 7, BLACK);
+          display.fillRect(x[i] - 3, y[i] - 3, 7, fixedSize + 7, BLACK);
       }    
     }
     uint8_t fgColor = invertColor ? WHITE : BLACK;
     uint8_t bgColor = invertColor ? BLACK : WHITE;
     if(isDisabled[i])
       continue;
-    if(i == 0 || i == 2)
+    int16_t a = (val[i] > 0) ? 9 : -9; //used for rounding up
+    if(i == 0 || i == 2) //horizontal
     {
-      uint8_t xqq = x[i] + range/2 - 1 + val[i];
+      uint8_t xqq = x[i] + fixedSize/2 - 1 + ((val[i] + a) * fixedSize / range);
       display.drawRect(xqq, y[i] - 1, 3, 3, fgColor);
-      display.drawHLine(x[i], y[i], range + 1, fgColor);
-      display.drawPixel(x[i] + range/2, y[i], bgColor);
+      display.drawHLine(x[i], y[i], fixedSize + 1, fgColor);
+      display.drawPixel(x[i] + fixedSize/2, y[i], bgColor);
     }
-    if(i == 1 || i == 3)
+    if(i == 1 || i == 3) //vertical
     {
-      uint8_t yqq = y[i] + range/2 - 1 - val[i];
+      uint8_t yqq = y[i] + fixedSize/2 - 1 - ((val[i] + a) * fixedSize / range);
       display.drawRect(x[i] - 1, yqq, 3, 3, fgColor);
-      display.drawVLine(x[i], y[i], range + 1, fgColor);
-      display.drawPixel(x[i], y[i] + range/2, bgColor);
+      display.drawVLine(x[i], y[i], fixedSize + 1, fgColor);
+      display.drawPixel(x[i], y[i] + fixedSize/2, bgColor);
     }
   }
 }
@@ -9254,25 +9406,10 @@ void drawBoundingBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color)
       display.drawHLine(xx, yy, 2, color);
       display.drawVLine((i % 2) ? (xx + 2) : (xx - 1), (i < 2) ? (yy + 1) : (yy - 2), 2, color);
     }
-    //drop shadow
-    if(Sys.showDropShadows)
-    {
-      display.drawHLine(x + 6, y + h, w - 10, color);
-      display.drawVLine(x + w, y + 6, h - 10, color);
-      display.drawHLine(x + w - 4, y + h - 1, 2, color);
-      display.drawVLine(x + w - 1, y + h - 4, 2, color);
-      display.drawPixel(x + w - 2, y + h - 2, color);
-    }
   }
   else
   {
     display.drawRect(x, y, w, h, color);
-    //drop shadow
-    if(Sys.showDropShadows)
-    {
-      display.drawHLine(x + 2, y + h, w - 1, color);
-      display.drawVLine(x + w, y + 2, h - 1, color);
-    }
   }
 }
 
