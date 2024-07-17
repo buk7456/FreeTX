@@ -125,6 +125,8 @@ uint8_t  battState = BATTHEALTY;
 
 uint8_t  audioToPlay = AUDIO_NONE;
 
+int16_t   audioTrimVal;
+
 bool     backlightIsOn = false;
 
 uint32_t inputsLastMoved = 0; 
@@ -211,11 +213,12 @@ void resetSystemParams()
   Sys.rfPower = RF_POWER_MEDIUM;
 
   Sys.soundEnabled = true; 
-  Sys.soundTrims = true;
+  Sys.inactivityMinutes = 10;
   Sys.soundSwitches = true;
   Sys.soundKnobCenter = true;
   Sys.soundKeys = true;
-  Sys.inactivityMinutes = 10;
+  Sys.soundTrims = true;
+  Sys.trimToneFreqMode = TRIM_TONE_FREQ_VARIABLE;
   
   Sys.backlightEnabled = true;
   Sys.backlightLevel = 50;
@@ -232,7 +235,6 @@ void resetSystemParams()
   Sys.rememberMenuPosition = true;
   Sys.useRoundRect = true;
   Sys.useDenserMenus = false;
-  Sys.showDropShadows = false;
   Sys.animationsEnabled = true;
   Sys.autohideTrims = false;
   Sys.showSplashScreen = true;
@@ -243,6 +245,7 @@ void resetSystemParams()
   Sys.autoSelectMovedControl = true;
   Sys.mixerTemplatesEnabled = true;
   Sys.defaultChannelOrder = 0;
+  Sys.onscreenTrimEnabled = true;
   
   Sys.DBG_showLoopTime = false;
   Sys.DBG_simulateTelemetry = false;
@@ -296,7 +299,10 @@ void resetModelParams()
   }
 
   //--- rates and expo ---
-  rate_expo_t* rateExpo[3] = {&Model.RudDualRate, &Model.AilDualRate, &Model.EleDualRate};
+  rate_expo_t* rateExpo[3];
+  rateExpo[0] = &Model.RudDualRate;
+  rateExpo[1] = &Model.AilDualRate;
+  rateExpo[2] = &Model.EleDualRate;
   for(uint8_t i = 0; i < 3; i++)
   {
     rateExpo[i]->rate1 = 100;
@@ -347,12 +353,18 @@ void resetModelParams()
   }
   
   //--- trim ----
-  trim_params_t* qqTrim[4] = {&Model.X1Trim, &Model.Y1Trim, &Model.X2Trim, &Model.Y2Trim};
+  trim_params_t* qqTrim[4];
+  qqTrim[0] = &Model.X1Trim;
+  qqTrim[1] = &Model.Y1Trim;
+  qqTrim[2] = &Model.X2Trim;
+  qqTrim[3] = &Model.Y2Trim;
   for(uint8_t i = 0; i < 4; i++)
   {
     qqTrim[i]->trimState = TRIM_COMMON;
     qqTrim[i]->commonTrim = 0;
   }
+
+  Model.trimStep = TRIM_STEP_MEDIUM;
 
   //--- flight modes ---
   for(uint8_t i = 0; i < NUM_FLIGHT_MODES; i++)
