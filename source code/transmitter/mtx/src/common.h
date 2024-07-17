@@ -143,18 +143,20 @@ enum {
 
   AUDIO_TRIM_MOVED,
   AUDIO_TRIM_CENTER,
-  AUDIO_TRIM_ENTERED,
-  AUDIO_TRIM_EXITED,
-  AUDIO_TRIM_X1,
-  AUDIO_TRIM_Y1,
-  AUDIO_TRIM_X2,
-  AUDIO_TRIM_Y2,
+  AUDIO_TRIM_MODE_ENTERED,
+  AUDIO_TRIM_MODE_EXITED,
+  AUDIO_TRIM_MODE_X1,
+  AUDIO_TRIM_MODE_Y1,
+  AUDIO_TRIM_MODE_X2,
+  AUDIO_TRIM_MODE_Y2,
 
   AUDIO_NOTIFICATION_TONE_FIRST,
   AUDIO_NOTIFICATION_TONE_LAST = AUDIO_NOTIFICATION_TONE_FIRST + NOTIFICATION_TONE_COUNT - 1,
 };
 
 extern uint8_t  audioToPlay;
+
+extern int16_t  audioTrimVal; //fixed point representation with scaling factor 1/10
 
 //---- Misc -------------------------------
 
@@ -212,7 +214,6 @@ extern uint32_t thisLoopNum; //main loop counter
 extern uint32_t DBG_loopTime;
 
 extern uint8_t screenshotSwtch;
-
 
 //====================== SYSTEM PARAMETERS =========================================================
 
@@ -291,11 +292,12 @@ typedef struct {
 
   //--- sound
   bool     soundEnabled; 
-  bool     soundTrims;
+  uint8_t  inactivityMinutes;
   bool     soundSwitches;
   bool     soundKnobCenter;
   bool     soundKeys;
-  uint8_t  inactivityMinutes;
+  bool     soundTrims;
+  uint8_t  trimToneFreqMode;
 
   //--- backlight
   bool     backlightEnabled; 
@@ -310,7 +312,6 @@ typedef struct {
   bool     rememberMenuPosition;
   bool     useRoundRect;
   bool     useDenserMenus;
-  bool     showDropShadows;
   bool     animationsEnabled;
   bool     autohideTrims;
   bool     useNumericalBatteryIndicator;
@@ -322,6 +323,7 @@ typedef struct {
   bool     autoSelectMovedControl;
   bool     mixerTemplatesEnabled;
   uint8_t  defaultChannelOrder;
+  bool     onscreenTrimEnabled;
   
   //--- debug
   bool     DBG_showLoopTime;
@@ -349,6 +351,13 @@ enum {
   RF_POWER_MAX,
   
   RF_POWER_COUNT
+};
+
+enum {
+  TRIM_TONE_FREQ_FIXED,
+  TRIM_TONE_FREQ_VARIABLE,
+
+  TRIM_TONE_FREQ_MODE_COUNT
 };
 
 enum { 
@@ -665,7 +674,7 @@ enum {
 typedef struct {
   char     name[7];       //6 chars + null
   bool     reverse; 
-  int8_t   subtrim;       //-20 to 20
+  int16_t  subtrim;       //fixed point representation with scaling factor 1/10
   uint8_t  overrideSwitch;
   int8_t   overrideVal; 
   int8_t   failsafe;      //-102 to 100. -102 means hold, -101 No pulse
@@ -719,7 +728,7 @@ typedef struct {
 
 typedef struct {
   uint8_t trimState;
-  int8_t  commonTrim; //-20 to 20
+  int16_t  commonTrim; //fixed point representation with scaling factor 1/10
 } trim_params_t;
 
 enum {
@@ -730,6 +739,10 @@ enum {
   TRIM_STATE_COUNT
 };
 
+//fixed point representation with scaling factor 1/10
+#define TRIM_MAX_VAL  200
+#define TRIM_MIN_VAL  (-TRIM_MAX_VAL)
+
 //------------------------------------------------
 // structure for flight mode data
 //------------------------------------------------
@@ -737,10 +750,10 @@ enum {
 typedef struct {
   char     name[7];  //6 chars + Null 
   uint8_t  swtch;
-  int8_t   x1Trim; //-20 to 20
-  int8_t   y1Trim; //-20 to 20
-  int8_t   x2Trim; //-20 to 20
-  int8_t   y2Trim; //-20 to 20
+  int16_t   x1Trim; //fixed point representation with scaling factor 1/10
+  int16_t   y1Trim; //fixed point representation with scaling factor 1/10
+  int16_t   x2Trim; //fixed point representation with scaling factor 1/10
+  int16_t   y2Trim; //fixed point representation with scaling factor 1/10
   uint8_t  transitionTime;
 } flight_mode_t;
 
@@ -841,6 +854,8 @@ typedef struct {
   trim_params_t Y1Trim; 
   trim_params_t X2Trim; 
   trim_params_t Y2Trim;
+
+  uint8_t trimStep;
   
   //--- Rates and expo
   rate_expo_t RudDualRate;
@@ -894,6 +909,14 @@ enum {
   MODEL_TYPE_OTHER,
   
   MODEL_TYPE_COUNT
+};
+
+enum {
+  TRIM_STEP_COARSE,
+  TRIM_STEP_MEDIUM,
+  TRIM_STEP_FINE,
+
+  TRIM_STEP_COUNT
 };
 
 #endif
