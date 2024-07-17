@@ -21,5 +21,4 @@ void restoreCounterRegisters();
 extern LCDKS0108 display; //shared object
 #endif
 
-
 #endif

@@ -12,7 +12,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define _SKETCHVERSION "1.0.4"
+#define _SKETCHVERSION "1.0.5"
 
 //===========================================================================
 //============================= LCD and UI ==================================
@@ -115,13 +115,11 @@
 #define EXTERNAL_EEPROM_DEVICE_ADDRESS  0x0
  */
 
-
 //--- 24LC256
 //Total bytes (256*1024)/8 => 32768
 #define EXTERNAL_EEPROM_TOTAL_BYTES     32768
 #define EXTERNAL_EEPROM_PAGE_BYTES      32
 #define EXTERNAL_EEPROM_DEVICE_ADDRESS  0x0
-
 
 #endif
 

@@ -17,13 +17,6 @@ const id_string_t enum_RFpower[] PROGMEM = {
   {0, ""} //indicates end so we omit passing sizeof(enum_RFpower)/sizeof(enum_RFpower[0])
 };
 
-const id_string_t enum_SwitchType[] PROGMEM = {
-  {SW_ABSENT, "Absent"},
-  {SW_2POS, "2pos"},
-  {SW_3POS, "3pos"},
-  {0, ""}
-};
-
 const id_string_t enum_BacklightWakeup[] PROGMEM = {
   {BACKLIGHT_WAKEUP_KEYS, "Keys"},
   {BACKLIGHT_WAKEUP_ACTIVITY, "Activity"},
@@ -39,6 +32,19 @@ const id_string_t enum_BacklightTimeout[] PROGMEM = {
   {BACKLIGHT_TIMEOUT_10MIN, "10min"},
   {BACKLIGHT_TIMEOUT_30MIN, "30min"},
   {BACKLIGHT_TIMEOUT_NEVER, "Never"},
+  {0, ""}
+};
+
+const id_string_t enum_TrimToneFreqMode[] PROGMEM = {
+  {TRIM_TONE_FREQ_FIXED, "Fixed"},
+  {TRIM_TONE_FREQ_VARIABLE, "Variable"},
+  {0, ""}
+};
+
+const id_string_t enum_SwitchType[] PROGMEM = {
+  {SW_ABSENT, "Absent"},
+  {SW_2POS, "2pos"},
+  {SW_3POS, "3pos"},
   {0, ""}
 };
 
@@ -88,9 +94,18 @@ const id_string_t enum_ModelType[] PROGMEM = {
 };
 
 const id_string_t enum_TrimState[] PROGMEM = {
-  {TRIM_DISABLED, "Disabled"},
+  {TRIM_DISABLED, "Off"},
+  {TRIM_DISABLED, "Disabled"}, //legacy support
   {TRIM_COMMON, "Common"},
-  {TRIM_FLIGHT_MODE, "FlightMode"},
+  {TRIM_FLIGHT_MODE, "F-mode"},
+  {TRIM_FLIGHT_MODE, "FlightMode"}, //legacy support
+  {0, ""}
+};
+
+const id_string_t enum_TrimStep[] PROGMEM = {
+  {TRIM_STEP_COARSE, "Coarse"},
+  {TRIM_STEP_MEDIUM, "Medium"},
+  {TRIM_STEP_FINE, "Fine"},
   {0, ""}
 };
 
@@ -239,7 +254,6 @@ const id_string_t enum_ClockEdge[] PROGMEM = {
   {0, ""}
 };
 
-
 //---- Strings for the keys -----
 //Max 20 characters
 //Key descriptors should be unique, but can also be shared.
@@ -272,6 +286,8 @@ const char key_X2Trim[] PROGMEM = "X2Trim";
 const char key_Y2Trim[] PROGMEM = "Y2Trim";
 const char key_TrimState[] PROGMEM = "TrimState";
 const char key_CommonTrim[] PROGMEM = "CommonTrim";
+
+const char key_TrimStep[] PROGMEM = "TrimStep";
 
 const char key_RudDualRate[] PROGMEM = "RudDualRate";
 const char key_AilDualRate[] PROGMEM = "AilDualRate";

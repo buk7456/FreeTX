@@ -25,9 +25,10 @@ void getControlSwitchName_Clean(char* buff, uint8_t idx, uint8_t lenBuff);
 
 //system related
 extern const id_string_t enum_RFpower[] PROGMEM;
-extern const id_string_t enum_SwitchType[] PROGMEM;
 extern const id_string_t enum_BacklightWakeup[] PROGMEM;
 extern const id_string_t enum_BacklightTimeout[] PROGMEM;
+extern const id_string_t enum_TrimToneFreqMode[] PROGMEM;
+extern const id_string_t enum_SwitchType[] PROGMEM;
 extern const id_string_t enum_StickMode[] PROGMEM;
 extern const id_string_t enum_StickAxisType[] PROGMEM;
 extern const id_string_t enum_StickAxisName[] PROGMEM;
@@ -36,6 +37,7 @@ extern const id_string_t enum_KnobType[] PROGMEM;
 //model related
 extern const id_string_t enum_ModelType[] PROGMEM;
 extern const id_string_t enum_TrimState[] PROGMEM;
+extern const id_string_t enum_TrimStep[] PROGMEM;
 extern const id_string_t enum_FuncgenWaveform[] PROGMEM;
 extern const id_string_t enum_FuncgenPeriodMode[] PROGMEM;
 extern const id_string_t enum_FuncgenWidthMode[] PROGMEM;
@@ -85,6 +87,8 @@ extern const char key_X2Trim[] PROGMEM;
 extern const char key_Y2Trim[] PROGMEM;
 extern const char key_TrimState[] PROGMEM;
 extern const char key_CommonTrim[] PROGMEM;
+
+extern const char key_TrimStep[] PROGMEM;
 
 extern const char key_RudDualRate[] PROGMEM;
 extern const char key_AilDualRate[] PROGMEM;

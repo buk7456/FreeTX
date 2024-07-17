@@ -190,21 +190,24 @@ uint8_t getControlSwitchID(const char* str)
 
 //--------------------------------------------------------------------------------------------------
 
-uint16_t getTimeFromTimeStr(const char* str)
+int32_t getFixedPointVal10(const char* str)
 {
-  //Converts the time string to deciseconds. Forexample 12.5s to becomes 125
-  
+  //Converts decimal string to fixed point representation with factor of 10
+  //For example 12.3 to becomes 123,  -12.3 becomes -123
+  //If no decimal point exists, the value is still multiplied by 10
+
   char tempBuff[MAX_STR_SIZE];
   tempBuff[0] = '\0';
   uint8_t i = 0;
   uint8_t pos = 0;
   bool seenDecimalPoint = false;
+  
   while(true)
   {
     uint8_t c = *(str + pos);
     if(c == '\0')
       break;
-    if(isDigit(c) && i < sizeof(tempBuff) - 1)
+    if((c == '-' || isDigit(c)) && i < sizeof(tempBuff) - 2)
       tempBuff[i++] = c;
     if(c == '.')
     {
@@ -218,9 +221,12 @@ uint16_t getTimeFromTimeStr(const char* str)
     if(pos == 0xff) //catch infinite loop
       break;
   }
+  
+  if(!seenDecimalPoint)
+    tempBuff[i++] = '0';
+ 
   tempBuff[i] = '\0';
-  uint16_t result = atoi_with_prefix(tempBuff); 
-  return result;
+  return atoi_with_prefix(tempBuff); 
 }
 
 //--------------------------- Extractors -----------------------------------------------------------
@@ -338,7 +344,7 @@ void extractConfig_X1Trim()
   if(MATCH_P(keyBuff[1], key_TrimState))
     findIdInIdStr(enum_TrimState, valueBuff, Model.X1Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
-    Model.X1Trim.commonTrim = atoi_with_prefix(valueBuff);
+    Model.X1Trim.commonTrim = getFixedPointVal10(valueBuff);
   else
     hasEncounteredInvalidParam = true;
 }
@@ -348,7 +354,7 @@ void extractConfig_Y1Trim()
   if(MATCH_P(keyBuff[1], key_TrimState))
     findIdInIdStr(enum_TrimState, valueBuff, Model.Y1Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
-    Model.Y1Trim.commonTrim = atoi_with_prefix(valueBuff);
+    Model.Y1Trim.commonTrim = getFixedPointVal10(valueBuff);
   else
     hasEncounteredInvalidParam = true;
 }
@@ -358,7 +364,7 @@ void extractConfig_X2Trim()
   if(MATCH_P(keyBuff[1], key_TrimState))
     findIdInIdStr(enum_TrimState, valueBuff, Model.X2Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
-    Model.X2Trim.commonTrim = atoi_with_prefix(valueBuff);
+    Model.X2Trim.commonTrim = getFixedPointVal10(valueBuff);
   else
     hasEncounteredInvalidParam = true;
 }
@@ -368,9 +374,14 @@ void extractConfig_Y2Trim()
   if(MATCH_P(keyBuff[1], key_TrimState))
     findIdInIdStr(enum_TrimState, valueBuff, Model.Y2Trim.trimState);
   else if(MATCH_P(keyBuff[1], key_CommonTrim))
-    Model.Y2Trim.commonTrim = atoi_with_prefix(valueBuff);
+    Model.Y2Trim.commonTrim = getFixedPointVal10(valueBuff);
   else
     hasEncounteredInvalidParam = true;
+}
+
+void extractConfig_TrimStep()
+{
+  findIdInIdStr(enum_TrimStep, valueBuff, Model.trimStep);
 }
 
 void extractConfig_RudDualRate()
@@ -479,9 +490,9 @@ void extractConfig_FunctionGenerators()
     else if(MATCH_P(keyBuff[1], key_PeriodMode))
       findIdInIdStr(enum_FuncgenPeriodMode, valueBuff, fgen->periodMode);
     else if(MATCH_P(keyBuff[1], key_Period1))
-      fgen->period1 = getTimeFromTimeStr(valueBuff);
+      fgen->period1 = getFixedPointVal10(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Period2))
-      fgen->period2 = getTimeFromTimeStr(valueBuff);
+      fgen->period2 = getFixedPointVal10(valueBuff);
     else if(MATCH_P(keyBuff[1], key_ModulatorSrc))
       fgen->modulatorSrc = getSrcId(valueBuff);
     else if(MATCH_P(keyBuff[1], key_ReverseModulator))
@@ -493,9 +504,9 @@ void extractConfig_FunctionGenerators()
     else if(MATCH_P(keyBuff[1], key_WidthMode))
       findIdInIdStr(enum_FuncgenWidthMode, valueBuff, fgen->widthMode);
     else if(MATCH_P(keyBuff[1], key_Width))
-      fgen->width = getTimeFromTimeStr(valueBuff);
+      fgen->width = getFixedPointVal10(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Period))
-      fgen->period = getTimeFromTimeStr(valueBuff);
+      fgen->period = getFixedPointVal10(valueBuff);
     else
       hasEncounteredInvalidParam = true;
   }
@@ -563,13 +574,13 @@ void extractConfig_Mixer()
       }
     }
     else if(MATCH_P(keyBuff[1], key_DelayUp))
-      mxr->delayUp = getTimeFromTimeStr(valueBuff);
+      mxr->delayUp = getFixedPointVal10(valueBuff);
     else if(MATCH_P(keyBuff[1], key_DelayDown))
-      mxr->delayDown = getTimeFromTimeStr(valueBuff);
+      mxr->delayDown = getFixedPointVal10(valueBuff);
     else if(MATCH_P(keyBuff[1], key_SlowUp))
-      mxr->slowUp = getTimeFromTimeStr(valueBuff);
+      mxr->slowUp = getFixedPointVal10(valueBuff);
     else if(MATCH_P(keyBuff[1], key_SlowDown))
-      mxr->slowDown = getTimeFromTimeStr(valueBuff);
+      mxr->slowDown = getFixedPointVal10(valueBuff);
     else
       hasEncounteredInvalidParam = true;
   }
@@ -653,7 +664,7 @@ void extractConfig_LogicalSwitches()
       else if(ls->func == LS_FUNC_TOGGLE)
         ls->val1 = getControlSwitchID(valueBuff);
       else if(ls->func == LS_FUNC_PULSE)
-        ls->val1 = getTimeFromTimeStr(valueBuff);
+        ls->val1 = getFixedPointVal10(valueBuff);
     }
     else if(MATCH_P(keyBuff[1], key_Val2))
     {
@@ -666,7 +677,7 @@ void extractConfig_LogicalSwitches()
       else if(ls->func == LS_FUNC_TOGGLE)
         findIdInIdStr(enum_ClockEdge, valueBuff, ls->val2);
       else if(ls->func == LS_FUNC_PULSE)
-        ls->val2 = getTimeFromTimeStr(valueBuff);
+        ls->val2 = getFixedPointVal10(valueBuff);
     }
     else if(MATCH_P(keyBuff[1], key_Val3))
     {
@@ -675,11 +686,11 @@ void extractConfig_LogicalSwitches()
       else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
         findIdInIdStr(enum_DirectionOfChange, valueBuff, ls->val3);
       else
-        ls->val3 = getTimeFromTimeStr(valueBuff);
+        ls->val3 = getFixedPointVal10(valueBuff);
     }
     else if(MATCH_P(keyBuff[1], key_Val4))
     {
-      ls->val4 = getTimeFromTimeStr(valueBuff);
+      ls->val4 = getFixedPointVal10(valueBuff);
     }
     else
       hasEncounteredInvalidParam = true;
@@ -732,15 +743,15 @@ void extractConfig_FlightModes()
     else if(MATCH_P(keyBuff[1], key_Switch))
       fmd->swtch = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_X1Trim))
-      fmd->x1Trim = atoi_with_prefix(valueBuff);
+      fmd->x1Trim = getFixedPointVal10(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Y1Trim))
-      fmd->y1Trim = atoi_with_prefix(valueBuff);
+      fmd->y1Trim = getFixedPointVal10(valueBuff);
     else if(MATCH_P(keyBuff[1], key_X2Trim))
-      fmd->x2Trim = atoi_with_prefix(valueBuff);
+      fmd->x2Trim = getFixedPointVal10(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Y2Trim))
-      fmd->y2Trim = atoi_with_prefix(valueBuff);
+      fmd->y2Trim = getFixedPointVal10(valueBuff);
     else if(MATCH_P(keyBuff[1], key_TransitionTime))
-      fmd->transitionTime = getTimeFromTimeStr(valueBuff);
+      fmd->transitionTime = getFixedPointVal10(valueBuff);
     else
       hasEncounteredInvalidParam = true;
   }
@@ -761,7 +772,7 @@ void extractConfig_Channels()
     else if(MATCH_P(keyBuff[1], key_Reverse))
       readValue_bool(valueBuff, &ch->reverse);
     else if(MATCH_P(keyBuff[1], key_Subtrim))
-      ch->subtrim = atoi_with_prefix(valueBuff);
+      ch->subtrim = getFixedPointVal10(valueBuff);
     else if(MATCH_P(keyBuff[1], key_OverrideSwitch))
       ch->overrideSwitch = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_OverrideVal))
@@ -926,6 +937,7 @@ void importModelData(File& file)
     else if(MATCH_P(keyBuff[0], key_Y1Trim)) extractConfig_Y1Trim();
     else if(MATCH_P(keyBuff[0], key_X2Trim)) extractConfig_X2Trim();
     else if(MATCH_P(keyBuff[0], key_Y2Trim)) extractConfig_Y2Trim();
+    else if(MATCH_P(keyBuff[0], key_TrimStep)) extractConfig_TrimStep();
     else if(MATCH_P(keyBuff[0], key_RudDualRate)) extractConfig_RudDualRate();
     else if(MATCH_P(keyBuff[0], key_YawDualRate)) extractConfig_RudDualRate();
     else if(MATCH_P(keyBuff[0], key_AilDualRate)) extractConfig_AilDualRate();
