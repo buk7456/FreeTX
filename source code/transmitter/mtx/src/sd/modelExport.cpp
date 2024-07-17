@@ -62,10 +62,29 @@ void writeKeyValue_bool(File& file, uint8_t level, const char* keyStr_P, bool va
 void writeKeyValue_TimeSeconds(File& file, uint8_t level, const char* keyStr_P, int32_t deciseconds)
 {
   writeKey_helper(file, level, keyStr_P);
+  if(deciseconds < 0)
+  {
+    file.print(F("-"));
+    deciseconds = -deciseconds;
+  }
   file.print(deciseconds / 10);
   file.print(F("."));
   file.print(deciseconds % 10);
   file.print(F("s"));
+  file.println();
+}
+
+void writeKeyValue_TrimVal(File& file, uint8_t level, const char* keyStr_P, int32_t trimVal)
+{
+  writeKey_helper(file, level, keyStr_P);
+  if(trimVal < 0)
+  {
+    file.print(F("-"));
+    trimVal = -trimVal;
+  }
+  file.print(trimVal / 10);
+  file.print(F("."));
+  file.print(trimVal % 10);
   file.println();
 }
 
@@ -191,19 +210,21 @@ void exportModelData(File& file)
   
   writeKeyValue_Char(file, 0, key_X1Trim, NULL);
   writeKeyValue_Char(file, 1, key_TrimState, findStringInIdStr(enum_TrimState, Model.X1Trim.trimState));
-  writeKeyValue_S32(file, 1, key_CommonTrim, Model.X1Trim.commonTrim);
+  writeKeyValue_TrimVal(file, 1, key_CommonTrim, Model.X1Trim.commonTrim);
   
   writeKeyValue_Char(file, 0, key_Y1Trim, NULL);
   writeKeyValue_Char(file, 1, key_TrimState, findStringInIdStr(enum_TrimState, Model.Y1Trim.trimState));
-  writeKeyValue_S32(file, 1, key_CommonTrim, Model.Y1Trim.commonTrim);
+  writeKeyValue_TrimVal(file, 1, key_CommonTrim, Model.Y1Trim.commonTrim);
   
   writeKeyValue_Char(file, 0, key_X2Trim, NULL);
   writeKeyValue_Char(file, 1, key_TrimState, findStringInIdStr(enum_TrimState, Model.X2Trim.trimState));
-  writeKeyValue_S32(file, 1, key_CommonTrim, Model.X2Trim.commonTrim);
+  writeKeyValue_TrimVal(file, 1, key_CommonTrim, Model.X2Trim.commonTrim);
   
   writeKeyValue_Char(file, 0, key_Y2Trim, NULL);
   writeKeyValue_Char(file, 1, key_TrimState, findStringInIdStr(enum_TrimState, Model.Y2Trim.trimState));
-  writeKeyValue_S32(file, 1, key_CommonTrim, Model.Y2Trim.commonTrim);
+  writeKeyValue_TrimVal(file, 1, key_CommonTrim, Model.Y2Trim.commonTrim);
+
+  writeKeyValue_Char(file, 0, key_TrimStep, findStringInIdStr(enum_TrimStep, Model.trimStep));
   
   if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
   {
@@ -469,10 +490,10 @@ void exportModelData(File& file)
       getControlSwitchName_Clean(tempBuff, fmd->swtch, sizeof(tempBuff));
       writeKeyValue_Char(file, 1, key_Switch, tempBuff);
       
-      writeKeyValue_S32(file, 1, key_X1Trim, fmd->x1Trim);
-      writeKeyValue_S32(file, 1, key_Y1Trim, fmd->y1Trim);
-      writeKeyValue_S32(file, 1, key_X2Trim, fmd->x2Trim);
-      writeKeyValue_S32(file, 1, key_Y2Trim, fmd->y2Trim);
+      writeKeyValue_TrimVal(file, 1, key_X1Trim, fmd->x1Trim);
+      writeKeyValue_TrimVal(file, 1, key_Y1Trim, fmd->y1Trim);
+      writeKeyValue_TrimVal(file, 1, key_X2Trim, fmd->x2Trim);
+      writeKeyValue_TrimVal(file, 1, key_Y2Trim, fmd->y2Trim);
       writeKeyValue_TimeSeconds(file, 1, key_TransitionTime, fmd->transitionTime);
     }
   }
@@ -487,7 +508,7 @@ void exportModelData(File& file)
     writeKeyValue_Char(file, 1, key_Name, ch->name);
 
     writeKeyValue_bool(file, 1, key_Reverse, ch->reverse);
-    writeKeyValue_S32(file, 1, key_Subtrim, ch->subtrim);
+    writeKeyValue_TrimVal(file, 1, key_Subtrim, ch->subtrim);
 
     getControlSwitchName_Clean(tempBuff, ch->overrideSwitch, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_OverrideSwitch, tempBuff);
