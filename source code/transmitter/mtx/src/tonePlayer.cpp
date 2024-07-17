@@ -161,7 +161,8 @@ const uint16_t notificationTone[][32] PROGMEM = {
 
 //--- Function declarations ---
 
-void beginTone(int16_t iPin, const uint16_t* toneArray, size_t iSize);
+void beginTone(const uint16_t* toneArray, size_t iSize);
+void beginToneTrimMoved();
 void playback();
 void stopPlayback();
 
@@ -170,25 +171,40 @@ void stopPlayback();
 uint32_t endTimeOfNote = 0;
 bool isPlaying = false;
 int16_t bpm;
-int16_t pin = -1;
 uint8_t postn = 0;
 size_t size = 0;
 
 const uint16_t* songStart;
 
+bool isTrimBeepSound = false; //TODO better name
+
 //--------------------------------------------------------------------------------------------------
 
-void beginTone(int16_t iPin, const uint16_t* toneArray, size_t iSize)
+void beginTone(const uint16_t* toneArray, size_t iSize)
 {
+  noTone(PIN_BUZZER); //stop any notes
   //init values
-  pin = iPin;
-  isPlaying = true;
-  endTimeOfNote = 0;
   size = iSize;
+  endTimeOfNote = 0;
   songStart = toneArray;
-  noTone(pin); //stop any notes
   bpm = pgm_read_word(songStart);
   postn = 1;
+  isPlaying = true;
+  isTrimBeepSound = false;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void beginToneTrimMoved()
+{
+  noTone(PIN_BUZZER); //stop any notes
+  //init values
+  endTimeOfNote = 0;
+  bpm = 250;
+  postn = 1; //todo cleanup, this is a hack
+  size = 2;  //todo cleanup, this is a hack
+  isPlaying = true;
+  isTrimBeepSound = true;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -199,22 +215,34 @@ void playback()
   
   if(!isPlaying || currTime < endTimeOfNote)
     return;
-
   if(postn >= size) //end reached, stop
-    stopPlayback();
-  else //play
   {
-    noTone(pin);
-    int32_t note = pgm_read_word(songStart + postn);
+    stopPlayback();
+    return;
+  }
+  
+  if(isTrimBeepSound)
+  {
+    int16_t freq = map(audioTrimVal, TRIM_MIN_VAL, TRIM_MAX_VAL, NOTE_AS6, NOTE_AS7);
+    int16_t duration = (audioTrimVal == 0) ? 80 : 40;
+    endTimeOfNote = currTime + duration;
+    postn += 2;
+    if(freq)
+      tone(PIN_BUZZER, freq, duration);
+  }
+  else
+  {
+    noTone(PIN_BUZZER);
+    int16_t note = pgm_read_word(songStart + postn);
     /* 
-    int32_t wholenote = (60 * 1000L / bpm) * 4;  // time for whole note in milliseconds
-    int32_t duration  = wholenote / pgm_read_word(songStart + postn + 1); 
+    int16_t wholenote = (60 * 1000L / bpm) * 4;  // time for whole note in milliseconds
+    int16_t duration  = wholenote / pgm_read_word(songStart + postn + 1); 
     */
-    int32_t duration = (bpm == 0) ? 0 : (240000L / (bpm * pgm_read_word(songStart + postn + 1)));
+    int16_t duration = (bpm == 0) ? 0 : (240000L / (bpm * pgm_read_word(songStart + postn + 1)));
     endTimeOfNote = currTime + duration;
     postn += 2;
     if(note)
-      tone(pin, note, duration);
+      tone(PIN_BUZZER, note, duration);
   }
 }
 
@@ -224,8 +252,9 @@ void stopPlayback()
 {
   if(isPlaying)
   {
-    noTone(pin);
+    noTone(PIN_BUZZER);
     isPlaying = false;
+    isTrimBeepSound = false;
   }
 }
 
@@ -234,54 +263,106 @@ void stopPlayback()
 void playTones()
 {
   if(!Sys.soundEnabled)
-    audioToPlay = AUDIO_NONE; 
+    audioToPlay = AUDIO_NONE;
 
   static uint8_t lastAudioToPlay = AUDIO_NONE;
   if(audioToPlay != lastAudioToPlay) //init playback with the specified audio
   {
     lastAudioToPlay = audioToPlay;
-    if(audioToPlay == AUDIO_SAFETY_WARN)
-      beginTone(PIN_BUZZER, warnSound, sizeof(warnSound)/sizeof(warnSound[0]));
-    else if(audioToPlay == AUDIO_BATTERY_WARN)
-      beginTone(PIN_BUZZER, battLowSound, sizeof(battLowSound)/sizeof(battLowSound[0])); 
-    else if(audioToPlay == AUDIO_TIMER_ELAPSED) 
-      beginTone(PIN_BUZZER, timerElapsedSound, sizeof(timerElapsedSound)/sizeof(timerElapsedSound[0]));
-    else if(audioToPlay == AUDIO_KEY_PRESSED || audioToPlay == AUDIO_SWITCH_MOVED) 
-      beginTone(PIN_BUZZER, shortBeepSound, sizeof(shortBeepSound)/sizeof(shortBeepSound[0])); 
-    else if(audioToPlay == AUDIO_INACTIVITY) 
-      beginTone(PIN_BUZZER, inactivitySound, sizeof(inactivitySound)/sizeof(inactivitySound[0]));
-    else if(audioToPlay == AUDIO_TELEM_WARN) 
-      beginTone(PIN_BUZZER, telemWarnSound, sizeof(telemWarnSound)/sizeof(telemWarnSound[0]));
-    else if(audioToPlay == AUDIO_TELEM_MUTE_CHANGED) 
-      beginTone(PIN_BUZZER, telemMuteSound, sizeof(telemMuteSound)/sizeof(telemMuteSound[0]));
-    else if(audioToPlay == AUDIO_BIND_SUCCESS) 
-      beginTone(PIN_BUZZER, bindSound, sizeof(bindSound)/sizeof(bindSound[0]));
-    else if(audioToPlay == AUDIO_SCREENSHOT_CAPTURED) 
-      beginTone(PIN_BUZZER, screenshotSound, sizeof(screenshotSound)/sizeof(screenshotSound[0]));
-    else if(audioToPlay == AUDIO_TRIM_MOVED) 
-      beginTone(PIN_BUZZER, trimMovedSound, sizeof(trimMovedSound)/sizeof(trimMovedSound[0]));
-    else if(audioToPlay == AUDIO_TRIM_CENTER) 
-      beginTone(PIN_BUZZER, trimCenterSound, sizeof(trimCenterSound)/sizeof(trimCenterSound[0]));
-    else if(audioToPlay == AUDIO_TRIM_ENTERED) 
-      beginTone(PIN_BUZZER, trimEnteredSound, sizeof(trimEnteredSound)/sizeof(trimEnteredSound[0]));
-    else if(audioToPlay == AUDIO_TRIM_EXITED) 
-      beginTone(PIN_BUZZER, trimExitedSound, sizeof(trimExitedSound)/sizeof(trimExitedSound[0]));
-    else if(audioToPlay == AUDIO_TRIM_X1) 
-      beginTone(PIN_BUZZER, trimX1Sound, sizeof(trimX1Sound)/sizeof(trimX1Sound[0]));
-    else if(audioToPlay == AUDIO_TRIM_Y1) 
-      beginTone(PIN_BUZZER, trimY1Sound, sizeof(trimY1Sound)/sizeof(trimY1Sound[0]));
-    else if(audioToPlay == AUDIO_TRIM_X2) 
-      beginTone(PIN_BUZZER, trimX2Sound, sizeof(trimX2Sound)/sizeof(trimX2Sound[0]));
-    else if(audioToPlay == AUDIO_TRIM_Y2) 
-      beginTone(PIN_BUZZER, trimY2Sound, sizeof(trimY2Sound)/sizeof(trimY2Sound[0]));
-    else if(audioToPlay >= AUDIO_NOTIFICATION_TONE_FIRST && audioToPlay <= AUDIO_NOTIFICATION_TONE_LAST)
+    
+    switch(audioToPlay)
     {
-      uint8_t i = audioToPlay - AUDIO_NOTIFICATION_TONE_FIRST;
-      beginTone(PIN_BUZZER, notificationTone[i], sizeof(notificationTone[0])/sizeof(notificationTone[0][0]));
+      case AUDIO_SAFETY_WARN:
+        beginTone(warnSound, sizeof(warnSound)/sizeof(warnSound[0]));
+        break;
+        
+      case AUDIO_BATTERY_WARN:
+        beginTone(battLowSound, sizeof(battLowSound)/sizeof(battLowSound[0])); 
+        break;
+        
+      case AUDIO_TIMER_ELAPSED:
+        beginTone(timerElapsedSound, sizeof(timerElapsedSound)/sizeof(timerElapsedSound[0]));
+        break;
+      
+      case AUDIO_KEY_PRESSED:
+      case AUDIO_SWITCH_MOVED:
+        beginTone(shortBeepSound, sizeof(shortBeepSound)/sizeof(shortBeepSound[0])); 
+        break;
+        
+      case AUDIO_INACTIVITY:
+        beginTone(inactivitySound, sizeof(inactivitySound)/sizeof(inactivitySound[0]));
+        break;
+        
+      case AUDIO_TELEM_WARN: 
+        beginTone(telemWarnSound, sizeof(telemWarnSound)/sizeof(telemWarnSound[0]));
+        break;
+        
+      case AUDIO_TELEM_MUTE_CHANGED: 
+        beginTone(telemMuteSound, sizeof(telemMuteSound)/sizeof(telemMuteSound[0]));
+        break;
+        
+      case AUDIO_BIND_SUCCESS:
+        beginTone(bindSound, sizeof(bindSound)/sizeof(bindSound[0]));
+        break;
+        
+      case AUDIO_SCREENSHOT_CAPTURED: 
+        beginTone(screenshotSound, sizeof(screenshotSound)/sizeof(screenshotSound[0]));
+        break;
+        
+      case AUDIO_TRIM_MOVED:
+      case AUDIO_TRIM_CENTER:
+        {
+          if(Sys.trimToneFreqMode == TRIM_TONE_FREQ_FIXED)
+          {
+            if(audioToPlay == AUDIO_TRIM_MOVED)
+              beginTone(trimMovedSound, sizeof(trimMovedSound)/sizeof(trimMovedSound[0]));
+            if(audioToPlay == AUDIO_TRIM_CENTER)
+              beginTone(trimCenterSound, sizeof(trimCenterSound)/sizeof(trimCenterSound[0]));
+          }
+          else if(Sys.trimToneFreqMode == TRIM_TONE_FREQ_VARIABLE)
+            beginToneTrimMoved();
+        }
+        break;
+
+      case AUDIO_TRIM_MODE_ENTERED: 
+        beginTone(trimEnteredSound, sizeof(trimEnteredSound)/sizeof(trimEnteredSound[0]));
+        break;
+        
+      case AUDIO_TRIM_MODE_EXITED: 
+        beginTone(trimExitedSound, sizeof(trimExitedSound)/sizeof(trimExitedSound[0]));
+        break;
+        
+      case AUDIO_TRIM_MODE_X1:
+        beginTone(trimX1Sound, sizeof(trimX1Sound)/sizeof(trimX1Sound[0]));
+        break;
+        
+      case AUDIO_TRIM_MODE_Y1:
+        beginTone(trimY1Sound, sizeof(trimY1Sound)/sizeof(trimY1Sound[0]));
+        break;
+        
+      case AUDIO_TRIM_MODE_X2: 
+        beginTone(trimX2Sound, sizeof(trimX2Sound)/sizeof(trimX2Sound[0]));
+        break;
+        
+      case AUDIO_TRIM_MODE_Y2: 
+        beginTone(trimY2Sound, sizeof(trimY2Sound)/sizeof(trimY2Sound[0]));
+        break;
+      
+      default:
+        {
+          if(audioToPlay >= AUDIO_NOTIFICATION_TONE_FIRST && audioToPlay <= AUDIO_NOTIFICATION_TONE_LAST)
+          {
+            uint8_t i = audioToPlay - AUDIO_NOTIFICATION_TONE_FIRST;
+            beginTone(notificationTone[i], sizeof(notificationTone[0])/sizeof(notificationTone[0][0]));
+          }
+        }
+        break;
     }
   }
   else //Playback. Automatically stops once all notes have been played
+  {
     playback();
+  }
     
   audioToPlay = AUDIO_NONE;
 }
