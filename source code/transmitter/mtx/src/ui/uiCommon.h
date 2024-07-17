@@ -70,5 +70,4 @@ void drawNotificationOverlay(uint8_t idx, uint32_t startTime, uint32_t endTime);
 
 void screenshotHandler();
 
-
 #endif
