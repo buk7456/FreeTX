@@ -36,7 +36,6 @@ int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEna
   if(!isEditMode)
     return val;
   
-
   uint8_t  heldBtnQQ = 0;
   int16_t delta = 1;
   uint8_t speed = initialSpeed;
