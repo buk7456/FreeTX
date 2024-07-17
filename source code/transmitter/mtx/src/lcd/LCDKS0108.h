@@ -46,5 +46,4 @@ class LCDKS0108 : public GFX
     void setPage(uint8_t page);
 };
 
-
 #endif
