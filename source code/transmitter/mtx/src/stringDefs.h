@@ -49,6 +49,7 @@ extern const id_string_t enum_MixerCurveType_Func[] PROGMEM;
 extern const id_string_t enum_LogicalSwitch_Func[] PROGMEM;
 extern const id_string_t enum_DirectionOfChange[] PROGMEM;
 extern const id_string_t enum_ChannelFailsafe[] PROGMEM;
+extern const id_string_t enum_ChannelCurve[] PROGMEM;
 extern const id_string_t enum_TelemetryAlarmCondition[] PROGMEM;
 extern const id_string_t enum_WidgetType[] PROGMEM;
 extern const id_string_t enum_WidgetSource[] PROGMEM;
@@ -172,6 +173,7 @@ extern const char key_SwitchWarn[] PROGMEM;
 
 extern const char key_Channel[] PROGMEM;
 // extern const char key_Name[] PROGMEM;
+extern const char key_Curve[] PROGMEM;
 extern const char key_Reverse[] PROGMEM;
 extern const char key_Subtrim[] PROGMEM;
 extern const char key_OverrideSwitch[] PROGMEM;
