@@ -9,6 +9,9 @@ void resetModelParams();
 void resetMixerParams();
 void resetMixerParams(uint8_t idx);
 
+void resetChannelParams();
+void resetChannelParams(uint8_t idx);
+
 void resetTelemParams();
 void resetTelemParams(uint8_t idx);
 
@@ -673,6 +676,7 @@ enum {
 
 typedef struct {
   char     name[7];       //6 chars + null
+  int8_t   curve;         //-1 means none, 0 to .. are custom curves
   bool     reverse; 
   int16_t  subtrim;       //fixed point representation with scaling factor 1/10
   uint8_t  overrideSwitch;
