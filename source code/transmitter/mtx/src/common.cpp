@@ -327,6 +327,9 @@ void resetModelParams()
   //--- mixers ---
   resetMixerParams();
   
+  //--- output channels ---
+  resetChannelParams();
+  
   //--- logical switches ---
   resetLogicalSwitchParams();
   
@@ -339,19 +342,6 @@ void resetModelParams()
   //--- timers ---
   resetTimerParams();
 
-  //--- output channels ---
-  for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-  {
-    Model.Channel[i].name[0] = '\0';
-    Model.Channel[i].reverse = false;
-    Model.Channel[i].subtrim = 0;
-    Model.Channel[i].overrideSwitch = CTRL_SW_NONE;
-    Model.Channel[i].overrideVal = -100;
-    Model.Channel[i].failsafe  = -102;
-    Model.Channel[i].endpointL = -100;
-    Model.Channel[i].endpointR = 100;
-  }
-  
   //--- trim ----
   trim_params_t* qqTrim[4];
   qqTrim[0] = &Model.X1Trim;
@@ -550,6 +540,32 @@ void resetMixerParams(uint8_t idx)
 
 //--------------------------------------------------------------------------------------------------
 
+void resetChannelParams()
+{
+  for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
+    resetChannelParams(i);
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void resetChannelParams(uint8_t idx)
+{
+  if(idx >= NUM_RC_CHANNELS)
+    return;
+  
+  Model.Channel[idx].name[0] = '\0';
+  Model.Channel[idx].curve = -1;
+  Model.Channel[idx].reverse = false;
+  Model.Channel[idx].subtrim = 0;
+  Model.Channel[idx].overrideSwitch = CTRL_SW_NONE;
+  Model.Channel[idx].overrideVal = -100;
+  Model.Channel[idx].failsafe  = -102;
+  Model.Channel[idx].endpointL = -100;
+  Model.Channel[idx].endpointR = 100;
+}
+
+//--------------------------------------------------------------------------------------------------
+
 void resetTelemParams()
 {
   for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
@@ -657,6 +673,12 @@ bool verifyModelData()
     if(Model.Mixer[i].swtch >= CTRL_SW_COUNT)  isSane = false;
     if(Model.Mixer[i].curveType >= MIX_CURVE_TYPE_COUNT)  isSane = false;
     if(Model.Mixer[i].operation >= MIX_OPERATOR_COUNT)  isSane = false;
+  }
+
+  for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
+  {
+    if(Model.Channel[i].curve != -1 && Model.Channel[i].curve >= NUM_CUSTOM_CURVES)
+      isSane = false;
   }
 
   for(uint8_t i = 0; i < NUM_CUSTOM_CURVES; i++)
