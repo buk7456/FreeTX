@@ -114,6 +114,7 @@ enum {
   SCREEN_OUTPUTS,
   CONTEXT_MENU_OUTPUTS,
   DIALOG_RENAME_CHANNEL,
+  CONFIRMATION_CHANNEL_RESET,
   
   //---- Extras ---
   SCREEN_EXTRAS_MENU,
@@ -2448,16 +2449,9 @@ void handleMainUI()
             
             ITEM_COUNT
           };
-          
-          uint8_t listItemIDs[ITEM_COUNT]; 
-          uint8_t listItemCount = 0;
-          
-          //add item Ids to the list of Ids
-          for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
-            listItemIDs[listItemCount++] = i;
-          
+
           //handle navigation
-          changeFocusOnUpDown(listItemCount + 1); //+1 for title focus
+          changeFocusOnUpDown(ITEM_COUNT + 1); //+1 for title focus
           static uint8_t topItem = 1;
           if(focusedItem == 1)
             topItem = 1;
@@ -2470,17 +2464,17 @@ void handleMainUI()
           }
           
           //fill list and edit items
-          for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
+          for(uint8_t line = 0; line < 5 && line < ITEM_COUNT; line++)
           {
             uint8_t ypos = 20 + line*9;
             if(focusedItem - 1 == topItem + line)
               drawCursor(32, ypos);
             
-            if((topItem - 1 + line) >= listItemCount)
+            if((topItem - 1 + line) >= ITEM_COUNT)
             break;
             
-            uint8_t itemID = listItemIDs[topItem - 1 + line];
-            bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+            uint8_t itemID = topItem - 1 + line;
+            bool edit = (focusedItem > 1 && itemID == focusedItem - 2 && isEditMode) ? true : false;
             
             display.setCursor(0, ypos);
             switch(itemID)
@@ -2572,7 +2566,7 @@ void handleMainUI()
           }
           
           //scrollbar
-          drawScrollBar(69, 19, listItemCount, topItem, 5, 5 * 9);
+          drawScrollBar(69, 19, ITEM_COUNT, topItem, 5, 5 * 9);
         
           //--- draw graph
           //draw stick input marker
@@ -3477,7 +3471,7 @@ void handleMainUI()
       {
         drawHeader(PSTR("Overview"));
         
-        //--- scrollable list
+        //--- dynamic scrollable list
         
         uint8_t listItemIDs[NUM_MIXSLOTS];
         uint8_t listItemCount = 0;
@@ -3564,14 +3558,12 @@ void handleMainUI()
       break;
       
     ////////////////////////////////// OUTPUTS /////////////////////////////////////////////////////
-      
+
     case SCREEN_OUTPUTS:
       {
         channel_params_t *ch = &Model.Channel[thisChIdx];
 
         drawHeader(mainMenu[MAIN_MENU_OUTPUTS]);
-
-        //--- draw ---
         
         display.setCursor(8, 9);
         display.print(F("Ch"));
@@ -3583,90 +3575,219 @@ void handleMainUI()
         }
         display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
         
+        //--- scrollable list 
         
-        display.setCursor(0, 20);
-        display.print(F("Reverse:"));
-        drawCheckbox(62, 20, ch->reverse);
-
-        display.setCursor(0, 29);
-        display.print(F("Subtrim:"));
-        display.setCursor(62, 29);
-        int16_t val = ch->subtrim;
-        if(val < 0)
+        enum {
+          ITEM_REVERSE,
+          ITEM_SUBTRIM,
+          ITEM_OVERRIDE_SWITCH,
+          ITEM_OVERRIDE_VALUE,
+          ITEM_FAILSAFE,
+          ITEM_ENDPOINT_L,
+          ITEM_ENDPOINT_R,
+          ITEM_CURVE,
+          
+          ITEM_COUNT
+        };
+        
+        static const uint8_t qqTab[ITEM_COUNT][2] PROGMEM = {
+          //{Item, Vertical offset} 
+          //Items should be ordered as in the enumeration above 
+          {ITEM_REVERSE, 0},
+          {ITEM_SUBTRIM, 1},
+          {ITEM_OVERRIDE_SWITCH, 2},
+          {ITEM_OVERRIDE_VALUE, 2},
+          {ITEM_FAILSAFE, 3},
+          {ITEM_ENDPOINT_L, 4},
+          {ITEM_ENDPOINT_R, 4},
+          {ITEM_CURVE, 5}
+        };
+        
+        const uint8_t totalLines = 6;
+        const uint8_t maxVisibleLines = 5;
+        
+        static uint8_t topLine = 0;
+        
+        //handle navigation
+        uint8_t numFocusable = ITEM_COUNT + 2; //+1 for title focus, +1 for context menu focus
+        changeFocusOnUpDown(numFocusable); 
+        toggleEditModeOnSelectClicked();
+        
+        if(focusedItem == 1 || focusedItem == numFocusable) //title focus or context menu focus
+          topLine = 0;
+        else if(focusedItem > 1)
         {
-          display.print(F("-"));
-          val = -val;
+          uint8_t verticalOffset = pgm_read_byte(&(qqTab[focusedItem - 2][1]));
+          if(verticalOffset < topLine)
+            topLine = verticalOffset;
+          while(verticalOffset >= topLine + maxVisibleLines)
+            topLine++;
         }
-        display.print(val / 10);
-        display.print(F("."));
-        display.print(val % 10);
 
-        display.setCursor(0, 38);
-        display.print(F("Override:"));
-        display.setCursor(62, 38);
-        getControlSwitchName(txtBuff, ch->overrideSwitch, sizeof(txtBuff));
-        display.print(txtBuff);
-        display.setCursor(98, 38);
-        if(ch->overrideSwitch == CTRL_SW_NONE) display.print(F("--"));
-        else display.print(ch->overrideVal);
+        //fill list and edit items
+        uint8_t itemID = topLine;
+        while(itemID < ITEM_COUNT)
+        {
+          bool isFocused = (focusedItem > 1 && focusedItem != numFocusable && itemID == focusedItem - 2) ? true : false;
+          bool edit = (isFocused && isEditMode) ? true : false;
+          
+          uint8_t ypos = 20 + (pgm_read_byte(&(qqTab[itemID][1])) - topLine) * 9;
+          if(ypos > (20 + (maxVisibleLines - 1) * 9))
+            break;
+
+          display.setCursor(0, ypos);
+          switch(itemID)
+          {
+            case ITEM_REVERSE:
+              {
+                display.print(F("Reverse:"));
+                drawCheckbox(62, ypos, ch->reverse);
+                if(isFocused)
+                  drawCursor(54, ypos);
+                if(edit)
+                  ch->reverse = incDec(ch->reverse, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+            
+            case ITEM_SUBTRIM:
+              {
+                display.print(F("Subtrim:"));
+                display.setCursor(62, ypos);
+                int16_t val = ch->subtrim;
+                if(val < 0)
+                {
+                  display.print(F("-"));
+                  val = -val;
+                }
+                display.print(val / 10);
+                display.print(F("."));
+                display.print(val % 10);
+                if(isFocused)
+                  drawCursor(54, ypos);
+                if(edit)
+                {
+                  //restrict to multiples of 2
+                  int16_t val = ch->subtrim / 2;
+                  val = incDec(val, TRIM_MIN_VAL / 2, TRIM_MAX_VAL / 2, INCDEC_NOWRAP, INCDEC_NORMAL);
+                  ch->subtrim = val * 2;
+                }
+              }
+              break;
+            
+            case ITEM_OVERRIDE_SWITCH:
+              {
+                display.print(F("Override:"));
+                display.setCursor(62, ypos);
+                getControlSwitchName(txtBuff, ch->overrideSwitch, sizeof(txtBuff));
+                display.print(txtBuff);
+                if(isFocused)
+                  drawCursor(54, ypos);
+                if(edit)
+                  ch->overrideSwitch = incDecControlSwitch(ch->overrideSwitch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+              }
+              break;
+            
+            case ITEM_OVERRIDE_VALUE:
+              {
+                display.setCursor(98, ypos);
+                if(ch->overrideSwitch == CTRL_SW_NONE) 
+                  display.print(F("--"));
+                else 
+                  display.print(ch->overrideVal);
+                if(isFocused)
+                  drawCursor(90, ypos);
+                if(edit && ch->overrideSwitch != CTRL_SW_NONE)
+                  ch->overrideVal = incDec(ch->overrideVal, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+              }
+              break;
+              
+            case ITEM_FAILSAFE:
+              {
+                display.print(F("Failsafe:"));
+                display.setCursor(62, ypos);
+                if(ch->failsafe < -100)
+                  display.print(findStringInIdStr(enum_ChannelFailsafe, ch->failsafe));
+                else
+                  display.print(ch->failsafe);
+                if(isFocused)
+                  drawCursor(54, ypos);
+                if(edit)
+                  ch->failsafe = incDec(ch->failsafe, -102, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+              }
+              break;
+              
+            case ITEM_ENDPOINT_L:
+              {
+                display.print(F("Endpts:"));
+                display.setCursor(62, ypos);
+                display.print(ch->endpointL);
+                if(isFocused)
+                  drawCursor(54, ypos);
+                if(edit)
+                  ch->endpointL = incDec(ch->endpointL, -100, 0, INCDEC_NOWRAP, INCDEC_NORMAL);
+              }
+              break;
+            
+            case ITEM_ENDPOINT_R:
+              {
+                display.setCursor(98, ypos);
+                display.print(ch->endpointR);
+                if(isFocused)
+                  drawCursor(90, ypos);
+                if(edit)
+                  ch->endpointR = incDec(ch->endpointR, 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+              }
+              break;
+              
+            case ITEM_CURVE:
+              {
+                display.print(F("Curve:"));
+                display.setCursor(62, ypos);
+                if(ch->curve == -1)
+                {
+                  display.print(findStringInIdStr(enum_ChannelCurve, ch->curve));
+                  // display.print(F("--"));
+                }
+                else
+                {
+                  if(isEmptyStr(Model.CustomCurve[ch->curve].name, sizeof(Model.CustomCurve[0].name)))
+                  {
+                    display.print(F("Crv"));
+                    display.print(ch->curve + 1);
+                  }
+                  else
+                    display.print(Model.CustomCurve[ch->curve].name);
+                }
+                if(isFocused)
+                  drawCursor(54, ypos);
+                if(edit)
+                  ch->curve = incDec(ch->curve, -1, NUM_CUSTOM_CURVES - 1, INCDEC_WRAP, INCDEC_SLOW);
+              }
+              break;
+          }
+
+          itemID++;
+        }
         
-        display.setCursor(0, 47);
-        display.print(F("Failsafe:"));
-        display.setCursor(62, 47);
-        if(ch->failsafe < -100)
-          display.print(findStringInIdStr(enum_ChannelFailsafe, ch->failsafe));
-        else
-          display.print(ch->failsafe);
-
-        display.setCursor(0, 56);
-        display.print(F("Endpts:"));
-        display.setCursor(62, 56);
-        display.print(ch->endpointL);
-        display.setCursor(98, 56);
-        display.print(ch->endpointR);
+        //scrollbar
+        drawScrollBar(125, 19, totalLines, topLine + 1, maxVisibleLines, maxVisibleLines * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
-        display.drawBitmap(120, 0, focusedItem == 9 ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
-        
-        //show the cursor
-        if(focusedItem == 1) drawCursor(0, 9);
-        else if(focusedItem <= 3) drawCursor(54, 20 + (focusedItem - 2) * 9);
-        else if(focusedItem == 4) drawCursor(54, 38);
-        else if(focusedItem == 5) drawCursor(90, 38);
-        else if(focusedItem == 6) drawCursor(54, 47);
-        else if(focusedItem == 7) drawCursor(54, 56);
-        else if(focusedItem == 8) drawCursor(90, 56);
+        display.drawBitmap(120, 0, focusedItem == numFocusable ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
 
-        changeFocusOnUpDown(9);
-        toggleEditModeOnSelectClicked();
-        
-        //edit items
-        if(focusedItem == 1)
-          thisChIdx = incDec(thisChIdx, 0, NUM_RC_CHANNELS - 1, INCDEC_WRAP, INCDEC_SLOW); 
-        else if(focusedItem == 2)
-          ch->reverse = incDec(ch->reverse, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 3)
-        {
-          //restrict to multiples of 2
-          int16_t val = ch->subtrim / 2;
-          val = incDec(val, TRIM_MIN_VAL / 2, TRIM_MAX_VAL / 2, INCDEC_NOWRAP, INCDEC_NORMAL);
-          ch->subtrim = val * 2;
-        }
-        else if(focusedItem == 4 && isEditMode)
-          ch->overrideSwitch = incDecControlSwitch(ch->overrideSwitch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
-        else if(focusedItem == 5 && ch->overrideSwitch != CTRL_SW_NONE)
-          ch->overrideVal = incDec(ch->overrideVal, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
-        else if(focusedItem == 6)
-          ch->failsafe = incDec(ch->failsafe, -102, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
-        else if(focusedItem == 7)
-          ch->endpointL = incDec(ch->endpointL, -100, 0, INCDEC_NOWRAP, INCDEC_NORMAL);
-        else if(focusedItem == 8)
-          ch->endpointR = incDec(ch->endpointR, 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
-        else if(focusedItem == 9 && isEditMode) //context menu
+        //open context menu
+        if(focusedItem == numFocusable && isEditMode)
           changeToScreen(CONTEXT_MENU_OUTPUTS);
+        
+        //change to next
+        if(focusedItem == 1)
+        {          
+          drawCursor(0, 9);
+          thisChIdx = incDec(thisChIdx, 0, NUM_RC_CHANNELS - 1, INCDEC_WRAP, INCDEC_SLOW); 
+        }
 
-        //Exit
+        // Exit
         if(heldButton == KEY_SELECT)
           changeToScreen(SCREEN_MAIN_MENU);
       }
@@ -3677,17 +3798,21 @@ void handleMainUI()
         enum {
           ITEM_CHANNEL_MONITOR,
           ITEM_RENAME_CHANNEL,
+          ITEM_RESET_SETTINGS,
         };
         
         contextMenuInitialise();
         contextMenuAddItem(PSTR("View outputs"), ITEM_CHANNEL_MONITOR);
         contextMenuAddItem(PSTR("Rename channel"), ITEM_RENAME_CHANNEL);
+        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_SETTINGS);
         contextMenuDraw();
         
         if(contextMenuSelectedItemID == ITEM_RENAME_CHANNEL)
           changeToScreen(DIALOG_RENAME_CHANNEL);
         if(contextMenuSelectedItemID == ITEM_CHANNEL_MONITOR)
           changeToScreen(SCREEN_CHANNEL_MONITOR);
+        if(contextMenuSelectedItemID == ITEM_RESET_SETTINGS)
+          changeToScreen(CONFIRMATION_CHANNEL_RESET);
         
         if(heldButton == KEY_SELECT)
           changeToScreen(SCREEN_OUTPUTS);
@@ -3699,6 +3824,19 @@ void handleMainUI()
         isEditTextDialog = true;
         editTextDialog(PSTR("Channel name"), Model.Channel[thisChIdx].name, sizeof(Model.Channel[0].name), true, true, false);
         if(!isEditTextDialog) //exited
+          changeToScreen(SCREEN_OUTPUTS);
+      }
+      break;
+      
+    case CONFIRMATION_CHANNEL_RESET:
+      {
+        printFullScreenMsg(PSTR("This may cause\nunintended\noperation.\nContinue?\n\nYes [Up] \nNo [Down]"));
+        if(clickedButton == KEY_UP)
+        {
+          resetChannelParams(thisChIdx);
+          changeToScreen(SCREEN_OUTPUTS);
+        }
+        else if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT) //exit
           changeToScreen(SCREEN_OUTPUTS);
       }
       break;
@@ -4629,6 +4767,8 @@ void handleMainUI()
         display.print(txtBuff);
         display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
         
+        //--- dynamic scrollable list 
+        
         enum {
           ITEM_WAVEFORM,
           ITEM_PERIOD_MODE,
@@ -5047,18 +5187,9 @@ void handleMainUI()
           
           ITEM_COUNT
         };
-        
-        uint8_t listItemIDs[ITEM_COUNT]; 
-        uint8_t listItemCount = 0;
-        
-        //add item Ids to the list of Ids
-        for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
-        {
-          listItemIDs[listItemCount++] = i;
-        }
-        
+
         //handle navigation
-        uint8_t numFocusable = listItemCount + 2; //+1 for title focus, +1 for context menu focus
+        uint8_t numFocusable = ITEM_COUNT + 2; //+1 for title focus, +1 for context menu focus
         changeFocusOnUpDown(numFocusable); 
         toggleEditModeOnSelectClicked();
         static uint8_t topItem = 1;
@@ -5073,17 +5204,17 @@ void handleMainUI()
         }
         
         //fill list and edit items
-        for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
+        for(uint8_t line = 0; line < 5 && line < ITEM_COUNT; line++)
         {
           uint8_t ypos = 20 + line*9;
           if(focusedItem - 1 == topItem + line)
             drawCursor(58, ypos);
           
-          if((topItem - 1 + line) >= listItemCount)
+          if((topItem - 1 + line) >= ITEM_COUNT)
             break;
           
-          uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          uint8_t itemID = topItem - 1 + line;
+          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == focusedItem - 2 && isEditMode) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -5152,7 +5283,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(125, 19, ITEM_COUNT, topItem, 5, 5 * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -5399,6 +5530,7 @@ void handleMainUI()
       {
         drawHeader(extrasMenu[EXTRAS_MENU_SAFETY_CHECKS]);
         
+        //--- dynamic scrollable list
         enum {
           ITEM_SAFETY_CHECK_THROTTLE,
           ITEM_SAFETY_CHECK_SW_FIRST,
@@ -5976,6 +6108,8 @@ void handleMainUI()
           viewInitialised = true;
         }
         
+        //--- dynamic scrollable list
+        
         enum {
           ITEM_MINIMUM_VAL,
           ITEM_RESET_MINIMUM_VAL,
@@ -6151,6 +6285,8 @@ void handleMainUI()
     case SCREEN_EDIT_SENSOR:
       {
         telemetry_params_t *tlm = &Model.Telemetry[thisTelemIdx]; 
+        
+        //--- dynamic scrollable list
         
         enum {
           ITEM_TELEMETRY_NAME,
@@ -6683,15 +6819,6 @@ void handleMainUI()
           ITEM_COUNT
         };
         
-        uint8_t listItemIDs[ITEM_COUNT]; 
-        uint8_t listItemCount = 0;
-        
-        //add item Ids to the list of Ids
-        for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
-        {        
-          listItemIDs[listItemCount++] = i;
-        }
-        
         //initialise
         static uint8_t topItem;
         static bool viewInitialised = false;
@@ -6703,7 +6830,7 @@ void handleMainUI()
         }
         
         //handle navigation
-        changeFocusOnUpDown(listItemCount);
+        changeFocusOnUpDown(ITEM_COUNT);
         if(focusedItem < topItem)
           topItem = focusedItem;
         while(focusedItem >= topItem + 6)
@@ -6712,17 +6839,17 @@ void handleMainUI()
         toggleEditModeOnSelectClicked();
         
         //fill list and edit items
-        for(uint8_t line = 0; line < 6 && line < listItemCount; line++)
+        for(uint8_t line = 0; line < 6 && line < ITEM_COUNT; line++)
         {
           uint8_t ypos = 9 + line*9;
           if(focusedItem == topItem + line)
             drawCursor(94, ypos);
           
-          if((topItem - 1 + line) >= listItemCount)
+          if((topItem - 1 + line) >= ITEM_COUNT)
             break;
           
-          uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
+          uint8_t itemID = topItem - 1 + line;
+          bool edit = (itemID == focusedItem - 1 && isEditMode) ? true : false;
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -6802,7 +6929,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 8, listItemCount, topItem, 6, 6 * 9);
+        drawScrollBar(125, 8, ITEM_COUNT, topItem, 6, 6 * 9);
         
         //exit
         if(heldButton == KEY_SELECT)
