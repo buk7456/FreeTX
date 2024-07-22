@@ -209,6 +209,11 @@ const id_string_t enum_ChannelFailsafe[] PROGMEM = {
   {0, ""}
 };
 
+const id_string_t enum_ChannelCurve[] PROGMEM = {
+  {-1, "None"},
+  {0, ""}
+};
+
 const id_string_t enum_TelemetryAlarmCondition[] PROGMEM = {
   {TELEMETRY_ALARM_CONDITION_NONE, "Off"},
   {TELEMETRY_ALARM_CONDITION_GREATER_THAN, ">Threshold"},
@@ -371,6 +376,7 @@ const char key_SwitchWarn[] PROGMEM = "SwitchWarn";
 
 const char key_Channel[] PROGMEM = "Channel";
 // const char key_Name[] PROGMEM = "Name";
+const char key_Curve[] PROGMEM = "Curve";
 const char key_Reverse[] PROGMEM = "Reverse";
 const char key_Subtrim[] PROGMEM = "Subtrim";
 const char key_OverrideSwitch[] PROGMEM = "OverrideSwitch";
