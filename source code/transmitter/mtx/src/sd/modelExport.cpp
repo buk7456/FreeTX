@@ -507,6 +507,16 @@ void exportModelData(File& file)
     writeKeyValue_S32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Name, ch->name);
 
+    if(ch->curve == -1)
+      writeKeyValue_Char(file, 1, key_Curve, findStringInIdStr(enum_ChannelCurve, ch->curve));
+    else
+    {
+      writeKey_helper(file, 1, key_Curve);
+      file.print(F("Crv"));
+      file.print(ch->curve + 1);
+      file.println();
+    }
+
     writeKeyValue_bool(file, 1, key_Reverse, ch->reverse);
     writeKeyValue_TrimVal(file, 1, key_Subtrim, ch->subtrim);
 

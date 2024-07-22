@@ -791,6 +791,23 @@ void computeChannelOutputs()
   for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
   {
     channelOut[i] = mixSources[SRC_CH1 + i];
+    //curve
+    if(Model.Channel[i].curve != -1)
+    {
+      uint8_t _crvIdx = Model.Channel[i].curve;
+      uint8_t _numPts = Model.CustomCurve[_crvIdx].numPoints;
+      int16_t _xx[MAX_NUM_POINTS_CUSTOM_CURVE];
+      int16_t _yy[MAX_NUM_POINTS_CUSTOM_CURVE];
+      for(uint8_t pt = 0; pt < _numPts; pt++)
+      {
+        _xx[pt] = 5 * Model.CustomCurve[_crvIdx].xVal[pt];
+        _yy[pt] = 5 * Model.CustomCurve[_crvIdx].yVal[pt];
+      }
+      if(Model.CustomCurve[_crvIdx].smooth)
+        channelOut[i] = cubicHermiteInterpolate(_xx, _yy, _numPts, channelOut[i]);
+      else
+        channelOut[i] = linearInterpolate(_xx, _yy, _numPts, channelOut[i]);
+    }
     //reverse
     if(Model.Channel[i].reverse) 
       channelOut[i] = 0 - channelOut[i]; 
