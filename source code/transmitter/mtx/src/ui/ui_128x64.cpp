@@ -114,7 +114,6 @@ enum {
   SCREEN_OUTPUTS,
   CONTEXT_MENU_OUTPUTS,
   DIALOG_RENAME_CHANNEL,
-  CONFIRMATION_CHANNEL_RESET,
   
   //---- Extras ---
   SCREEN_EXTRAS_MENU,
@@ -3812,7 +3811,10 @@ void handleMainUI()
         if(contextMenuSelectedItemID == ITEM_CHANNEL_MONITOR)
           changeToScreen(SCREEN_CHANNEL_MONITOR);
         if(contextMenuSelectedItemID == ITEM_RESET_SETTINGS)
-          changeToScreen(CONFIRMATION_CHANNEL_RESET);
+        {
+          resetChannelParams(thisChIdx);
+          changeToScreen(SCREEN_OUTPUTS);
+        }
         
         if(heldButton == KEY_SELECT)
           changeToScreen(SCREEN_OUTPUTS);
@@ -3828,19 +3830,6 @@ void handleMainUI()
       }
       break;
       
-    case CONFIRMATION_CHANNEL_RESET:
-      {
-        printFullScreenMsg(PSTR("This may cause\nunintended\noperation.\nContinue?\n\nYes [Up] \nNo [Down]"));
-        if(clickedButton == KEY_UP)
-        {
-          resetChannelParams(thisChIdx);
-          changeToScreen(SCREEN_OUTPUTS);
-        }
-        else if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT) //exit
-          changeToScreen(SCREEN_OUTPUTS);
-      }
-      break;
-    
     ////////////////////////////////// EXTRAS //////////////////////////////////////////////////////
     
     case SCREEN_EXTRAS_MENU:
