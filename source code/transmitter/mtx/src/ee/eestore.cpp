@@ -51,7 +51,7 @@ uint8_t maxModelsInternal = 1; //Computed at runtime. Just an initial value here
 uint8_t maxModelsExternal = 0; //Computed at runtime. Just an initial value here
 bool hasExternalEE = false;
 
-bool eeStoreInitExited = false;
+bool eeStoreIsReady = false;
 
 bool isInternalEE(uint8_t modelIdx);
 uint32_t getModelAddressInternalEE(uint8_t modelIdx);
@@ -155,7 +155,7 @@ void eeStoreInit()
   eeSaveSysConfig();
   
   //set flag
-  eeStoreInitExited = true;
+  eeStoreIsReady = true;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -331,7 +331,7 @@ void checkAndFormatEEPROM()
 
 bool eeStoreIsInitialised()
 {
-  return eeStoreInitExited;
+  return eeStoreIsReady;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -618,8 +618,34 @@ uint8_t eeExternalEEReadByte(uint32_t address)
 
 void eeFactoryReset()
 {
-  uint16_t fileSignature = 0xFFFF;
-  EEPROM.put(ADDRESS_INT_EE_FILE_SIGNATURE, fileSignature);
+  eeStoreIsReady = false;
+
+  uint32_t totalBytes = EEPROM.length();
   if(hasExternalEE)
-    myMem.put(ADDRESS_EXT_EE_FILE_SIGNATURE, fileSignature);
+    totalBytes += myMem.length();
+
+  //wipe internal eeprom
+  for(uint32_t i = 0; i < EEPROM.length(); i++)
+  {
+    EEPROM.update(i, 0xff);
+    if(i % 256 == 0)
+    {
+      uint8_t percent = (i * 100) / totalBytes;
+      showFactoryResetProgress(percent);
+    }
+  }
+  
+  //wipe external eeprom
+  if(hasExternalEE)
+  {
+    for(uint32_t i = 0; i < myMem.length(); i++)
+    {
+      myMem.write(i, 0xff);
+      if(i % 256 == 0)
+      {
+        uint8_t percent = ((i + EEPROM.length()) * 100) / totalBytes;
+        showFactoryResetProgress(percent);
+      }
+    }
+  }
 }
