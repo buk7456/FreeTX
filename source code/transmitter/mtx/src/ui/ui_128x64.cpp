@@ -359,6 +359,15 @@ void showMuteMsg()
   display.display();
 }
 
+void showFactoryResetProgress(uint8_t percent)
+{
+  display.clearDisplay();
+  printFullScreenMsg(PSTR("Erasing data"));
+  drawHorizontalBarChart(43, 40, 41, 4, BLACK, percent, 0, 100);
+  display.setInterlace(false);
+  display.display();
+}
+
 //============================ Battery warning =====================================================
 
 void handleBatteryWarnUI()
@@ -5606,7 +5615,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 8, listItemCount, topItem, 6, 6 * 9);
+        drawScrollBar(125, 9, listItemCount, topItem, 6, 6 * 9);
 
         // Exit
         if(heldButton == KEY_SELECT)
@@ -5966,7 +5975,7 @@ void handleMainUI()
           }
         }
         //scroll bar
-        drawScrollBar(125, 9, NUM_CUSTOM_TELEMETRY, topItem, 6, 6 * 9 + 1);
+        drawScrollBar(125, 9, NUM_CUSTOM_TELEMETRY, topItem, 6, 6 * 9);
         //--- end of list ---
         
         if(focusedItem <= NUM_CUSTOM_TELEMETRY)
@@ -6722,7 +6731,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 8, listItemCount, topItem, 6, 6 * 9);
+        drawScrollBar(125, 9, listItemCount, topItem, 6, 6 * 9);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -6876,7 +6885,7 @@ void handleMainUI()
                 display.print(F("Scrollbar style:")); 
                 display.setCursor(102, ypos);
                 display.print(Sys.scrollBarStyle);
-                if(edit) Sys.scrollBarStyle = incDec(Sys.scrollBarStyle, 1, 2, INCDEC_WRAP, INCDEC_SLOW);
+                if(edit) Sys.scrollBarStyle = incDec(Sys.scrollBarStyle, 1, 3, INCDEC_WRAP, INCDEC_SLOW);
               }
               break;
               
@@ -6918,7 +6927,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 8, ITEM_COUNT, topItem, 6, 6 * 9);
+        drawScrollBar(125, 9, ITEM_COUNT, topItem, 6, 6 * 9);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -7523,7 +7532,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 8, NUM_PHYSICAL_SWITCHES, topItem, end, end * 9);
+        drawScrollBar(125, 9, NUM_PHYSICAL_SWITCHES, topItem, end, hasNextButton ? 44 : 54);
         
         //show the 'next' button
         if(hasNextButton)
@@ -7951,7 +7960,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 8, listItemCount, topItem, 6, 6 * 9);
+        drawScrollBar(125, 9, listItemCount, topItem, 6, 6 * 9);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -8168,17 +8177,15 @@ void handleMainUI()
       
     case CONFIRMATION_FACTORY_RESET:
       {
-        printFullScreenMsg(PSTR("Factory reset will\ndelete all data,\nincluding models.\n\nPress [UP]\nrepeatedly"));
+        printFullScreenMsg(PSTR("Factory reset will\nerase all data\nfrom the EEPROM,\nincluding models.\nPress [UP]\nrepeatedly"));
         //trigger action
         static uint8_t cntr = 0;
         if(pressedButton == KEY_UP)
           cntr++;
-        if(cntr >= 10)
+        if(cntr >= 5)
         {
-          showWaitMsg();
           stopTones();
-          delay(1000);
-          eeFactoryReset();
+          eeFactoryReset(); //implicitly calls showFactoryResetProgress()
           while(1) //blocking
           {
             delay(10);
@@ -8192,7 +8199,7 @@ void handleMainUI()
             inactivityAlarmHandler();
             playTones();
             display.clearDisplay();
-            printFullScreenMsg(PSTR("Factory reset has\nbeen initiated.\nReboot to continue"));
+            printFullScreenMsg(PSTR("All data has\nbeen erased.\nReboot to continue"));
             display.display();
           }
         }
@@ -8201,7 +8208,7 @@ void handleMainUI()
           cntr = 0;
         
         //show a graphical progress bar
-        uint8_t w = ((uint16_t) 128 * cntr) / 10;
+        uint8_t w = ((uint16_t) 128 * cntr) / 5;
         display.fillRect(0, 61, w, 3, BLACK);
 
         if(heldButton == KEY_SELECT)
@@ -8404,7 +8411,7 @@ void handleMainUI()
           }
           
           //Draw scroll bar
-          drawScrollBar(125, 9, numItems, topItem, 5, 5 * 9);
+          drawScrollBar(125, 9, numItems, topItem, 5, 44);
           
           //show the write button
           drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -9354,12 +9361,12 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
   if(numItems > numVisible)
   {
     uint8_t barHeight = divRoundClosest((int32_t)viewportHeight * numVisible, numItems);
-    //limit barHeight to 5px minimum
+    //limit barHeight to 6px minimum
     uint16_t _viewportHeight = viewportHeight;
-    if(barHeight < 5)
+    if(barHeight < 6)
     {      
-      _viewportHeight -= (5 - barHeight);
-      barHeight = 5;
+      _viewportHeight -= (6 - barHeight);
+      barHeight = 6;
     }
     uint8_t barYpos = ypos + divRoundClosest((int32_t)_viewportHeight * (topItem - 1), numItems);
     //Restrict the scroll bar to being drawn inside the view port. 
@@ -9373,6 +9380,10 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
       display.drawVLine(xpos + 1, barYpos, barHeight, BLACK);
     }
     else if(Sys.scrollBarStyle == 2)
+    {
+      display.drawRoundRect(xpos, barYpos, 3, barHeight, Sys.useRoundRect ? 1 : 0, BLACK);
+    }
+    else if(Sys.scrollBarStyle == 3)
     {
       display.drawVLine(xpos + 1, ypos, viewportHeight, BLACK);
       display.drawRoundRect(xpos, barYpos, 3, barHeight, Sys.useRoundRect ? 1 : 0, BLACK);
