@@ -6,6 +6,7 @@ void initialiseDisplay();
 void showMsg(const char* str);
 void showWaitMsg();
 void showMuteMsg();
+void showFactoryResetProgress(uint8_t percent);
 
 void startInitialSetup();
 
