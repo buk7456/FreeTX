@@ -362,8 +362,8 @@ void showMuteMsg()
 void showFactoryResetProgress(uint8_t percent)
 {
   display.clearDisplay();
-  printFullScreenMsg(PSTR("Erasing data"));
-  drawHorizontalBarChart(43, 40, 41, 4, BLACK, percent, 0, 100);
+  printFullScreenMsg(PSTR("Erasing data\n\n"));
+  drawHorizontalBarChart(38, 36, 52, 8, BLACK, percent, 0, 100);
   display.setInterlace(false);
   display.display();
 }
@@ -815,7 +815,7 @@ void handleMainUI()
               {
                 int32_t tVal = ((int32_t) telemetryReceivedValue[idx] * Model.Telemetry[idx].multiplier) / 100;
                 tVal += Model.Telemetry[idx].offset;
-                drawHorizontalBarChart(73, ypos+1, 41, 4, BLACK, tVal, widget->gaugeMin, widget->gaugeMax);
+                drawHorizontalBarChart(73, ypos + 1, 41, 4, BLACK, tVal, widget->gaugeMin, widget->gaugeMax);
               }
             }
             hasPrinted = true;
@@ -832,9 +832,9 @@ void handleMainUI()
             if(widget->disp == WIDGET_DISP_NUMERICAL)
               display.print(mixSources[widget->src]/5);
             else if(widget->disp == WIDGET_DISP_GAUGE)
-              drawHorizontalBarChart(73, ypos+1, 41, 4, BLACK, mixSources[widget->src]/5, widget->gaugeMin, widget->gaugeMax);
+              drawHorizontalBarChart(73, ypos + 1, 41, 4, BLACK, mixSources[widget->src]/5, widget->gaugeMin, widget->gaugeMax);
             else if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
-              drawHorizontalBarChartZeroCentered(74, ypos+2, 39, 3, BLACK, mixSources[widget->src]/5, widget->gaugeMax - widget->gaugeMin);
+              drawHorizontalBarChartZeroCentered(74, ypos + 2, 39, 3, BLACK, mixSources[widget->src]/5, widget->gaugeMax - widget->gaugeMin);
             hasPrinted = true;
           }
           else if(widget->type == WIDGET_TYPE_OUTPUTS)
@@ -853,9 +853,9 @@ void handleMainUI()
             if(widget->disp == WIDGET_DISP_NUMERICAL)
               display.print(channelOut[widget->src]/5);
             else if(widget->disp == WIDGET_DISP_GAUGE)
-              drawHorizontalBarChart(73, ypos+1, 41, 4, BLACK, channelOut[widget->src]/5, widget->gaugeMin, widget->gaugeMax);
+              drawHorizontalBarChart(73, ypos + 1, 41, 4, BLACK, channelOut[widget->src]/5, widget->gaugeMin, widget->gaugeMax);
             else if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
-              drawHorizontalBarChartZeroCentered(74, ypos+2, 39, 3, BLACK, channelOut[widget->src]/5, widget->gaugeMax - widget->gaugeMin);
+              drawHorizontalBarChartZeroCentered(74, ypos + 2, 39, 3, BLACK, channelOut[widget->src]/5, widget->gaugeMax - widget->gaugeMin);
             hasPrinted = true;
           }
           else if(widget->type == WIDGET_TYPE_TIMERS)
