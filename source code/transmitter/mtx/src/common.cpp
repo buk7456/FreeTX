@@ -157,6 +157,10 @@ bool     telemetryForceRequest = false;
 int16_t  counterOut[NUM_COUNTERS];
 
 uint32_t timerElapsedTime[NUM_TIMERS];
+uint32_t timerLastElapsedTime[NUM_TIMERS];
+uint32_t timerLastPaused[NUM_TIMERS];
+bool     timerIsRunning[NUM_TIMERS];
+bool     timerForceRun[NUM_TIMERS];
 
 uint8_t  maxNumOfModels;
 
@@ -455,6 +459,42 @@ void resetTimerParams(uint8_t idx)
 
 //--------------------------------------------------------------------------------------------------
 
+void resetTimerRegisters()
+{
+  for(uint8_t i = 0; i < NUM_TIMERS; i++)
+  {
+    resetTimerRegister(i);
+    timerForceRun[i] = false;
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void resetTimerRegister(uint8_t idx)
+{
+  timerElapsedTime[idx] = 0;
+  timerLastElapsedTime[idx] = 0;
+  timerLastPaused[idx] = millis();
+  timerIsRunning[idx] = false;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void restoreTimerRegisters()
+{
+  for(uint8_t i = 0; i < NUM_TIMERS; i++)
+  {
+    if(Model.Timer[i].isPersistent)
+    {
+      timerLastElapsedTime[i] = Model.Timer[i].persistVal;
+      timerElapsedTime[i] = Model.Timer[i].persistVal;
+      timerLastPaused[i] = millis();
+    }
+  }
+}
+
+//--------------------------------------------------------------------------------------------------
+
 void resetCounterParams()
 {
   for(uint8_t i = 0; i < NUM_COUNTERS; i++)
@@ -479,6 +519,34 @@ void resetCounterParams(uint8_t idx)
   
   //also clear the output value of the counter to 0
   counterOut[idx] = 0;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void resetCounterRegisters()
+{
+  for(uint8_t i = 0; i < NUM_COUNTERS; i++)
+    resetCounterRegister(i);
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void resetCounterRegister(uint8_t idx)
+{
+  counterOut[idx] = 0;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void restoreCounterRegisters()
+{
+  for(uint8_t i = 0; i < NUM_COUNTERS; i++)
+  {
+    if(Model.Counter[i].isPersistent)
+    {
+      counterOut[i] = Model.Counter[i].persistVal;
+    }
+  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -616,6 +684,7 @@ void resetNotificationParams(uint8_t idx)
   if(idx >= NUM_CUSTOM_NOTIFICATIONS)
     return;
   
+  Model.CustomNotification[idx].enabled = true;
   Model.CustomNotification[idx].swtch = CTRL_SW_NONE;
   Model.CustomNotification[idx].tone = AUDIO_NOTIFICATION_TONE_FIRST;
   Model.CustomNotification[idx].text[0] = '\0';
