@@ -11,11 +11,6 @@
 
 bool isEditMode = false;
 
-uint32_t timerLastElapsedTime[NUM_TIMERS];
-uint32_t timerLastPaused[NUM_TIMERS];
-bool     timerIsRunning[NUM_TIMERS];
-bool     timerForceRun[NUM_TIMERS];
-
 const char* toastText;
 uint32_t toastEndTime;
 uint32_t toastStartTime;
@@ -283,62 +278,6 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
   }
   idxQQ = incDec(idxQQ, 0, ctrlCnt - 1, INCDEC_WRAP, INCDEC_SLOW);
   return ctrlQQ[idxQQ];
-}
-
-//--------------------------------------------------------------------------------------------------
-
-void resetTimerRegisters()
-{
-  for(uint8_t i = 0; i < NUM_TIMERS; i++)
-  {
-    resetTimerRegister(i);
-    timerForceRun[i] = false;
-  }
-}
-
-void resetTimerRegister(uint8_t idx)
-{
-  timerElapsedTime[idx] = 0;
-  timerLastElapsedTime[idx] = 0;
-  timerLastPaused[idx] = millis();
-  timerIsRunning[idx] = false;
-}
-
-void restoreTimerRegisters()
-{
-  for(uint8_t i = 0; i < NUM_TIMERS; i++)
-  {
-    if(Model.Timer[i].isPersistent)
-    {
-      timerLastElapsedTime[i] = Model.Timer[i].persistVal;
-      timerElapsedTime[i] = Model.Timer[i].persistVal;
-      timerLastPaused[i] = millis();
-    }
-  }
-}
-
-//--------------------------------------------------------------------------------------------------
-
-void resetCounterRegisters()
-{
-  for(uint8_t i = 0; i < NUM_COUNTERS; i++)
-    resetCounterRegister(i);
-}
-
-void resetCounterRegister(uint8_t idx)
-{
-  counterOut[idx] = 0;
-}
-
-void restoreCounterRegisters()
-{
-  for(uint8_t i = 0; i < NUM_COUNTERS; i++)
-  {
-    if(Model.Counter[i].isPersistent)
-    {
-      counterOut[i] = Model.Counter[i].persistVal;
-    }
-  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -705,6 +644,8 @@ void notificationHandler()
   
   for(uint8_t i = 0; i < NUM_CUSTOM_NOTIFICATIONS; i++)
   {
+    if(!Model.CustomNotification[i].enabled)
+      continue;
     uint8_t sw = Model.CustomNotification[i].swtch;
     bool state = (checkSwitchCondition(sw) && sw != CTRL_SW_NONE);
     if(state && !lastState[i]) //just went on
@@ -749,7 +690,7 @@ void notificationHandler()
     {
       lastId = queue[0].notificationId;
       startTime = millis();
-      endTime = startTime + 3000;
+      endTime = startTime + 3500;
       toneStarted = false;
     }
     
