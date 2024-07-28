@@ -359,11 +359,11 @@ void showMuteMsg()
   display.display();
 }
 
-void showFactoryResetProgress(uint8_t percent)
+void showProgressMsg(const char* str, uint8_t percent)
 {
   display.clearDisplay();
-  printFullScreenMsg(PSTR("Erasing data\n\n"));
-  drawHorizontalBarChart(38, 36, 52, 8, BLACK, percent, 0, 100);
+  printFullScreenMsg(str);
+  drawHorizontalBarChart(38, display.getCursorY() + 9, 52, 7, BLACK, percent, 0, 100);
   display.setInterlace(false);
   display.display();
 }
@@ -8177,7 +8177,8 @@ void handleMainUI()
       
     case CONFIRMATION_FACTORY_RESET:
       {
-        printFullScreenMsg(PSTR("Factory reset will\nerase all data\nfrom the EEPROM,\nincluding models.\nPress [UP]\nrepeatedly"));
+        printFullScreenMsg(PSTR("Factory reset will\nerase all data,\nincluding models."
+                                "\nPress [UP]\nrepeatedly\nto confirm."));
         //trigger action
         static uint8_t cntr = 0;
         if(pressedButton == KEY_UP)
@@ -8185,7 +8186,7 @@ void handleMainUI()
         if(cntr >= 5)
         {
           stopTones();
-          eeFactoryReset(); //implicitly calls showFactoryResetProgress()
+          eeFactoryReset(); //implicitly calls the function that shows the progress
           while(1) //blocking
           {
             delay(10);
@@ -8489,7 +8490,8 @@ void handleMainUI()
       {
         drawHeader(mainMenu[MAIN_MENU_ABOUT]);
 
-        printFullScreenMsg(PSTR("FW version: " _SKETCHVERSION "\n(c) 2023 Buk7456" "\nhttps://github.com/" "\nbuk7456/FreeTX"));
+        printFullScreenMsg(PSTR("FW version: " _SKETCHVERSION "\n(c) 2023 Buk7456" 
+                                "\nhttps://github.com/" "\nbuk7456/FreeTX"));
         
         display.drawBitmap(61, 61, icon_down_arrow_small, 5, 3, BLACK);
         
