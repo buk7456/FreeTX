@@ -205,6 +205,7 @@ extern const char key_GaugeMin[] PROGMEM;
 extern const char key_GaugeMax[] PROGMEM;
 
 extern const char key_Notification[] PROGMEM;
+extern const char key_Enabled[] PROGMEM;
 // extern const char key_Switch[] PROGMEM;
 extern const char key_Tone[] PROGMEM;
 extern const char key_Text[] PROGMEM;

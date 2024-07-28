@@ -602,6 +602,8 @@ void exportModelData(File& file)
     writeKeyValue_Char(file, 0, key_Notification, NULL);
     writeKeyValue_S32(file, 1, key_Number, idx + 1);
 
+    writeKeyValue_bool(file, 1, key_Enabled, notification->enabled);
+
     getControlSwitchName_Clean(tempBuff, notification->swtch, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_Switch, tempBuff);
 

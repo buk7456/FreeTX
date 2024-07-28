@@ -112,10 +112,12 @@ void setup()
   //Warnings
   handleSafetyWarnUI(); //blocking
   
-  //Restore timers
+  //Initialise timers
+  resetTimerRegisters();
   restoreTimerRegisters();
   
-  //Restore counters
+  //Initialise counters
+  resetCounterRegisters();
   restoreCounterRegisters();
   
   //Other initialisations

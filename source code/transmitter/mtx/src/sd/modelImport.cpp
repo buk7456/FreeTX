@@ -886,7 +886,9 @@ void extractConfig_Notifications()
   else if(idx < NUM_CUSTOM_NOTIFICATIONS)
   {
     notification_params_t *notification = &Model.CustomNotification[idx];
-    if(MATCH_P(keyBuff[1], key_Text))
+    if(MATCH_P(keyBuff[1], key_Enabled))
+      readValue_bool(valueBuff, &notification->enabled);
+    else if(MATCH_P(keyBuff[1], key_Text))
       strlcpy(notification->text, valueBuff, sizeof(notification->text));
     else if(MATCH_P(keyBuff[1], key_Switch))
       notification->swtch = getControlSwitchID(valueBuff);

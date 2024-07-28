@@ -408,7 +408,8 @@ const char key_GaugeMin[] PROGMEM = "GaugeMin";
 const char key_GaugeMax[] PROGMEM = "GaugeMax";
 
 const char key_Notification[] PROGMEM = "Notification";
-//const char key_Switch[] PROGMEM;
+extern const char key_Enabled[] PROGMEM = "Enabled";
+//const char key_Switch[] PROGMEM = "Switch";
 const char key_Tone[] PROGMEM = "Tone";
 const char key_Text[] PROGMEM = "Text";
 

@@ -338,7 +338,7 @@ void sdShowSplashScreen()
     myFile.close();
 
     //delay to make it noticeable
-    delay(2500);
+    delay(3000);
   }
 }
 

@@ -23,23 +23,12 @@ enum {
   INCDEC_FLAG_FMODE   = 0x04,
 }; 
 
-extern uint32_t timerLastElapsedTime[NUM_TIMERS];
-extern uint32_t timerLastPaused[NUM_TIMERS];
-extern bool     timerIsRunning[NUM_TIMERS];
-extern bool     timerForceRun[NUM_TIMERS];
-
 extern const char* toastText;
 extern uint32_t toastEndTime;
 extern uint32_t toastStartTime;
 extern bool     toastExpired;
 
 //------------- functions ----------------
-
-void resetTimerRegisters();
-void resetTimerRegister(uint8_t idx);
-
-void resetCounterRegisters();
-void resetCounterRegister(uint8_t idx);
 
 uint8_t getMovedSource();
 uint8_t getMovedControlSwitch();

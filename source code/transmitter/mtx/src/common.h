@@ -21,11 +21,17 @@ void resetCustomCurveParams(uint8_t idx);
 void resetLogicalSwitchParams();
 void resetLogicalSwitchParams(uint8_t idx);
 
-void resetCounterParams();
-void resetCounterParams(uint8_t idx);
-
 void resetTimerParams();
 void resetTimerParams(uint8_t idx);
+void resetTimerRegisters();
+void resetTimerRegister(uint8_t idx);
+void restoreTimerRegisters();
+
+void resetCounterParams();
+void resetCounterParams(uint8_t idx);
+void resetCounterRegisters();
+void resetCounterRegister(uint8_t idx);
+void restoreCounterRegisters();
 
 void resetFuncgenParams();
 void resetFuncgenParams(uint8_t idx);
@@ -223,7 +229,7 @@ extern uint8_t screenshotSwtch;
 /* 
   NOTES & WARNINGS
   - The odering in the enumerations should match the ordering in the UI.
-  - Adding new fields or parameters does corrupt the system data. This is no big deal however.
+  - Adding new fields or parameters can corrupt the system data. This is no big deal however.
 */
 
 //------------------------------------------------
@@ -397,10 +403,66 @@ enum {
 /* 
   NOTES & WARNINGS
   - The odering in the enumerations should match the ordering in the UI.
-  - Don't reorder the structures unless you dont care about corrupting model settings
-  - Adding new fields or parameters could corrupt model data, 
-    so make a backup of the models you care about to the SD card before flashing the new changes.
+  - Adding new fields/parameters or reordering the structures can corrupt model data. Always make 
+    a backup of the models you care about to an SD card before updating the device's firmware.
+  - If you have added new fields, remember to update the model import and export code for the SD card.
 */
+
+//------------------------------------------------
+// structure for channel params
+//------------------------------------------------
+
+typedef struct {
+  char     name[7];       //6 chars + null
+  int8_t   curve;         //-1 means none, 0 to .. are custom curves
+  bool     reverse; 
+  int16_t  subtrim;       //fixed point representation with scaling factor 1/10
+  uint8_t  overrideSwitch;
+  int8_t   overrideVal; 
+  int8_t   failsafe;      //-102 to 100. -102 means hold, -101 No pulse
+  int8_t   endpointL;     //left endpoint, -100 to 0
+  int8_t   endpointR;     //right endpoint, 0 to 100
+} channel_params_t;
+
+//------------------------------------------------
+// structure for custom telemetry
+//------------------------------------------------
+
+typedef struct {
+  char     name[9];        //8 chars + Null. If no name, the telemetry doesn't then exist
+  char     unitsName[5];   //4 chars + null
+  uint8_t  identifier;     //ID 00 to FE. FF is unused
+  int16_t  multiplier;     //1 to 1000, scales to 0.01 to 10.00
+  int8_t   factor10;       //-2, 1, 0, 1, 2. Means x10^
+  int16_t  offset;         //-30000 to 30000
+  bool     logEnabled;     //
+  uint8_t  alarmCondition; //None, >Thresh, <Thresh
+  int16_t  alarmThreshold; //-30000 to 30000
+  uint8_t  alarmMelody;
+  bool     showOnHome; 
+  bool     recordMaximum;
+  bool     recordMinimum;
+} telemetry_params_t;
+
+enum {
+  TELEMETRY_ALARM_CONDITION_NONE,
+  TELEMETRY_ALARM_CONDITION_GREATER_THAN,
+  TELEMETRY_ALARM_CONDITION_LESS_THAN,
+  
+  TELEMETRY_ALARM_CONDITION_COUNT
+};
+
+////----------------------------------------------
+// structure for dual rates and expo
+//------------------------------------------------
+
+typedef struct {
+  int8_t   rate1;  // 0 to 100
+  int8_t   rate2;  // 0 to 100
+  int8_t   expo1;  // -100 to 100
+  int8_t   expo2;  // -100 to 100
+  uint8_t  swtch;
+} rate_expo_t;
 
 //------------------------------------------------
 // structure for function generator data
@@ -409,7 +471,7 @@ enum {
 typedef struct {
   uint8_t  waveform;
   union {
-    uint8_t  periodMode;   //for waveforms sine, square, triangle, sawtoot, and random
+    uint8_t  periodMode;   //for waveforms sine, square, triangle, sawtooth, and random
     uint8_t  widthMode;    //for pulse waveform
   };
   //time is in tenths of a second
@@ -535,25 +597,6 @@ enum {
   LS_FUNC_COUNT
 };
 
-//------------------------------------------------
-// structure for counter data
-//------------------------------------------------
-
-typedef struct {
-  char     name[7];   //6 chars + Null 
-  uint8_t  clock;     //the control switch that clocks the counter
-  uint8_t  edge;      //0 rising, 1 falling, 2 dual
-  uint8_t  clear;     //the control switch that clears the counter
-  int16_t  modulus;   //2 to 10000
-  uint8_t  direction; //0 count upwards, 1 count downwards
-  bool     isPersistent;
-  int16_t  persistVal;
-} counter_params_t;
-
-#define NUM_COUNTERS  5
-
-extern int16_t counterOut[NUM_COUNTERS];
-
 //-----------------------------------------------
 // structure for mixer data
 //-----------------------------------------------
@@ -671,62 +714,6 @@ enum {
 };
 
 //------------------------------------------------
-// structure for channel params
-//------------------------------------------------
-
-typedef struct {
-  char     name[7];       //6 chars + null
-  int8_t   curve;         //-1 means none, 0 to .. are custom curves
-  bool     reverse; 
-  int16_t  subtrim;       //fixed point representation with scaling factor 1/10
-  uint8_t  overrideSwitch;
-  int8_t   overrideVal; 
-  int8_t   failsafe;      //-102 to 100. -102 means hold, -101 No pulse
-  int8_t   endpointL;     //left endpoint, -100 to 0
-  int8_t   endpointR;     //right endpoint, 0 to 100
-} channel_params_t;
-
-//------------------------------------------------
-// structure for custom telemetry
-//------------------------------------------------
-
-typedef struct {
-  char     name[9];        //8 chars + Null. If no name, the telemetry doesn't then exist
-  char     unitsName[5];   //4 chars + null
-  uint8_t  identifier;     //ID 00 to FE. FF is unused
-  int16_t  multiplier;     //1 to 1000, scales to 0.01 to 10.00
-  int8_t   factor10;       //-2, 1, 0, 1, 2. Means x10^
-  int16_t  offset;         //-30000 to 30000
-  bool     logEnabled;     //
-  uint8_t  alarmCondition; //None, >Thresh, <Thresh
-  int16_t  alarmThreshold; //-30000 to 30000
-  uint8_t  alarmMelody;
-  bool     showOnHome; 
-  bool     recordMaximum;
-  bool     recordMinimum;
-} telemetry_params_t;
-
-enum {
-  TELEMETRY_ALARM_CONDITION_NONE,
-  TELEMETRY_ALARM_CONDITION_GREATER_THAN,
-  TELEMETRY_ALARM_CONDITION_LESS_THAN,
-  
-  TELEMETRY_ALARM_CONDITION_COUNT
-};
-
-////----------------------------------------------
-// structure for dual rates and expo
-//------------------------------------------------
-
-typedef struct {
-  int8_t   rate1;  // 0 to 100
-  int8_t   rate2;  // 0 to 100
-  int8_t   expo1;  // -100 to 100
-  int8_t   expo2;  // -100 to 100
-  uint8_t  swtch;
-} rate_expo_t;
-
-//------------------------------------------------
 // structure for trim parameters
 //------------------------------------------------
 
@@ -764,6 +751,25 @@ typedef struct {
 #define NUM_FLIGHT_MODES 5
 
 //------------------------------------------------
+// structure for counter data
+//------------------------------------------------
+
+typedef struct {
+  char     name[7];   //6 chars + Null 
+  uint8_t  clock;     //the control switch that clocks the counter
+  uint8_t  edge;      //0 rising, 1 falling, 2 dual
+  uint8_t  clear;     //the control switch that clears the counter
+  int16_t  modulus;   //2 to 10000
+  uint8_t  direction; //0 count upwards, 1 count downwards
+  bool     isPersistent;
+  int16_t  persistVal;
+} counter_params_t;
+
+#define NUM_COUNTERS  5
+
+extern int16_t counterOut[NUM_COUNTERS];
+
+//------------------------------------------------
 // structure for timer parameters
 //------------------------------------------------
 
@@ -779,6 +785,10 @@ typedef struct {
 #define NUM_TIMERS 3
 
 extern uint32_t timerElapsedTime[NUM_TIMERS];
+extern uint32_t timerLastElapsedTime[NUM_TIMERS];
+extern uint32_t timerLastPaused[NUM_TIMERS];
+extern bool     timerIsRunning[NUM_TIMERS];
+extern bool     timerForceRun[NUM_TIMERS];
 
 //------------------------------------------------
 // structure for home screen widget data
@@ -821,6 +831,7 @@ enum {
 //------------------------------------------------
 
 typedef struct {
+  bool    enabled;
   uint8_t swtch;
   uint8_t tone;
   char    text[13]; //12 chars + Null
@@ -831,7 +842,7 @@ typedef struct {
 ///===============================================
 /// STRUCTURE FOR ENTIRE MODEL INFORMATION.
 /// THIS NESTS THE PREVIOUS STRUCTURES 
-/// AND IT IS ALSO THE DATA WE STORE TO EEPROM.
+/// IT IS ALSO THE DATA WE STORE TO EEPROM.
 ///===============================================
 
 typedef struct {
