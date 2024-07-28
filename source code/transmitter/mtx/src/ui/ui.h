@@ -4,9 +4,9 @@
 void initialiseDisplay();
 
 void showMsg(const char* str);
+void showProgressMsg(const char* str, uint8_t percent);
 void showWaitMsg();
 void showMuteMsg();
-void showFactoryResetProgress(uint8_t percent);
 
 void startInitialSetup();
 

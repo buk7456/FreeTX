@@ -620,31 +620,29 @@ void eeFactoryReset()
 {
   eeStoreIsReady = false;
 
-  uint32_t totalBytes = EEPROM.length();
-  if(hasExternalEE)
-    totalBytes += myMem.length();
-
   //wipe internal eeprom
-  for(uint32_t i = 0; i < EEPROM.length(); i++)
+  uint32_t totalBytes = EEPROM.length();
+  for(uint32_t i = 0; i < totalBytes; i++)
   {
     EEPROM.update(i, 0xff);
-    if(i % 256 == 0)
+    if(i % 32 == 0)
     {
-      uint8_t percent = (i * 100) / totalBytes;
-      showFactoryResetProgress(percent);
+      uint8_t percent = ((i + 1) * 100) / totalBytes;
+      showProgressMsg(PSTR("Erasing internal\nEEPROM"), percent);
     }
   }
   
   //wipe external eeprom
   if(hasExternalEE)
   {
-    for(uint32_t i = 0; i < myMem.length(); i++)
+    totalBytes = myMem.length();
+    for(uint32_t i = 0; i < totalBytes; i++)
     {
       myMem.write(i, 0xff);
       if(i % 256 == 0)
       {
-        uint8_t percent = ((i + EEPROM.length()) * 100) / totalBytes;
-        showFactoryResetProgress(percent);
+        uint8_t percent = ((i + 1) * 100) / totalBytes;
+        showProgressMsg(PSTR("Erasing external\nEEPROM"), percent);
       }
     }
   }
