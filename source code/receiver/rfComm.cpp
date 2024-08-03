@@ -67,7 +67,8 @@ enum {
 
 bool radioInitialised = false;
 uint32_t rcPacketCount = 0;
-uint8_t  idxRfPowerLevel = 0;
+
+bool isSendingTelemetry = false;
 
 int16_t telem_rssi;
 
@@ -118,6 +119,14 @@ void doRfCommunication()
   {
     bind(); //blocking
     isRequestingBind = false;
+    return;
+  }
+  
+  //--- NON BLOCKING TELEMETRY TRANSMISSION
+  if(isSendingTelemetry)
+  {
+    //continue transmitting the telemetry
+    sendTelemetry();
     return;
   }
     
@@ -194,8 +203,9 @@ void doRfCommunication()
           }
         }
         
-        //rf power level
-        idxRfPowerLevel = flag & 0x07;
+        //set rf power level
+        static uint8_t power_dBm[3] = {3, 10, 17}; //2mW, 10mW, 50mW
+        setRfPower(power_dBm[flag & 0x07]);
         
         //telemetry request
         bool isRequestingTelemetry = (flag >> 3) & 0x01;
@@ -259,7 +269,6 @@ void doRfCommunication()
        
         //reply 
         buildPacket(Sys.receiverID, Sys.transmitterID, PAC_ACK_OUTPUT_CH_CONFIG, NULL, 0);
-        // delay(1);
         delayMicroseconds(500);
         if(LoRa.beginPacket())
         {
@@ -270,10 +279,6 @@ void doRfCommunication()
       }
       break;
   }
-
-  //--- SET POWER LEVEL
-  static uint8_t power_dBm[3] = {3, 10, 17}; //2mW, 10mW, 50mW
-  setRfPower(power_dBm[idxRfPowerLevel]);
 
   //--- TURN OFF LED TO INDICATE NO INCOMING RC DATA
   if(millis() - lastRCPacketMillis > 100)
@@ -399,51 +404,68 @@ void sendTelemetry() //### TODO implement custom telemetry, establish standard I
   if(!Sys.isMainReceiver)
   {
     hop();
+    isSendingTelemetry = false;
     return;
   }
   
-  //--- Calculate packets per second
-  static uint32_t prevRCPacketCount = 0; 
-  static uint32_t ttPrevMillis = 0;
-  static uint8_t rcPacketsPerSecond = 0; 
-  uint32_t ttElapsed = millis() - ttPrevMillis;
-  if (ttElapsed >= 1000)
+  static bool transmitInitiated = false;
+  
+  if(!transmitInitiated) 
   {
-    ttPrevMillis = millis();
-    rcPacketsPerSecond = ((rcPacketCount - prevRCPacketCount) * 1000) / ttElapsed;
-    prevRCPacketCount = rcPacketCount;
+    //--- Calculate packets per second
+    static uint32_t prevRCPacketCount = 0; 
+    static uint32_t ttPrevMillis = 0;
+    static uint8_t rcPacketsPerSecond = 0; 
+    uint32_t ttElapsed = millis() - ttPrevMillis;
+    if (ttElapsed >= 1000)
+    {
+      ttPrevMillis = millis();
+      rcPacketsPerSecond = ((rcPacketCount - prevRCPacketCount) * 1000) / ttElapsed;
+      prevRCPacketCount = rcPacketCount;
+    }
+    if(millis() - lastRCPacketMillis >= 1000)
+      rcPacketsPerSecond = 0;
+    
+    //--- Prepare telemetry data and send it
+    
+    uint8_t dataToSend[FIXED_PAYLOAD_SIZE]; 
+    memset(dataToSend, 0, sizeof(dataToSend));
+    
+    //packet rate
+    dataToSend[0] = rcPacketsPerSecond;
+    
+    //external voltage
+    uint16_t telem_volts = externalVolts / 10; //convert to 10mV scale
+    if(externalVolts < 2000 || millis() < 5000UL)
+      telem_volts = TELEMETRY_NO_DATA;
+    dataToSend[1] = 0x01; //sensor ID
+    dataToSend[2] = (telem_volts >> 8) & 0xFF; //high byte
+    dataToSend[3] = telem_volts & 0xFF; //low byte
+    
+    //rssi
+    dataToSend[4] = 0x7F; //sensor ID
+    dataToSend[5] = (telem_rssi >> 8) & 0xFF; //high byte
+    dataToSend[6] = telem_rssi & 0xFF; //low byte
+    
+
+    //--- Build packet and start transmit ---
+    buildPacket(Sys.receiverID, Sys.transmitterID, PAC_TELEMETRY, dataToSend, sizeof(dataToSend));
+    if(LoRa.beginPacket())
+    {
+      LoRa.write(packet, sizeof(packet));
+      LoRa.endPacket(true); //async
+      delayMicroseconds(500);
+      transmitInitiated = true;
+      isSendingTelemetry = true;
+    }
   }
-  if(millis() - lastRCPacketMillis >= 1000)
-    rcPacketsPerSecond = 0;
   
-  //--- Prepare telemetry data and send it
-  
-  uint8_t dataToSend[FIXED_PAYLOAD_SIZE]; 
-  memset(dataToSend, 0, sizeof(dataToSend));
-  
-  //packet rate
-  dataToSend[0] = rcPacketsPerSecond;
-  
-  //external voltage
-  uint16_t telem_volts = externalVolts / 10; //convert to 10mV scale
-  if(externalVolts < 2000 || millis() < 5000UL)
-    telem_volts = TELEMETRY_NO_DATA;
-  dataToSend[1] = 0x01; //sensor ID
-  dataToSend[2] = (telem_volts >> 8) & 0xFF; //high byte
-  dataToSend[3] = telem_volts & 0xFF; //low byte
-  
-  //rssi
-  dataToSend[4] = 0x7F; //sensor ID
-  dataToSend[5] = (telem_rssi >> 8) & 0xFF; //high byte
-  dataToSend[6] = telem_rssi & 0xFF; //low byte
- 
-  buildPacket(Sys.receiverID, Sys.transmitterID, PAC_TELEMETRY, dataToSend, sizeof(dataToSend));
-  delayMicroseconds(500);
-  if(LoRa.beginPacket())
+  // ON TRANSMIT COMPLETE
+  if(!LoRa.isTransmitting())
   {
-    LoRa.write(packet, sizeof(packet));
-    LoRa.endPacket(); //block until done transmitting
     hop();
+    transmitInitiated = false;
+    isSendingTelemetry = false;
   }
 }
 
