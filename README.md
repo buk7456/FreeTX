@@ -45,8 +45,8 @@ Three buttons are used for navigation; Up, Select, Down. Long press Select to go
 <img src="doc/img4.jpg" width="240"/>
 </p>
 
-[![Features overview - FreeTX](doc/yt.jpg)](https://www.youtube.com/watch?v=rDpRMRE8av0) 
-[![RF link test - FreeTX](doc/yt2.jpg)](https://www.youtube.com/watch?v=9EZkyRHkMpg)
+[<img src="doc/yt.jpg" width = "240"/>](https://www.youtube.com/watch?v=rDpRMRE8av0)
+[<img src="doc/yt2.jpg" width = "240"/>](https://www.youtube.com/watch?v=9EZkyRHkMpg)
 
 ## Frequently Asked Questions
 [Got a question? See the FAQ first.](doc/faq.md)
