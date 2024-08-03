@@ -2,7 +2,7 @@
 Open source radio control system for almost anything.  
 Remotely operate model airplanes, multicopters, helicopters, boats, land vehicles, robots, animatronics, etc.
 <p align="left">
-<img src="doc/tx_views.jpg"/>
+<img src="doc/tx_views.jpg" width = "480"/>
 </p>
 
 ## Main features
@@ -40,9 +40,9 @@ Three buttons are used for navigation; Up, Select, Down. Long press Select to go
 
 ## Gallery
 <p align="left">
-<img src="doc/img6.jpg" width = "800"/>
-<img src="doc/img2.jpg" width="400"/>
-<img src="doc/img4.jpg" width="400"/>
+<img src="doc/img6.jpg" width = "240"/>
+<img src="doc/img2.jpg" width="240"/>
+<img src="doc/img4.jpg" width="240"/>
 </p>
 
 [![Features overview - FreeTX](doc/yt.jpg)](https://www.youtube.com/watch?v=rDpRMRE8av0) 
