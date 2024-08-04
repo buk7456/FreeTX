@@ -10073,7 +10073,7 @@ void menuDraw(uint8_t *topItem, uint8_t *highlightedItem)
       display.drawBitmap(7, ypos - 2 , _menuItemIcons[item - 1], 15, 11, *highlightedItem == item ? WHITE : BLACK);
     
     //show text
-    display.setCursor(hasMenuIcons ? 26 : 10, ypos);
+    display.setCursor((hasMenuIcons && Sys.showMenuIcons) ? 26 : 10, ypos);
     strlcpy_P(txtBuff, _menuItems[item - 1], sizeof(txtBuff));
     display.print(txtBuff);
     display.setTextColor(BLACK);
