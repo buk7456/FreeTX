@@ -211,6 +211,9 @@ uint8_t focusedItem = 1;
 bool isEditTextDialog = false;
 bool isDisplayingBattWarn = false;
 
+//menu
+uint8_t menuSelectedItemID = 0xff;
+
 //context menu
 uint8_t contextMenuTopItem = 1;
 uint8_t contextMenuFocusedItem = 1;
@@ -282,7 +285,6 @@ void toggleEditModeOnSelectClicked();
 void drawCursor(uint8_t xpos, uint8_t ypos);
 void drawHeader(const char* str);
 void drawHeader_Menu(const char* str);
-void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const icons[], uint8_t *topItem, uint8_t *highlightedItem);
 void drawDottedVLine(uint8_t x, uint8_t y, uint8_t len, uint8_t fgColor, uint8_t bgColor);
 void drawDottedHLine(uint8_t x, uint8_t y, uint8_t len, uint8_t fgColor, uint8_t bgColor);
 void drawBoundingBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color);
@@ -307,11 +309,17 @@ void printModelName(char* buff, uint8_t modelIdx);
 void printTimerValue(uint8_t idx);
 void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEmpty, bool trimStr, bool isSecureMode);
 void validatePassword(uint8_t nextScreen, uint8_t prevScreen);
+void resetPages();
+
+void menuInitialise();
+void menuAddItem(const char* str, uint8_t itemID, const uint8_t* icon);
+void menuDraw(uint8_t *topItem, uint8_t *highlightedItem);
+uint8_t menuGetItemCount();
+
 void contextMenuInitialise();
 void contextMenuAddItem(const char* str, uint8_t itemID);
 void contextMenuDraw();
 uint8_t contextMenuGetItemCount();
-void resetPages();
 
 //==================================================================================================
 
@@ -1522,29 +1530,36 @@ void handleMainUI()
         drawHeader_Menu(PSTR("Main menu"));
         
         static uint8_t topItem = 1, highlightedItem = 1;
-        drawMenu(mainMenu, sizeof(mainMenu)/sizeof(mainMenu[0]), mainMenuIcons, &topItem, &highlightedItem);
-        
-        //handle selection
-        if(clickedButton == KEY_SELECT)
+
+        menuInitialise();
+        menuAddItem(mainMenu[MAIN_MENU_MODEL], MAIN_MENU_MODEL, icon_m_model);
+        menuAddItem(mainMenu[MAIN_MENU_INPUTS], MAIN_MENU_INPUTS, icon_m_inputs);
+        menuAddItem(mainMenu[MAIN_MENU_MIXER], MAIN_MENU_MIXER, icon_m_mixer);
+        menuAddItem(mainMenu[MAIN_MENU_OUTPUTS], MAIN_MENU_OUTPUTS, icon_m_outputs);
+        menuAddItem(mainMenu[MAIN_MENU_EXTRAS], MAIN_MENU_EXTRAS, icon_m_extras);
+        menuAddItem(mainMenu[MAIN_MENU_TELEMETRY], MAIN_MENU_TELEMETRY, icon_m_telemetry);
+        menuAddItem(mainMenu[MAIN_MENU_SYSTEM], MAIN_MENU_SYSTEM, icon_m_system);
+        menuAddItem(mainMenu[MAIN_MENU_RECEIVER], MAIN_MENU_RECEIVER, icon_m_receiver);
+        menuAddItem(mainMenu[MAIN_MENU_ABOUT], MAIN_MENU_ABOUT, icon_m_about);
+        menuDraw(&topItem, &highlightedItem);
+
+        if(menuSelectedItemID == MAIN_MENU_MODEL) 
         {
-          uint8_t selectIdx = highlightedItem - 1;
-          if(selectIdx == MAIN_MENU_MODEL) 
-          {
-            if(Sys.lockModels && !isEmptyStr(Sys.password, sizeof(Sys.password))) 
-              changeToScreen(SCREEN_UNLOCK_MODEL_MANAGER);
-            else 
-              changeToScreen(SCREEN_MODEL);
-          }
-          if(selectIdx == MAIN_MENU_INPUTS) changeToScreen(SCREEN_INPUTS); 
-          if(selectIdx == MAIN_MENU_MIXER)  changeToScreen(SCREEN_MIXER);
-          if(selectIdx == MAIN_MENU_OUTPUTS) changeToScreen(SCREEN_OUTPUTS);
-          if(selectIdx == MAIN_MENU_EXTRAS) changeToScreen(SCREEN_EXTRAS_MENU);
-          if(selectIdx == MAIN_MENU_TELEMETRY) changeToScreen(SCREEN_TELEMETRY);
-          if(selectIdx == MAIN_MENU_SYSTEM) changeToScreen(SCREEN_SYSTEM_MENU);
-          if(selectIdx == MAIN_MENU_RECEIVER) changeToScreen(SCREEN_RECEIVER);
-          if(selectIdx == MAIN_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
+          if(Sys.lockModels && !isEmptyStr(Sys.password, sizeof(Sys.password))) 
+            changeToScreen(SCREEN_UNLOCK_MODEL_MANAGER);
+          else 
+            changeToScreen(SCREEN_MODEL);
         }
-        else if(heldButton == KEY_SELECT)
+        else if(menuSelectedItemID == MAIN_MENU_INPUTS) changeToScreen(SCREEN_INPUTS); 
+        else if(menuSelectedItemID == MAIN_MENU_MIXER)  changeToScreen(SCREEN_MIXER);
+        else if(menuSelectedItemID == MAIN_MENU_OUTPUTS) changeToScreen(SCREEN_OUTPUTS);
+        else if(menuSelectedItemID == MAIN_MENU_EXTRAS) changeToScreen(SCREEN_EXTRAS_MENU);
+        else if(menuSelectedItemID == MAIN_MENU_TELEMETRY) changeToScreen(SCREEN_TELEMETRY);
+        else if(menuSelectedItemID == MAIN_MENU_SYSTEM) changeToScreen(SCREEN_SYSTEM_MENU);
+        else if(menuSelectedItemID == MAIN_MENU_RECEIVER) changeToScreen(SCREEN_RECEIVER);
+        else if(menuSelectedItemID == MAIN_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
+
+        if(heldButton == KEY_SELECT)
         {
           if(!Sys.rememberMenuPosition)
           {
@@ -2759,7 +2774,6 @@ void handleMainUI()
           listItemIDs[listItemCount++] = i;
         }
         
-        
         //initialise the view
         static uint8_t topItem;
         static uint8_t lastFocusedItem;
@@ -3840,31 +3854,35 @@ void handleMainUI()
       break;
       
     ////////////////////////////////// EXTRAS //////////////////////////////////////////////////////
-    
+      
     case SCREEN_EXTRAS_MENU:
       {
         drawHeader_Menu(mainMenu[MAIN_MENU_EXTRAS]);
         
         static uint8_t topItem = 1, highlightedItem = 1;
-        if(Model.type == MODEL_TYPE_OTHER) //### TODO better implementation. This hack hides flight mode entry.
-          drawMenu(extrasMenu, sizeof(extrasMenu)/sizeof(extrasMenu[0]) - 1, NULL, &topItem, &highlightedItem);
-        else
-          drawMenu(extrasMenu, sizeof(extrasMenu)/sizeof(extrasMenu[0]), NULL, &topItem, &highlightedItem);
         
-        //--- handle selection
-        if(clickedButton == KEY_SELECT)
-        {
-          uint8_t selectIdx = highlightedItem - 1;
-          if(selectIdx == EXTRAS_MENU_CUSTOM_CURVES) changeToScreen(SCREEN_CUSTOM_CURVES);
-          if(selectIdx == EXTRAS_MENU_LOGICAL_SWITCHES) changeToScreen(SCREEN_LOGICAL_SWITCHES);
-          if(selectIdx == EXTRAS_MENU_FLIGHT_MODES) changeToScreen(SCREEN_FLIGHT_MODES);
-          if(selectIdx == EXTRAS_MENU_TRIM_SETUP) changeToScreen(SCREEN_TRIM_SETUP);
-          if(selectIdx == EXTRAS_MENU_SAFETY_CHECKS) changeToScreen(SCREEN_SAFETY_CHECKS);
-          if(selectIdx == EXTRAS_MENU_COUNTERS) changeToScreen(SCREEN_COUNTERS);
-          if(selectIdx == EXTRAS_MENU_FUNCTION_GENERATORS) changeToScreen(SCREEN_FUNCTION_GENERATORS);
-          if(selectIdx == EXTRAS_MENU_TIMERS) changeToScreen(SCREEN_TIMERS);
-          if(selectIdx == EXTRAS_MENU_NOTIFICATION_SETUP) changeToScreen(SCREEN_NOTIFICATION_SETUP);
-        }
+        menuInitialise();
+        menuAddItem(extrasMenu[EXTRAS_MENU_CUSTOM_CURVES], EXTRAS_MENU_CUSTOM_CURVES, NULL);
+        menuAddItem(extrasMenu[EXTRAS_MENU_FUNCTION_GENERATORS], EXTRAS_MENU_FUNCTION_GENERATORS, NULL);
+        menuAddItem(extrasMenu[EXTRAS_MENU_LOGICAL_SWITCHES], EXTRAS_MENU_LOGICAL_SWITCHES, NULL);
+        menuAddItem(extrasMenu[EXTRAS_MENU_TIMERS], EXTRAS_MENU_TIMERS, NULL);
+        menuAddItem(extrasMenu[EXTRAS_MENU_COUNTERS], EXTRAS_MENU_COUNTERS, NULL);
+        menuAddItem(extrasMenu[EXTRAS_MENU_NOTIFICATION_SETUP], EXTRAS_MENU_NOTIFICATION_SETUP, NULL);
+        menuAddItem(extrasMenu[EXTRAS_MENU_SAFETY_CHECKS], EXTRAS_MENU_SAFETY_CHECKS, NULL);
+        menuAddItem(extrasMenu[EXTRAS_MENU_TRIM_SETUP], EXTRAS_MENU_TRIM_SETUP, NULL);
+        if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
+          menuAddItem(extrasMenu[EXTRAS_MENU_FLIGHT_MODES], EXTRAS_MENU_FLIGHT_MODES, NULL);
+        menuDraw(&topItem, & highlightedItem);
+
+        if(menuSelectedItemID == EXTRAS_MENU_CUSTOM_CURVES) changeToScreen(SCREEN_CUSTOM_CURVES);
+        if(menuSelectedItemID == EXTRAS_MENU_LOGICAL_SWITCHES) changeToScreen(SCREEN_LOGICAL_SWITCHES);
+        if(menuSelectedItemID == EXTRAS_MENU_FLIGHT_MODES) changeToScreen(SCREEN_FLIGHT_MODES);
+        if(menuSelectedItemID == EXTRAS_MENU_TRIM_SETUP) changeToScreen(SCREEN_TRIM_SETUP);
+        if(menuSelectedItemID == EXTRAS_MENU_SAFETY_CHECKS) changeToScreen(SCREEN_SAFETY_CHECKS);
+        if(menuSelectedItemID == EXTRAS_MENU_COUNTERS) changeToScreen(SCREEN_COUNTERS);
+        if(menuSelectedItemID == EXTRAS_MENU_FUNCTION_GENERATORS) changeToScreen(SCREEN_FUNCTION_GENERATORS);
+        if(menuSelectedItemID == EXTRAS_MENU_TIMERS) changeToScreen(SCREEN_TIMERS);
+        if(menuSelectedItemID == EXTRAS_MENU_NOTIFICATION_SETUP) changeToScreen(SCREEN_NOTIFICATION_SETUP);
 
         //Exit
         if(heldButton == KEY_SELECT)
@@ -5439,7 +5457,7 @@ void handleMainUI()
         
         //Show the value of the timer, right aligned.
         //Here we are employing a hack to measure the width of the text 
-        //by intentionally print off screen and using the difference in the x position.
+        //by intentionally printing off screen and using the difference in the x position.
         display.setCursor(0, 64);
         printTimerValue(thisTimerIdx);
         uint8_t len = display.getCursorX() / 6;
@@ -5622,7 +5640,6 @@ void handleMainUI()
           changeToScreen(SCREEN_EXTRAS_MENU);
       }
       break;
-    
     
     case SCREEN_NOTIFICATION_SETUP:
       {
@@ -6598,23 +6615,25 @@ void handleMainUI()
         drawHeader_Menu(mainMenu[MAIN_MENU_SYSTEM]);
         
         static uint8_t topItem = 1, highlightedItem = 1;
-        drawMenu(systemMenu, sizeof(systemMenu)/sizeof(systemMenu[0]), NULL, &topItem, &highlightedItem);
 
-        //--- handle selection
-        if(clickedButton == KEY_SELECT)
+        menuInitialise();
+        menuAddItem(systemMenu[SYSTEM_MENU_RF], SYSTEM_MENU_RF, NULL);
+        menuAddItem(systemMenu[SYSTEM_MENU_SOUND], SYSTEM_MENU_SOUND, NULL);
+        menuAddItem(systemMenu[SYSTEM_MENU_BACKLIGHT], SYSTEM_MENU_BACKLIGHT, NULL);
+        menuAddItem(systemMenu[SYSTEM_MENU_APPEARANCE], SYSTEM_MENU_APPEARANCE, NULL);
+        menuAddItem(systemMenu[SYSTEM_MENU_ADVANCED], SYSTEM_MENU_ADVANCED, NULL);
+        menuDraw(&topItem, &highlightedItem);
+
+        if(menuSelectedItemID == SYSTEM_MENU_RF) changeToScreen(SCREEN_RF);
+        else if(menuSelectedItemID == SYSTEM_MENU_SOUND) changeToScreen(SCREEN_SOUND);
+        else if(menuSelectedItemID == SYSTEM_MENU_BACKLIGHT) changeToScreen(SCREEN_BACKLIGHT);
+        else if(menuSelectedItemID == SYSTEM_MENU_APPEARANCE) changeToScreen(SCREEN_APPEARANCE);
+        else if(menuSelectedItemID == SYSTEM_MENU_ADVANCED)  
         {
-          uint8_t selectIdx = highlightedItem - 1;
-          if(selectIdx == SYSTEM_MENU_RF) changeToScreen(SCREEN_RF);
-          if(selectIdx == SYSTEM_MENU_SOUND) changeToScreen(SCREEN_SOUND);
-          if(selectIdx == SYSTEM_MENU_BACKLIGHT) changeToScreen(SCREEN_BACKLIGHT);
-          if(selectIdx == SYSTEM_MENU_APPEARANCE) changeToScreen(SCREEN_APPEARANCE);
-          if(selectIdx == SYSTEM_MENU_ADVANCED)  
-          {
-            if(!isEmptyStr(Sys.password, sizeof(Sys.password))) 
-              changeToScreen(SCREEN_UNLOCK_ADVANCED_MENU); //prompt to enter password first
-            else //no password specified, don't prompt
-              changeToScreen(SCREEN_ADVANCED_MENU);
-          }
+          if(!isEmptyStr(Sys.password, sizeof(Sys.password))) 
+            changeToScreen(SCREEN_UNLOCK_ADVANCED_MENU); //prompt to enter password first
+          else //no password specified, don't prompt
+            changeToScreen(SCREEN_ADVANCED_MENU);
         }
 
         //exit
@@ -7015,20 +7034,24 @@ void handleMainUI()
         drawHeader_Menu(systemMenu[SYSTEM_MENU_ADVANCED]);
         
         static uint8_t topItem = 1, highlightedItem = 1;
-        drawMenu(advancedMenu, sizeof(advancedMenu)/sizeof(advancedMenu[0]), NULL, &topItem, &highlightedItem);
 
-        //--- handle selection
-        if(clickedButton == KEY_SELECT)
-        {
-          uint8_t selectIdx = highlightedItem - 1;
-          if(selectIdx == ADVANCED_MENU_STICKS) changeToScreen(SCREEN_STICKS);
-          if(selectIdx == ADVANCED_MENU_KNOBS) changeToScreen(SCREEN_KNOBS);
-          if(selectIdx == ADVANCED_MENU_SWITCHES) changeToScreen(SCREEN_SWITCHES); 
-          if(selectIdx == ADVANCED_MENU_BATTERY) changeToScreen(SCREEN_BATTERY);
-          if(selectIdx == ADVANCED_MENU_DEBUG) changeToScreen(SCREEN_DEBUG);
-          if(selectIdx == ADVANCED_MENU_SECURITY) changeToScreen(SCREEN_SECURITY);
-          if(selectIdx == ADVANCED_MENU_MISCELLANEOUS) changeToScreen(SCREEN_MISCELLANEOUS);
-        }
+        menuInitialise();
+        menuAddItem(advancedMenu[ADVANCED_MENU_STICKS], ADVANCED_MENU_STICKS, NULL);
+        menuAddItem(advancedMenu[ADVANCED_MENU_KNOBS], ADVANCED_MENU_KNOBS, NULL);
+        menuAddItem(advancedMenu[ADVANCED_MENU_SWITCHES], ADVANCED_MENU_SWITCHES, NULL);
+        menuAddItem(advancedMenu[ADVANCED_MENU_BATTERY], ADVANCED_MENU_BATTERY, NULL);
+        menuAddItem(advancedMenu[ADVANCED_MENU_SECURITY], ADVANCED_MENU_SECURITY, NULL);
+        menuAddItem(advancedMenu[ADVANCED_MENU_MISCELLANEOUS], ADVANCED_MENU_MISCELLANEOUS, NULL);
+        menuAddItem(advancedMenu[ADVANCED_MENU_DEBUG], ADVANCED_MENU_DEBUG, NULL);
+        menuDraw(&topItem, &highlightedItem);
+
+        if(menuSelectedItemID == ADVANCED_MENU_STICKS) changeToScreen(SCREEN_STICKS);
+        else if(menuSelectedItemID == ADVANCED_MENU_KNOBS) changeToScreen(SCREEN_KNOBS);
+        else if(menuSelectedItemID == ADVANCED_MENU_SWITCHES) changeToScreen(SCREEN_SWITCHES); 
+        else if(menuSelectedItemID == ADVANCED_MENU_BATTERY) changeToScreen(SCREEN_BATTERY);
+        else if(menuSelectedItemID == ADVANCED_MENU_DEBUG) changeToScreen(SCREEN_DEBUG);
+        else if(menuSelectedItemID == ADVANCED_MENU_SECURITY) changeToScreen(SCREEN_SECURITY);
+        else if(menuSelectedItemID == ADVANCED_MENU_MISCELLANEOUS) changeToScreen(SCREEN_MISCELLANEOUS);
 
         //exit
         if(heldButton == KEY_SELECT)
@@ -9112,7 +9135,6 @@ void changeToScreen(uint8_t scrn)
   isEditMode = false;
   contextMenuTopItem = 1;
   contextMenuFocusedItem = 1;
-  contextMenuSelectedItemID = 0xff;
   killButtonEvents();
 }
 
@@ -9317,72 +9339,6 @@ void drawHeader_Menu(const char* str)
     display.print(txtBuff);
     display.drawHLine(0, 9, 128, BLACK);
   }
-}
-
-//--------------------------------------------------------------------------------------------------
-
-void drawMenu(char const list[][20], uint8_t numItems, const uint8_t *const bitmapTable[], 
-              uint8_t *topItem, uint8_t *highlightedItem)
-{
-  uint8_t numVisible = 4;
-  uint8_t lineHeight = 13;
-  uint8_t y0 = 14;
-  if(Sys.useDenserMenus)
-  {
-    numVisible = 5;
-    lineHeight = 11;
-    y0 = 11;
-  }
-  
-  //handle scenario of being called with invalid highlightedItem
-  if(*highlightedItem > numItems) 
-    *highlightedItem = 1;
-  
-  //handle navigation
-  isEditMode = true;
-  *highlightedItem = incDec(*highlightedItem, numItems, 1, INCDEC_WRAP, INCDEC_SLOW);
-  isEditMode = false;
-  if(*highlightedItem < *topItem)
-    *topItem = *highlightedItem;
-  while(*highlightedItem >= *topItem + numVisible)
-    (*topItem)++;
-  
-  //fill menu slots
-  for(uint8_t i = 0; i < numVisible && i < numItems; i++)
-  {
-    //prevent showing garbage entries when we've changed to using denser menus
-    if(*topItem + i > numItems)
-      break;
-    
-    uint8_t ypos = y0 + i * lineHeight;
-    //highlight selection
-    if(*highlightedItem == (*topItem + i))
-    {
-      display.fillRoundRect(3, 
-                            Sys.useDenserMenus ? ypos - 2 : ypos - 3, 
-                            numItems <= numVisible ? 122 : 121, 
-                            lineHeight, 
-                            Sys.useRoundRect ? 4 : 0, 
-                            BLACK);
-      display.setTextColor(WHITE);
-    }
-    //show icons
-    if(bitmapTable != NULL && Sys.showMenuIcons)
-    {
-      display.drawBitmap(7, ypos - 2 , (uint8_t *)pgm_read_word(&bitmapTable[(*topItem + i) - 1]),
-                         15, 11, *highlightedItem == (*topItem + i) ? WHITE : BLACK);
-      display.setCursor(26, ypos);
-    }
-    else
-      display.setCursor(10, ypos);
-    //show text
-    strlcpy_P(txtBuff, list[*topItem + i - 1], sizeof(txtBuff));
-    display.print(txtBuff);
-    display.setTextColor(BLACK);
-  }
-  
-  //scroll bar
-  drawScrollBar(125, Sys.useDenserMenus ? 9 : 11, numItems, *topItem, numVisible, numVisible * lineHeight);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -10023,36 +9979,138 @@ void drawNotificationOverlay(uint8_t idx, uint32_t startTime, uint32_t endTime)
   }
 }
 
-//--------------------------------------------------------------------------------------------------
+//---------------------------- Menus and context menus ---------------------------------------------
 
-#define _CONTEXT_MENU_MAX_ITEMS  16
-const char* _contextMenuItems[_CONTEXT_MENU_MAX_ITEMS];
-uint8_t     _contextMenuItemIDs[_CONTEXT_MENU_MAX_ITEMS];
-uint8_t     _contextMenuItemCount = 0;
+#define _MENU_MAX_ITEMS 16
+
+const char* _menuItems[_MENU_MAX_ITEMS];
+uint8_t _menuItemIDs[_MENU_MAX_ITEMS];
+const uint8_t* _menuItemIcons[_MENU_MAX_ITEMS];
+uint8_t _menuItemCount = 0;
+
+void menuInitialise()
+{
+  _menuItemCount = 0;
+}
+
+void menuAddItem(const char* str, uint8_t itemID, const uint8_t* icon)
+{
+  if(_menuItemCount < _MENU_MAX_ITEMS)
+  {
+    _menuItems[_menuItemCount] = str;
+    _menuItemIDs[_menuItemCount] = itemID;
+    _menuItemIcons[_menuItemCount] = icon;
+    _menuItemCount++;
+  }
+}
+
+uint8_t menuGetItemCount()
+{
+  return _menuItemCount;
+}
+
+void menuDraw(uint8_t *topItem, uint8_t *highlightedItem)
+{
+  if(_menuItemCount == 0)
+    return;
+  
+  uint8_t numVisible = 4;
+  uint8_t lineHeight = 13;
+  uint8_t y0 = 14;
+  if(Sys.useDenserMenus)
+  {
+    numVisible = 5;
+    lineHeight = 11;
+    y0 = 11;
+  }
+  
+  //handle scenario of being called with invalid highlightedItem
+  if(*highlightedItem > _menuItemCount) 
+    *highlightedItem = 1;
+  
+  //handle navigation
+  isEditMode = true;
+  *highlightedItem = incDec(*highlightedItem, _menuItemCount, 1, INCDEC_WRAP, INCDEC_SLOW);
+  isEditMode = false;
+  if(*highlightedItem < *topItem)
+    *topItem = *highlightedItem;
+  while(*highlightedItem >= *topItem + numVisible)
+    (*topItem)++;
+
+  //check if there are any icons in the menu
+  bool hasMenuIcons = false;
+  for(uint8_t i = 0; i < _menuItemCount; i++)
+  {
+    if(_menuItemIcons[i] != NULL)
+    {
+      hasMenuIcons = true;
+      break;
+    }
+  }
+  
+  //fill menu slots
+  for(uint8_t line = 0; line < numVisible && line < _menuItemCount; line++)
+  {
+    //prevent showing garbage entries when we've changed to using denser menus
+    if(*topItem + line > _menuItemCount)
+      break;
+    
+    uint8_t item = *topItem + line;
+    uint8_t ypos = y0 + line * lineHeight;
+    //highlight selection
+    if(*highlightedItem == item)
+    {
+      display.fillRoundRect(3, 
+                            Sys.useDenserMenus ? ypos - 2 : ypos - 3, 
+                            _menuItemCount <= numVisible ? 122 : 121, 
+                            lineHeight, 
+                            Sys.useRoundRect ? 4 : 0, 
+                            BLACK);
+      display.setTextColor(WHITE);
+    }
+    //show icon
+    if(_menuItemIcons[item - 1] != NULL && Sys.showMenuIcons)
+      display.drawBitmap(7, ypos - 2 , _menuItemIcons[item - 1], 15, 11, *highlightedItem == item ? WHITE : BLACK);
+    
+    //show text
+    display.setCursor(hasMenuIcons ? 26 : 10, ypos);
+    strlcpy_P(txtBuff, _menuItems[item - 1], sizeof(txtBuff));
+    display.print(txtBuff);
+    display.setTextColor(BLACK);
+  }
+  
+  //scroll bar
+  drawScrollBar(125, Sys.useDenserMenus ? 9 : 11, _menuItemCount, *topItem, numVisible, numVisible * lineHeight);
+
+  //get the id of the item selected
+  menuSelectedItemID = 0xff;
+  if(clickedButton == KEY_SELECT)
+    menuSelectedItemID = _menuItemIDs[*highlightedItem - 1];
+}
 
 void contextMenuInitialise()
 {
-  _contextMenuItemCount = 0;
+  _menuItemCount = 0;
 }
 
 void contextMenuAddItem(const char* str, uint8_t itemID)
 {
-  if(_contextMenuItemCount < _CONTEXT_MENU_MAX_ITEMS)
+  if(_menuItemCount < _MENU_MAX_ITEMS)
   {
-    _contextMenuItems[_contextMenuItemCount] = str;
-    _contextMenuItemIDs[_contextMenuItemCount] = itemID;
-    _contextMenuItemCount++;
+    _menuItems[_menuItemCount] = str;
+    _menuItemIDs[_menuItemCount] = itemID;
+    _menuItemCount++;
   }
 }
 
 uint8_t contextMenuGetItemCount()
 {
-  return _contextMenuItemCount;
+  return _menuItemCount;
 }
 
 void contextMenuDraw()
 {
-  if(_contextMenuItemCount == 0)
+  if(_menuItemCount == 0)
     return;
   
   //--- scrollable list
@@ -10061,7 +10119,7 @@ void contextMenuDraw()
   
   //handle navigation
   isEditMode = true;
-  contextMenuFocusedItem = incDec(contextMenuFocusedItem, _contextMenuItemCount, 1, INCDEC_WRAP, INCDEC_SLOW);
+  contextMenuFocusedItem = incDec(contextMenuFocusedItem, _menuItemCount, 1, INCDEC_WRAP, INCDEC_SLOW);
   isEditMode = false;
   if(contextMenuFocusedItem < contextMenuTopItem)
     contextMenuTopItem = contextMenuFocusedItem;
@@ -10069,7 +10127,7 @@ void contextMenuDraw()
     contextMenuTopItem++;
 
   //Calculate y coord for text item 0. Items are center aligned
-  uint8_t numVisible = _contextMenuItemCount <= maxVisible ? _contextMenuItemCount : maxVisible;
+  uint8_t numVisible = _menuItemCount <= maxVisible ? _menuItemCount : maxVisible;
   uint8_t y0 = ((display.height() - (numVisible * 10)) / 2) + 1;  //10 is line height
   
   //draw bounding box
@@ -10080,10 +10138,10 @@ void contextMenuDraw()
   {
     uint8_t ypos = y0 + line * 10;
     uint8_t item = contextMenuTopItem + line;
-    strlcpy_P(txtBuff, _contextMenuItems[item-1], sizeof(txtBuff));
+    strlcpy_P(txtBuff, _menuItems[item-1], sizeof(txtBuff));
     if(item == contextMenuFocusedItem)
     {
-      display.fillRoundRect(13, ypos - 2, _contextMenuItemCount <= maxVisible ? 101 : 97, 11, Sys.useRoundRect ? 4 : 0, BLACK);
+      display.fillRoundRect(13, ypos - 2, _menuItemCount <= maxVisible ? 101 : 97, 11, Sys.useRoundRect ? 4 : 0, BLACK);
       display.setTextColor(WHITE);
     }
     display.setCursor(17, ypos);
@@ -10094,12 +10152,12 @@ void contextMenuDraw()
   //scroll bar
   uint8_t  y = Sys.useRoundRect ? y0 - 1 : y0 - 2;
   uint16_t h = Sys.useRoundRect ? numVisible * 10 - 1 : numVisible * 10 + 1;
-  drawScrollBar(111, y, _contextMenuItemCount, contextMenuTopItem, numVisible, h);
+  drawScrollBar(111, y, _menuItemCount, contextMenuTopItem, numVisible, h);
   
   //get the id of the item selected
   contextMenuSelectedItemID = 0xff;
   if(clickedButton == KEY_SELECT)
-    contextMenuSelectedItemID = _contextMenuItemIDs[contextMenuFocusedItem - 1];
+    contextMenuSelectedItemID = _menuItemIDs[contextMenuFocusedItem - 1];
 }
 
 #endif //UI_128X64
