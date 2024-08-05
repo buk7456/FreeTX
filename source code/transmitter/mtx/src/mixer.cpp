@@ -427,8 +427,9 @@ void computeChannelOutputs()
   static uint32_t lsDurEndTime[NUM_LOGICAL_SWITCHES];
   static bool     lsToggleLastState[NUM_LOGICAL_SWITCHES];
   static int32_t  lsDeltaPrevVal[NUM_LOGICAL_SWITCHES];
+  static uint8_t  lsDeltaPrevInput[NUM_LOGICAL_SWITCHES];
   
-  if(isReinitialiseMixer)  
+  if(isReinitialiseMixer)
   {
     for(uint8_t idx = 0; idx < NUM_LOGICAL_SWITCHES; idx++)
     {
@@ -438,14 +439,7 @@ void computeChannelOutputs()
       if(ls->func == LS_FUNC_TOGGLE)
         lsToggleLastState[idx] = checkSwitchCondition(ls->val1);
       if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
-      {
-        if(ls->val1 < MIXSOURCES_COUNT) //mixsources
-          lsDeltaPrevVal[idx] = mixSources[ls->val1];
-        else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counters
-          lsDeltaPrevVal[idx] = counterOut[ls->val1 - MIXSOURCES_COUNT];
-        else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timers
-          lsDeltaPrevVal[idx] = timerElapsedTime[ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS)];
-      }
+        lsDeltaPrevInput[idx] = 0xFF;
     }
   }
     
@@ -454,6 +448,7 @@ void computeChannelOutputs()
     logical_switch_t *ls = &Model.LogicalSwitch[idx];
     
     bool result = false;
+    
     switch(ls->func)
     {
       case LS_FUNC_A_GREATER_THAN_X:
@@ -518,6 +513,12 @@ void computeChannelOutputs()
           else if(ls->func == LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X) result = abs(_val1) <= _val2;
           else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
           {
+            if(lsDeltaPrevInput[idx] != ls->val1) //reinitialise
+            {
+              lsDeltaPrevInput[idx] = ls->val1;
+              lsDeltaPrevVal[idx] = _val1;
+            }
+
             int32_t difference = _val1 - lsDeltaPrevVal[idx];
             if(abs(difference) > _val2)
             {
@@ -653,45 +654,59 @@ void computeChannelOutputs()
     
     //delay
     //here we delay activation of the logical switch by overriding for the specified time
-    if(ls->val3 > 0
-       && ls->func != LS_FUNC_PULSE 
-       && ls->func != LS_FUNC_TOGGLE 
-       && ls->func != LS_FUNC_ABS_DELTA_GREATER_THAN_X)
+    if(ls->val3 > 0)
     {
-      if(result && !logicalSwitchState[idx]) //went from false to true
+      if(ls->func != LS_FUNC_NONE 
+         && ls->func != LS_FUNC_PULSE 
+         && ls->func != LS_FUNC_TOGGLE 
+         && ls->func != LS_FUNC_ABS_DELTA_GREATER_THAN_X)
       {
-        if(!lsDlyStarted[idx])
+        if(result && !logicalSwitchState[idx]) //went from false to true
         {
-          lsDlyStartTime[idx] = currMillis;
-          lsDlyStarted[idx] = true;
+          if(!lsDlyStarted[idx])
+          {
+            lsDlyStartTime[idx] = currMillis;
+            lsDlyStarted[idx] = true;
+          }
         }
+        if(!result) //reset flag
+          lsDlyStarted[idx] = false;
+          
+        if(currMillis - lsDlyStartTime[idx] < ((uint32_t)ls->val3 * 100)) //override result
+          result = false;
       }
-      if(!result) //reset flag
+      else
+      {
         lsDlyStarted[idx] = false;
-        
-      if(currMillis - lsDlyStartTime[idx] < ((uint32_t)ls->val3 * 100)) //override result
-        result = false;
+      }
     }
     
     //duration
-    if(ls->val4 > 0 
-       && ls->func != LS_FUNC_PULSE 
-       && ls->func != LS_FUNC_LATCH 
-       && ls->func != LS_FUNC_TOGGLE)
+    if(ls->val4 > 0)
     {
-      if(result && !lsDurOldState[idx]) //went from inactive to active
+      if(ls->func != LS_FUNC_NONE 
+         && ls->func != LS_FUNC_PULSE 
+         && ls->func != LS_FUNC_LATCH 
+         && ls->func != LS_FUNC_TOGGLE)
       {
-        lsDurOldState[idx] = true;
-        lsDurEndTime[idx] = currMillis + ((uint32_t)ls->val4 * 100); 
+        if(result && !lsDurOldState[idx]) //went from inactive to active
+        {
+          lsDurOldState[idx] = true;
+          lsDurEndTime[idx] = currMillis + ((uint32_t)ls->val4 * 100); 
+        }
+        if(currMillis >= lsDurEndTime[idx]) //duration has expired
+        {
+          if(!result) //only reset old state when result goes false
+            lsDurOldState[idx] = false;
+          result = false;
+        }
+        else if(lsDurOldState[idx]) //hold even if the input suddenly became false before duration expired
+          result = true;
       }
-      if(currMillis >= lsDurEndTime[idx]) //duration has expired
+      else
       {
-        if(!result) //only reset old state when result goes false
-          lsDurOldState[idx] = false;
-        result = false;
+        lsDurOldState[idx] = false;
       }
-      else if(lsDurOldState[idx]) //hold even if the input suddenly became false before duration expired
-        result = true;
     }
 
     //store the result
