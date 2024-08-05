@@ -484,7 +484,7 @@ void getTelemetry()
   }
   
   //reset telemetry
-  if(millis() - timeOfLastTelemReception > 2000)
+  if(millis() - timeOfLastTelemReception > 2500)
     resetTelemetry();
 }
 
