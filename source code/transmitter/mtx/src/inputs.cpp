@@ -6,7 +6,7 @@
 
 int16_t deadzoneAndMap(int16_t input, int16_t minVal, int16_t centreVal, int16_t maxVal, int16_t deadzn, int16_t mapMin, int16_t mapMax);
 
-const uint8_t swPin[NUM_PHYSICAL_SWITCHES][2] = {
+const uint8_t swPin[NUM_PHYSICAL_SWITCHES][2] PROGMEM = {
   {PIN_SWA_UP, PIN_SWA_DN},
   {PIN_SWB_UP, PIN_SWB_DN},
   {PIN_SWC_UP, PIN_SWC_DN},
@@ -17,7 +17,7 @@ const uint8_t swPin[NUM_PHYSICAL_SWITCHES][2] = {
   {PIN_SWH_UP, PIN_SWH_DN}
 };
 
-const uint8_t stickAxisPin[NUM_STICK_AXES] = {
+const uint8_t stickAxisPin[NUM_STICK_AXES] PROGMEM = {
   PIN_X1_AXIS,
   PIN_Y1_AXIS,
   PIN_Z1_AXIS,
@@ -30,7 +30,7 @@ const uint8_t stickAxisPin[NUM_STICK_AXES] = {
   PIN_Y4_AXIS
 };
 
-const uint8_t knobPin[NUM_KNOBS] = {
+const uint8_t knobPin[NUM_KNOBS] PROGMEM = {
   PIN_KNOB_A,
   PIN_KNOB_B
 };
@@ -41,8 +41,8 @@ void initialiseSwitches()
 {
   for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
   {
-    pinMode(swPin[i][0], INPUT_PULLUP);
-    pinMode(swPin[i][1], INPUT_PULLUP);
+    pinMode(pgm_read_byte(&swPin[i][0]), INPUT_PULLUP);
+    pinMode(pgm_read_byte(&swPin[i][1]), INPUT_PULLUP);
   }
 }
 
@@ -62,15 +62,15 @@ void readSwitchesAndButtons()
       swState[i] = SWUPPERPOS;
       if(Sys.swType[i] == SW_2POS) 
       {
-        if(!digitalRead(swPin[i][1])) 
+        if(!digitalRead(pgm_read_byte(&swPin[i][1]))) 
           swState[i] = SWLOWERPOS;
       }
       else if(Sys.swType[i] == SW_3POS) 
       {
         swState[i] = SWMIDPOS;
-        if(!digitalRead(swPin[i][0]))      
+        if(!digitalRead(pgm_read_byte(&swPin[i][0])))      
           swState[i] = SWUPPERPOS;
-        else if(!digitalRead(swPin[i][1])) 
+        else if(!digitalRead(pgm_read_byte(&swPin[i][1]))) 
           swState[i] = SWLOWERPOS;
       }
     }
@@ -213,7 +213,7 @@ void readSticks()
       stickAxisIn[i] = 0;
     else
     {
-      stickAxisIn[i] = analogRead(stickAxisPin[i]);
+      stickAxisIn[i] = analogRead(pgm_read_byte(&stickAxisPin[i]));
       if(axis->type == STICK_AXIS_SELF_CENTERING)
       {
         stickAxisIn[i] = deadzoneAndMap(stickAxisIn[i], axis->minVal, axis->centerVal, axis->maxVal, 
@@ -235,7 +235,7 @@ void readSticks()
       knobIn[i] = 0;
     else
     {
-      knobIn[i] = analogRead(knobPin[i]);
+      knobIn[i] = analogRead(pgm_read_byte(&knobPin[i]));
       if(knob->type == KNOB_CENTER_DETENT)
       {
         knobIn[i] = deadzoneAndMap(knobIn[i], knob->minVal, knob->centerVal, knob->maxVal, 
@@ -327,7 +327,7 @@ void calibrateSticks(uint8_t stage)
       {
         if(Sys.StickAxis[i].type == STICK_AXIS_ABSENT)
           continue;
-        reading = analogRead(stickAxisPin[i]);
+        reading = analogRead(pgm_read_byte(&stickAxisPin[i]));
         Sys.StickAxis[i].centerVal = reading;
         if(reading < Sys.StickAxis[i].minVal)
           Sys.StickAxis[i].minVal = reading;
@@ -378,7 +378,7 @@ void calibrateKnobs(uint8_t stage)
       {
         if(Sys.Knob[i].type == KNOB_ABSENT)
           continue;
-        reading = analogRead(knobPin[i]);
+        reading = analogRead(pgm_read_byte(&knobPin[i]));
         Sys.Knob[i].centerVal = reading;
         if(reading < Sys.Knob[i].minVal)
           Sys.Knob[i].minVal = reading;
