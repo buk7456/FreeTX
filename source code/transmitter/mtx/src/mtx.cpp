@@ -289,7 +289,7 @@ void doSerialCommunication()
   }
   
   //alternately send failsafe or request telemetry
-  const uint16_t interval = 660;
+  const uint16_t interval = 740; //the LCM of this value and 1000 should be fairly large
   if(thisLoopNum % (interval/fixedLoopTime) == 1) 
     status1 |= FLAG_FAILSAFE_DATA;
   else if(thisLoopNum % (interval/fixedLoopTime) == interval/(2*fixedLoopTime) + 1)
@@ -502,7 +502,7 @@ void handleTelemetry()
         telemetryMinReceivedValue[i] = telemetryReceivedValue[i];
     }
     //-- reset received telemetry if timeout
-    if(millis() - telemetryLastReceivedTime[i] > 2000)
+    if(millis() - telemetryLastReceivedTime[i] > 2500)
       telemetryReceivedValue[i] = TELEMETRY_NO_DATA; 
   }
   
