@@ -722,6 +722,187 @@ void resetWidgetParams(uint8_t idx)
 
 //--------------------------------------------------------------------------------------------------
 
+bool changeLSReference(uint8_t newRef, uint8_t oldRef)
+{
+  if(newRef >= NUM_LOGICAL_SWITCHES || oldRef >= NUM_LOGICAL_SWITCHES)
+    return false;
+  
+  bool refFound = false;
+  
+  uint8_t swOld = CTRL_SW_LOGICAL_FIRST + oldRef;
+  uint8_t swNew = CTRL_SW_LOGICAL_FIRST + newRef;
+  
+  uint8_t swInvertOld =CTRL_SW_LOGICAL_FIRST_INVERT + oldRef;
+  uint8_t swInvertNew =CTRL_SW_LOGICAL_FIRST_INVERT + newRef;
+
+  uint8_t srcOld = SRC_SW_LOGICAL_FIRST + oldRef;
+  uint8_t srcNew = SRC_SW_LOGICAL_FIRST + newRef;
+
+  //widgets
+  for(uint8_t i = 0; i < NUM_WIDGETS; i++)
+  {
+    widget_params_t *widget = &Model.Widget[i];
+    if(widget->type == WIDGET_TYPE_MIXSOURCES)
+    {
+      if(widget->src == srcOld)   {refFound = true; widget->src = srcNew;}
+    }
+  }
+
+  //dual rate switch
+  rate_expo_t *rateExpo[3];
+  rateExpo[0] = &Model.RudDualRate;
+  rateExpo[1] = &Model.AilDualRate;
+  rateExpo[2] = &Model.EleDualRate;
+  for(uint8_t i = 0; i < 3; i++)
+  {
+    if(rateExpo[i]->swtch == swOld)       {refFound = true; rateExpo[i]->swtch = swNew;}
+    if(rateExpo[i]->swtch == swInvertOld) {refFound = true; rateExpo[i]->swtch = swInvertNew;}
+  }
+
+  //mixer
+  for(uint8_t i = 0; i < NUM_MIXSLOTS; i++)
+  {
+    mixer_params_t *mxr = &Model.Mixer[i];
+    if(mxr->swtch == swOld)       {refFound = true; mxr->swtch = swNew;}
+    if(mxr->swtch == swInvertOld) {refFound = true; mxr->swtch = swInvertNew;}
+    if(mxr->input == srcOld)      {refFound = true; mxr->input = srcNew;}
+  }
+
+  //output channels
+  for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
+  {
+    channel_params_t *ch = &Model.Channel[i];
+    if(ch->overrideSwitch == swOld)       {refFound = true; ch->overrideSwitch = swNew;}
+    if(ch->overrideSwitch == swInvertOld) {refFound = true; ch->overrideSwitch = swInvertNew;}
+  }
+
+  //logical switches
+  for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
+  {
+    logical_switch_t *ls = &Model.LogicalSwitch[i];
+    if(ls->func <= LS_FUNC_GROUP3_LAST)
+    {
+      if(ls->val1 == srcOld)      {refFound = true; ls->val1 = srcNew;}
+    }
+    else if(ls->func <= LS_FUNC_GROUP4_LAST)
+    {
+      if(ls->val1 == srcOld)      {refFound = true; ls->val1 = srcNew;}
+      if(ls->val2 == srcOld)      {refFound = true; ls->val2 = srcNew;}
+    }
+    else if(ls->func <= LS_FUNC_GROUP5_LAST)
+    {
+      if(ls->val1 == swOld)       {refFound = true; ls->val1 = swNew;}
+      if(ls->val1 == swInvertOld) {refFound = true; ls->val1 = swInvertNew;}
+      if(ls->val2 == swOld)       {refFound = true; ls->val2 = swNew;}
+      if(ls->val2 == swInvertOld) {refFound = true; ls->val2 = swInvertNew;}
+    }
+    else if(ls->func == LS_FUNC_TOGGLE)
+    {
+      if(ls->val1 == swOld)       {refFound = true; ls->val1 = swNew;}
+      if(ls->val1 == swInvertOld) {refFound = true; ls->val1 = swInvertNew;}
+      if(ls->val3 == swOld)       {refFound = true; ls->val3 = swNew;}
+      if(ls->val3 == swInvertOld) {refFound = true; ls->val3 = swInvertNew;}
+    }
+  }
+
+  //function generators
+  for(uint8_t i = 0; i < NUM_FUNCGEN; i++)
+  {
+    funcgen_t *fgen = &Model.Funcgen[i];
+    if(fgen->modulatorSrc == srcOld)   {refFound = true; fgen->modulatorSrc = srcNew;}
+  }
+  
+  //timers
+  for(uint8_t i = 0; i < NUM_TIMERS; i++)
+  {
+    timer_params_t *tmr = &Model.Timer[i];
+    if(tmr->swtch == swOld)            { refFound = true; tmr->swtch = swNew;}
+    if(tmr->swtch == swInvertOld)       {refFound = true; tmr->swtch = swInvertNew;}
+    if(tmr->resetSwitch == swOld)       {refFound = true; tmr->resetSwitch = swNew;}
+    if(tmr->resetSwitch == swInvertOld) {refFound = true; tmr->resetSwitch = swInvertNew;}
+  }
+
+  //counters
+  for(uint8_t i = 0; i < NUM_COUNTERS; i++)
+  {
+    counter_params_t *counter = &Model.Counter[i];
+    if(counter->clock == swOld)        {refFound = true; counter->clock = swNew;}
+    if(counter->clock == swInvertOld)  {refFound = true; counter->clock = swInvertNew;}
+    if(counter->clear == swOld)        {refFound = true; counter->clear = swNew;}
+    if(counter->clear == swInvertOld)  {refFound = true; counter->clear = swInvertNew;}
+  }
+
+  //custom notifications
+  for(uint8_t i = 0; i < NUM_CUSTOM_NOTIFICATIONS; i++)
+  {
+    notification_params_t *notification = &Model.CustomNotification[i];
+    if(notification->swtch == swOld)       {refFound = true; notification->swtch = swNew;}
+    if(notification->swtch == swInvertOld) {refFound = true; notification->swtch = swInvertNew;}
+  }
+
+  //flight modes
+  for(uint8_t i = 0; i < NUM_FLIGHT_MODES; i++)
+  {
+    flight_mode_t *fmd = &Model.FlightMode[i];
+    if(fmd->swtch == swOld)            {refFound = true; fmd->swtch = swNew;}
+    if(fmd->swtch == swInvertOld)      {refFound = true; fmd->swtch = swInvertNew;}
+  }
+
+  return refFound;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+bool updateLogicalSwitchReferences(uint8_t newPos, uint8_t oldPos)
+{
+  if(newPos >= NUM_LOGICAL_SWITCHES || oldPos >= NUM_LOGICAL_SWITCHES)
+    return false;
+
+  if(newPos == oldPos)
+    return true;
+
+  //try finding an unreferenced logical switch, so we can use it as temporary store
+  uint8_t freeLS = 0xFF;
+  for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
+  {
+    if(!changeLSReference(i, i) && Model.LogicalSwitch[i].func == LS_FUNC_NONE)
+    {
+      //condition is that it should be outside of the range of newPos and oldPos, i.e not inbetween the two
+      if((newPos < oldPos && (i > oldPos || i < newPos)) || (newPos > oldPos && (i > newPos || i < oldPos)))
+      {
+        freeLS = i;
+        break;
+      }
+    }
+  }
+  //exit if not found
+  if(freeLS == 0xFF)
+    return false;
+
+  //store
+  changeLSReference(freeLS, oldPos);
+
+  //change 
+  if(newPos < oldPos)
+  {
+    for(int8_t pos = oldPos - 1; pos >= newPos; pos--)
+      changeLSReference(pos + 1, pos);
+  }
+  else if(newPos > oldPos) 
+  {
+    for(int8_t pos = oldPos; pos < newPos; pos++)
+      changeLSReference(pos, pos + 1);
+  }
+
+  //copy to newPos
+  changeLSReference(newPos, freeLS);
+
+  //exit
+  return true;
+}
+
+//--------------------------------------------------------------------------------------------------
+
 bool verifyModelData()
 {
   // Verify if the model data is sane. Here, we check for critical

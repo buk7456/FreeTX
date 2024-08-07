@@ -128,6 +128,7 @@ enum {
   SCREEN_LOGICAL_SWITCHES,
   CONTEXT_MENU_LOGICAL_SWITCHES,
   DIALOG_COPY_LOGICAL_SWITCH,
+  DIALOG_MOVE_LOGICAL_SWITCH,
   SCREEN_LOGICAL_SWITCH_OUTPUTS,
   //counters
   SCREEN_COUNTERS,
@@ -3863,8 +3864,8 @@ void handleMainUI()
         
         menuInitialise();
         menuAddItem(extrasMenu[EXTRAS_MENU_CUSTOM_CURVES], EXTRAS_MENU_CUSTOM_CURVES, NULL);
-        menuAddItem(extrasMenu[EXTRAS_MENU_FUNCTION_GENERATORS], EXTRAS_MENU_FUNCTION_GENERATORS, NULL);
         menuAddItem(extrasMenu[EXTRAS_MENU_LOGICAL_SWITCHES], EXTRAS_MENU_LOGICAL_SWITCHES, NULL);
+        menuAddItem(extrasMenu[EXTRAS_MENU_FUNCTION_GENERATORS], EXTRAS_MENU_FUNCTION_GENERATORS, NULL);
         menuAddItem(extrasMenu[EXTRAS_MENU_TIMERS], EXTRAS_MENU_TIMERS, NULL);
         menuAddItem(extrasMenu[EXTRAS_MENU_COUNTERS], EXTRAS_MENU_COUNTERS, NULL);
         menuAddItem(extrasMenu[EXTRAS_MENU_NOTIFICATION_SETUP], EXTRAS_MENU_NOTIFICATION_SETUP, NULL);
@@ -4647,13 +4648,15 @@ void handleMainUI()
         enum {
           ITEM_VIEW_OUTPUTS,
           ITEM_COPY_TO,
-          ITEM_RESET
+          ITEM_MOVE_TO,
+          ITEM_RESET_SETTINGS
         };
         
         contextMenuInitialise();
         contextMenuAddItem(PSTR("View outputs"), ITEM_VIEW_OUTPUTS);
         contextMenuAddItem(PSTR("Copy to"), ITEM_COPY_TO);
-        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET);
+        contextMenuAddItem(PSTR("Move to"), ITEM_MOVE_TO);
+        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_SETTINGS);
         contextMenuDraw();
         
         if(contextMenuSelectedItemID == ITEM_VIEW_OUTPUTS)
@@ -4663,7 +4666,12 @@ void handleMainUI()
           destLsIdx = thisLsIdx;
           changeToScreen(DIALOG_COPY_LOGICAL_SWITCH);
         }
-        if(contextMenuSelectedItemID == ITEM_RESET)
+        if(contextMenuSelectedItemID == ITEM_MOVE_TO)
+        {
+          destLsIdx = thisLsIdx;
+          changeToScreen(DIALOG_MOVE_LOGICAL_SWITCH);
+        }
+        if(contextMenuSelectedItemID == ITEM_RESET_SETTINGS)
         {
           resetLogicalSwitchParams(thisLsIdx);
           changeToScreen(SCREEN_LOGICAL_SWITCHES);
@@ -4675,14 +4683,31 @@ void handleMainUI()
       break;
     
     case DIALOG_COPY_LOGICAL_SWITCH:
+    case DIALOG_MOVE_LOGICAL_SWITCH:
       {
         isEditMode = true;
         destLsIdx = incDec(destLsIdx, 0, NUM_LOGICAL_SWITCHES - 1, INCDEC_WRAP, INCDEC_SLOW);
-        drawDialogCopyMove(PSTR("L"), thisLsIdx, destLsIdx, true);
+        drawDialogCopyMove(PSTR("L"), thisLsIdx, destLsIdx, theScreen == DIALOG_COPY_LOGICAL_SWITCH);
         if(clickedButton == KEY_SELECT)
         {
-          Model.LogicalSwitch[destLsIdx] = Model.LogicalSwitch[thisLsIdx];
-          thisLsIdx = destLsIdx;
+          if(theScreen == DIALOG_COPY_LOGICAL_SWITCH)
+          {
+            Model.LogicalSwitch[destLsIdx] = Model.LogicalSwitch[thisLsIdx];
+            thisLsIdx = destLsIdx;
+          }
+          else
+          {
+            if(updateLogicalSwitchReferences(destLsIdx, thisLsIdx))
+            {
+              moveLogicalSwitch(destLsIdx, thisLsIdx);
+              thisLsIdx = destLsIdx;
+            }
+            else
+            {
+              makeToast(PSTR("Moving failed"), 2000, 0);
+            }
+          }
+          
           changeToScreen(SCREEN_LOGICAL_SWITCHES);
         }
         if(heldButton == KEY_SELECT) //exit

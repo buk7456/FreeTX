@@ -5,6 +5,7 @@ void computeChannelOutputs();
 
 int16_t calcRateExpo(int16_t input, int16_t rate, int16_t expo);
 bool checkSwitchCondition(uint8_t sw);
+void moveLogicalSwitch(uint8_t newPos, uint8_t oldPos);
 void moveMix(uint8_t newPos, uint8_t oldPos);
 void swapMix(uint8_t posA, uint8_t posB);
 void syncWaveform(uint8_t idx);

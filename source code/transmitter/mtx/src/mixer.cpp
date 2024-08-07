@@ -9,6 +9,8 @@ int16_t calcDifferential(int16_t input, int16_t diff);
 int32_t applySlow(int32_t currVal, int32_t targetVal, int32_t range, int32_t multiplier, uint32_t riseTime, uint32_t fallTime);
 int16_t weightAndOffset(int16_t input, int16_t weight, int16_t offset);
 int16_t generateWaveform(uint8_t idx, int32_t _currTime);
+void evaluateLogicalSwitches(uint32_t _currTime);
+void evaluateCounters();
 
 //mix sources array
 int16_t mixSources[MIXSOURCES_COUNT]; 
@@ -23,6 +25,15 @@ int32_t  slowCurrVal[NUM_MIXSLOTS];
 //variables to help with the mix Hold feature
 int16_t hldOldVal[NUM_MIXSLOTS];
 uint8_t hldOldState[NUM_MIXSLOTS];
+
+//variables to help with logical switches
+bool     lsDlyStarted[NUM_LOGICAL_SWITCHES];
+uint32_t lsDlyStartTime[NUM_LOGICAL_SWITCHES];
+bool     lsDurOldState[NUM_LOGICAL_SWITCHES];
+uint32_t lsDurEndTime[NUM_LOGICAL_SWITCHES];
+bool     lsToggleLastState[NUM_LOGICAL_SWITCHES];
+int32_t  lsDeltaPrevVal[NUM_LOGICAL_SWITCHES];
+uint8_t  lsDeltaPrevInput[NUM_LOGICAL_SWITCHES];
 
 //array to store logical switches
 bool logicalSwitchState[NUM_LOGICAL_SWITCHES];
@@ -51,6 +62,9 @@ void computeChannelOutputs()
     //resynchronize the waveform generators
     for(uint8_t i = 0; i < NUM_FUNCGEN; i++)
       syncWaveform(i);
+    // mixSources array
+    for(uint8_t i = 0; i < MIXSOURCES_COUNT; i++)
+      mixSources[i] = 0;
   }
   
   //--- Record the current time
@@ -189,24 +203,29 @@ void computeChannelOutputs()
     else if(Sys.swType[i] == SW_3POS)
       mixSources[SRC_SW_PHYSICAL_FIRST + i] = (swState[i] == SWLOWERPOS) ? 500 : ((swState[i] == SWUPPERPOS) ? -500 : 0);
   }
-
-  //Mix sources logical switches
-  for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
-    mixSources[SRC_SW_LOGICAL_FIRST + i] = logicalSwitchState[i] ? 500 : -500;
   
   //Mix sources function generators
   for(uint8_t i = 0; i < NUM_FUNCGEN; i++)
     mixSources[SRC_FUNCGEN_FIRST + i] = generateWaveform(i, currMillis);
+
+  //Evaluate counters
+  //TODO possibly use counters in the mixer
+  evaluateCounters();
+
+  //Mix sources logical switches
+  evaluateLogicalSwitches(currMillis);
+  for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
+    mixSources[SRC_SW_LOGICAL_FIRST + i] = logicalSwitchState[i] ? 500 : -500;
   
-  //Channels
+  //Mix sources channels
   for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
     mixSources[SRC_CH1 + i] = 0;
   
-  //Virtuals
+  //Mix sources virtual channels
   for(uint8_t i = 0; i < NUM_VIRTUAL_CHANNELS; i++)
     mixSources[SRC_VIRTUAL_FIRST + i] = 0;
   
-  ///------------------ MIXER LOOP ------------------------
+  ///----------------- MIXER LOOP ------------------------
   
   for(uint8_t mixIdx = 0; mixIdx < NUM_MIXSLOTS; mixIdx++)
   {
@@ -419,16 +438,218 @@ void computeChannelOutputs()
     mixSources[mxr->output] = (int16_t) output;
   }
   
-  ///------------------ LOGICAL SWITCH EVALUATIONS --------
-
-  static bool     lsDlyStarted[NUM_LOGICAL_SWITCHES];
-  static uint32_t lsDlyStartTime[NUM_LOGICAL_SWITCHES];
-  static bool     lsDurOldState[NUM_LOGICAL_SWITCHES];
-  static uint32_t lsDurEndTime[NUM_LOGICAL_SWITCHES];
-  static bool     lsToggleLastState[NUM_LOGICAL_SWITCHES];
-  static int32_t  lsDeltaPrevVal[NUM_LOGICAL_SWITCHES];
-  static uint8_t  lsDeltaPrevInput[NUM_LOGICAL_SWITCHES];
+  ///----------------- OUTPUT TO CHANNELS ----------------
   
+  for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
+  {
+    channelOut[i] = mixSources[SRC_CH1 + i];
+    //curve
+    if(Model.Channel[i].curve != -1)
+    {
+      uint8_t _crvIdx = Model.Channel[i].curve;
+      uint8_t _numPts = Model.CustomCurve[_crvIdx].numPoints;
+      int16_t _xx[MAX_NUM_POINTS_CUSTOM_CURVE];
+      int16_t _yy[MAX_NUM_POINTS_CUSTOM_CURVE];
+      for(uint8_t pt = 0; pt < _numPts; pt++)
+      {
+        _xx[pt] = 5 * Model.CustomCurve[_crvIdx].xVal[pt];
+        _yy[pt] = 5 * Model.CustomCurve[_crvIdx].yVal[pt];
+      }
+      if(Model.CustomCurve[_crvIdx].smooth)
+        channelOut[i] = cubicHermiteInterpolate(_xx, _yy, _numPts, channelOut[i]);
+      else
+        channelOut[i] = linearInterpolate(_xx, _yy, _numPts, channelOut[i]);
+    }
+    //reverse
+    if(Model.Channel[i].reverse) 
+      channelOut[i] = 0 - channelOut[i]; 
+    //subtrim
+    channelOut[i] += 5 * Model.Channel[i].subtrim / 10; 
+    //override
+    if(Model.Channel[i].overrideSwitch != CTRL_SW_NONE && checkSwitchCondition(Model.Channel[i].overrideSwitch))
+      channelOut[i] = 5 * Model.Channel[i].overrideVal;
+    //endpoints
+    int16_t endptL = 5 * Model.Channel[i].endpointL;
+    int16_t endptR = 5 * Model.Channel[i].endpointR;
+    channelOut[i] = constrain(channelOut[i], endptL, endptR); 
+  }
+  
+  /// ---------------- RESET SOME VARIABLES --------------
+  isReinitialiseMixer = false;
+}
+
+//==================================================================================================
+
+void moveMix(uint8_t newPos, uint8_t oldPos)
+{
+  if(newPos >= NUM_MIXSLOTS || oldPos >= NUM_MIXSLOTS || newPos == oldPos)
+    return;
+  
+  // store temporarily the old position's data
+  mixer_params_t Temp_Mixer    = Model.Mixer[oldPos];
+  int16_t  tempDlyOldVal       = dlyOldVal[oldPos];
+  int16_t  tempDlyPrevOperand  = dlyPrevOperand[oldPos];
+  uint8_t  tempDlyPrevInputIdx = dlyPrevInput[oldPos];
+  uint32_t tempDlyStartTime    = dlyStartTime[oldPos];
+  int32_t  tempSlowCurrVal     = slowCurrVal[oldPos];
+  int16_t  tempHldOldVal       = hldOldVal[oldPos];
+  uint8_t  tempHldOldState     = hldOldState[oldPos];
+
+  //shift elements of the arrays
+  uint8_t thisPostn = oldPos;
+  if(newPos < oldPos)
+  {
+    while(thisPostn > newPos)
+    {
+      Model.Mixer[thisPostn]     = Model.Mixer[thisPostn-1];
+      dlyOldVal[thisPostn]       = dlyOldVal[thisPostn-1];
+      dlyPrevOperand[thisPostn]  = dlyPrevOperand[thisPostn-1];
+      dlyPrevInput[thisPostn]    = dlyPrevInput[thisPostn-1];
+      dlyStartTime[thisPostn]    = dlyStartTime[thisPostn-1];
+      slowCurrVal[thisPostn]     = slowCurrVal[thisPostn-1];
+      hldOldVal[thisPostn]       = hldOldVal[thisPostn-1];
+      hldOldState[thisPostn]     = hldOldState[thisPostn-1];
+      
+      thisPostn--;
+    }
+  }
+  else if(newPos > oldPos) 
+  {
+    while(thisPostn < newPos)
+    {
+      Model.Mixer[thisPostn]     = Model.Mixer[thisPostn+1];
+      dlyOldVal[thisPostn]       = dlyOldVal[thisPostn+1];
+      dlyPrevOperand[thisPostn]  = dlyPrevOperand[thisPostn+1];
+      dlyPrevInput[thisPostn]    = dlyPrevInput[thisPostn+1];
+      dlyStartTime[thisPostn]    = dlyStartTime[thisPostn+1];
+      slowCurrVal[thisPostn]     = slowCurrVal[thisPostn+1];
+      hldOldVal[thisPostn]       = hldOldVal[thisPostn+1];
+      hldOldState[thisPostn]     = hldOldState[thisPostn+1];
+      
+      thisPostn++;
+    }
+  }
+  
+  //copy from temporary into new position
+  Model.Mixer[newPos]     = Temp_Mixer;
+  dlyOldVal[newPos]       = tempDlyOldVal;
+  dlyPrevOperand[newPos]  = tempDlyPrevOperand;
+  dlyPrevInput[newPos]    = tempDlyPrevInputIdx;
+  dlyStartTime[newPos]    = tempDlyStartTime;
+  slowCurrVal[newPos]     = tempSlowCurrVal;
+  hldOldVal[newPos]       = tempHldOldVal;
+  hldOldState[newPos]     = tempHldOldState;
+}
+
+//==================================================================================================
+
+void swapMix(uint8_t posA, uint8_t posB)
+{
+  if(posA >= NUM_MIXSLOTS || posB >= NUM_MIXSLOTS || posA == posB)
+    return;
+  
+  //store posA to temp
+  mixer_params_t Temp_Mixer    = Model.Mixer[posA];
+  int16_t  tempDlyOldVal       = dlyOldVal[posA];
+  int16_t  tempDlyPrevOperand  = dlyPrevOperand[posA];
+  uint8_t  tempDlyPrevInputIdx = dlyPrevInput[posA];
+  uint32_t tempDlyStartTime    = dlyStartTime[posA];
+  int32_t  tempSlowCurrVal     = slowCurrVal[posA];
+  int16_t  tempHldOldVal       = hldOldVal[posA];
+  uint8_t  tempHldOldState     = hldOldState[posA];
+  
+  //copy posB to posA
+  Model.Mixer[posA]     = Model.Mixer[posB];
+  dlyOldVal[posA]       = dlyOldVal[posB];
+  dlyPrevOperand[posA]  = dlyPrevOperand[posB];
+  dlyPrevInput[posA]    = dlyPrevInput[posB];
+  dlyStartTime[posA]    = dlyStartTime[posB];
+  slowCurrVal[posA]     = slowCurrVal[posB];
+  hldOldVal[posA]       = hldOldVal[posB];
+  hldOldState[posA]     = hldOldState[posB];
+  
+  //copy from temp to posB
+  Model.Mixer[posB]     = Temp_Mixer;
+  dlyOldVal[posB]       = tempDlyOldVal;
+  dlyPrevOperand[posB]  = tempDlyPrevOperand;
+  dlyPrevInput[posB]    = tempDlyPrevInputIdx;
+  dlyStartTime[posB]    = tempDlyStartTime;
+  slowCurrVal[posB]     = tempSlowCurrVal;
+  hldOldVal[posB]       = tempHldOldVal;
+  hldOldState[posB]     = tempHldOldState;
+}
+
+//==================================================================================================
+
+void moveLogicalSwitch(uint8_t newPos, uint8_t oldPos)
+{
+  if(newPos >= NUM_LOGICAL_SWITCHES || oldPos >= NUM_LOGICAL_SWITCHES || newPos == oldPos)
+    return;
+  
+  // store temporarily the old position's data
+  logical_switch_t Temp_LogicalSwitch = Model.LogicalSwitch[oldPos];
+  bool     tempLsDlyStarted           = lsDlyStarted[oldPos];
+  uint32_t tempLsDlyStartTime         = lsDlyStartTime[oldPos];
+  bool     tempLsDurOldState          = lsDurOldState[oldPos];
+  uint32_t tempLsDurEndTime           = lsDurEndTime[oldPos];
+  bool     tempLsToggleLastState      = lsToggleLastState[oldPos];
+  int32_t  tempLsDeltaPrevVal         = lsDeltaPrevVal[oldPos];
+  uint8_t  tempLsDeltaPrevInput       = lsDeltaPrevInput[oldPos];
+  bool     tempLogicalSwitchState     = logicalSwitchState[oldPos];
+
+  //shift elements of the arrays
+  uint8_t thisPostn = oldPos;
+  if(newPos < oldPos)
+  {
+    while(thisPostn > newPos)
+    {
+      Model.LogicalSwitch[thisPostn] = Model.LogicalSwitch[thisPostn-1];
+      lsDlyStarted[thisPostn]        = lsDlyStarted[thisPostn-1];
+      lsDlyStartTime[thisPostn]      = lsDlyStartTime[thisPostn-1];
+      lsDurOldState[thisPostn]       = lsDurOldState[thisPostn-1];
+      lsDurEndTime[thisPostn]        = lsDurEndTime[thisPostn-1];
+      lsToggleLastState[thisPostn]   = lsToggleLastState[thisPostn-1];
+      lsDeltaPrevVal[thisPostn]      = lsDeltaPrevVal[thisPostn-1];
+      lsDeltaPrevInput[thisPostn]    = lsDeltaPrevInput[thisPostn-1];
+      logicalSwitchState[thisPostn]  = logicalSwitchState[thisPostn-1];
+
+      thisPostn--;
+    }
+  }
+  else if(newPos > oldPos) 
+  {
+    while(thisPostn < newPos)
+    {
+      Model.LogicalSwitch[thisPostn] = Model.LogicalSwitch[thisPostn+1];
+      lsDlyStarted[thisPostn]        = lsDlyStarted[thisPostn+1];
+      lsDlyStartTime[thisPostn]      = lsDlyStartTime[thisPostn+1];
+      lsDurOldState[thisPostn]       = lsDurOldState[thisPostn+1];
+      lsDurEndTime[thisPostn]        = lsDurEndTime[thisPostn+1];
+      lsToggleLastState[thisPostn]   = lsToggleLastState[thisPostn+1];
+      lsDeltaPrevVal[thisPostn]      = lsDeltaPrevVal[thisPostn+1];
+      lsDeltaPrevInput[thisPostn]    = lsDeltaPrevInput[thisPostn+1];
+      logicalSwitchState[thisPostn]  = logicalSwitchState[thisPostn+1];
+
+      thisPostn++;
+    }
+  }
+  
+  //copy from temporary into new position
+  Model.LogicalSwitch[newPos] = Temp_LogicalSwitch;
+  lsDlyStarted[newPos]        = tempLsDlyStarted;
+  lsDlyStartTime[newPos]      = tempLsDlyStartTime;
+  lsDurOldState[newPos]       = tempLsDurOldState;
+  lsDurEndTime[newPos]        = tempLsDurEndTime;
+  lsToggleLastState[newPos]   = tempLsToggleLastState;
+  lsDeltaPrevVal[newPos]      = tempLsDeltaPrevVal;
+  lsDeltaPrevInput[newPos]    = tempLsDeltaPrevInput;
+  logicalSwitchState[newPos]  = tempLogicalSwitchState;
+}
+
+//==================================================================================================
+
+void evaluateLogicalSwitches(uint32_t _currTime)
+{
   if(isReinitialiseMixer)
   {
     for(uint8_t idx = 0; idx < NUM_LOGICAL_SWITCHES; idx++)
@@ -639,12 +860,12 @@ void computeChannelOutputs()
           uint32_t pulseDelay = (uint32_t)ls->val3 * 100;
           uint32_t timeInstance;
           //As we are dealing with unsigned subtraction, we need to prevent strange results here
-          //because at start up, the value of currMillis is less than that of pulseDelay.
-          if(currMillis >= pulseDelay)
-            timeInstance = (currMillis - pulseDelay) % period;
+          //because at start up, the value of _currTime is less than that of pulseDelay.
+          if(_currTime >= pulseDelay)
+            timeInstance = (_currTime - pulseDelay) % period;
           else
           {
-            timeInstance = period - ((pulseDelay - currMillis) % period); 
+            timeInstance = period - ((pulseDelay - _currTime) % period); 
             timeInstance %= period;
           }
           result = timeInstance < highTime;
@@ -665,14 +886,14 @@ void computeChannelOutputs()
         {
           if(!lsDlyStarted[idx])
           {
-            lsDlyStartTime[idx] = currMillis;
+            lsDlyStartTime[idx] = _currTime;
             lsDlyStarted[idx] = true;
           }
         }
         if(!result) //reset flag
           lsDlyStarted[idx] = false;
           
-        if(currMillis - lsDlyStartTime[idx] < ((uint32_t)ls->val3 * 100)) //override result
+        if(_currTime - lsDlyStartTime[idx] < ((uint32_t)ls->val3 * 100)) //override result
           result = false;
       }
       else
@@ -692,9 +913,9 @@ void computeChannelOutputs()
         if(result && !lsDurOldState[idx]) //went from inactive to active
         {
           lsDurOldState[idx] = true;
-          lsDurEndTime[idx] = currMillis + ((uint32_t)ls->val4 * 100); 
+          lsDurEndTime[idx] = _currTime + ((uint32_t)ls->val4 * 100); 
         }
-        if(currMillis >= lsDurEndTime[idx]) //duration has expired
+        if(_currTime >= lsDurEndTime[idx]) //duration has expired
         {
           if(!result) //only reset old state when result goes false
             lsDurOldState[idx] = false;
@@ -712,9 +933,12 @@ void computeChannelOutputs()
     //store the result
     logicalSwitchState[idx] = result;
   }
+}
 
-  ///----------------- COUNTER EVALUATIONS ---------------
-  
+//==================================================================================================
+
+void evaluateCounters()
+{
   static bool counterState[NUM_COUNTERS];
   static bool counterToggleLastState[NUM_COUNTERS];
 
@@ -800,146 +1024,6 @@ void computeChannelOutputs()
     else
       counter->persistVal = 0;
   }
-  
-  ///----------------- OUTPUT TO CHANNELS ----------------
-  
-  for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-  {
-    channelOut[i] = mixSources[SRC_CH1 + i];
-    //curve
-    if(Model.Channel[i].curve != -1)
-    {
-      uint8_t _crvIdx = Model.Channel[i].curve;
-      uint8_t _numPts = Model.CustomCurve[_crvIdx].numPoints;
-      int16_t _xx[MAX_NUM_POINTS_CUSTOM_CURVE];
-      int16_t _yy[MAX_NUM_POINTS_CUSTOM_CURVE];
-      for(uint8_t pt = 0; pt < _numPts; pt++)
-      {
-        _xx[pt] = 5 * Model.CustomCurve[_crvIdx].xVal[pt];
-        _yy[pt] = 5 * Model.CustomCurve[_crvIdx].yVal[pt];
-      }
-      if(Model.CustomCurve[_crvIdx].smooth)
-        channelOut[i] = cubicHermiteInterpolate(_xx, _yy, _numPts, channelOut[i]);
-      else
-        channelOut[i] = linearInterpolate(_xx, _yy, _numPts, channelOut[i]);
-    }
-    //reverse
-    if(Model.Channel[i].reverse) 
-      channelOut[i] = 0 - channelOut[i]; 
-    //subtrim
-    channelOut[i] += 5 * Model.Channel[i].subtrim / 10; 
-    //override
-    if(Model.Channel[i].overrideSwitch != CTRL_SW_NONE && checkSwitchCondition(Model.Channel[i].overrideSwitch))
-      channelOut[i] = 5 * Model.Channel[i].overrideVal;
-    //endpoints
-    int16_t endptL = 5 * Model.Channel[i].endpointL;
-    int16_t endptR = 5 * Model.Channel[i].endpointR;
-    channelOut[i] = constrain(channelOut[i], endptL, endptR); 
-  }
-  
-  /// ---------------- RESET SOME VARIABLES --------------
-  isReinitialiseMixer = false;
-}
-
-//==================================================================================================
-
-void moveMix(uint8_t newPos, uint8_t oldPos)
-{
-  if(newPos >= NUM_MIXSLOTS || oldPos >= NUM_MIXSLOTS)
-    return;
-  
-  // store temporarily the old position's data
-  mixer_params_t Temp_Mixer    = Model.Mixer[oldPos];
-  int16_t  tempDlyOldVal       = dlyOldVal[oldPos];
-  int16_t  tempDlyPrevOperand  = dlyPrevOperand[oldPos];
-  uint8_t  tempDlyPrevInputIdx = dlyPrevInput[oldPos];
-  uint32_t tempDlyStartTime    = dlyStartTime[oldPos];
-  int32_t  tempSlowCurrVal     = slowCurrVal[oldPos];
-  int16_t  tempHldOldVal       = hldOldVal[oldPos];
-  uint8_t  tempHldOldState     = hldOldState[oldPos];
-
-  //shift elements of the arrays
-  uint8_t thisPostn = oldPos;
-  if(newPos < oldPos)
-  {
-    while(thisPostn > newPos)
-    {
-      Model.Mixer[thisPostn]     = Model.Mixer[thisPostn-1];
-      dlyOldVal[thisPostn]       = dlyOldVal[thisPostn-1];
-      dlyPrevOperand[thisPostn]  = dlyPrevOperand[thisPostn-1];
-      dlyPrevInput[thisPostn]    = dlyPrevInput[thisPostn-1];
-      dlyStartTime[thisPostn]    = dlyStartTime[thisPostn-1];
-      slowCurrVal[thisPostn]     = slowCurrVal[thisPostn-1];
-      hldOldVal[thisPostn]       = hldOldVal[thisPostn-1];
-      hldOldState[thisPostn]     = hldOldState[thisPostn-1];
-      
-      thisPostn--;
-    }
-  }
-  else if(newPos > oldPos) 
-  {
-    while(thisPostn < newPos)
-    {
-      Model.Mixer[thisPostn]     = Model.Mixer[thisPostn+1];
-      dlyOldVal[thisPostn]       = dlyOldVal[thisPostn+1];
-      dlyPrevOperand[thisPostn]  = dlyPrevOperand[thisPostn+1];
-      dlyPrevInput[thisPostn]    = dlyPrevInput[thisPostn+1];
-      dlyStartTime[thisPostn]    = dlyStartTime[thisPostn+1];
-      slowCurrVal[thisPostn]     = slowCurrVal[thisPostn+1];
-      hldOldVal[thisPostn]       = hldOldVal[thisPostn+1];
-      hldOldState[thisPostn]     = hldOldState[thisPostn+1];
-      
-      thisPostn++;
-    }
-  }
-  
-  //copy from temporary into new position
-  Model.Mixer[newPos]     = Temp_Mixer;
-  dlyOldVal[newPos]       = tempDlyOldVal;
-  dlyPrevOperand[newPos]  = tempDlyPrevOperand;
-  dlyPrevInput[newPos]    = tempDlyPrevInputIdx;
-  dlyStartTime[newPos]    = tempDlyStartTime;
-  slowCurrVal[newPos]     = tempSlowCurrVal;
-  hldOldVal[newPos]       = tempHldOldVal;
-  hldOldState[newPos]     = tempHldOldState;
-}
-
-//==================================================================================================
-
-void swapMix(uint8_t posA, uint8_t posB)
-{
-  if(posA >= NUM_MIXSLOTS || posB >= NUM_MIXSLOTS)
-    return;
-  
-  //store posA to temp
-  mixer_params_t Temp_Mixer    = Model.Mixer[posA];
-  int16_t  tempDlyOldVal       = dlyOldVal[posA];
-  int16_t  tempDlyPrevOperand  = dlyPrevOperand[posA];
-  uint8_t  tempDlyPrevInputIdx = dlyPrevInput[posA];
-  uint32_t tempDlyStartTime    = dlyStartTime[posA];
-  int32_t  tempSlowCurrVal     = slowCurrVal[posA];
-  int16_t  tempHldOldVal       = hldOldVal[posA];
-  uint8_t  tempHldOldState     = hldOldState[posA];
-  
-  //copy posB to posA
-  Model.Mixer[posA]     = Model.Mixer[posB];
-  dlyOldVal[posA]       = dlyOldVal[posB];
-  dlyPrevOperand[posA]  = dlyPrevOperand[posB];
-  dlyPrevInput[posA]    = dlyPrevInput[posB];
-  dlyStartTime[posA]    = dlyStartTime[posB];
-  slowCurrVal[posA]     = slowCurrVal[posB];
-  hldOldVal[posA]       = hldOldVal[posB];
-  hldOldState[posA]     = hldOldState[posB];
-  
-  //copy from temp to posB
-  Model.Mixer[posB]     = Temp_Mixer;
-  dlyOldVal[posB]       = tempDlyOldVal;
-  dlyPrevOperand[posB]  = tempDlyPrevOperand;
-  dlyPrevInput[posB]    = tempDlyPrevInputIdx;
-  dlyStartTime[posB]    = tempDlyStartTime;
-  slowCurrVal[posB]     = tempSlowCurrVal;
-  hldOldVal[posB]       = tempHldOldVal;
-  hldOldState[posB]     = tempHldOldState;
 }
 
 //==================================================================================================

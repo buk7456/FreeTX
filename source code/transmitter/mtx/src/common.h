@@ -42,6 +42,8 @@ void resetNotificationParams(uint8_t idx);
 void resetWidgetParams();
 void resetWidgetParams(uint8_t idx);
 
+bool updateLogicalSwitchReferences(uint8_t newPos, uint8_t oldPos);
+
 bool verifyModelData();
 
 uint16_t joinBytes(uint8_t highByte, uint8_t lowByte);
@@ -405,7 +407,9 @@ enum {
   - The odering in the enumerations should match the ordering in the UI.
   - Adding new fields/parameters or reordering the structures can corrupt model data. Always make 
     a backup of the models you care about to an SD card before updating the device's firmware.
-  - If you have added new fields, remember to update the model import and export code for the SD card.
+  - If you have added new fields, remember to update the model import and export code for the SD card,
+    as well as the changeLSReference() function.
+
 */
 
 //------------------------------------------------
