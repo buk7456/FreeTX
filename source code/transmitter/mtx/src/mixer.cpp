@@ -581,11 +581,55 @@ void swapMix(uint8_t posA, uint8_t posB)
 
 //==================================================================================================
 
-void moveLogicalSwitch(uint8_t newPos, uint8_t oldPos)
+bool moveLogicalSwitch(uint8_t newPos, uint8_t oldPos)
 {
-  if(newPos >= NUM_LOGICAL_SWITCHES || oldPos >= NUM_LOGICAL_SWITCHES || newPos == oldPos)
-    return;
+  if(newPos >= NUM_LOGICAL_SWITCHES || oldPos >= NUM_LOGICAL_SWITCHES)
+    return false;
+
+  if(newPos == oldPos)
+    return true;
+
+  //--- Update all references of the affected logical switches
+
+  //try finding an unreferenced logical switch, so we can use it as temporary place holder, with
+  //condition that it should lie outside of the range of newPos and oldPos
+  uint8_t freeLS = 0xFF;
+  for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
+  {
+    if(!changeLSReference(i, i) && Model.LogicalSwitch[i].func == LS_FUNC_NONE)
+    {
+      if((newPos < oldPos && (i > oldPos || i < newPos)) || (newPos > oldPos && (i > newPos || i < oldPos)))
+      {
+        freeLS = i;
+        break;
+      }
+    }
+  }
+
+  //exit if not found
+  if(freeLS == 0xFF)
+    return false;
+
+  //change the oldPos reference to that of the place holder
+  changeLSReference(freeLS, oldPos);
+
+  //change references
+  if(newPos < oldPos)
+  {
+    for(int8_t pos = oldPos - 1; pos >= newPos; pos--)
+      changeLSReference(pos + 1, pos);
+  }
+  else if(newPos > oldPos) 
+  {
+    for(int8_t pos = oldPos; pos < newPos; pos++)
+      changeLSReference(pos, pos + 1);
+  }
+
+  //change reference from that of the place holder to that of the newPos
+  changeLSReference(newPos, freeLS);
   
+  //--- Move the array elements
+
   // store temporarily the old position's data
   logical_switch_t Temp_LogicalSwitch = Model.LogicalSwitch[oldPos];
   bool     tempLsDlyStarted           = lsDlyStarted[oldPos];
@@ -633,7 +677,7 @@ void moveLogicalSwitch(uint8_t newPos, uint8_t oldPos)
       thisPostn++;
     }
   }
-  
+
   //copy from temporary into new position
   Model.LogicalSwitch[newPos] = Temp_LogicalSwitch;
   lsDlyStarted[newPos]        = tempLsDlyStarted;
@@ -644,6 +688,8 @@ void moveLogicalSwitch(uint8_t newPos, uint8_t oldPos)
   lsDeltaPrevVal[newPos]      = tempLsDeltaPrevVal;
   lsDeltaPrevInput[newPos]    = tempLsDeltaPrevInput;
   logicalSwitchState[newPos]  = tempLogicalSwitchState;
+
+  return true;
 }
 
 //==================================================================================================
