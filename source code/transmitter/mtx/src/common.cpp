@@ -724,6 +724,8 @@ void resetWidgetParams(uint8_t idx)
 
 bool changeLSReference(uint8_t newRef, uint8_t oldRef)
 {
+  //Searches for and replaces all occurances of a Logical switch old reference with new reference.
+
   if(newRef >= NUM_LOGICAL_SWITCHES || oldRef >= NUM_LOGICAL_SWITCHES)
     return false;
   
@@ -849,56 +851,6 @@ bool changeLSReference(uint8_t newRef, uint8_t oldRef)
   }
 
   return refFound;
-}
-
-//--------------------------------------------------------------------------------------------------
-
-bool updateLogicalSwitchReferences(uint8_t newPos, uint8_t oldPos)
-{
-  if(newPos >= NUM_LOGICAL_SWITCHES || oldPos >= NUM_LOGICAL_SWITCHES)
-    return false;
-
-  if(newPos == oldPos)
-    return true;
-
-  //try finding an unreferenced logical switch, so we can use it as temporary store
-  uint8_t freeLS = 0xFF;
-  for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
-  {
-    if(!changeLSReference(i, i) && Model.LogicalSwitch[i].func == LS_FUNC_NONE)
-    {
-      //condition is that it should be outside of the range of newPos and oldPos, i.e not inbetween the two
-      if((newPos < oldPos && (i > oldPos || i < newPos)) || (newPos > oldPos && (i > newPos || i < oldPos)))
-      {
-        freeLS = i;
-        break;
-      }
-    }
-  }
-  //exit if not found
-  if(freeLS == 0xFF)
-    return false;
-
-  //store
-  changeLSReference(freeLS, oldPos);
-
-  //change 
-  if(newPos < oldPos)
-  {
-    for(int8_t pos = oldPos - 1; pos >= newPos; pos--)
-      changeLSReference(pos + 1, pos);
-  }
-  else if(newPos > oldPos) 
-  {
-    for(int8_t pos = oldPos; pos < newPos; pos++)
-      changeLSReference(pos, pos + 1);
-  }
-
-  //copy to newPos
-  changeLSReference(newPos, freeLS);
-
-  //exit
-  return true;
 }
 
 //--------------------------------------------------------------------------------------------------

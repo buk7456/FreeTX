@@ -2368,13 +2368,8 @@ void handleMainUI()
           display.setCursor(0, 38);
           display.print(F("D/R:"));
           display.setCursor(42, 38);
-          if(*swtch == CTRL_SW_NONE)
-            display.print(F("--"));
-          else
-          {
-            getControlSwitchName(txtBuff, *swtch, sizeof(txtBuff));
-            display.print(txtBuff);
-          }
+          getControlSwitchName(txtBuff, *swtch, sizeof(txtBuff));
+          display.print(txtBuff);
           
           display.setCursor(0, 47);
           display.print(F("Src:"));
@@ -4697,15 +4692,10 @@ void handleMainUI()
           }
           else
           {
-            if(updateLogicalSwitchReferences(destLsIdx, thisLsIdx))
-            {
-              moveLogicalSwitch(destLsIdx, thisLsIdx);
+            if(moveLogicalSwitch(destLsIdx, thisLsIdx))
               thisLsIdx = destLsIdx;
-            }
             else
-            {
               makeToast(PSTR("Moving failed"), 2000, 0);
-            }
           }
           
           changeToScreen(SCREEN_LOGICAL_SWITCHES);
