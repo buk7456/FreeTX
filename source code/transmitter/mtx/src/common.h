@@ -42,7 +42,7 @@ void resetNotificationParams(uint8_t idx);
 void resetWidgetParams();
 void resetWidgetParams(uint8_t idx);
 
-bool updateLogicalSwitchReferences(uint8_t newPos, uint8_t oldPos);
+bool changeLSReference(uint8_t newRef, uint8_t oldRef);
 
 bool verifyModelData();
 
