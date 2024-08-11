@@ -29,11 +29,11 @@ LCDKS0108 display = LCDKS0108(PIN_KS_RS, PIN_KS_EN, PIN_KS_CS1, PIN_KS_CS2);
 // Max 19 characters per string
 
 char const mainMenu[][20] PROGMEM = { 
-  "Model", "Inputs", "Mixer", "Outputs", "Extras", "Telemetry", "System", "Receiver", "About"
+  "Model", "Inputs", "Mixer", "Outputs", "Extras", "Telemetry", "System", "Receiver"
 };
 enum {
   MAIN_MENU_MODEL, MAIN_MENU_INPUTS, MAIN_MENU_MIXER, MAIN_MENU_OUTPUTS, MAIN_MENU_EXTRAS,
-  MAIN_MENU_TELEMETRY, MAIN_MENU_SYSTEM, MAIN_MENU_RECEIVER, MAIN_MENU_ABOUT
+  MAIN_MENU_TELEMETRY, MAIN_MENU_SYSTEM, MAIN_MENU_RECEIVER
 };
 
 char const extrasMenu[][20] PROGMEM = { 
@@ -54,12 +54,13 @@ enum {
 };
 
 char const advancedMenu[][20] PROGMEM = { 
-  "Sticks", "Knobs", "Switches", "Battery", "Security", "Miscellaneous", "Debug"
+  "Sticks", "Knobs", "Switches", "Battery", "Security", "Miscellaneous", "Debug", "About"
 };
 enum {
   ADVANCED_MENU_STICKS, ADVANCED_MENU_KNOBS, ADVANCED_MENU_SWITCHES, 
   ADVANCED_MENU_BATTERY, ADVANCED_MENU_SECURITY,
-  ADVANCED_MENU_MISCELLANEOUS, ADVANCED_MENU_DEBUG
+  ADVANCED_MENU_MISCELLANEOUS, ADVANCED_MENU_DEBUG,
+  ADVANCED_MENU_ABOUT
 };
 
 //---------------------------- Main UI states ------------------------------------------------------
@@ -186,15 +187,13 @@ enum {
   SCREEN_CHARACTER_SET,
   SCREEN_SCREENSHOT_CONFIG,
   CONFIRMATION_FACTORY_RESET,
+  SCREEN_ABOUT,
+  SCREEN_EASTER_EGG,
   
   //---- Receiver ----
   SCREEN_RECEIVER,
   SCREEN_RECEIVER_CONFIG,
   SCREEN_RECEIVER_BINDING,
-  
-  //---- About ----
-  SCREEN_ABOUT,
-  SCREEN_EASTER_EGG,
   
   //---- Generic text viewer ----
   SCREEN_TEXT_VIEWER,
@@ -1541,7 +1540,6 @@ void handleMainUI()
         menuAddItem(mainMenu[MAIN_MENU_TELEMETRY], MAIN_MENU_TELEMETRY, icon_m_telemetry);
         menuAddItem(mainMenu[MAIN_MENU_SYSTEM], MAIN_MENU_SYSTEM, icon_m_system);
         menuAddItem(mainMenu[MAIN_MENU_RECEIVER], MAIN_MENU_RECEIVER, icon_m_receiver);
-        menuAddItem(mainMenu[MAIN_MENU_ABOUT], MAIN_MENU_ABOUT, icon_m_about);
         menuDraw(&topItem, &highlightedItem);
 
         if(menuSelectedItemID == MAIN_MENU_MODEL) 
@@ -1558,7 +1556,6 @@ void handleMainUI()
         else if(menuSelectedItemID == MAIN_MENU_TELEMETRY) changeToScreen(SCREEN_TELEMETRY);
         else if(menuSelectedItemID == MAIN_MENU_SYSTEM) changeToScreen(SCREEN_SYSTEM_MENU);
         else if(menuSelectedItemID == MAIN_MENU_RECEIVER) changeToScreen(SCREEN_RECEIVER);
-        else if(menuSelectedItemID == MAIN_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
 
         if(heldButton == KEY_SELECT)
         {
@@ -7058,6 +7055,7 @@ void handleMainUI()
         menuAddItem(advancedMenu[ADVANCED_MENU_SECURITY], ADVANCED_MENU_SECURITY, NULL);
         menuAddItem(advancedMenu[ADVANCED_MENU_MISCELLANEOUS], ADVANCED_MENU_MISCELLANEOUS, NULL);
         menuAddItem(advancedMenu[ADVANCED_MENU_DEBUG], ADVANCED_MENU_DEBUG, NULL);
+        menuAddItem(advancedMenu[ADVANCED_MENU_ABOUT], ADVANCED_MENU_ABOUT, NULL);
         menuDraw(&topItem, &highlightedItem);
 
         if(menuSelectedItemID == ADVANCED_MENU_STICKS) changeToScreen(SCREEN_STICKS);
@@ -7067,6 +7065,7 @@ void handleMainUI()
         else if(menuSelectedItemID == ADVANCED_MENU_DEBUG) changeToScreen(SCREEN_DEBUG);
         else if(menuSelectedItemID == ADVANCED_MENU_SECURITY) changeToScreen(SCREEN_SECURITY);
         else if(menuSelectedItemID == ADVANCED_MENU_MISCELLANEOUS) changeToScreen(SCREEN_MISCELLANEOUS);
+        else if(menuSelectedItemID == ADVANCED_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
 
         //exit
         if(heldButton == KEY_SELECT)
@@ -8324,275 +8323,9 @@ void handleMainUI()
       } 
       break;
       
-    ////////////////////////////////// RECEIVER ////////////////////////////////////////////////////
-
-    case SCREEN_RECEIVER:
-      {
-        drawHeader(mainMenu[MAIN_MENU_RECEIVER]);
-
-        enum { 
-          PAGE_MAIN_RECEIVER,
-          PAGE_SECONDARY_RECEIVER,
-          NUM_PAGES
-        };
-        
-        uint8_t numPages = NUM_PAGES;
-        if(MAX_CHANNELS_PER_RECEIVER == NUM_RC_CHANNELS)
-          numPages = 1;
-        
-        static uint8_t page = PAGE_MAIN_RECEIVER;
-        if(focusedItem == 1)
-          page = incDec(page, 0, numPages - 1, INCDEC_WRAP, INCDEC_SLOW);
-        
-        isMainReceiver = (page == PAGE_MAIN_RECEIVER) ? true : false;
-        
-        //--- draw
-        
-        display.setCursor(8, 9);
-        strlcpy_P(txtBuff, isMainReceiver ? PSTR("Main rcvr") : PSTR("Secondary rcvr"), sizeof(txtBuff));
-        display.print(txtBuff);
-        display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
-        
-        display.setCursor(8, 20);
-        display.print(F("[Bind]"));
-        
-        display.setCursor(8, 29);
-        display.print(F("[Configure]"));
-        
-        if(focusedItem == 1) drawCursor(0, 9);
-        else drawCursor(0, (focusedItem * 9) + 2);
-        
-        changeFocusOnUpDown(3);
-        toggleEditModeOnSelectClicked();
-        
-        //--- edit items
-        if(focusedItem == 2 && isEditMode) //Bind
-        {
-          isRequestingBind = true;
-          changeToScreen(SCREEN_RECEIVER_BINDING);
-        }
-        else if(focusedItem == 3 && isEditMode) //Output configuration
-          changeToScreen(SCREEN_RECEIVER_CONFIG);
-
-        //exit
-        if(heldButton == KEY_SELECT)
-          changeToScreen(SCREEN_MAIN_MENU);
-      }
-      break;
-      
-    case SCREEN_RECEIVER_BINDING:
-      {
-        static uint32_t entryTime = 0;
-        static bool initialised = false;
-        if(!initialised)
-        {
-          initialised = true;
-          entryTime = millis();
-          bindStatusCode = 0;
-        }
-
-        printFullScreenMsg(PSTR("Binding"));
-        if(Sys.animationsEnabled)
-          drawLoaderSpinner(60, display.getCursorY() + 12, 2);
-        
-        if(bindStatusCode == 1)
-        {
-          makeToast(PSTR("Bind success"), 2000, 0);
-          changeToScreen(SCREEN_RECEIVER);
-          audioToPlay = AUDIO_BIND_SUCCESS;
-          initialised = false;
-        }
-        else if(bindStatusCode == 2)
-        {
-          makeToast(PSTR("Bind failed"), 2000, 0);
-          changeToScreen(SCREEN_RECEIVER);
-          initialised = false;
-        }
-        else if(millis() - entryTime > 5000)
-        {
-          makeToast(PSTR("Bind timeout"), 2000, 0);
-          changeToScreen(SCREEN_RECEIVER);
-          initialised = false;
-        }
-      }
-      break;
-      
-    case SCREEN_RECEIVER_CONFIG:
-      {
-        enum {
-          QUERYING_CONFIG, 
-          SENDING_CONFIG, 
-          VIEWING_CONFIG
-        };
-        
-        static uint8_t state = QUERYING_CONFIG;
-        static bool stateInitialised = false;
-        static uint32_t entryTime = 0;
-        static bool actionStarted = false;
-        
-        if(!stateInitialised)
-        {
-          state = QUERYING_CONFIG;
-          // state = VIEWING_CONFIG; //DEBUG
-          entryTime = millis();
-          gotOutputChConfig = false;
-          stateInitialised = true;
-        }
-        
-        if(state == QUERYING_CONFIG)
-        {
-          printFullScreenMsg(PSTR("Reading settings"));
-          if(Sys.animationsEnabled)
-            drawLoaderSpinner(60, display.getCursorY() + 12, 2);
-          
-          if(!actionStarted)
-          {
-            isRequestingOutputChConfig = true;
-            actionStarted = true;
-          }
-          if(gotOutputChConfig)
-          {
-            actionStarted = false;
-            state = VIEWING_CONFIG;
-          }
-          //Time out
-          if(millis() - entryTime > 2500)
-          {
-            makeToast(PSTR("No response"), 2000, 0);
-            stateInitialised = false;
-            actionStarted = false;
-            changeToScreen(SCREEN_RECEIVER);
-          }
-        }
-        else if(state == VIEWING_CONFIG)
-        {
-          drawHeader(PSTR("Output config"));
-
-          //--scrollable list--
-          
-          static uint8_t topItem;
-          static bool viewInitialised = false;
-          if(!viewInitialised)
-          {
-            focusedItem = 1;
-            topItem = 1;
-            viewInitialised = true;
-          }
-
-          uint8_t startIdx = 0; 
-          uint8_t endIdx = MAX_CHANNELS_PER_RECEIVER - 1;
-          if(!isMainReceiver)
-          {
-            startIdx = endIdx + 1; 
-            endIdx = startIdx + MAX_CHANNELS_PER_RECEIVER - 1;
-            if(endIdx >= NUM_RC_CHANNELS)
-              endIdx = NUM_RC_CHANNELS - 1;
-          }
-          
-          //fill list
-          uint8_t numItems = (endIdx - startIdx) + 1; 
-          for(uint8_t line = 0; line < 5 && line < numItems; line++)
-          {
-            uint8_t ypos = 9 + line * 9;
-            uint8_t item = topItem + line;
-            if(focusedItem == item)
-              drawCursor(64, ypos);
-            display.setCursor(0, ypos);
-            
-            //print channels
-            uint8_t idx = startIdx + item - 1; 
-            if(idx <= endIdx)
-            {
-              display.print(F("Channel"));
-              if(idx < 9)
-                display.print(F(" "));
-              display.print(idx + 1);
-              display.print(F(":"));
-              display.setCursor(72, ypos);
-              if(outputChConfig[idx] == 0) display.print(F("Dgtl"));
-              if(outputChConfig[idx] == 1) display.print(F("Servo")); 
-              if(outputChConfig[idx] == 2) display.print(F("PWM")); 
-            }
-          }
-          
-          //Draw scroll bar
-          drawScrollBar(125, 9, numItems, topItem, 5, 44);
-          
-          //show the write button
-          drawDottedHLine(0, 54, 128, BLACK, WHITE);
-          display.setCursor(84, 56);
-          display.print(F("[Write]"));
-          if(focusedItem == numItems + 1)
-            drawCursor(76, 56);
-          
-          //Handle navigation
-          changeFocusOnUpDown(numItems + 1); //+1 for button focus
-          if(focusedItem < topItem)
-            topItem = focusedItem;
-          while(focusedItem >= topItem + 5 && focusedItem < numItems + 1)
-            topItem++;
-          toggleEditModeOnSelectClicked();
-
-          //edit params
-          uint8_t idx = startIdx + focusedItem - 1;
-          if(idx <= endIdx)
-            outputChConfig[idx] = incDec(outputChConfig[idx], 0, maxOutputChConfig[idx], INCDEC_WRAP, INCDEC_SLOW);
-          
-          //write configuration
-          if(focusedItem == numItems + 1 && clickedButton == KEY_SELECT)
-          {
-            state = SENDING_CONFIG;
-            entryTime = millis();
-            gotOutputChConfig = false;
-            actionStarted = false;
-            viewInitialised = false;
-          }
-          
-          //exit without writing changes
-          if(heldButton == KEY_SELECT)
-          {
-            stateInitialised = false;
-            actionStarted = false;
-            viewInitialised = false;
-            changeToScreen(SCREEN_RECEIVER);
-          }
-        }
-        else if(state == SENDING_CONFIG)
-        {
-          printFullScreenMsg(PSTR("Writing settings"));
-          if(Sys.animationsEnabled)
-            drawLoaderSpinner(60, display.getCursorY() + 12, 2);
-          
-          if(!actionStarted)
-          {
-            isSendOutputChConfig = true;
-            actionStarted = true;
-          }
-          if(receiverConfigStatusCode > 0)
-          {
-            if(receiverConfigStatusCode == 1) makeToast(PSTR("Write success"), 2000, 0);
-            if(receiverConfigStatusCode == 2) makeToast(PSTR("Write failed"), 2000, 0);
-            stateInitialised = false;
-            actionStarted = false;
-            changeToScreen(SCREEN_RECEIVER);
-          }
-          //Time out
-          if(millis() - entryTime > 2500)
-          {
-            makeToast(PSTR("No response"), 2000, 0);
-            stateInitialised = false;
-            actionStarted = false;
-            changeToScreen(SCREEN_RECEIVER);
-          }
-        }
-      }
-      break;
-      
-    ////////////////////////////////// ABOUT ///////////////////////////////////////////////////////
-
     case SCREEN_ABOUT:
       {
-        drawHeader(mainMenu[MAIN_MENU_ABOUT]);
+        drawHeader(advancedMenu[ADVANCED_MENU_ABOUT]);
 
         printFullScreenMsg(PSTR("FW version: " _SKETCHVERSION "\n(c) 2023 Buk7456" 
                                 "\nhttps://github.com/" "\nbuk7456/FreeTX"));
@@ -8631,7 +8364,7 @@ void handleMainUI()
         if(heldButton == KEY_SELECT)
         {
           cntr = 0;
-          changeToScreen(SCREEN_MAIN_MENU);
+          changeToScreen(SCREEN_ADVANCED_MENU);
         }
       }
       break;
@@ -8954,11 +8687,275 @@ void handleMainUI()
         {
           free(game); //free the memory
           game = NULL; //set the pointer to NULL to avoid dangling pointer issues
-          changeToScreen(SCREEN_MAIN_MENU);
+          changeToScreen(SCREEN_ADVANCED_MENU);
         }
       }
       break;
-    
+      
+    ////////////////////////////////// RECEIVER ////////////////////////////////////////////////////
+
+    case SCREEN_RECEIVER:
+      {
+        drawHeader(mainMenu[MAIN_MENU_RECEIVER]);
+
+        enum { 
+          PAGE_MAIN_RECEIVER,
+          PAGE_SECONDARY_RECEIVER,
+          NUM_PAGES
+        };
+        
+        uint8_t numPages = NUM_PAGES;
+        if(MAX_CHANNELS_PER_RECEIVER == NUM_RC_CHANNELS)
+          numPages = 1;
+        
+        static uint8_t page = PAGE_MAIN_RECEIVER;
+        if(focusedItem == 1)
+          page = incDec(page, 0, numPages - 1, INCDEC_WRAP, INCDEC_SLOW);
+        
+        isMainReceiver = (page == PAGE_MAIN_RECEIVER) ? true : false;
+        
+        //--- draw
+        
+        display.setCursor(8, 9);
+        strlcpy_P(txtBuff, isMainReceiver ? PSTR("Main rcvr") : PSTR("Secondary rcvr"), sizeof(txtBuff));
+        display.print(txtBuff);
+        display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
+        
+        display.setCursor(8, 20);
+        display.print(F("[Bind]"));
+        
+        display.setCursor(8, 29);
+        display.print(F("[Configure]"));
+        
+        if(focusedItem == 1) drawCursor(0, 9);
+        else drawCursor(0, (focusedItem * 9) + 2);
+        
+        changeFocusOnUpDown(3);
+        toggleEditModeOnSelectClicked();
+        
+        //--- edit items
+        if(focusedItem == 2 && isEditMode) //Bind
+        {
+          isRequestingBind = true;
+          changeToScreen(SCREEN_RECEIVER_BINDING);
+        }
+        else if(focusedItem == 3 && isEditMode) //Output configuration
+          changeToScreen(SCREEN_RECEIVER_CONFIG);
+
+        //exit
+        if(heldButton == KEY_SELECT)
+          changeToScreen(SCREEN_MAIN_MENU);
+      }
+      break;
+      
+    case SCREEN_RECEIVER_BINDING:
+      {
+        static uint32_t entryTime = 0;
+        static bool initialised = false;
+        if(!initialised)
+        {
+          initialised = true;
+          entryTime = millis();
+          bindStatusCode = 0;
+        }
+
+        printFullScreenMsg(PSTR("Binding"));
+        if(Sys.animationsEnabled)
+          drawLoaderSpinner(60, display.getCursorY() + 12, 2);
+        
+        if(bindStatusCode == 1)
+        {
+          makeToast(PSTR("Bind success"), 2000, 0);
+          changeToScreen(SCREEN_RECEIVER);
+          audioToPlay = AUDIO_BIND_SUCCESS;
+          initialised = false;
+        }
+        else if(bindStatusCode == 2)
+        {
+          makeToast(PSTR("Bind failed"), 2000, 0);
+          changeToScreen(SCREEN_RECEIVER);
+          initialised = false;
+        }
+        else if(millis() - entryTime > 5000)
+        {
+          makeToast(PSTR("Bind timeout"), 2000, 0);
+          changeToScreen(SCREEN_RECEIVER);
+          initialised = false;
+        }
+      }
+      break;
+      
+    case SCREEN_RECEIVER_CONFIG:
+      {
+        enum {
+          QUERYING_CONFIG, 
+          SENDING_CONFIG, 
+          VIEWING_CONFIG
+        };
+        
+        static uint8_t state = QUERYING_CONFIG;
+        static bool stateInitialised = false;
+        static uint32_t entryTime = 0;
+        static bool actionStarted = false;
+        
+        if(!stateInitialised)
+        {
+          state = QUERYING_CONFIG;
+          // state = VIEWING_CONFIG; //DEBUG
+          entryTime = millis();
+          gotOutputChConfig = false;
+          stateInitialised = true;
+        }
+        
+        if(state == QUERYING_CONFIG)
+        {
+          printFullScreenMsg(PSTR("Reading settings"));
+          if(Sys.animationsEnabled)
+            drawLoaderSpinner(60, display.getCursorY() + 12, 2);
+          
+          if(!actionStarted)
+          {
+            isRequestingOutputChConfig = true;
+            actionStarted = true;
+          }
+          if(gotOutputChConfig)
+          {
+            actionStarted = false;
+            state = VIEWING_CONFIG;
+          }
+          //Time out
+          if(millis() - entryTime > 2500)
+          {
+            makeToast(PSTR("No response"), 2000, 0);
+            stateInitialised = false;
+            actionStarted = false;
+            changeToScreen(SCREEN_RECEIVER);
+          }
+        }
+        else if(state == VIEWING_CONFIG)
+        {
+          drawHeader(PSTR("Output config"));
+
+          //--scrollable list--
+          
+          static uint8_t topItem;
+          static bool viewInitialised = false;
+          if(!viewInitialised)
+          {
+            focusedItem = 1;
+            topItem = 1;
+            viewInitialised = true;
+          }
+
+          uint8_t startIdx = 0; 
+          uint8_t endIdx = MAX_CHANNELS_PER_RECEIVER - 1;
+          if(!isMainReceiver)
+          {
+            startIdx = endIdx + 1; 
+            endIdx = startIdx + MAX_CHANNELS_PER_RECEIVER - 1;
+            if(endIdx >= NUM_RC_CHANNELS)
+              endIdx = NUM_RC_CHANNELS - 1;
+          }
+          
+          //fill list
+          uint8_t numItems = (endIdx - startIdx) + 1; 
+          for(uint8_t line = 0; line < 5 && line < numItems; line++)
+          {
+            uint8_t ypos = 9 + line * 9;
+            uint8_t item = topItem + line;
+            if(focusedItem == item)
+              drawCursor(64, ypos);
+            display.setCursor(0, ypos);
+            
+            //print channels
+            uint8_t idx = startIdx + item - 1; 
+            if(idx <= endIdx)
+            {
+              display.print(F("Channel"));
+              if(idx < 9)
+                display.print(F(" "));
+              display.print(idx + 1);
+              display.print(F(":"));
+              display.setCursor(72, ypos);
+              if(outputChConfig[idx] == 0) display.print(F("Dgtl"));
+              if(outputChConfig[idx] == 1) display.print(F("Servo")); 
+              if(outputChConfig[idx] == 2) display.print(F("PWM")); 
+            }
+          }
+          
+          //Draw scroll bar
+          drawScrollBar(125, 9, numItems, topItem, 5, 44);
+          
+          //show the write button
+          drawDottedHLine(0, 54, 128, BLACK, WHITE);
+          display.setCursor(84, 56);
+          display.print(F("[Write]"));
+          if(focusedItem == numItems + 1)
+            drawCursor(76, 56);
+          
+          //Handle navigation
+          changeFocusOnUpDown(numItems + 1); //+1 for button focus
+          if(focusedItem < topItem)
+            topItem = focusedItem;
+          while(focusedItem >= topItem + 5 && focusedItem < numItems + 1)
+            topItem++;
+          toggleEditModeOnSelectClicked();
+
+          //edit params
+          uint8_t idx = startIdx + focusedItem - 1;
+          if(idx <= endIdx)
+            outputChConfig[idx] = incDec(outputChConfig[idx], 0, maxOutputChConfig[idx], INCDEC_WRAP, INCDEC_SLOW);
+          
+          //write configuration
+          if(focusedItem == numItems + 1 && clickedButton == KEY_SELECT)
+          {
+            state = SENDING_CONFIG;
+            entryTime = millis();
+            gotOutputChConfig = false;
+            actionStarted = false;
+            viewInitialised = false;
+          }
+          
+          //exit without writing changes
+          if(heldButton == KEY_SELECT)
+          {
+            stateInitialised = false;
+            actionStarted = false;
+            viewInitialised = false;
+            changeToScreen(SCREEN_RECEIVER);
+          }
+        }
+        else if(state == SENDING_CONFIG)
+        {
+          printFullScreenMsg(PSTR("Writing settings"));
+          if(Sys.animationsEnabled)
+            drawLoaderSpinner(60, display.getCursorY() + 12, 2);
+          
+          if(!actionStarted)
+          {
+            isSendOutputChConfig = true;
+            actionStarted = true;
+          }
+          if(receiverConfigStatusCode > 0)
+          {
+            if(receiverConfigStatusCode == 1) makeToast(PSTR("Write success"), 2000, 0);
+            if(receiverConfigStatusCode == 2) makeToast(PSTR("Write failed"), 2000, 0);
+            stateInitialised = false;
+            actionStarted = false;
+            changeToScreen(SCREEN_RECEIVER);
+          }
+          //Time out
+          if(millis() - entryTime > 2500)
+          {
+            makeToast(PSTR("No response"), 2000, 0);
+            stateInitialised = false;
+            actionStarted = false;
+            changeToScreen(SCREEN_RECEIVER);
+          }
+        }
+      }
+      break;
+
     ////////////////////////////////// GENERIC TEXT VIEWER /////////////////////////////////////////
     
     case SCREEN_TEXT_VIEWER:
