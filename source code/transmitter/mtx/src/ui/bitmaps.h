@@ -102,7 +102,7 @@ const uint8_t icon_up_arrow_small [] PROGMEM = {
   0x20, 0x70, 0xf8
 };
 
-//-------------------------- Main menu icons ----------------------------------
+//-------------------------- Menu icons ----------------------------------
 //All are 15x11px
 const uint8_t icon_m_telemetry [] PROGMEM = {
   0x00, 0x00, 0x00, 0x10, 0x00, 0x20, 0x02, 0x10, 0x02, 0x20, 0x03, 0x00, 0x01, 0x80, 0x04, 0xe0, 
