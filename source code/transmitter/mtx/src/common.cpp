@@ -516,9 +516,6 @@ void resetCounterParams(uint8_t idx)
   Model.Counter[idx].direction = 0; 
   Model.Counter[idx].isPersistent = false;
   Model.Counter[idx].persistVal = 0;
-  
-  //also clear the output value of the counter to 0
-  counterOut[idx] = 0;
 }
 
 //--------------------------------------------------------------------------------------------------
