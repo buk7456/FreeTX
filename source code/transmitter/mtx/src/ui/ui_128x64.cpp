@@ -5345,7 +5345,7 @@ void handleMainUI()
       {
         enum {
           ITEM_RENAME_COUNTER,
-          ITEM_RESET_COUNTER,
+          ITEM_RESET_SETTINGS,
           ITEM_COPY_COUNTER,
           ITEM_CLEAR_COUNTER,
           ITEM_CLEAR_ALL_COUNTERS,
@@ -5354,14 +5354,15 @@ void handleMainUI()
         contextMenuInitialise();
         contextMenuAddItem(PSTR("Copy to"), ITEM_COPY_COUNTER);
         contextMenuAddItem(PSTR("Rename counter"), ITEM_RENAME_COUNTER);
-        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_COUNTER);
+        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_SETTINGS);
         contextMenuAddItem(PSTR("Clear counter"), ITEM_CLEAR_COUNTER);
         contextMenuAddItem(PSTR("Clear all"), ITEM_CLEAR_ALL_COUNTERS);
         contextMenuDraw();
         
-        if(contextMenuSelectedItemID == ITEM_RESET_COUNTER)
+        if(contextMenuSelectedItemID == ITEM_RESET_SETTINGS)
         {
           resetCounterParams(thisCounterIdx);
+          resetCounterRegister(thisCounterIdx); //also reset the register
           changeToScreen(SCREEN_COUNTERS);
         }
         if(contextMenuSelectedItemID == ITEM_CLEAR_COUNTER)
@@ -5524,7 +5525,7 @@ void handleMainUI()
         enum {
           ITEM_START_STOP_TIMER,
           ITEM_RESET_TIMER,
-          ITEM_RESET_TIMER_SETTINGS,
+          ITEM_RESET_SETTINGS,
         };
         
         contextMenuInitialise();
@@ -5536,7 +5537,7 @@ void handleMainUI()
             contextMenuAddItem(PSTR("Start timer"), ITEM_START_STOP_TIMER);
         }
         contextMenuAddItem(PSTR("Reset timer"), ITEM_RESET_TIMER);
-        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_TIMER_SETTINGS);
+        contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_SETTINGS);
         contextMenuDraw();
         
         if(contextMenuSelectedItemID == ITEM_START_STOP_TIMER)
@@ -5549,7 +5550,7 @@ void handleMainUI()
           resetTimerRegister(thisTimerIdx);
           changeToScreen(SCREEN_TIMERS);
         }
-        if(contextMenuSelectedItemID == ITEM_RESET_TIMER_SETTINGS)
+        if(contextMenuSelectedItemID == ITEM_RESET_SETTINGS)
         {
           resetTimerParams(thisTimerIdx);
           resetTimerRegister(thisTimerIdx); //also reset the register
