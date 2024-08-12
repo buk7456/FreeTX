@@ -1643,7 +1643,7 @@ void handleMainUI()
           if((uint8_t)mdlStr[line][0] != 0xFF)
             printModelName(mdlStr[line], modelIdx);
           if(modelIdx == Sys.activeModelIdx) //indicate it is active
-            display.drawBitmap(display.getCursorX() + 4, ypos + 1, icon_checkmark_regular, 7, 5, BLACK);
+            display.drawBitmap(display.getCursorX() + 6, ypos + 1, icon_checkmark_bold, 7, 6, BLACK);
         }
         
         //scroll bar
@@ -1867,10 +1867,12 @@ void handleMainUI()
           stopTones();
           //Save the current active model first
           eeSaveModelData(Sys.activeModelIdx);
-          //reset stuff
+          //reset other stuff
           resetTimerRegisters();
           resetCounterRegisters();
           Sys.rfEnabled = false;
+          //reinitialise mixer calculations
+          reinitialiseMixerCalculations();
           //create model and set it active
           eeCreateModel(thisModelIdx);
           Sys.activeModelIdx = thisModelIdx;
@@ -2010,26 +2012,31 @@ void handleMainUI()
           //otherwise there is no point in saving first
           if(thisModelIdx != Sys.activeModelIdx)
             eeSaveModelData(Sys.activeModelIdx);
-          //reset stuff
-          resetTimerRegisters();
-          resetCounterRegisters();
-          Sys.rfEnabled = false;
           //restore the model
           if(sdRestoreModel(txtBuff))
           {
-            //set the model as active
-            Sys.activeModelIdx = thisModelIdx;
-            //also save it to eeprom
-            eeSaveModelData(Sys.activeModelIdx);
-            //reinitialise the mixer
-            reinitialiseMixerCalculations();
-            //restore timers
-            restoreTimerRegisters();
-            //restore counters
-            restoreCounterRegisters();
+            //save it to eeprom
+            eeSaveModelData(thisModelIdx);
+            //if we have restored into the active model slot, reinitialise some items
+            if(thisModelIdx == Sys.activeModelIdx)
+            {
+              resetTimerRegisters();
+              resetCounterRegisters();
+              Sys.rfEnabled = false;
+              reinitialiseMixerCalculations();
+              restoreTimerRegisters();
+              restoreCounterRegisters();
+              resetPages();
+              //Safety checks
+              handleSafetyWarnUI();
+            }
+            else
+            {
+              //read back the active model from eeprom
+              eeReadModelData(Sys.activeModelIdx);
+            }
             //exit
             changeToScreen(SCREEN_MODEL);
-            resetPages();
           }
           else
           {
@@ -2137,7 +2144,7 @@ void handleMainUI()
           //back up to the sd card
           if(!sdBackupModel(nameStr))
             makeToast(PSTR("Backup failed"), 2000, 0);
-          //now read back the active model from eeprom
+          //read back the active model from eeprom
           eeReadModelData(Sys.activeModelIdx);
           //exit
           initialised = false;
@@ -2166,12 +2173,12 @@ void handleMainUI()
           strlcpy(Model.name, txtBuff, sizeof(Model.name));
           //save
           eeSaveModelData(Sys.activeModelIdx);
-          //reinitialise mixer calculations
-          reinitialiseMixerCalculations();
           //reset other stuff
           resetTimerRegisters();
           resetCounterRegisters();
           Sys.rfEnabled = false;
+          //reinitialise mixer calculations
+          reinitialiseMixerCalculations();
           //reinit
           thisModelIdx = Sys.activeModelIdx; 
           //exit
