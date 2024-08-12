@@ -996,7 +996,6 @@ void evaluateCounters()
     {
       counterState[idx] = false;
       counterToggleLastState[idx] = checkSwitchCondition(counter->clock);
-      // counterOut[idx] = 0;
       continue;
     }
     
