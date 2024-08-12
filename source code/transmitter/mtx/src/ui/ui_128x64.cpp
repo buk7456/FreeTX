@@ -1792,17 +1792,14 @@ void handleMainUI()
           //load model and set it active
           eeReadModelData(thisModelIdx);
           Sys.activeModelIdx = thisModelIdx; 
-          //reset other stuff
+          //Safety checks
+          handleSafetyWarnUI();
+          //reinitialise other stuff
           resetTimerRegisters();
           resetCounterRegisters();
           Sys.rfEnabled = false;
-          //reinitialise the mixer
           reinitialiseMixerCalculations();
-          //Safety checks
-          handleSafetyWarnUI();
-          //restore timers
           restoreTimerRegisters();
-          //restore counters
           restoreCounterRegisters();
           //exit
           changeToScreen(SCREEN_MODEL);
@@ -1867,11 +1864,10 @@ void handleMainUI()
           stopTones();
           //Save the current active model first
           eeSaveModelData(Sys.activeModelIdx);
-          //reset other stuff
+          //reinitialise other stuff
           resetTimerRegisters();
           resetCounterRegisters();
           Sys.rfEnabled = false;
-          //reinitialise mixer calculations
           reinitialiseMixerCalculations();
           //create model and set it active
           eeCreateModel(thisModelIdx);
@@ -2020,6 +2016,9 @@ void handleMainUI()
             //if we have restored into the active model slot, reinitialise some items
             if(thisModelIdx == Sys.activeModelIdx)
             {
+              //safety checks
+              handleSafetyWarnUI();
+              //reinitialise other stuff
               resetTimerRegisters();
               resetCounterRegisters();
               Sys.rfEnabled = false;
@@ -2027,8 +2026,6 @@ void handleMainUI()
               restoreTimerRegisters();
               restoreCounterRegisters();
               resetPages();
-              //Safety checks
-              handleSafetyWarnUI();
             }
             else
             {
@@ -2173,13 +2170,11 @@ void handleMainUI()
           strlcpy(Model.name, txtBuff, sizeof(Model.name));
           //save
           eeSaveModelData(Sys.activeModelIdx);
-          //reset other stuff
+          //reinitiailise other stuff
           resetTimerRegisters();
           resetCounterRegisters();
           Sys.rfEnabled = false;
-          //reinitialise mixer calculations
           reinitialiseMixerCalculations();
-          //reinit
           thisModelIdx = Sys.activeModelIdx; 
           //exit
           changeToScreen(SCREEN_MODEL);
@@ -2214,11 +2209,10 @@ void handleMainUI()
           Model.type = mdlType;
           //save to eeprom
           eeSaveModelData(Sys.activeModelIdx);
-          //reset other stuff
+          //reinitialise other stuff
           resetTimerRegisters();
           resetCounterRegisters();
           Sys.rfEnabled = false;
-          //reinitialise the mixer
           reinitialiseMixerCalculations();
           //exit
           changeToScreen(SCREEN_MODEL);
