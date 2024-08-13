@@ -4432,19 +4432,24 @@ void handleMainUI()
                     if(movedSrc != SRC_NONE)
                       ls->val1 = movedSrc;
                     //inc dec
-                    ls->val1 = incDecSource(ls->val1, INCDEC_FLAG_MIX_SRC | INCDEC_FLAG_TELEM_SRC | INCDEC_FLAG_COUNTER_SRC | INCDEC_FLAG_TIMER_SRC);
+                    ls->val1 = incDecSource(ls->val1, INCDEC_FLAG_MIX_SRC 
+                                                    | INCDEC_FLAG_COUNTER_SRC 
+                                                    | INCDEC_FLAG_TIMER_SRC
+                                                    | INCDEC_FLAG_TELEM_SRC 
+                                                    | INCDEC_FLAG_INACTIVITY_TIMER_AS_SRC 
+                                                    | INCDEC_FLAG_TX_BATTV_AS_SRC);
                     //reset ls->val2 if out of range
                     if(ls->val1 < MIXSOURCES_COUNT)
                     {
                       if(ls->val2 > 100 || ls->val2 < -100)
                         ls->val2 = 0;
                     }
-                    else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS)
+                    else if(ls->val1 >= SRC_COUNTER_FIRST && ls->val1 <= SRC_COUNTER_LAST)
                     {
                       if(ls->val2 > 9999 || ls->val2 < 0)
                         ls->val2 = 0;
                     }
-                    else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS)
+                    else if(ls->val1 == SRC_INACTIVITY_TIMER || ls->val1 == SRC_TX_BATTERY_VOLTAGE)
                     {
                       if(ls->val2 < 0)
                         ls->val2 = 0;
@@ -4484,16 +4489,21 @@ void handleMainUI()
                   display.print(F("--"));
                 else if(ls->func <= LS_FUNC_GROUP3_LAST)
                 {
-                  if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //mixsource value, counter value
+                  if(ls->val1 < MIXSOURCES_COUNT)
                     display.print(ls->val2);
-                  else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timer
+                  else if(ls->val1 >= SRC_COUNTER_FIRST && ls->val1 <= SRC_COUNTER_LAST)
+                    display.print(ls->val2);
+                  else if(ls->val1 >= SRC_TIMER_FIRST && ls->val1 <= SRC_TIMER_LAST)
                     printHHMMSS((int32_t)ls->val2 * 1000);
-                  else //telemetry value
+                  else if(ls->val1 >= SRC_TELEMETRY_FIRST && ls->val1 <= SRC_TELEMETRY_LAST)
                   {
-                    uint8_t idx = ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS);
-                    printTelemParam(display.getCursorX(), display.getCursorY(), idx, ls->val2);
-                    display.print(Model.Telemetry[idx].unitsName);
+                    printTelemParam(display.getCursorX(), display.getCursorY(), ls->val1 - SRC_TELEMETRY_FIRST, ls->val2);
+                    display.print(Model.Telemetry[ls->val1 - SRC_TELEMETRY_FIRST].unitsName);
                   }
+                  else if(ls->val1 == SRC_INACTIVITY_TIMER)
+                    printHHMMSS((int32_t) ls->val2 * 1000);
+                  else if(ls->val1 == SRC_TX_BATTERY_VOLTAGE)
+                    printVoltage(ls->val2);
                 }
                 else if(ls->func <= LS_FUNC_GROUP4_LAST)
                 {
@@ -4521,12 +4531,20 @@ void handleMainUI()
                   {
                     if(ls->val1 < MIXSOURCES_COUNT)
                       ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -100 : 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
-                    else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counter value
+                    else if(ls->val1 >= SRC_COUNTER_FIRST && ls->val1 <= SRC_COUNTER_LAST)
                       ls->val2 = incDec(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
-                    else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timer value
+                    else if(ls->val1 >= SRC_TIMER_FIRST && ls->val1 <= SRC_TIMER_LAST)
                       ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_FAST);
-                    else //telemetry value
+                    else if(ls->val1 >= SRC_TELEMETRY_FIRST && ls->val1 <= SRC_TELEMETRY_LAST)
                       ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -30000 : 0, 30000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
+                    else if(ls->val1 == SRC_INACTIVITY_TIMER)
+                      ls->val2 = incDec(ls->val2, 0, 30000, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_FAST);
+                    else if(ls->val1 == SRC_TX_BATTERY_VOLTAGE)
+                    {
+                      ls->val2 /= 10;
+                      ls->val2 = incDec(ls->val2, 0, 3000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
+                      ls->val2 *= 10;
+                    }
                   }
                   else if(ls->func <= LS_FUNC_GROUP4_LAST)
                   {
@@ -6601,7 +6619,7 @@ void handleMainUI()
           for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
           {
             if(Model.LogicalSwitch[i].func <= LS_FUNC_GROUP3_LAST 
-               && Model.LogicalSwitch[i].val1 == (int16_t) MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS + thisTelemIdx)
+               && Model.LogicalSwitch[i].val1 == (int16_t) SRC_TELEMETRY_FIRST + thisTelemIdx)
             {
               resetLogicalSwitchParams(i);
             }
@@ -7862,6 +7880,7 @@ void handleMainUI()
           ITEM_UP_TIME,
           ITEM_LOOP_NUM,
           ITEM_FIXED_LOOP_TIME,
+          ITEM_INACTIVITY_TIME,
           ITEM_FREE_RAM,
           ITEM_SEPARATOR,
           ITEM_SHOW_LOOP_TIME,
@@ -8033,6 +8052,14 @@ void handleMainUI()
                 display.print(F("Up time:"));
                 display.setCursor(72, ypos);
                 printHHMMSS(millis());
+              }
+              break;
+            
+            case ITEM_INACTIVITY_TIME:
+              {
+                display.print(F("Inactvty:"));
+                display.setCursor(72, ypos);
+                printHHMMSS(millis() - inputsLastMoved);
               }
               break;
             

@@ -162,7 +162,7 @@ uint8_t getSrcId(const char* str)
 {
   char tempBuff[MAX_STR_SIZE];
   tempBuff[0] = '\0';
-  for(uint8_t i = 0; i < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS + NUM_CUSTOM_TELEMETRY; i++)
+  for(uint8_t i = 0; i < TOTAL_SOURCES_COUNT; i++)
   {
     getSrcName(tempBuff, i, sizeof(tempBuff));
     if(MATCH(tempBuff, str))
@@ -178,7 +178,7 @@ uint8_t getControlSwitchID(const char* str)
 {
   char tempBuff[MAX_STR_SIZE];
   tempBuff[0] = '\0';
-  for(uint8_t i = 0; i < CTRL_SW_COUNT + NUM_FLIGHT_MODES * 2; i++)
+  for(uint8_t i = 0; i < CTRL_SW_COUNT; i++)
   {
     getControlSwitchName_Clean(tempBuff, i, sizeof(tempBuff));
     if(MATCH(tempBuff, str))
@@ -859,7 +859,7 @@ void extractConfig_Widgets()
           widget->src = WIDGET_SRC_AUTO;
         else
         {
-          uint8_t tlmIdx = getSrcId(valueBuff) - (MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS);
+          uint8_t tlmIdx = getSrcId(valueBuff) - SRC_TELEMETRY_FIRST;
           if(tlmIdx < NUM_CUSTOM_TELEMETRY)
             widget->src = tlmIdx;
         }

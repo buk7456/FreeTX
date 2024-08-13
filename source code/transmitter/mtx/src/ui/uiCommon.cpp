@@ -134,7 +134,7 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
     return val;
   
   //use an array to hold the valid sources
-  uint8_t srcQQ[MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS + NUM_CUSTOM_TELEMETRY];
+  uint8_t srcQQ[TOTAL_SOURCES_COUNT]; 
   uint8_t srcCnt = 0;
   for(uint8_t i = 0; i < sizeof(srcQQ); i++)
   {
@@ -157,34 +157,44 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
         if(Sys.swType[i - SRC_SW_PHYSICAL_FIRST] == SW_ABSENT)
           continue;
       }
-      if(i >= SRC_STICK_AXIS_FIRST && i <= SRC_STICK_AXIS_LAST)
+      else if(i >= SRC_STICK_AXIS_FIRST && i <= SRC_STICK_AXIS_LAST)
       {
         if(Sys.StickAxis[i - SRC_STICK_AXIS_FIRST].type == STICK_AXIS_ABSENT)
           continue;
       }
-      if(i >= SRC_KNOB_FIRST && i <= SRC_KNOB_LAST)
+      else if(i >= SRC_KNOB_FIRST && i <= SRC_KNOB_LAST)
       {
         if(Sys.Knob[i - SRC_KNOB_FIRST].type == KNOB_ABSENT)
           continue;
       }
     }
-    else if(i < MIXSOURCES_COUNT + NUM_COUNTERS) //counters
+    else if(i >= SRC_COUNTER_FIRST && i <= SRC_COUNTER_LAST) //counters
     {
       if(!(flag & INCDEC_FLAG_COUNTER_SRC))
         continue;
     }
-    else if(i < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timers
+    else if(i >= SRC_TIMER_FIRST && i <= SRC_TIMER_LAST) //timers
     {
       if(!(flag & INCDEC_FLAG_TIMER_SRC))
         continue;
     }
-    else //telemetry sources
+    else if(i >= SRC_TELEMETRY_FIRST && i <= SRC_TELEMETRY_LAST) //telemetry
     {
       if(!(flag & INCDEC_FLAG_TELEM_SRC))
         continue;
       //skip empty telemetry
-      uint8_t idx = i - (MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS);
+      uint8_t idx = i - SRC_TELEMETRY_FIRST;
       if(isEmptyStr(Model.Telemetry[idx].name, sizeof(Model.Telemetry[0].name)))
+        continue;
+    }
+    else if(i == SRC_INACTIVITY_TIMER) //inactivity timer
+    {
+      if(!(flag & INCDEC_FLAG_INACTIVITY_TIMER_AS_SRC))
+        continue;
+    }
+    else if(i == SRC_TX_BATTERY_VOLTAGE) //tx battery voltage
+    {
+      if(!(flag & INCDEC_FLAG_TX_BATTV_AS_SRC))
         continue;
     }
     
@@ -239,7 +249,7 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
     val = movedCtrlSw;
   
   //use an array to hold the valid parameters
-  uint8_t ctrlQQ[CTRL_SW_COUNT + (NUM_FLIGHT_MODES * 2)];
+  uint8_t ctrlQQ[CTRL_SW_COUNT];
   uint8_t ctrlCnt = 0; 
   for(uint8_t i = 0; i < sizeof(ctrlQQ); i++)
   {
@@ -250,12 +260,12 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
       if(!controlSwitchExists(i)) //skip absent control switches
         continue;
     }
-    if(i >= CTRL_SW_LOGICAL_FIRST && i <= CTRL_SW_LOGICAL_LAST_INVERT)
+    else if(i >= CTRL_SW_LOGICAL_FIRST && i <= CTRL_SW_LOGICAL_LAST_INVERT)
     {
       if(!(flag & INCDEC_FLAG_LGC_SW))
         continue;
     }
-    if(i >= CTRL_SW_COUNT) //flight modes
+    else if(i >= CTRL_SW_FMD_FIRST && i <= CTRL_SW_FMD_LAST_INVERT)
     {
       if(!(flag & INCDEC_FLAG_FMODE))
         continue;

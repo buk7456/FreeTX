@@ -869,7 +869,6 @@ bool verifyModelData()
   {
     if(Model.Mixer[i].output >= MIXSOURCES_COUNT) isSane = false;
     if(Model.Mixer[i].input >= MIXSOURCES_COUNT) isSane = false;
-    if(Model.Mixer[i].swtch >= CTRL_SW_COUNT)  isSane = false;
     if(Model.Mixer[i].curveType >= MIX_CURVE_TYPE_COUNT)  isSane = false;
     if(Model.Mixer[i].operation >= MIX_OPERATOR_COUNT)  isSane = false;
   }

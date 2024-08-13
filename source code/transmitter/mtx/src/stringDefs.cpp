@@ -521,21 +521,29 @@ void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff)
         itoa((idx - SRC_VIRTUAL_FIRST) + 1, suffix, 10);
         strlcat(buff, suffix, lenBuff);
       }
-      else if(idx < MIXSOURCES_COUNT + NUM_COUNTERS) //counters as sources
+      else if(idx >= SRC_COUNTER_FIRST && idx <= SRC_COUNTER_LAST)
       {
         strlcpy_P(buff, PSTR("Counter"), lenBuff);
-        itoa((idx - MIXSOURCES_COUNT) + 1, suffix, 10);
+        itoa((idx - SRC_COUNTER_FIRST) + 1, suffix, 10);
         strlcat(buff, suffix, lenBuff);
       }
-      else if(idx < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timers as sources
+      else if(idx >= SRC_TIMER_FIRST && idx <= SRC_TIMER_LAST)
       {
         strlcpy_P(buff, PSTR("Timer"), lenBuff);
-        itoa((idx - (MIXSOURCES_COUNT + NUM_COUNTERS)) + 1, suffix, 10);
+        itoa((idx - SRC_TIMER_FIRST) + 1, suffix, 10);
         strlcat(buff, suffix, lenBuff);
       }
-      else //telemetry as sources
+      else if(idx >= SRC_TELEMETRY_FIRST && idx <= SRC_TELEMETRY_LAST)
       {
-        strlcpy(buff, Model.Telemetry[idx - (MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS)].name, lenBuff);
+        strlcpy(buff, Model.Telemetry[idx - SRC_TELEMETRY_FIRST].name, lenBuff);
+      }
+      else if(idx == SRC_INACTIVITY_TIMER)
+      {
+        strlcpy_P(buff, PSTR("Inactvty"), lenBuff);
+      }
+      else if(idx == SRC_TX_BATTERY_VOLTAGE)
+      {
+        strlcpy_P(buff, PSTR("Battery"), lenBuff);
       }
     }
   }
@@ -576,9 +584,9 @@ void getControlSwitchName(char* buff, uint8_t idx, uint8_t lenBuff)
     itoa((idx - CTRL_SW_LOGICAL_FIRST_INVERT) + 1, suffix, 10); 
     strlcat(buff, suffix, lenBuff);
   }
-  else //flight modes as control switches
+  else if(idx >= CTRL_SW_FMD_FIRST && idx <= CTRL_SW_FMD_LAST_INVERT)
   {
-    uint8_t i = idx - CTRL_SW_COUNT;
+    uint8_t i = idx - CTRL_SW_FMD_FIRST;
     if(i < NUM_FLIGHT_MODES)
       strlcpy_P(buff, PSTR("FMD"), lenBuff);
     else
