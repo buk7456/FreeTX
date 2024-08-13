@@ -730,20 +730,20 @@ void evaluateLogicalSwitches(uint32_t _currTime)
       case LS_FUNC_ABS_A_LESS_THAN_OR_EQUAL_X:
       case LS_FUNC_ABS_DELTA_GREATER_THAN_X:
         {
-          int32_t _val1, _val2;
+          int32_t _val1 = 0, _val2 = 0;
           if(ls->val1 < MIXSOURCES_COUNT) //mixsources
           {
             _val1 = mixSources[ls->val1];
             _val2 = 5 * ls->val2;
           }
-          else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS) //counters
+          else if(ls->val1 >= SRC_COUNTER_FIRST && ls->val1 <= SRC_COUNTER_LAST) //counters
           {
-            _val1 = counterOut[ls->val1 - MIXSOURCES_COUNT];
+            _val1 = counterOut[ls->val1 - SRC_COUNTER_FIRST];
             _val2 = ls->val2;
           }
-          else if(ls->val1 < MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS) //timers
+          else if(ls->val1 >= SRC_TIMER_FIRST && ls->val1 <= SRC_TIMER_LAST) //timers
           {
-            uint8_t tmrIdx = ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS);
+            uint8_t tmrIdx = ls->val1 - SRC_TIMER_FIRST;
             if(Model.Timer[tmrIdx].initialMinutes == 0) //a count up timer
             {
               _val1 = timerElapsedTime[tmrIdx];
@@ -755,9 +755,9 @@ void evaluateLogicalSwitches(uint32_t _currTime)
             }
             _val2 = (int32_t)ls->val2 * 1000;
           }
-          else //telemetry
+          else if(ls->val1 >= SRC_TELEMETRY_FIRST && ls->val1 <= SRC_TELEMETRY_LAST)//telemetry
           {
-            uint8_t tlmIdx = ls->val1 - (MIXSOURCES_COUNT + NUM_COUNTERS + NUM_TIMERS);
+            uint8_t tlmIdx = ls->val1 - SRC_TELEMETRY_FIRST;
             if(telemetryReceivedValue[tlmIdx] == TELEMETRY_NO_DATA)
               break; 
             else
@@ -766,6 +766,17 @@ void evaluateLogicalSwitches(uint32_t _currTime)
               _val1 += Model.Telemetry[tlmIdx].offset;
               _val2 = ls->val2;
             }
+          }
+          else if(ls->val1 == SRC_INACTIVITY_TIMER)
+          {
+            // _val1 = _currTime - inputsLastMoved;
+            _val1 = millis() - inputsLastMoved;
+            _val2 = (int32_t)ls->val2 * 1000;
+          }
+          else if(ls->val1 == SRC_TX_BATTERY_VOLTAGE)
+          {
+            _val1 = battVoltsNow;
+            _val2 = ls->val2;
           }
           
           if(ls->func == LS_FUNC_A_GREATER_THAN_X)                result = _val1 > _val2;
@@ -1215,10 +1226,10 @@ bool checkSwitchCondition(uint8_t sw)
     if(invertResult)
       result = !result;
   }
-  else //flight modes as switches
+  else if(sw >= CTRL_SW_FMD_FIRST && sw <= CTRL_SW_FMD_LAST_INVERT)
   {
     bool invertResult = false;
-    uint8_t fmdIdx = sw - CTRL_SW_COUNT;
+    uint8_t fmdIdx = sw - CTRL_SW_FMD_FIRST;
     if(fmdIdx >= NUM_FLIGHT_MODES)
     {      
       fmdIdx -= NUM_FLIGHT_MODES;
