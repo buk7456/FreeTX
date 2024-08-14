@@ -47,20 +47,20 @@ enum {
 };
 
 char const systemMenu[][20] PROGMEM = { 
-  "RF setup", "Sound", "Backlight", "Appearance", "Advanced"
+  "RF setup", "Sound", "Backlight", "Appearance", "Advanced", "About"
 };
 enum {
-  SYSTEM_MENU_RF, SYSTEM_MENU_SOUND, SYSTEM_MENU_BACKLIGHT, SYSTEM_MENU_APPEARANCE, SYSTEM_MENU_ADVANCED
+  SYSTEM_MENU_RF, SYSTEM_MENU_SOUND, SYSTEM_MENU_BACKLIGHT, SYSTEM_MENU_APPEARANCE, SYSTEM_MENU_ADVANCED,
+  SYSTEM_MENU_ABOUT
 };
 
 char const advancedMenu[][20] PROGMEM = { 
-  "Sticks", "Knobs", "Switches", "Battery", "Security", "Miscellaneous", "Debug", "About"
+  "Sticks", "Knobs", "Switches", "Battery", "Security", "Miscellaneous", "Debug"
 };
 enum {
   ADVANCED_MENU_STICKS, ADVANCED_MENU_KNOBS, ADVANCED_MENU_SWITCHES, 
   ADVANCED_MENU_BATTERY, ADVANCED_MENU_SECURITY,
-  ADVANCED_MENU_MISCELLANEOUS, ADVANCED_MENU_DEBUG,
-  ADVANCED_MENU_ABOUT
+  ADVANCED_MENU_MISCELLANEOUS, ADVANCED_MENU_DEBUG
 };
 
 //---------------------------- Main UI states ------------------------------------------------------
@@ -172,7 +172,8 @@ enum {
   SCREEN_SOUND,
   SCREEN_BACKLIGHT,
   SCREEN_APPEARANCE,
-  //advanced system settings
+  SCREEN_ABOUT,
+  SCREEN_EASTER_EGG,
   SCREEN_UNLOCK_ADVANCED_MENU,
   SCREEN_ADVANCED_MENU,
   SCREEN_STICKS,
@@ -187,8 +188,6 @@ enum {
   SCREEN_CHARACTER_SET,
   SCREEN_SCREENSHOT_CONFIG,
   CONFIRMATION_FACTORY_RESET,
-  SCREEN_ABOUT,
-  SCREEN_EASTER_EGG,
   
   //---- Receiver ----
   SCREEN_RECEIVER,
@@ -6654,13 +6653,15 @@ void handleMainUI()
         menuAddItem(systemMenu[SYSTEM_MENU_BACKLIGHT], SYSTEM_MENU_BACKLIGHT, NULL);
         menuAddItem(systemMenu[SYSTEM_MENU_APPEARANCE], SYSTEM_MENU_APPEARANCE, NULL);
         menuAddItem(systemMenu[SYSTEM_MENU_ADVANCED], SYSTEM_MENU_ADVANCED, NULL);
+        menuAddItem(systemMenu[SYSTEM_MENU_ABOUT], SYSTEM_MENU_ABOUT, NULL);
         menuDraw(&topItem, &highlightedItem);
 
         if(menuSelectedItemID == SYSTEM_MENU_RF) changeToScreen(SCREEN_RF);
         else if(menuSelectedItemID == SYSTEM_MENU_SOUND) changeToScreen(SCREEN_SOUND);
         else if(menuSelectedItemID == SYSTEM_MENU_BACKLIGHT) changeToScreen(SCREEN_BACKLIGHT);
         else if(menuSelectedItemID == SYSTEM_MENU_APPEARANCE) changeToScreen(SCREEN_APPEARANCE);
-        else if(menuSelectedItemID == SYSTEM_MENU_ADVANCED)  
+        else if(menuSelectedItemID == SYSTEM_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
+        else if(menuSelectedItemID == SYSTEM_MENU_ADVANCED)
         {
           if(!isEmptyStr(Sys.password, sizeof(Sys.password))) 
             changeToScreen(SCREEN_UNLOCK_ADVANCED_MENU); //prompt to enter password first
@@ -7075,7 +7076,6 @@ void handleMainUI()
         menuAddItem(advancedMenu[ADVANCED_MENU_SECURITY], ADVANCED_MENU_SECURITY, NULL);
         menuAddItem(advancedMenu[ADVANCED_MENU_MISCELLANEOUS], ADVANCED_MENU_MISCELLANEOUS, NULL);
         menuAddItem(advancedMenu[ADVANCED_MENU_DEBUG], ADVANCED_MENU_DEBUG, NULL);
-        menuAddItem(advancedMenu[ADVANCED_MENU_ABOUT], ADVANCED_MENU_ABOUT, NULL);
         menuDraw(&topItem, &highlightedItem);
 
         if(menuSelectedItemID == ADVANCED_MENU_STICKS) changeToScreen(SCREEN_STICKS);
@@ -7085,7 +7085,6 @@ void handleMainUI()
         else if(menuSelectedItemID == ADVANCED_MENU_DEBUG) changeToScreen(SCREEN_DEBUG);
         else if(menuSelectedItemID == ADVANCED_MENU_SECURITY) changeToScreen(SCREEN_SECURITY);
         else if(menuSelectedItemID == ADVANCED_MENU_MISCELLANEOUS) changeToScreen(SCREEN_MISCELLANEOUS);
-        else if(menuSelectedItemID == ADVANCED_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
 
         //exit
         if(heldButton == KEY_SELECT)
@@ -8354,7 +8353,7 @@ void handleMainUI()
       
     case SCREEN_ABOUT:
       {
-        drawHeader(advancedMenu[ADVANCED_MENU_ABOUT]);
+        drawHeader(systemMenu[SYSTEM_MENU_ABOUT]);
 
         printFullScreenMsg(PSTR("FW version: " _SKETCHVERSION "\n(c) 2023 Buk7456" 
                                 "\nhttps://github.com/" "\nbuk7456/FreeTX"));
@@ -8393,7 +8392,7 @@ void handleMainUI()
         if(heldButton == KEY_SELECT)
         {
           cntr = 0;
-          changeToScreen(SCREEN_ADVANCED_MENU);
+          changeToScreen(SCREEN_SYSTEM_MENU);
         }
       }
       break;
@@ -8471,7 +8470,7 @@ void handleMainUI()
             showMsg(PSTR("Failed to allocate\nmemory for game"));
             delay(2000);
             //force exit
-            changeToScreen(SCREEN_MAIN_MENU);
+            changeToScreen(SCREEN_ABOUT);
             break;
           }
           else
@@ -8716,7 +8715,7 @@ void handleMainUI()
         {
           free(game); //free the memory
           game = NULL; //set the pointer to NULL to avoid dangling pointer issues
-          changeToScreen(SCREEN_ADVANCED_MENU);
+          changeToScreen(SCREEN_ABOUT);
         }
       }
       break;
@@ -9145,6 +9144,7 @@ void resetPages()
   thisFmdIdx = 0;
   thisTelemIdx = 0;
   thisWidgetIdx = 0;
+  trimIdx = 0;
 }
 
 //---------------------------------------------------------------------------------------------------
