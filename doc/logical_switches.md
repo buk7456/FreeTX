@@ -156,7 +156,7 @@ Dirctn:   Both
 L2 will now output a brief pulse whenever the output of the function generator crosses zero.
 
 ### Example 7: Using a momentary switch to cycle among four values or states
-Suppose that we want an output on the Receiver (e.g. Ch1) to cylce among four levels whenever 
+Suppose that we want an output channel to cycle among four levels whenever 
 we click the momentary switch.
 
 #### Method 1:
