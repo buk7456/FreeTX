@@ -13,7 +13,7 @@ Remotely operate model airplanes, multicopters, helicopters, boats, land vehicle
 - Reverse, subtrim, endpoints, failsafe.
 - Dual rates and expo, custom curves, flight modes.
 - Powerful mixer system, logical switches, function generators, counters, timers.
-- Telemetry, alarms, warnings, notifications, home screen widgets,
+- Telemetry, alarms, warnings, notifications, home screen widgets.
 - Custom splash screen, screenshot capture, etc.
 - Model memory. I2C eeprom and SD card supported. 
 - Model types, context-aware nomenclature.
