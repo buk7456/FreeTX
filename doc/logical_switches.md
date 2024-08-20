@@ -100,8 +100,10 @@ Switch:  L2
 ### Example 5: Throttle timer (advanced)
 Suppose we instead want the speed at which the timer runs to be proportional to the throttle value.  
 Also if we have a throttle cut function on say SwA, we want the timer to only run when throttle cut is inactive.  
-Assume our throttle source is the Y1 axis.  
-We can achieve this behaviour using a function generator and logical switches as follows.
+Assume our throttle source is the Y1 axis. 
+
+#### Method 1: 
+Using the built-in function generator to genarate a pulse width modulated signal that controls the timer.
 
 ```txt
 Fgen1
@@ -127,6 +129,38 @@ Value2:   SwA_down
 Timer1
 ------
 Switch:  L2
+
+```
+
+#### Method 2:
+Using the mixer and a virtual channel to create a pulse width modulated signal that controls the timer.
+
+```txt
+Mixer
+-----
+1. Virt1  Add  L1 (Weight 100, Offset 1,  SlowUp 0.5s, SlowDown 0.5s)
+
+L1
+---
+Functn: Pulse
+Width:  0.5s
+Period: 1.0s
+
+L2
+---
+Functn:   a>=b
+Value1:   Y1
+Value2:   Virt1
+
+L3
+---
+Functn:   AND
+Value1:   L2
+Value2:   SwA_down
+
+Timer1
+------
+Switch:  L3
 
 ```
 
