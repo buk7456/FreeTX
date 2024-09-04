@@ -94,6 +94,7 @@ enum {
   CONFIRMATION_MODEL_COPY,
   CONFIRMATION_MODEL_DELETE,
   CONFIRMATION_MODEL_RESET,
+  CONFIRMATION_CREATE_MODEL,
   
   //---- Inputs ----
   SCREEN_INPUTS,
@@ -1682,6 +1683,7 @@ void handleMainUI()
           ITEM_RESET_MODEL,
           ITEM_BACKUP_MODEL,
           ITEM_RESTORE_MODEL,
+          ITEM_NEW_MODEL,
         };
         
         contextMenuInitialise();
@@ -1692,6 +1694,8 @@ void handleMainUI()
           contextMenuAddItem(PSTR("Copy from"), ITEM_COPY_FROM);
         }
         contextMenuAddItem(PSTR("Reset model"), ITEM_RESET_MODEL);
+        if(maxNumOfModels == 1)
+          contextMenuAddItem(PSTR("New model"), ITEM_NEW_MODEL);
         if(sdHasCard())
         {
           contextMenuAddItem(PSTR("Backup to SD"), ITEM_BACKUP_MODEL);
@@ -1761,6 +1765,8 @@ void handleMainUI()
           changeToScreen(CONFIRMATION_MODEL_BACKUP);
         if(contextMenuSelectedItemID == ITEM_RESTORE_MODEL)
           changeToScreen(DIALOG_RESTORE_MODEL);
+        if(contextMenuSelectedItemID == ITEM_NEW_MODEL)
+          changeToScreen(CONFIRMATION_CREATE_MODEL);
         
         if(heldButton == KEY_SELECT) //exit
           changeToScreen(SCREEN_MODEL);
@@ -1836,6 +1842,16 @@ void handleMainUI()
       }
       break;
       
+    case CONFIRMATION_CREATE_MODEL:
+      {
+        printFullScreenMsg(PSTR("Model data will\nbe overwritten.\nContinue?\n\nYes [Up] \nNo [Down]"));
+        if(clickedButton == KEY_UP)
+          changeToScreen(DIALOG_MODEL_TYPE);
+        else if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT)
+          changeToScreen(SCREEN_MODEL);
+      }
+      break;
+      
     case DIALOG_MODEL_TYPE:
       {
         isEditMode = true;
@@ -1862,7 +1878,8 @@ void handleMainUI()
           showWaitMsg();
           stopTones();
           //Save the current active model first
-          eeSaveModelData(Sys.activeModelIdx);
+          if(Sys.activeModelIdx != thisModelIdx)
+            eeSaveModelData(Sys.activeModelIdx);
           //reinitialise other stuff
           resetTimerRegisters();
           resetCounterRegisters();
@@ -2156,7 +2173,7 @@ void handleMainUI()
       
     case CONFIRMATION_MODEL_COPY:
       {
-        printFullScreenMsg(PSTR("Model data will be\noverwritten.\nContinue?\n\nYes [Up] \nNo [Down]"));
+        printFullScreenMsg(PSTR("Model data will\nbe overwritten.\nContinue?\n\nYes [Up] \nNo [Down]"));
         if(clickedButton == KEY_UP)
         {
           showWaitMsg();
