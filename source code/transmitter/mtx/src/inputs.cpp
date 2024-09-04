@@ -249,7 +249,7 @@ void readSticks()
     }
   }
 
-  //play audio whenever a knob crosses center 
+  //play audio whenever a knob is at the center
   enum {
     CENTER = 0,
     NEG_SIDE,
@@ -258,7 +258,7 @@ void readSticks()
   static uint8_t knobRegion[NUM_KNOBS];
   for(uint8_t i = 0; i < NUM_KNOBS; i++)
   {
-    if((knobIn[i] > 0 && knobRegion[i] == NEG_SIDE) || (knobIn[i] < 0 && knobRegion[i] == POS_SIDE)) //crossed center
+    if((knobIn[i] >= 0 && knobRegion[i] == NEG_SIDE) || (knobIn[i] <= 0 && knobRegion[i] == POS_SIDE))
     {
       knobRegion[i] = CENTER;
       if(Sys.soundKnobCenter && !isCalibratingControls)
