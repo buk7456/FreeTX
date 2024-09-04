@@ -1204,7 +1204,7 @@ void handleMainUI()
             break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -2490,7 +2490,7 @@ void handleMainUI()
             break;
             
             uint8_t itemID = topItem - 1 + line;
-            bool edit = (focusedItem > 1 && itemID == focusedItem - 2 && isEditMode) ? true : false;
+            bool edit = (focusedItem > 1 && itemID == focusedItem - 2 && isEditMode);
             
             display.setCursor(0, ypos);
             switch(itemID)
@@ -2806,7 +2806,7 @@ void handleMainUI()
             break;
     
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -3643,8 +3643,8 @@ void handleMainUI()
         uint8_t itemID = topLine;
         while(itemID < ITEM_COUNT)
         {
-          bool isFocused = (focusedItem > 1 && focusedItem != numFocusable && itemID == focusedItem - 2) ? true : false;
-          bool edit = (isFocused && isEditMode) ? true : false;
+          bool isFocused = (focusedItem > 1 && focusedItem != numFocusable && itemID == focusedItem - 2);
+          bool edit = (isFocused && isEditMode);
           
           uint8_t ypos = 20 + (pgm_read_byte(&(qqTab[itemID][1])) - topLine) * 9;
           if(ypos > (20 + (maxVisibleLines - 1) * 9))
@@ -4335,7 +4335,7 @@ void handleMainUI()
             break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -4897,7 +4897,7 @@ void handleMainUI()
             break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -5260,7 +5260,7 @@ void handleMainUI()
             break;
           
           uint8_t itemID = topItem - 1 + line;
-          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == focusedItem - 2 && isEditMode) ? true : false;
+          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == focusedItem - 2 && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -5634,7 +5634,7 @@ void handleMainUI()
             break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
+          bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode);
           
           display.setCursor(0, ypos);
           
@@ -5747,8 +5747,8 @@ void handleMainUI()
             break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool isFocused = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2]) ? true : false;
-          bool edit = (isFocused && isEditMode) ? true : false;
+          bool isFocused = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2]);
+          bool edit = (isFocused && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -6283,7 +6283,7 @@ void handleMainUI()
             break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool isFocused = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2]) ? true : false;
+          bool isFocused = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2]);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -6464,7 +6464,7 @@ void handleMainUI()
             break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
+          bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -6770,7 +6770,7 @@ void handleMainUI()
             break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode) ? true : false;
+          bool edit = (itemID == listItemIDs[focusedItem - 1] && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -6965,7 +6965,7 @@ void handleMainUI()
             break;
           
           uint8_t itemID = topItem - 1 + line;
-          bool edit = (itemID == focusedItem - 1 && isEditMode) ? true : false;
+          bool edit = (itemID == focusedItem - 1 && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -7940,7 +7940,7 @@ void handleMainUI()
             break;
           
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool isFocused = (itemID == listItemIDs[focusedItem - 1]) ? true : false;
+          bool isFocused = (itemID == listItemIDs[focusedItem - 1]);
           
           display.setCursor(8, ypos);
           switch(itemID)
@@ -8740,7 +8740,7 @@ void handleMainUI()
         if(focusedItem == 1)
           page = incDec(page, 0, numPages - 1, INCDEC_WRAP, INCDEC_SLOW);
         
-        isMainReceiver = (page == PAGE_MAIN_RECEIVER) ? true : false;
+        isMainReceiver = (page == PAGE_MAIN_RECEIVER);
         
         //--- draw
         
