@@ -1612,16 +1612,23 @@ void handleMainUI()
         if(modelListNeedsUpdate)
         {
           modelListNeedsUpdate = false;
-          for(uint8_t i = 0; i < numVisible && i < maxNumOfModels; i++)
+          if(maxNumOfModels > 1)
           {
-            uint8_t modelIdx = topItem - 1 + i;
-            if(eeModelIsFree(modelIdx)) // write 0xFF to indicate its free
-              mdlStr[i][0] = 0xFF;
-            else //get the name
+            for(uint8_t i = 0; i < numVisible && i < maxNumOfModels; i++)
             {
-              eeGetModelName(txtBuff, modelIdx, sizeof(txtBuff));
-              strlcpy(&mdlStr[i][0], txtBuff, sizeof(Model.name));
+              uint8_t modelIdx = topItem - 1 + i;
+              if(eeModelIsFree(modelIdx)) // write 0xFF to indicate its free
+                mdlStr[i][0] = 0xFF;
+              else //get the name
+              {
+                eeGetModelName(txtBuff, modelIdx, sizeof(txtBuff));
+                strlcpy(&mdlStr[i][0], txtBuff, sizeof(Model.name));
+              }
             }
+          }
+          else
+          {
+            strlcpy(&mdlStr[0][0], Model.name, sizeof(Model.name));
           }
         }
         
@@ -1878,7 +1885,7 @@ void handleMainUI()
           showWaitMsg();
           stopTones();
           //Save the current active model first
-          if(Sys.activeModelIdx != thisModelIdx)
+          if(maxNumOfModels > 1)
             eeSaveModelData(Sys.activeModelIdx);
           //reinitialise other stuff
           resetTimerRegisters();
@@ -1886,8 +1893,16 @@ void handleMainUI()
           Sys.rfEnabled = false;
           reinitialiseMixerCalculations();
           //create model and set it active
-          eeCreateModel(thisModelIdx);
-          Sys.activeModelIdx = thisModelIdx;
+          if(maxNumOfModels > 1)
+          {
+            eeCreateModel(thisModelIdx);
+            Sys.activeModelIdx = thisModelIdx;
+          }
+          else
+          {
+            resetModelName();
+            resetModelParams();
+          }
           //write model type
           Model.type = mdlType;
           //load default mixer template
@@ -1896,8 +1911,9 @@ void handleMainUI()
             if(Sys.mixerTemplatesEnabled)
               loadMixerTemplateBasic(0);
           }
-          //save 
-          eeSaveModelData(Sys.activeModelIdx);
+          //save
+          if(maxNumOfModels > 1)
+            eeSaveModelData(Sys.activeModelIdx);
           // changeToScreen(SCREEN_MODEL);
           changeToScreen(DIALOG_RENAME_MODEL);
           resetPages();
@@ -1916,7 +1932,8 @@ void handleMainUI()
         {
           showWaitMsg();
           stopTones();
-          eeSaveModelData(Sys.activeModelIdx);
+          if(maxNumOfModels > 1)
+            eeSaveModelData(Sys.activeModelIdx);
           changeToScreen(SCREEN_MODEL); 
         }
       }
@@ -2022,13 +2039,14 @@ void handleMainUI()
           stopTones();
           //save active model first but only if we aren't restoring to active slot
           //otherwise there is no point in saving first
-          if(thisModelIdx != Sys.activeModelIdx)
+          if(maxNumOfModels > 1 && thisModelIdx != Sys.activeModelIdx)
             eeSaveModelData(Sys.activeModelIdx);
           //restore the model
           if(sdRestoreModel(txtBuff))
           {
             //save it to eeprom
-            eeSaveModelData(thisModelIdx);
+            if(maxNumOfModels > 1)
+              eeSaveModelData(thisModelIdx);
             //if we have restored into the active model slot, reinitialise some items
             if(thisModelIdx == Sys.activeModelIdx)
             {
@@ -2046,7 +2064,8 @@ void handleMainUI()
             else
             {
               //read back the active model from eeprom
-              eeReadModelData(Sys.activeModelIdx);
+              if(maxNumOfModels > 1)
+                eeReadModelData(Sys.activeModelIdx);
             }
             //exit
             changeToScreen(SCREEN_MODEL);
@@ -2075,9 +2094,13 @@ void handleMainUI()
           modelBackupExists = false;
 
           //get the model name into the nameStr buffer
-          eeGetModelName(nameStr, thisModelIdx, sizeof(nameStr));
+          if(maxNumOfModels > 1)
+            eeGetModelName(nameStr, thisModelIdx, sizeof(nameStr));
+          else
+            strlcpy(nameStr, Model.name, sizeof(nameStr));
+          
           bool nameEmpty = false;
-          if(isEmptyStr(nameStr, sizeof(Model.name))) 
+          if(isEmptyStr(nameStr, sizeof(nameStr))) 
             nameEmpty = true;
           else
           {
@@ -2146,19 +2169,30 @@ void handleMainUI()
         
         if(modelBackupExists)
           printFullScreenMsg(PSTR("A backup with\na similar name\nexists.\nOverwrite it?\n\nYes [Up] \nNo [Down]"));
+        
         if(clickedButton == KEY_UP || !modelBackupExists)
         {
           showWaitMsg();
           stopTones();
-          //save the active model first
-          eeSaveModelData(Sys.activeModelIdx);
-          //read into ram the model we want to back up to sd card
-          eeReadModelData(thisModelIdx);
+          
+          if(maxNumOfModels > 1)
+          {
+            //save the active model first
+            eeSaveModelData(Sys.activeModelIdx);
+            //read into ram the model we want to back up to sd card
+            eeReadModelData(thisModelIdx);
+          }
+          
           //back up to the sd card
           if(!sdBackupModel(nameStr))
             makeToast(PSTR("Backup failed"), 2000, 0);
-          //read back the active model from eeprom
-          eeReadModelData(Sys.activeModelIdx);
+          
+          if(maxNumOfModels > 1)
+          {
+            //read back the active model from eeprom
+            eeReadModelData(Sys.activeModelIdx);
+          }
+
           //exit
           initialised = false;
           changeToScreen(SCREEN_MODEL);
@@ -2224,7 +2258,8 @@ void handleMainUI()
           //restore the model type
           Model.type = mdlType;
           //save to eeprom
-          eeSaveModelData(Sys.activeModelIdx);
+          if(maxNumOfModels > 1)
+            eeSaveModelData(Sys.activeModelIdx);
           //reinitialise other stuff
           resetTimerRegisters();
           resetCounterRegisters();
