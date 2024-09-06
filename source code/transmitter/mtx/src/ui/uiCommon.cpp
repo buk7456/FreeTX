@@ -31,6 +31,9 @@ int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEna
   if(!isEditMode)
     return val;
   
+  if(buttonCode != KEY_UP && buttonCode != KEY_DOWN)
+    return val;
+  
   uint8_t  heldBtnQQ = 0;
   int16_t delta = 1;
   uint8_t speed = initialSpeed;
@@ -133,12 +136,19 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
   if(!isEditMode)
     return val;
   
+  if(buttonCode != KEY_UP && buttonCode != KEY_DOWN)
+    return val;
+  
   //use an array to hold the valid sources
   uint8_t srcQQ[TOTAL_SOURCES_COUNT]; 
   uint8_t srcCnt = 0;
   for(uint8_t i = 0; i < sizeof(srcQQ); i++)
   {
-    if(i < MIXSOURCES_COUNT) //mix sources
+    if(i == SRC_NONE)
+    {
+      //nothing here
+    }
+    else if(i < MIXSOURCES_COUNT) //mix sources
     {
       if(!(flag & INCDEC_FLAG_MIX_SRC))
       {
@@ -243,6 +253,9 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
   if(!isEditMode)
     return val;
   
+  if(buttonCode != KEY_UP && buttonCode != KEY_DOWN)
+    return val;
+  
   //detect moved switch
   uint8_t movedCtrlSw = getMovedControlSwitch();
   if(movedCtrlSw != CTRL_SW_NONE)
@@ -253,7 +266,11 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
   uint8_t ctrlCnt = 0; 
   for(uint8_t i = 0; i < sizeof(ctrlQQ); i++)
   {
-    if(i >= CTRL_SW_PHYSICAL_FIRST && i <= CTRL_SW_PHYSICAL_LAST)
+    if(i == CTRL_SW_NONE)
+    {
+      //nothing here
+    }
+    else if(i >= CTRL_SW_PHYSICAL_FIRST && i <= CTRL_SW_PHYSICAL_LAST)
     {
       if(!(flag & INCDEC_FLAG_PHY_SW))
         continue;

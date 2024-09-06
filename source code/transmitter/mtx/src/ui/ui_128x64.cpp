@@ -7174,7 +7174,20 @@ void handleMainUI()
         }
 
         uint8_t numItems = NUM_STICK_AXES;
-
+        
+        bool allAxesAbsent = false;
+        bool hasSelfCenteringAxes = false;
+        uint8_t cntrQQ = 0;
+        for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
+        {
+          if(Sys.StickAxis[i].type == STICK_AXIS_ABSENT)
+            cntrQQ++;
+          else if(Sys.StickAxis[i].type == STICK_AXIS_SELF_CENTERING)
+            hasSelfCenteringAxes = true;
+        }
+        if(cntrQQ == NUM_STICK_AXES)
+          allAxesAbsent = true;
+        
         switch(page)
         {
           case PAGE_START:
@@ -7258,12 +7271,22 @@ void handleMainUI()
               //Draw scroll bar
               drawScrollBar(125, 9, numItems, topItem, 4, 44);
               
-              //'next' button
+              //'next' or 'finish' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
-              display.setCursor(90, 56);
-              display.print(F("[Next]"));
-              if(focusedItem == numItems + 1)
-                drawCursor(82, 56);
+              if(!allAxesAbsent || lastScreen == SCREEN_HOME)
+              {
+                display.setCursor(90, 56);
+                display.print(F("[Next]"));
+                if(focusedItem == numItems + 1)
+                  drawCursor(82, 56);
+              }
+              else
+              {
+                display.setCursor(78, 56);
+                display.print(F("[Finish]"));
+                if(focusedItem == numItems + 1)
+                  drawCursor(70, 56);
+              }
               
               //handle navigation
               changeFocusOnUpDown(numItems + 1); //+1 for button focus
@@ -7280,34 +7303,64 @@ void handleMainUI()
               
               if(focusedItem == numItems + 1 && isEditMode)
               {
-                //start the calibration
-                calibrateSticks(CALIBRATE_INIT);
-                //go to next page
-                page = PAGE_MOVE_STICKS;
                 isEditMode = false;
                 focusedItem = 1;
                 viewInitialised = false;
+                if(allAxesAbsent)
+                {
+                  initialised = false;
+                  isRequestingStickCalibration = false;
+                  if(lastScreen == SCREEN_HOME)
+                    changeToScreen(SCREEN_HOME);
+                }
+                else
+                {
+                  calibrateSticks(CALIBRATE_INIT);
+                  page = PAGE_MOVE_STICKS;
+                }
               }
             }
             break;
             
           case PAGE_MOVE_STICKS:
             {
-              printFullScreenMsg(PSTR("Move sticks fully,\nthen center them.\n"));
+              if(hasSelfCenteringAxes)
+                printFullScreenMsg(PSTR("Move sticks fully,\nthen center them.\n"));
+              else
+                printFullScreenMsg(PSTR("Move sticks fully\n"));
+                
               calibrateSticks(CALIBRATE_MOVE);
-              
+
+              //'next' or 'finish' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
-              display.setCursor(90, 56);
-              display.print(F("[Next]"));
-              drawCursor(82, 56);
+              if(hasSelfCenteringAxes || lastScreen == SCREEN_HOME)
+              {
+                display.setCursor(90, 56);
+                display.print(F("[Next]"));
+                drawCursor(82, 56);
+              }
+              else
+              {
+                display.setCursor(78, 56);
+                display.print(F("[Finish]"));
+                drawCursor(70, 56);
+              }
               
               if(clickedButton == KEY_SELECT)
               {
                 //add dead band to stick extremes
                 calibrateSticks(CALIBRATE_DEADBAND); 
-                //go to next page
-                page = PAGE_ADJUST_DEADZONE;
                 isCalibratingControls = false;
+                
+                if(hasSelfCenteringAxes)
+                  page = PAGE_ADJUST_DEADZONE;
+                else
+                {
+                  initialised = false;
+                  isRequestingStickCalibration = false;
+                  if(lastScreen == SCREEN_HOME)
+                    changeToScreen(SCREEN_HOME);
+                }
               }
             }
             break;
@@ -7393,11 +7446,11 @@ void handleMainUI()
               if(focusedItem == numItems + 1 && isEditMode)
               {
                 //exit calibration
-                if(lastScreen == SCREEN_HOME)
-                  changeToScreen(SCREEN_HOME);
                 viewInitialised = false;
                 isRequestingStickCalibration = false;
                 initialised = false;
+                if(lastScreen == SCREEN_HOME)
+                  changeToScreen(SCREEN_HOME);
               }
             }
             break;
@@ -7428,6 +7481,19 @@ void handleMainUI()
         }
 
         uint8_t numItems = NUM_KNOBS;
+        
+        bool allKnobsAbsent = false;
+        bool hasCenterDetentKnobs = false;
+        uint8_t cntrQQ = 0;
+        for(uint8_t i = 0; i < NUM_KNOBS; i++)
+        {
+          if(Sys.Knob[i].type == KNOB_ABSENT)
+            cntrQQ++;
+          else if(Sys.Knob[i].type == KNOB_CENTER_DETENT)
+            hasCenterDetentKnobs = true;
+        }
+        if(cntrQQ == NUM_KNOBS)
+          allKnobsAbsent = true;
 
         switch(page)
         {
@@ -7505,12 +7571,22 @@ void handleMainUI()
               //Draw scroll bar
               drawScrollBar(125, 9, numItems, topItem, 4, 44);
               
-              //'next' button
+              //'next' or 'finish' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
-              display.setCursor(90, 56);
-              display.print(F("[Next]"));
-              if(focusedItem == numItems + 1)
-                drawCursor(82, 56);
+              if(!allKnobsAbsent || lastScreen == SCREEN_HOME)
+              {
+                display.setCursor(90, 56);
+                display.print(F("[Next]"));
+                if(focusedItem == numItems + 1)
+                  drawCursor(82, 56);
+              }
+              else
+              {
+                display.setCursor(78, 56);
+                display.print(F("[Finish]"));
+                if(focusedItem == numItems + 1)
+                  drawCursor(70, 56);
+              }
               
               //handle navigation
               changeFocusOnUpDown(numItems + 1); //+1 for button focus
@@ -7527,34 +7603,64 @@ void handleMainUI()
               
               if(focusedItem == numItems + 1 && isEditMode)
               {
-                //start the calibration
-                calibrateKnobs(CALIBRATE_INIT);
-                //go to next page
-                page = PAGE_MOVE_KNOBS;
                 isEditMode = false;
                 focusedItem = 1;
                 viewInitialised = false;
+                if(allKnobsAbsent)
+                {
+                  initialised = false;
+                  isRequestingKnobCalibration = false;
+                  if(lastScreen == SCREEN_HOME)
+                    changeToScreen(SCREEN_HOME);
+                }
+                else
+                {
+                  calibrateKnobs(CALIBRATE_INIT);
+                  page = PAGE_MOVE_KNOBS;
+                }
               }
             }
             break;
             
           case PAGE_MOVE_KNOBS:
             {
-              printFullScreenMsg(PSTR("Move knobs fully,\nthen center them.\n"));
+              if(hasCenterDetentKnobs)
+                printFullScreenMsg(PSTR("Move knobs fully,\nthen center them.\n"));
+              else
+                printFullScreenMsg(PSTR("Move knobs fully\n"));
+              
               calibrateKnobs(CALIBRATE_MOVE);
               
+              //'next' or 'finish' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
-              display.setCursor(90, 56);
-              display.print(F("[Next]"));
-              drawCursor(82, 56);
+              if(hasCenterDetentKnobs || lastScreen == SCREEN_HOME)
+              {
+                display.setCursor(90, 56);
+                display.print(F("[Next]"));
+                drawCursor(82, 56);
+              }
+              else
+              {
+                display.setCursor(78, 56);
+                display.print(F("[Finish]"));
+                drawCursor(70, 56);
+              }
               
               if(clickedButton == KEY_SELECT)
               {
                 //add dead band to extremes
                 calibrateKnobs(CALIBRATE_DEADBAND); 
-                //go to next page
-                page = PAGE_ADJUST_DEADZONE;
                 isCalibratingControls = false;
+                
+                if(hasCenterDetentKnobs)
+                  page = PAGE_ADJUST_DEADZONE;
+                else
+                {
+                  initialised = false;
+                  isRequestingKnobCalibration = false;
+                  if(lastScreen == SCREEN_HOME)
+                    changeToScreen(SCREEN_HOME);
+                }
               }
             }
             break;
