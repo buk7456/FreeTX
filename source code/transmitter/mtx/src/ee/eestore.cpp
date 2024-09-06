@@ -66,7 +66,6 @@ void eeStoreInit()
 
   if(maxModelsInternal == 0)
   {
-    turnOnBacklight();
     showMsg(PSTR("------ERROR------\nNot enough memory\nfor model storage"));
     while(1)
     {
