@@ -434,7 +434,7 @@ typedef struct {
 
 typedef struct {
   char     name[9];        //8 chars + Null. If no name, the telemetry doesn't then exist
-  char     unitsName[5];   //4 chars + null
+  char     unitsName[6];   //5 chars + null
   uint8_t  identifier;     //ID 00 to FE. FF is unused
   int16_t  multiplier;     //1 to 1000, scales to 0.01 to 10.00
   int8_t   factor10;       //-2, 1, 0, 1, 2. Means x10^
@@ -788,7 +788,7 @@ typedef struct {
   
   //--- Model name 
   //This is the first member in structure
-  char name[9]; //8 chars + Null.
+  char name[9]; //8 chars + Null. The SD library uses 8.3 naming so this should be left as is.
   
   //---Model type 
   //This should be the second member in structure
