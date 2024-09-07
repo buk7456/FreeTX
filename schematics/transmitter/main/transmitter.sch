@@ -18242,22 +18242,26 @@ shorted together e.g. when using
 <text x="248.92" y="172.72" size="2.54" layer="97">KNOB_A</text>
 <text x="248.92" y="154.94" size="2.54" layer="97">KNOB_B</text>
 <text x="200.66" y="297.18" size="2.54" layer="97">Z2</text>
-<text x="45.72" y="2.54" size="1.9304" layer="97" font="vector">NOTES:
+<text x="40.64" y="0" size="1.9304" layer="97" font="vector">NOTES:
 - MCU pins marked with x have no arduino
   mapping. They can be used but they
   have no connector headers on arduino
   boards, hence have been avoided here.
-- For two position switches, the UP signal
-  is left unconnected.
+- All switches are optional. 2-position and 
+  3-position switches are supported. 
+  For 2-position switches, the UP signal is 
+  left unconnected.
 - The Z1 and Z2 axes as well as X3,Y3,X4,Y4, 
   BTN_A, BTN_B are optional.
-- Uart0 is used for firmware uploads
-- Uart1 for interfacing with the secondary mcu 
+- Uart0 is used for firmware uploads.
+- Uart1 is for interfacing with the secondary mcu 
   (controlling the RF module).
-- Uart2 reserved for sound modules.
-- The I2C EEPROM recommended is 24LC256 or
-  24LC512. Any other lower capacity eeproms
-  can also be used, minimum being the 24LC32.</text>
+- Uart2 is reserved for sound modules.
+- The I2C EEPROM is optional, but recommend 
+  the 24LC256 or 24LC512 for adequate Model slots.
+- The soft latching power circuit is compulsory.
+
+Schematics designed by BUK7456</text>
 <text x="160.02" y="147.32" size="1.27" layer="97">x</text>
 <text x="160.02" y="144.78" size="1.27" layer="97">x</text>
 <text x="160.02" y="142.24" size="1.27" layer="97">x</text>
