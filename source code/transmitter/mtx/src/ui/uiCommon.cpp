@@ -252,14 +252,14 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
 {
   if(!isEditMode)
     return val;
-  
-  if(buttonCode != KEY_UP && buttonCode != KEY_DOWN)
-    return val;
-  
+
   //detect moved switch
   uint8_t movedCtrlSw = getMovedControlSwitch();
   if(movedCtrlSw != CTRL_SW_NONE)
     val = movedCtrlSw;
+  
+  if(buttonCode != KEY_UP && buttonCode != KEY_DOWN)
+    return val;
   
   //use an array to hold the valid parameters
   uint8_t ctrlQQ[CTRL_SW_COUNT];
