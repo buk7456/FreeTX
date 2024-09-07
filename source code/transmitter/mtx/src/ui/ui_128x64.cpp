@@ -3211,12 +3211,12 @@ void handleMainUI()
         contextMenuAddItem(PSTR("Reset mix" ), ITEM_RESET_MIX);
         contextMenuAddItem(PSTR("Reset all mixes"), ITEM_RESET_ALL_MIXES);
         contextMenuAddItem(PSTR("Compact mixes"), ITEM_COMPACT_MIXES);
-        contextMenuAddItem(PSTR("Show overview"), ITEM_MIXER_OVERVIEW);
         if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
         {
           if(Sys.mixerTemplatesEnabled)
             contextMenuAddItem(PSTR("Templates"), ITEM_MIXER_TEMPLATES);
         }
+        contextMenuAddItem(PSTR("Show overview"), ITEM_MIXER_OVERVIEW);
         contextMenuDraw();
         
         if(contextMenuSelectedItemID == ITEM_MIXER_OUTPUTS) 
