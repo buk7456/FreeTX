@@ -8343,7 +8343,7 @@ void handleMainUI()
               display.print(F("0"));
             display.print(val, 16); //print as hex
             
-            //show the ascii characters
+            //show the characters
             display.setCursor(99 + col * 6, line * 8);
             if(val == 0x20 || val == 0xFF || val == 0x00)
               display.write(0x2E);
@@ -10048,25 +10048,32 @@ void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEm
     display.fillRect(xpos + 6 * charPos, 36, 5, 1, BLACK);
   
   //---- map characters ---
-  // Z to A  (ascii 90 to 65)  --> 0 to 25
-  // space   (ascii 32)        --> 26
-  // a to z  (ascii 97 to 122) --> 27 to 52
-  // Numbers (ascii 48 to 57)  --> 53 to 62
-  // - . /   (ascii 45 to 47)  --> 63 to 65
-  // % sign  (ascii 37)        --> 66
-  // Degree sign (ascii 248)   --> 67
+  //(Code page 437 font)
+  // Z to A  (90 ... 65)   -->  0 ... 25
+  // space   (32)          -->  26
+  // a to z  (97 ... 122)  -->  27 ... 52
+  // Numbers (48 ... 57)   -->  53 ... 62
+  // - . /   (45 ... 47)   -->  63 ... 65
+  // % symbol  (37)        -->  66
+  // Degree symbol (248)   -->  67
+  // Caret ^ (94)          -->  68
+  // Square symbol (253)   -->  69
+  // Greek letter mu (230) -->  70
 
   if(thisChar == 32) thisChar = 26;
   else if(thisChar == 37)  thisChar = 66;
   else if(thisChar <= 47)  thisChar += 18;
   else if(thisChar <= 57)  thisChar += 5;
   else if(thisChar <= 90)  thisChar = 90 - thisChar ;
+  else if(thisChar == 94)  thisChar = 68;
   else if(thisChar <= 122) thisChar -= 70;
+  else if(thisChar == 230) thisChar = 70;
   else if(thisChar == 248) thisChar = 67;
+  else if(thisChar == 253) thisChar = 69;
   
   //adjust
   isEditMode = true;
-  thisChar = incDec(thisChar, 67, 0, INCDEC_NOWRAP, INCDEC_SLOW);
+  thisChar = incDec(thisChar, 70, 0, INCDEC_NOWRAP, INCDEC_SLOW);
 
   //map back
   if(thisChar <= 25) thisChar = 90 - thisChar;
@@ -10076,6 +10083,9 @@ void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEm
   else if(thisChar <= 65) thisChar -= 18;
   else if(thisChar == 66) thisChar = 37;
   else if(thisChar == 67) thisChar = 248;
+  else if(thisChar == 68) thisChar = 94;
+  else if(thisChar == 69) thisChar = 253;
+  else if(thisChar == 70) thisChar = 230;
 
   //write
   *(buff + charPos) = thisChar;
