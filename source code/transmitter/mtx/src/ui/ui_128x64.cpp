@@ -7310,6 +7310,7 @@ void handleMainUI()
                 {
                   initialised = false;
                   isRequestingStickCalibration = false;
+                  isCalibratingControls = false;
                   if(lastScreen == SCREEN_HOME)
                     changeToScreen(SCREEN_HOME);
                 }
@@ -7610,6 +7611,7 @@ void handleMainUI()
                 {
                   initialised = false;
                   isRequestingKnobCalibration = false;
+                  isCalibratingControls = false;
                   if(lastScreen == SCREEN_HOME)
                     changeToScreen(SCREEN_HOME);
                 }
