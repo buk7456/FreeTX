@@ -1030,26 +1030,15 @@ void handleMainUI()
         for(uint8_t i = startIdx; i < startIdx + 10 && i < NUM_RC_CHANNELS; i++)
         {
           if((i - startIdx) < 5)
-          {
-            if(lastScreen == CONTEXT_MENU_OUTPUTS && i == thisChIdx)
-            {
-              display.setCursor(0, 10 + (i - startIdx) * 11);
-              display.write(0xB1);
-            }
-            display.setCursor(6, 10 + (i - startIdx) * 11);
-          }
+            display.setCursor(0, 10 + (i - startIdx) * 11);
           else
-          { 
-            if(lastScreen == CONTEXT_MENU_OUTPUTS && i == thisChIdx)
-            {
-              display.setCursor(66, 10 + (i - (startIdx + 5)) * 11);
-              display.write(0xB1);
-            }
-            display.setCursor(72, 10 + (i - (startIdx + 5)) * 11);
-          }
-          display.print(F("Ch"));          
+            display.setCursor(66, 10 + (i - (startIdx + 5)) * 11);
+          display.print(F("Ch"));
           display.print(1 + i);  
-          display.print(F(":"));
+          if(lastScreen == CONTEXT_MENU_OUTPUTS && i == thisChIdx)
+            display.write(0xB1);
+          else
+            display.print(F(":"));
           if(i < 9)
             display.print(F(" "));
           // display.print(channelOut[i] / 5);
@@ -4284,7 +4273,7 @@ void handleMainUI()
         display.setCursor(17, 18);
         display.print(F("Delete point"));
         display.setCursor(17, 28);
-        display.print(F("Point: "));
+        display.print(F("Point:"));
         display.setCursor(71, 28);
         display.write(97 + deletePt);
         drawCursor(63, 28);
@@ -8433,7 +8422,7 @@ void handleMainUI()
         }
         
         display.setCursor(0, 9);
-        display.print(F("Switch: "));
+        display.print(F("Switch:"));
         display.setCursor(66, 9);
         getControlSwitchName(txtBuff, tempSwtch, sizeof(txtBuff));
         display.print(txtBuff);
