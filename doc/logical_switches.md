@@ -138,7 +138,7 @@ Using the mixer and a virtual channel to create a pulse width modulated signal t
 ```txt
 Mixer
 -----
-1. Virt1  Add  L1 (Weight 100, Offset 1,  SlowUp 0.5s, SlowDown 0.5s)
+1. Virt1  Add  L1 (Weight 99, SlowUp 0.5s, SlowDown 0.5s)
 
 L1
 ---
@@ -148,7 +148,7 @@ Period: 1.0s
 
 L2
 ---
-Functn:   a>=b
+Functn:   a>b
 Value1:   Y1
 Value2:   Virt1
 
