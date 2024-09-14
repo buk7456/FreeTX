@@ -405,10 +405,10 @@ void computeChannelOutputs()
       if(src == SRC_AIL) src = Model.ailSrcRaw;
       if(src == SRC_ELE) src = Model.eleSrcRaw;
       
-      if(src == SRC_X1) operand += ((int32_t) mixSources[SRC_X1_TRIM] * mxr->weight) / 100; 
-      else if(src == SRC_Y1) operand += ((int32_t) mixSources[SRC_Y1_TRIM] * mxr->weight) / 100; 
-      else if(src == SRC_X2) operand += ((int32_t) mixSources[SRC_X2_TRIM] * mxr->weight) / 100; 
-      else if(src == SRC_Y2) operand += ((int32_t) mixSources[SRC_Y2_TRIM] * mxr->weight) / 100; 
+      if(src == SRC_X1_AXIS) operand += ((int32_t) mixSources[SRC_X1_TRIM] * mxr->weight) / 100; 
+      else if(src == SRC_Y1_AXIS) operand += ((int32_t) mixSources[SRC_Y1_TRIM] * mxr->weight) / 100; 
+      else if(src == SRC_X2_AXIS) operand += ((int32_t) mixSources[SRC_X2_TRIM] * mxr->weight) / 100; 
+      else if(src == SRC_Y2_AXIS) operand += ((int32_t) mixSources[SRC_Y2_TRIM] * mxr->weight) / 100; 
     }
     
     //--- MIX AND UPDATE
