@@ -873,7 +873,6 @@ enum {
   TRIM_STEP_COUNT
 };
 
-//==================================================================================================
 
 #define NUM_VIRTUAL_CHANNELS  5
 
@@ -911,6 +910,11 @@ enum {
   
   SRC_FUNCGEN_FIRST,
   SRC_FUNCGEN_LAST = SRC_FUNCGEN_FIRST + NUM_FUNCGEN - 1,
+
+  SRC_X1_TRIM,
+  SRC_Y1_TRIM,
+  SRC_X2_TRIM,
+  SRC_Y2_TRIM,
   
   SRC_SW_PHYSICAL_FIRST,
   SRC_SW_PHYSICAL_LAST = SRC_SW_PHYSICAL_FIRST + NUM_PHYSICAL_SWITCHES - 1,
