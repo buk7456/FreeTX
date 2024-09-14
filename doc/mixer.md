@@ -8,6 +8,7 @@ Mixer sources can be any of the following
 - Knobs (KnobA, KnobB)
 - Constants (Max)
 - Function generators (Fgen1, Fgen2, ...)
+- Trims (X1Trim, Y1Trim, X2Trim, Y2Trim)
 - Physical switches (SwA, SwB, ...)
 - Logical switches (L1, L2, ...)
 - Channels (Ch1, Ch2, ...)
@@ -138,7 +139,7 @@ while in the air. Also assume the Rud source is the X1 axis
 For safety, we also need to set Failsafe for both Ch3 and Ch7 in the 'Outputs' screen. 
 <br>We can also add throttle cut by specifying an override switch and a value of -100.
 
-### Example 10: Elevator throttle mixing
+### Example 10: Throttle elevator mixing
 When the throttle is increased, some down elevator can be added to counter tendency of the model gaining 
 <br> altitude when the throttle increases.
 
@@ -205,7 +206,7 @@ value2: L2
 Then in the mixer
 ```txt
 1. Ch3  Add   Thrt (Weight 100)
-2. Ch3  RplW  max  (Weight -100, Switch L1)
+2. Ch3  RplW  Max  (Weight -100, Switch L1)
 ```
 Alternatively, a much safer throttle cut can be achieved in the Outputs screen by specifying the 
 override as L1 and value -100.
@@ -281,7 +282,7 @@ via a switch. This is left as an exercise.
 ### Example 19: Random servo motion generator
 Suppose we have a model equipped with a turret, or a figure. We want the servo to move automatically but in a 
 random and intermittent manner.
-<br>We can achieve this behaviour with function genarators and logical switches as follows.
+<br>We can achieve this with function genarators and logical switches as follows.
  
 ```txt
 Function generator Fgen1
@@ -387,3 +388,38 @@ Assuming our final output is on Ch1, we specify the input as Virt1 and apply the
 1. Virt1  Add  L1    (Weight 100, SlowUp 1s, SlowDown 0s)
 2. Ch1    Add  Virt1 (Weight 100, Custom Curve1)
 ```
+
+### Example 22: Aileron rudder mixing with automatic switching
+When the Rudder stick is centered and the Aileron stick is moved away from center, the mix is activated (Aileron stick now controls the rudder).
+<br>The mix is deactivated as soon as the Rudder stick is moved away from center (Rudder stick now controls the Rudder).
+<br>When both sticks are centered the mix gets activated again.
+<br>We can achieve this behavior with the help of logical switches as follows.
+```txt
+L1
+Func:   a==x
+Value1: Rud    
+Value2: 0         
+
+L2
+Func: a==x
+Value1: Ail
+value2: 0
+
+L3
+Func: AND
+Value1: L1
+value2: L2
+
+L4
+Func: Latch
+Value1: L3
+value2: !L1
+``` 
+Then in the mixer, assuming the rudder servo is on Ch4,
+```txt
+1. Virt1 Add     Max   (Weight 100, Switch L4)
+2. Ch4   Add     Ail   (Weight 100, No trim)
+3. Ch4   Mltply  Virt1 (Weight 100, SlowDown 1s)
+4. Ch4   Add     Rud   (Weight 100, Switch !L4)
+```
+Here, Virt1 is used to smooth the transition from the Aileron stick to the Rudder stick.
