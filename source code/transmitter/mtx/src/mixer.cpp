@@ -156,6 +156,28 @@ void computeChannelOutputs()
   //Mix source raw sticks
   for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
     mixSources[SRC_STICK_AXIS_FIRST + i] = stickAxisIn[i];
+  
+  //Mix source stick trims
+
+  if(Model.X1Trim.trimState == TRIM_FLIGHT_MODE)
+    mixSources[SRC_X1_TRIM] = ((int32_t) fmdTrimVal[0] * 5) / 10 ;
+  else if(Model.X1Trim.trimState == TRIM_COMMON)
+    mixSources[SRC_X1_TRIM] = ((int32_t) Model.X1Trim.commonTrim * 5) / 10;
+  
+  if(Model.Y1Trim.trimState == TRIM_FLIGHT_MODE)
+    mixSources[SRC_Y1_TRIM] = ((int32_t) fmdTrimVal[1] * 5) / 10 ;
+  else if(Model.Y1Trim.trimState == TRIM_COMMON)
+    mixSources[SRC_Y1_TRIM] = ((int32_t) Model.Y1Trim.commonTrim * 5) / 10;
+
+  if(Model.X2Trim.trimState == TRIM_FLIGHT_MODE)
+    mixSources[SRC_X2_TRIM] = ((int32_t) fmdTrimVal[2] * 5) / 10 ;
+  else if(Model.X2Trim.trimState == TRIM_COMMON)
+    mixSources[SRC_X2_TRIM] = ((int32_t) Model.X2Trim.commonTrim * 5) / 10;
+
+  if(Model.Y2Trim.trimState == TRIM_FLIGHT_MODE)
+    mixSources[SRC_Y2_TRIM] = ((int32_t) fmdTrimVal[3] * 5) / 10 ;
+  else if(Model.Y2Trim.trimState == TRIM_COMMON)
+    mixSources[SRC_Y2_TRIM] = ((int32_t) Model.Y2Trim.commonTrim * 5) / 10;
 
   //Mix source knobs
   for(uint8_t i = 0; i < NUM_KNOBS; i++)
@@ -383,36 +405,10 @@ void computeChannelOutputs()
       if(src == SRC_AIL) src = Model.ailSrcRaw;
       if(src == SRC_ELE) src = Model.eleSrcRaw;
       
-      // Mathematical formula is (trim/10)*5*(weight/100)
-
-      if(src == SRC_X1)
-      {
-        if(Model.X1Trim.trimState == TRIM_FLIGHT_MODE)
-          operand += ((int32_t) fmdTrimVal[0] * 5 * mxr->weight) / 1000; 
-        else if(Model.X1Trim.trimState == TRIM_COMMON)
-          operand += ((int32_t) Model.X1Trim.commonTrim * 5 * mxr->weight) / 1000;
-      }
-      else if(src == SRC_Y1)
-      {
-        if(Model.Y1Trim.trimState == TRIM_FLIGHT_MODE)
-          operand += ((int32_t) fmdTrimVal[1] * 5 * mxr->weight) / 1000; 
-        else if(Model.Y1Trim.trimState == TRIM_COMMON)
-          operand += ((int32_t) Model.Y1Trim.commonTrim * 5 * mxr->weight) / 1000;
-      }
-      else if(src == SRC_X2)
-      {
-        if(Model.X2Trim.trimState == TRIM_FLIGHT_MODE)
-          operand += ((int32_t) fmdTrimVal[2] * 5 * mxr->weight) / 1000; 
-        else if(Model.X2Trim.trimState == TRIM_COMMON)
-          operand += ((int32_t) Model.X2Trim.commonTrim * 5 * mxr->weight) / 1000;
-      }
-      else if(src == SRC_Y2)
-      {
-        if(Model.Y2Trim.trimState == TRIM_FLIGHT_MODE)
-          operand += ((int32_t) fmdTrimVal[3] * 5 * mxr->weight) / 1000; 
-        else if(Model.Y2Trim.trimState == TRIM_COMMON)
-          operand += ((int32_t) Model.Y2Trim.commonTrim * 5 * mxr->weight) / 1000;
-      }
+      if(src == SRC_X1) operand += ((int32_t) mixSources[SRC_X1_TRIM] * mxr->weight) / 100; 
+      else if(src == SRC_Y1) operand += ((int32_t) mixSources[SRC_Y1_TRIM] * mxr->weight) / 100; 
+      else if(src == SRC_X2) operand += ((int32_t) mixSources[SRC_X2_TRIM] * mxr->weight) / 100; 
+      else if(src == SRC_Y2) operand += ((int32_t) mixSources[SRC_Y2_TRIM] * mxr->weight) / 100; 
     }
     
     //--- MIX AND UPDATE
