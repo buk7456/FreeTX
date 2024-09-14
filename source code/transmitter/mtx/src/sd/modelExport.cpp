@@ -131,16 +131,16 @@ void exportModelData(File& file)
   
   if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
   {
-    getSrcName(tempBuff, Model.rudSrcRaw, sizeof(tempBuff));
+    getSrcName_Clean(tempBuff, Model.rudSrcRaw, sizeof(tempBuff));
     writeKeyValue_Char(file, 0, (Model.type == MODEL_TYPE_AIRPLANE) ? key_RudSrc : key_YawSrc, tempBuff);
 
-    getSrcName(tempBuff, Model.ailSrcRaw, sizeof(tempBuff));
+    getSrcName_Clean(tempBuff, Model.ailSrcRaw, sizeof(tempBuff));
     writeKeyValue_Char(file, 0, (Model.type == MODEL_TYPE_AIRPLANE) ? key_AilSrc : key_RollSrc, tempBuff);
     
-    getSrcName(tempBuff, Model.eleSrcRaw, sizeof(tempBuff));
+    getSrcName_Clean(tempBuff, Model.eleSrcRaw, sizeof(tempBuff));
     writeKeyValue_Char(file, 0, (Model.type == MODEL_TYPE_AIRPLANE) ? key_EleSrc : key_PitchSrc, tempBuff);
 
-    getSrcName(tempBuff, Model.thrSrcRaw, sizeof(tempBuff));
+    getSrcName_Clean(tempBuff, Model.thrSrcRaw, sizeof(tempBuff));
     writeKeyValue_Char(file, 0, key_ThrSrc, tempBuff);
   }
 
@@ -151,7 +151,7 @@ void exportModelData(File& file)
   for(uint8_t idx = 0; idx < NUM_PHYSICAL_SWITCHES; idx++)
   {
     printIndention_helper(file, 1);
-    getSrcName(tempBuff, SRC_SW_PHYSICAL_FIRST + idx, sizeof(tempBuff));
+    getSrcName_Clean(tempBuff, SRC_SW_PHYSICAL_FIRST + idx, sizeof(tempBuff));
     file.print(tempBuff);
     file.print(F(": "));
     file.print(findStringInIdStr(enum_SwitchWarn, Model.switchWarn[idx]));
@@ -286,7 +286,7 @@ void exportModelData(File& file)
       writeKeyValue_TimeSeconds(file, 1, key_Period2, fgen->period2);
     }
 
-    getSrcName(tempBuff, fgen->modulatorSrc, sizeof(tempBuff));
+    getSrcName_Clean(tempBuff, fgen->modulatorSrc, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_ModulatorSrc, tempBuff);
 
     writeKeyValue_bool(file, 1, key_ReverseModulator, fgen->reverseModulator);
@@ -307,7 +307,7 @@ void exportModelData(File& file)
     writeKeyValue_S32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Name, mxr->name);
     
-    getSrcName(tempBuff, mxr->output, sizeof(tempBuff));
+    getSrcName_Clean(tempBuff, mxr->output, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_Output, tempBuff);
     
     getControlSwitchName_Clean(tempBuff, mxr->swtch, sizeof(tempBuff));
@@ -318,7 +318,7 @@ void exportModelData(File& file)
     if(mxr->operation == MIX_HOLD)
       continue;
     
-    getSrcName(tempBuff, mxr->input, sizeof(tempBuff));
+    getSrcName_Clean(tempBuff, mxr->input, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_Input, tempBuff);
     
     writeKeyValue_S32(file, 1, key_Weight, mxr->weight);
@@ -391,7 +391,7 @@ void exportModelData(File& file)
     
     if(ls->func <= LS_FUNC_GROUP3_LAST)
     {
-      getSrcName(tempBuff, ls->val1, sizeof(tempBuff));
+      getSrcName_Clean(tempBuff, ls->val1, sizeof(tempBuff));
       writeKeyValue_Char(file, 1, key_Val1, tempBuff);
       
       writeKeyValue_S32(file, 1, key_Val2, ls->val2);
@@ -403,10 +403,10 @@ void exportModelData(File& file)
     }
     else if(ls->func <= LS_FUNC_GROUP4_LAST)
     {
-      getSrcName(tempBuff, ls->val1, sizeof(tempBuff));
+      getSrcName_Clean(tempBuff, ls->val1, sizeof(tempBuff));
       writeKeyValue_Char(file, 1, key_Val1, tempBuff);
       
-      getSrcName(tempBuff, ls->val2, sizeof(tempBuff));
+      getSrcName_Clean(tempBuff, ls->val2, sizeof(tempBuff));
       writeKeyValue_Char(file, 1, key_Val2, tempBuff);
       
       writeKeyValue_TimeSeconds(file, 1, key_Val3, ls->val3);
@@ -558,7 +558,7 @@ void exportModelData(File& file)
     }
     else if(widget->type == WIDGET_TYPE_MIXSOURCES)
     {
-      getSrcName(tempBuff, widget->src, sizeof(tempBuff));
+      getSrcName_Clean(tempBuff, widget->src, sizeof(tempBuff));
       writeKeyValue_Char(file, 1, key_Src, tempBuff);
       writeKeyValue_Char(file, 1, key_Disp, findStringInIdStr(enum_WidgetDisplay, widget->disp));
       writeKeyValue_S32(file, 1, key_GaugeMin, widget->gaugeMin);

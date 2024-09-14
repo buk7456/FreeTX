@@ -17,6 +17,7 @@ template <typename T> void findIdInIdStr(const id_string_t *idStr_P, const char 
 extern bool idNotFoundInIdStr; //for basic error detection only
 
 void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff);
+void getSrcName_Clean(char* buff, uint8_t idx, uint8_t lenBuff);
 void getControlSwitchName(char* buff, uint8_t idx, uint8_t lenBuff);
 void getControlSwitchName_Clean(char* buff, uint8_t idx, uint8_t lenBuff);
 

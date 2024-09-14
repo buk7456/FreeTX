@@ -2986,7 +2986,7 @@ void handleMainUI()
                 if(input == SRC_THR) input = Model.thrSrcRaw;
                 if(input == SRC_AIL) input = Model.ailSrcRaw;
                 if(input == SRC_ELE) input = Model.eleSrcRaw;
-                if(input ==  SRC_X1 || input == SRC_Y1 || input == SRC_X2 || input == SRC_Y2)
+                if(input ==  SRC_X1_AXIS || input == SRC_Y1_AXIS || input == SRC_X2_AXIS || input == SRC_Y2_AXIS)
                 {
                   drawCheckbox(60, ypos, mxr->trimEnabled);
                   if(edit)
@@ -5953,7 +5953,7 @@ void handleMainUI()
       {
         drawHeader(extrasMenu[EXTRAS_MENU_TRIM_SETUP]);
         
-        uint8_t axis[4] = {SRC_X1, SRC_Y1, SRC_X2, SRC_Y2};
+        uint8_t axis[4] = {SRC_X1_AXIS, SRC_Y1_AXIS, SRC_X2_AXIS, SRC_Y2_AXIS};
 
         trim_params_t* trim[4];
         trim[0] = &Model.X1Trim;

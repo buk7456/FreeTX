@@ -64,16 +64,16 @@ const id_string_t enum_StickAxisType[] PROGMEM = {
 };
 
 const id_string_t enum_StickAxisName[] PROGMEM = {
-  {SRC_X1, "X1"},
-  {SRC_Y1, "Y1"},
-  {SRC_Z1, "Z1"},
-  {SRC_X2, "X2"},
-  {SRC_Y2, "Y2"},
-  {SRC_Z2, "Z2"},
-  {SRC_X3, "X3"},
-  {SRC_Y3, "Y3"},
-  {SRC_X4, "X4"},
-  {SRC_Y4, "Y4"},
+  {SRC_X1_AXIS, "X1"},
+  {SRC_Y1_AXIS, "Y1"},
+  {SRC_Z1_AXIS, "Z1"},
+  {SRC_X2_AXIS, "X2"},
+  {SRC_Y2_AXIS, "Y2"},
+  {SRC_Z2_AXIS, "Z2"},
+  {SRC_X3_AXIS, "X3"},
+  {SRC_Y3_AXIS, "Y3"},
+  {SRC_X4_AXIS, "X4"},
+  {SRC_Y4_AXIS, "Y4"},
   {0, ""}
 };
 
@@ -469,12 +469,16 @@ void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff)
 {
   switch(idx)
   {
-    case SRC_NONE:    strlcpy_P(buff, PSTR("None"), lenBuff); break;
+    case SRC_NONE: strlcpy_P(buff, PSTR("None"), lenBuff); break;
     case SRC_100PERC: strlcpy_P(buff, PSTR("Max"), lenBuff); break;
     case SRC_THR: strlcpy_P(buff, PSTR("Thr"), lenBuff); break;
     case SRC_AIL: strlcpy_P(buff, Model.type == MODEL_TYPE_MULTICOPTER ? PSTR("Roll") : PSTR("Ail"), lenBuff); break;
     case SRC_ELE: strlcpy_P(buff, Model.type == MODEL_TYPE_MULTICOPTER ? PSTR("Pitch") : PSTR("Ele"), lenBuff); break;
     case SRC_RUD: strlcpy_P(buff, Model.type == MODEL_TYPE_MULTICOPTER ? PSTR("Yaw") : PSTR("Rud"), lenBuff); break;
+    case SRC_X1_TRIM: strlcpy_P(buff, PSTR("X1\x16"), lenBuff); break;
+    case SRC_Y1_TRIM: strlcpy_P(buff, PSTR("Y1\x16"), lenBuff); break;
+    case SRC_X2_TRIM: strlcpy_P(buff, PSTR("X2\x16"), lenBuff); break;
+    case SRC_Y2_TRIM: strlcpy_P(buff, PSTR("Y2\x16"), lenBuff); break;
     default:
     {
       if(idx >= SRC_STICK_AXIS_FIRST && idx <= SRC_STICK_AXIS_LAST)
@@ -551,6 +555,25 @@ void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff)
 
 //=================================================================================================
 
+void getSrcName_Clean(char* buff, uint8_t idx, uint8_t lenBuff)
+{
+  //This function substitutes non printable characters and in the src name 
+  //so that we can write it to a human readable text file format
+
+  getSrcName(buff, idx, lenBuff);
+
+  if(idx == SRC_X1_TRIM || idx == SRC_Y1_TRIM || idx == SRC_X2_TRIM || idx == SRC_Y2_TRIM)
+  {
+    for(uint8_t i = 0; i < lenBuff - 1; i++)
+    {
+      uint8_t c = *(buff + i);
+      if(c == 0x16) { strlcpy_P(buff + i, PSTR("Trim"), lenBuff - i); break; }
+    }
+  }
+}
+
+//=================================================================================================
+
 void getControlSwitchName(char* buff, uint8_t idx, uint8_t lenBuff)
 {
   if(idx == CTRL_SW_NONE)
@@ -603,7 +626,7 @@ void getControlSwitchName(char* buff, uint8_t idx, uint8_t lenBuff)
 
 void getControlSwitchName_Clean(char* buff, uint8_t idx, uint8_t lenBuff)
 {
-  //This function substitutes non printable ascii characters and the "--" 
+  //This function substitutes non printable characters and the "--" 
   //in the switch name so we can write it to a human readable text file format
   
   if(idx == CTRL_SW_NONE)
@@ -620,9 +643,9 @@ void getControlSwitchName_Clean(char* buff, uint8_t idx, uint8_t lenBuff)
     for(uint8_t i = 0; i < lenBuff - 1; i++)
     {
       uint8_t c = *(buff + i);
-      if(c == 0x18){ strlcpy_P(buff + i, PSTR("_Up"), lenBuff - i); break; }
-      if(c == '-') { strlcpy_P(buff + i, PSTR("_Mid"), lenBuff - i); break; }
-      if(c == 0x19){ strlcpy_P(buff + i, PSTR("_Down"), lenBuff - i); break; }
+      if(c == 0x18) { strlcpy_P(buff + i, PSTR("_Up"), lenBuff - i); break; }
+      else if(c == '-')  { strlcpy_P(buff + i, PSTR("_Mid"), lenBuff - i); break; }
+      else if(c == 0x19) { strlcpy_P(buff + i, PSTR("_Down"), lenBuff - i); break; }
     }
   }
 }

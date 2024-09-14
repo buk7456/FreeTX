@@ -178,11 +178,11 @@ void resetSystemParams()
 
   for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
   {
-    if(SRC_STICK_AXIS_FIRST + i == SRC_Y1)
+    if(SRC_STICK_AXIS_FIRST + i == SRC_Y1_AXIS)
       Sys.StickAxis[i].type = STICK_AXIS_NON_CENTERING;
-    else if(SRC_STICK_AXIS_FIRST + i == SRC_Z1)
+    else if(SRC_STICK_AXIS_FIRST + i == SRC_Z1_AXIS)
       Sys.StickAxis[i].type = STICK_AXIS_ABSENT;
-    else if(SRC_STICK_AXIS_FIRST + i == SRC_Z2)
+    else if(SRC_STICK_AXIS_FIRST + i == SRC_Z2_AXIS)
       Sys.StickAxis[i].type = STICK_AXIS_ABSENT;
     else
       Sys.StickAxis[i].type = STICK_AXIS_SELF_CENTERING;
@@ -275,31 +275,31 @@ void resetModelParams()
   //--- raw sources for rud, thr, ail, ele inputs ---
   if(Sys.defaultStickMode == STICK_MODE_RTAE)
   {
-    Model.rudSrcRaw = SRC_X1;
-    Model.thrSrcRaw = SRC_Y1;
-    Model.ailSrcRaw = SRC_X2;
-    Model.eleSrcRaw = SRC_Y2;
+    Model.rudSrcRaw = SRC_X1_AXIS;
+    Model.thrSrcRaw = SRC_Y1_AXIS;
+    Model.ailSrcRaw = SRC_X2_AXIS;
+    Model.eleSrcRaw = SRC_Y2_AXIS;
   }
   if(Sys.defaultStickMode == STICK_MODE_AERT)
   {
-    Model.ailSrcRaw = SRC_X1;
-    Model.eleSrcRaw = SRC_Y1;
-    Model.rudSrcRaw = SRC_X2;
-    Model.thrSrcRaw = SRC_Y2;
+    Model.ailSrcRaw = SRC_X1_AXIS;
+    Model.eleSrcRaw = SRC_Y1_AXIS;
+    Model.rudSrcRaw = SRC_X2_AXIS;
+    Model.thrSrcRaw = SRC_Y2_AXIS;
   }
   if(Sys.defaultStickMode == STICK_MODE_REAT)
   {
-    Model.rudSrcRaw = SRC_X1;
-    Model.eleSrcRaw = SRC_Y1;
-    Model.ailSrcRaw = SRC_X2;
-    Model.thrSrcRaw = SRC_Y2;
+    Model.rudSrcRaw = SRC_X1_AXIS;
+    Model.eleSrcRaw = SRC_Y1_AXIS;
+    Model.ailSrcRaw = SRC_X2_AXIS;
+    Model.thrSrcRaw = SRC_Y2_AXIS;
   }
   if(Sys.defaultStickMode == STICK_MODE_ATRE)
   {
-    Model.ailSrcRaw = SRC_X1;
-    Model.thrSrcRaw = SRC_Y1;
-    Model.rudSrcRaw = SRC_X2;
-    Model.eleSrcRaw = SRC_Y2;
+    Model.ailSrcRaw = SRC_X1_AXIS;
+    Model.thrSrcRaw = SRC_Y1_AXIS;
+    Model.rudSrcRaw = SRC_X2_AXIS;
+    Model.eleSrcRaw = SRC_Y2_AXIS;
   }
 
   //--- rates and expo ---

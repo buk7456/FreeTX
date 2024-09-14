@@ -164,7 +164,7 @@ uint8_t getSrcId(const char* str)
   tempBuff[0] = '\0';
   for(uint8_t i = 0; i < TOTAL_SOURCES_COUNT; i++)
   {
-    getSrcName(tempBuff, i, sizeof(tempBuff));
+    getSrcName_Clean(tempBuff, i, sizeof(tempBuff));
     if(MATCH(tempBuff, str))
       return i;
   }
