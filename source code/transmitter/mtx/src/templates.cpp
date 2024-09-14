@@ -108,9 +108,9 @@ void loadMixerTemplateVtail(uint8_t mixIdx)
 void loadMixerTemplateDiffThrust(uint8_t mixIdx)
 {
   loadMix(mixIdx,     PSTR("MotorL"), SRC_CH1 + getChannelIdx('T'), MIX_ADD, CTRL_SW_NONE, SRC_THR, 100, 0, 0, 0, 1, 0xFF, 0, 0, 0, 0);
-  loadMix(mixIdx + 1, PSTR("MotorL"), SRC_CH1 + getChannelIdx('T'), MIX_ADD, CTRL_SW_NONE, SRC_X1, 40, 0, 0, 0, 1, 0xFF, 0, 0, 0, 0);
+  loadMix(mixIdx + 1, PSTR("MotorL"), SRC_CH1 + getChannelIdx('T'), MIX_ADD, CTRL_SW_NONE, SRC_X1_AXIS, 40, 0, 0, 0, 1, 0xFF, 0, 0, 0, 0);
   loadMix(mixIdx + 2, PSTR("MotorR"), SRC_CH1 + 5,                  MIX_ADD, CTRL_SW_NONE, SRC_THR, 100, 0, 0, 0, 1, 0xFF, 0, 0, 0, 0);
-  loadMix(mixIdx + 3, PSTR("MotorR"), SRC_CH1 + 5,                  MIX_ADD, CTRL_SW_NONE, SRC_X1, -40, 0, 0, 0, 1, 0xFF, 0, 0, 0, 0);
+  loadMix(mixIdx + 3, PSTR("MotorR"), SRC_CH1 + 5,                  MIX_ADD, CTRL_SW_NONE, SRC_X1_AXIS, -40, 0, 0, 0, 1, 0xFF, 0, 0, 0, 0);
 }
 
 //---------------------------- TELEMETRY SENSOR TEMPLATES ------------------------------------------
