@@ -467,6 +467,8 @@ template void findIdInIdStr<int16_t>(const id_string_t *idStr_P, const char *sea
 
 void getSrcName(char* buff, uint8_t idx, uint8_t lenBuff)
 {
+  //For mixer sources, limit to 5 characters max otherwise text could overflow or get clipped in the UI.
+  
   switch(idx)
   {
     case SRC_NONE: strlcpy_P(buff, PSTR("None"), lenBuff); break;
@@ -576,6 +578,8 @@ void getSrcName_Clean(char* buff, uint8_t idx, uint8_t lenBuff)
 
 void getControlSwitchName(char* buff, uint8_t idx, uint8_t lenBuff)
 {
+  //Limit to 5 characters max, otherwise text could overflow or get clipped in the UI.
+  
   if(idx == CTRL_SW_NONE)
   {
     strlcpy_P(buff, PSTR("--"), lenBuff);
