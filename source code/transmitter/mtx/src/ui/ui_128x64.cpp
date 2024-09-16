@@ -2364,14 +2364,7 @@ void handleMainUI()
           }
           
           //--- Edit values
-          
-          if(focusedItem == 2)
-            *rate = incDec(*rate, 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL); 
-          else if(focusedItem == 3)
-            *expo = incDec(*expo, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
-          else if(focusedItem == 4 && isEditMode)
-            *swtch = incDecControlSwitch(*swtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
-          else if(focusedItem == 5 && isEditMode)
+          if(focusedItem == 2 && isEditMode)
           {
             //auto detect moved
             uint8_t movedSrc = getMovedSource();
@@ -2383,36 +2376,42 @@ void handleMainUI()
             //inc dec
             *qqSrcRaw[idx] = incDecSource(*qqSrcRaw[idx], INCDEC_FLAG_MIX_SRC_RAW_ANALOG);
           }
-
+          else if(focusedItem == 3)
+            *rate = incDec(*rate, 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL); 
+          else if(focusedItem == 4)
+            *expo = incDec(*expo, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+          else if(focusedItem == 5 && isEditMode)
+            *swtch = incDecControlSwitch(*swtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+          
           //--- Draw text
           
           display.setCursor(8, 9);
           getSrcName(txtBuff, qqSrc[idx], sizeof(txtBuff));
           display.print(txtBuff);
           display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
-
+          
           display.setCursor(0, 20);
-          display.print(F("Rate:"));
+          display.print(F("Src:"));
           display.setCursor(42, 20);
+          getSrcName(txtBuff, *qqSrcRaw[idx], sizeof(txtBuff));
+          display.print(txtBuff);
+
+          display.setCursor(0, 29);
+          display.print(F("Rate:"));
+          display.setCursor(42, 29);
           display.print(*rate);
           display.print(F("%"));
           
-          display.setCursor(0, 29);
+          display.setCursor(0, 38);
           display.print(F("Expo:"));
-          display.setCursor(42, 29);
+          display.setCursor(42, 38);
           display.print(*expo);
           display.print(F("%"));
           
-          display.setCursor(0, 38);
-          display.print(F("D/R:"));
-          display.setCursor(42, 38);
-          getControlSwitchName(txtBuff, *swtch, sizeof(txtBuff));
-          display.print(txtBuff);
-          
           display.setCursor(0, 47);
-          display.print(F("Src:"));
+          display.print(F("D/R:"));
           display.setCursor(42, 47);
-          getSrcName(txtBuff, *qqSrcRaw[idx], sizeof(txtBuff));
+          getControlSwitchName(txtBuff, *swtch, sizeof(txtBuff));
           display.print(txtBuff);
           
           //--- Show the current D/R in use. Only show if we have dual rates enabled
@@ -2497,12 +2496,12 @@ void handleMainUI()
           //scrollable list
           
           enum {
+            ITEM_THR_SRC_RAW,
             ITEM_CURVE_NUM_POINTS,
             ITEM_CURVE_POINT,
             ITEM_CURVE_XVAL,
             ITEM_CURVE_YVAL,
             ITEM_CURVE_SMOOTH,
-            ITEM_THR_SRC_RAW,
             
             ITEM_COUNT
           };
@@ -2520,6 +2519,8 @@ void handleMainUI()
               topItem++;
           }
           
+          bool markNode = false;
+          
           //fill list and edit items
           for(uint8_t line = 0; line < 5 && line < ITEM_COUNT; line++)
           {
@@ -2528,10 +2529,11 @@ void handleMainUI()
               drawCursor(32, ypos);
             
             if((topItem - 1 + line) >= ITEM_COUNT)
-            break;
+              break;
             
             uint8_t itemID = topItem - 1 + line;
-            bool edit = (focusedItem > 1 && itemID == focusedItem - 2 && isEditMode);
+            bool isFocused = (focusedItem > 1 && itemID == focusedItem - 2);
+            bool edit = (isFocused && isEditMode);
             
             display.setCursor(0, ypos);
             switch(itemID)
@@ -2582,6 +2584,8 @@ void handleMainUI()
                   display.print(F("Pt:"));
                   display.setCursor(40, ypos);
                   display.write(97 + thisPt);
+                  if(isFocused)
+                    markNode = true;
                   if(edit)
                     thisPt = incDec(thisPt, 0, crv->numPoints - 1, INCDEC_WRAP, INCDEC_SLOW);
                 }
@@ -2592,6 +2596,8 @@ void handleMainUI()
                   display.print(F("Xval:"));
                   display.setCursor(40, ypos);
                   display.print(crv->xVal[thisPt]);
+                  if(isFocused)
+                    markNode = true;
                   if(edit && thisPt > 0 && thisPt < crv->numPoints - 1)
                   {
                     int8_t _minVal = crv->xVal[thisPt - 1];
@@ -2606,6 +2612,8 @@ void handleMainUI()
                   display.print(F("Yval:"));
                   display.setCursor(40, ypos);
                   display.print(crv->yVal[thisPt]);
+                  if(isFocused)
+                    markNode = true;
                   if(edit)
                     crv->yVal[thisPt] = incDec(crv->yVal[thisPt], -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
                 }
@@ -2642,7 +2650,7 @@ void handleMainUI()
             display.setInterlace(false);
           }
           //draw graph
-          drawCustomCurve(crv, (focusedItem >= 3 && focusedItem <= 5) ? thisPt : 0xff, moved ? Model.thrSrcRaw : (uint8_t)SRC_NONE);
+          drawCustomCurve(crv, markNode ? thisPt : 0xff, moved ? Model.thrSrcRaw : (uint8_t)SRC_NONE);
         }
 
         //------ STICKS
@@ -3579,14 +3587,14 @@ void handleMainUI()
                 num /= 10;
                 digits++;
               }
-              uint8_t xpos = 61 - (digits - 1)*6;
+              uint8_t xpos = 60 - (digits - 1)*6;
               if(Model.Mixer[mixIdx].weight < 0)
                 xpos -= 6;
               display.setCursor(xpos, ypos);
               display.print(Model.Mixer[mixIdx].weight);
               
               //input 
-              display.setCursor(67, ypos);
+              display.setCursor(66, ypos);
               getSrcName(txtBuff, Model.Mixer[mixIdx].input, sizeof(txtBuff));
               display.print(txtBuff);
             }
@@ -3596,7 +3604,9 @@ void handleMainUI()
             {
               getControlSwitchName(txtBuff, Model.Mixer[mixIdx].swtch, sizeof(txtBuff));
               uint8_t len = strlen(txtBuff);
-              display.setCursor(126 - len * 6, ypos);
+              uint8_t xpos = 126 - len * 6;
+              display.fillRect(xpos, ypos, (len * 6) - 1, 8, WHITE); //clear area just in case the preceding text overflowed
+              display.setCursor(xpos, ypos);
               display.print(txtBuff);
             }
           }
@@ -5953,13 +5963,13 @@ void handleMainUI()
       {
         drawHeader(extrasMenu[EXTRAS_MENU_TRIM_SETUP]);
         
-        uint8_t axis[4] = {SRC_X1_AXIS, SRC_Y1_AXIS, SRC_X2_AXIS, SRC_Y2_AXIS};
+        uint8_t qqSrc[4] = {SRC_X1_TRIM, SRC_Y1_TRIM, SRC_X2_TRIM, SRC_Y2_TRIM};
 
-        trim_params_t* trim[4];
-        trim[0] = &Model.X1Trim;
-        trim[1] = &Model.Y1Trim;
-        trim[2] = &Model.X2Trim;
-        trim[3] = &Model.Y2Trim;
+        trim_params_t* qqTrim[4];
+        qqTrim[0] = &Model.X1Trim;
+        qqTrim[1] = &Model.Y1Trim;
+        qqTrim[2] = &Model.X2Trim;
+        qqTrim[3] = &Model.Y2Trim;
 
         int16_t fmdTrimVal[4];
         fmdTrimVal[0] = Model.FlightMode[activeFmdIdx].x1Trim;
@@ -5970,17 +5980,17 @@ void handleMainUI()
         for(uint8_t i = 0; i < 4; i++)
         {
           display.setCursor(0, 9 + i * 9);
-          getSrcName(txtBuff, axis[i], sizeof(txtBuff));
+          getSrcName(txtBuff, qqSrc[i], sizeof(txtBuff));
           display.print(txtBuff);
           display.print(F(":"));
           display.setCursor(42, 9 + i * 9);
-          display.print(findStringInIdStr(enum_TrimState, trim[i]->trimState));
+          display.print(findStringInIdStr(enum_TrimState, qqTrim[i]->trimState));
           display.setCursor(84, 9 + i * 9);
           display.print(F("("));
           int16_t val = 0;
-          if(trim[i]->trimState == TRIM_COMMON) 
-            val = trim[i]->commonTrim;
-          else if(trim[i]->trimState == TRIM_FLIGHT_MODE) 
+          if(qqTrim[i]->trimState == TRIM_COMMON) 
+            val = qqTrim[i]->commonTrim;
+          else if(qqTrim[i]->trimState == TRIM_FLIGHT_MODE) 
             val = fmdTrimVal[i];
           if(val < 0)
           {
@@ -6007,8 +6017,8 @@ void handleMainUI()
         {
           uint8_t i = focusedItem - 1;
           do {
-            trim[i]->trimState = incDec(trim[i]->trimState, 0, TRIM_STATE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
-          } while(Model.type == MODEL_TYPE_OTHER && trim[i]->trimState == TRIM_FLIGHT_MODE);
+            qqTrim[i]->trimState = incDec(qqTrim[i]->trimState, 0, TRIM_STATE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+          } while(Model.type == MODEL_TYPE_OTHER && qqTrim[i]->trimState == TRIM_FLIGHT_MODE);
         }
         if(focusedItem == 5)
           Model.trimStep = incDec(Model.trimStep, 0, TRIM_STEP_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
@@ -9610,8 +9620,8 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
 
 void drawTrimSliders()
 {
-  int8_t x[4] = {14, 1, 73, 126};
-  int8_t y[4] = {62, 15, 62, 15};
+  int8_t x[4] = {12, 2, 71, 125};
+  int8_t y[4] = {61, 13, 61, 13};
 
   int16_t val[4];
   val[0] = Model.X1Trim.trimState == TRIM_FLIGHT_MODE ? Model.FlightMode[activeFmdIdx].x1Trim : Model.X1Trim.commonTrim;
@@ -9637,21 +9647,21 @@ void drawTrimSliders()
         invertColor = true;
       if(i == 0 || i == 2) 
       { 
-        y[i] -= 2;
+        y[i] -= 1;
         if(i == trimIdx)
-          display.fillRect(x[i] - 3, y[i] - 3, fixedSize + 7, 7, BLACK);
+          display.fillRect(x[i] - 1, y[i] - 3, fixedSize + 7, 7, BLACK);
       }
       if(i == 1) 
       {
-        x[i] += 2;
+        x[i] += 1;
         if(i == trimIdx)
-          display.fillRect(x[i] - 3, y[i] - 3, 7, fixedSize + 7, BLACK);
+          display.fillRect(x[i] - 3, y[i] - 1, 7, fixedSize + 7, BLACK);
       }
       if(i == 3) 
       {
-        x[i] -= 2;
+        x[i] -= 1;
         if(i == trimIdx)
-          display.fillRect(x[i] - 3, y[i] - 3, 7, fixedSize + 7, BLACK);
+          display.fillRect(x[i] - 3, y[i] - 1, 7, fixedSize + 7, BLACK);
       }    
     }
     uint8_t fgColor = invertColor ? WHITE : BLACK;
@@ -9661,17 +9671,27 @@ void drawTrimSliders()
     int16_t a = (val[i] > 0) ? 9 : -9; //used for rounding up
     if(i == 0 || i == 2) //horizontal
     {
-      uint8_t xqq = x[i] + fixedSize/2 - 1 + ((val[i] + a) * fixedSize / range);
-      display.drawRect(xqq, y[i] - 1, 3, 3, fgColor);
-      display.drawHLine(x[i], y[i], fixedSize + 1, fgColor);
-      display.drawPixel(x[i] + fixedSize/2, y[i], bgColor);
+      display.drawHLine(x[i], y[i], fixedSize + 5, fgColor);
+      display.drawPixel(x[i] + 2 + fixedSize/2, y[i], bgColor);
+      uint8_t xqq = x[i] + 1 + fixedSize/2 + ((val[i] + a) * fixedSize / range);
+      if(val[i] > 0) 
+        xqq += 1;
+      else if(val[i] < 0)
+        xqq -= 1;
+      display.drawRect(xqq, y[i] - 2, 3, 5, fgColor);
+      display.drawVLine(xqq + 1, y[i] - 1, 3, bgColor);
     }
     if(i == 1 || i == 3) //vertical
     {
-      uint8_t yqq = y[i] + fixedSize/2 - 1 - ((val[i] + a) * fixedSize / range);
-      display.drawRect(x[i] - 1, yqq, 3, 3, fgColor);
-      display.drawVLine(x[i], y[i], fixedSize + 1, fgColor);
-      display.drawPixel(x[i], y[i] + fixedSize/2, bgColor);
+      display.drawVLine(x[i], y[i], fixedSize + 5, fgColor);
+      display.drawPixel(x[i], y[i] + 2 + fixedSize/2, bgColor);
+      uint8_t yqq = y[i] + 1 + fixedSize/2 - ((val[i] + a) * fixedSize / range);
+      if(val[i] > 0) 
+        yqq -= 1;
+      else if(val[i] < 0)
+        yqq += 1;
+      display.drawRect(x[i] - 2, yqq, 5, 3, fgColor);
+      display.drawHLine(x[i] - 1, yqq + 1, 3, bgColor);
     }
   }
 }
