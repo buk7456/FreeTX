@@ -92,12 +92,12 @@ void computeChannelOutputs()
   //--- Get trim values
   //x1 axis
   if(Model.X1Trim.trimState == TRIM_COMMON)
-     Model.X1Trim.commonTrim = adjustTrim(0, Model.X1Trim.commonTrim, KEY_X1_TRIM_UP, KEY_X1_TRIM_DOWN);
+    Model.X1Trim.commonTrim = adjustTrim(0, Model.X1Trim.commonTrim, KEY_X1_TRIM_UP, KEY_X1_TRIM_DOWN);
   else if(Model.X1Trim.trimState == TRIM_FLIGHT_MODE)
     fmd->x1Trim = adjustTrim(0, fmd->x1Trim, KEY_X1_TRIM_UP, KEY_X1_TRIM_DOWN);
   //y1 axis
   if(Model.Y1Trim.trimState == TRIM_COMMON)
-     Model.Y1Trim.commonTrim = adjustTrim(1, Model.Y1Trim.commonTrim, KEY_Y1_TRIM_UP, KEY_Y1_TRIM_DOWN);
+    Model.Y1Trim.commonTrim = adjustTrim(1, Model.Y1Trim.commonTrim, KEY_Y1_TRIM_UP, KEY_Y1_TRIM_DOWN);
   else if(Model.Y1Trim.trimState == TRIM_FLIGHT_MODE)
     fmd->y1Trim = adjustTrim(1, fmd->y1Trim, KEY_Y1_TRIM_UP, KEY_Y1_TRIM_DOWN);
   //x2 axis
@@ -107,7 +107,7 @@ void computeChannelOutputs()
     fmd->x2Trim = adjustTrim(2, fmd->x2Trim, KEY_X2_TRIM_UP, KEY_X2_TRIM_DOWN);
   //y2 axis
   if(Model.Y2Trim.trimState == TRIM_COMMON)
-     Model.Y2Trim.commonTrim = adjustTrim(3, Model.Y2Trim.commonTrim, KEY_Y2_TRIM_UP, KEY_Y2_TRIM_DOWN);
+    Model.Y2Trim.commonTrim = adjustTrim(3, Model.Y2Trim.commonTrim, KEY_Y2_TRIM_UP, KEY_Y2_TRIM_DOWN);
   else if(Model.Y2Trim.trimState == TRIM_FLIGHT_MODE)
     fmd->y2Trim = adjustTrim(3, fmd->y2Trim, KEY_Y2_TRIM_UP, KEY_Y2_TRIM_DOWN);
   
@@ -163,21 +163,29 @@ void computeChannelOutputs()
     mixSources[SRC_X1_TRIM] = ((int32_t) fmdTrimVal[0] * 5) / 10 ;
   else if(Model.X1Trim.trimState == TRIM_COMMON)
     mixSources[SRC_X1_TRIM] = ((int32_t) Model.X1Trim.commonTrim * 5) / 10;
+  else if(Model.X1Trim.trimState == TRIM_DISABLED)
+    mixSources[SRC_X1_TRIM] = 0;
   
   if(Model.Y1Trim.trimState == TRIM_FLIGHT_MODE)
     mixSources[SRC_Y1_TRIM] = ((int32_t) fmdTrimVal[1] * 5) / 10 ;
   else if(Model.Y1Trim.trimState == TRIM_COMMON)
     mixSources[SRC_Y1_TRIM] = ((int32_t) Model.Y1Trim.commonTrim * 5) / 10;
+  else if(Model.Y1Trim.trimState == TRIM_DISABLED)
+    mixSources[SRC_Y1_TRIM] = 0;
 
   if(Model.X2Trim.trimState == TRIM_FLIGHT_MODE)
     mixSources[SRC_X2_TRIM] = ((int32_t) fmdTrimVal[2] * 5) / 10 ;
   else if(Model.X2Trim.trimState == TRIM_COMMON)
     mixSources[SRC_X2_TRIM] = ((int32_t) Model.X2Trim.commonTrim * 5) / 10;
+  else if(Model.X2Trim.trimState == TRIM_DISABLED)
+    mixSources[SRC_X2_TRIM] = 0;
 
   if(Model.Y2Trim.trimState == TRIM_FLIGHT_MODE)
     mixSources[SRC_Y2_TRIM] = ((int32_t) fmdTrimVal[3] * 5) / 10 ;
   else if(Model.Y2Trim.trimState == TRIM_COMMON)
     mixSources[SRC_Y2_TRIM] = ((int32_t) Model.Y2Trim.commonTrim * 5) / 10;
+  else if(Model.Y2Trim.trimState == TRIM_DISABLED)
+    mixSources[SRC_Y2_TRIM] = 0;
 
   //Mix source knobs
   for(uint8_t i = 0; i < NUM_KNOBS; i++)
@@ -224,6 +232,8 @@ void computeChannelOutputs()
       mixSources[SRC_SW_PHYSICAL_FIRST + i] = (swState[i] == SWLOWERPOS) ? 500 : -500;
     else if(Sys.swType[i] == SW_3POS)
       mixSources[SRC_SW_PHYSICAL_FIRST + i] = (swState[i] == SWLOWERPOS) ? 500 : ((swState[i] == SWUPPERPOS) ? -500 : 0);
+    else if(Sys.swType[i] == SW_ABSENT)
+      mixSources[SRC_SW_PHYSICAL_FIRST + i] = 0;
   }
   
   //Mix sources function generators

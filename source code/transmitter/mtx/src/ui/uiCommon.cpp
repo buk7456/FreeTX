@@ -177,6 +177,26 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
         if(Sys.Knob[i - SRC_KNOB_FIRST].type == KNOB_ABSENT)
           continue;
       }
+      else if(i == SRC_X1_TRIM)
+      {
+        if(Model.X1Trim.trimState == TRIM_DISABLED)
+          continue;
+      }
+      else if(i == SRC_Y1_TRIM)
+      {
+        if(Model.Y1Trim.trimState == TRIM_DISABLED)
+          continue;
+      }
+      else if(i == SRC_X2_TRIM)
+      {
+        if(Model.X2Trim.trimState == TRIM_DISABLED)
+          continue;
+      }
+      else if(i == SRC_Y2_TRIM)
+      {
+        if(Model.Y2Trim.trimState == TRIM_DISABLED)
+          continue;
+      }
     }
     else if(i >= SRC_COUNTER_FIRST && i <= SRC_COUNTER_LAST) //counters
     {
