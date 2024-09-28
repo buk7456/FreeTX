@@ -138,8 +138,7 @@ bool     isRequestingBind = false;
 uint8_t  bindStatusCode = 0;  
 bool     isMainReceiver = true;
 
-uint8_t  outputChConfig[NUM_RC_CHANNELS]; 
-uint8_t  maxOutputChConfig[NUM_RC_CHANNELS];
+uint8_t  outputChConfig[NUM_RC_CHANNELS];
 bool     gotOutputChConfig = false;
 bool     isRequestingOutputChConfig = false;
 bool     isSendOutputChConfig = false;
