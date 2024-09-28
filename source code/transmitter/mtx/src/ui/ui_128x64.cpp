@@ -8977,7 +8977,8 @@ void handleMainUI()
         enum {
           QUERYING_CONFIG, 
           SENDING_CONFIG, 
-          VIEWING_CONFIG
+          VIEWING_CONFIG,
+          VIEWING_CONFIG_SERVOPWM
         };
         
         static uint8_t state = QUERYING_CONFIG;
@@ -8994,151 +8995,270 @@ void handleMainUI()
           stateInitialised = true;
         }
         
-        if(state == QUERYING_CONFIG)
+        switch(state)
         {
-          printFullScreenMsg(PSTR("Reading settings"));
-          if(Sys.animationsEnabled)
-            drawLoaderSpinner(60, display.getCursorY() + 12, 2);
-          
-          if(!actionStarted)
-          {
-            isRequestingOutputChConfig = true;
-            actionStarted = true;
-          }
-          if(gotOutputChConfig)
-          {
-            actionStarted = false;
-            state = VIEWING_CONFIG;
-          }
-          //Time out
-          if(millis() - entryTime > 2500)
-          {
-            makeToast(PSTR("No response"), 2000, 0);
-            stateInitialised = false;
-            actionStarted = false;
-            changeToScreen(SCREEN_RECEIVER);
-          }
-        }
-        else if(state == VIEWING_CONFIG)
-        {
-          drawHeader(PSTR("Output config"));
-
-          //--scrollable list--
-          
-          static uint8_t topItem;
-          static bool viewInitialised = false;
-          if(!viewInitialised)
-          {
-            focusedItem = 1;
-            topItem = 1;
-            viewInitialised = true;
-          }
-
-          uint8_t startIdx = 0; 
-          uint8_t endIdx = MAX_CHANNELS_PER_RECEIVER - 1;
-          if(!isMainReceiver)
-          {
-            startIdx = endIdx + 1; 
-            endIdx = startIdx + MAX_CHANNELS_PER_RECEIVER - 1;
-            if(endIdx >= NUM_RC_CHANNELS)
-              endIdx = NUM_RC_CHANNELS - 1;
-          }
-          
-          //fill list
-          uint8_t numItems = (endIdx - startIdx) + 1; 
-          for(uint8_t line = 0; line < 5 && line < numItems; line++)
-          {
-            uint8_t ypos = 9 + line * 9;
-            uint8_t item = topItem + line;
-            if(focusedItem == item)
-              drawCursor(64, ypos);
-            display.setCursor(0, ypos);
-            
-            //print channels
-            uint8_t idx = startIdx + item - 1; 
-            if(idx <= endIdx)
+          case QUERYING_CONFIG:
             {
-              display.print(F("Channel"));
-              if(idx < 9)
-                display.print(F(" "));
-              display.print(idx + 1);
-              display.print(F(":"));
-              display.setCursor(72, ypos);
-              if(outputChConfig[idx] == 0) display.print(F("Dgtl"));
-              if(outputChConfig[idx] == 1) display.print(F("Servo")); 
-              if(outputChConfig[idx] == 2) display.print(F("PWM")); 
+              printFullScreenMsg(PSTR("Reading settings"));
+              if(Sys.animationsEnabled)
+                drawLoaderSpinner(60, display.getCursorY() + 12, 2);
+              
+              if(!actionStarted)
+              {
+                isRequestingOutputChConfig = true;
+                actionStarted = true;
+              }
+              if(gotOutputChConfig)
+              {
+                actionStarted = false;
+                state = VIEWING_CONFIG;
+              }
+              //Time out
+              if(millis() - entryTime > 2500)
+              {
+                makeToast(PSTR("No response"), 2000, 0);
+                stateInitialised = false;
+                actionStarted = false;
+                changeToScreen(SCREEN_RECEIVER);
+              }
             }
-          }
-          
-          //Draw scroll bar
-          drawScrollBar(125, 9, numItems, topItem, 5, 44);
-          
-          //show the write button
-          drawDottedHLine(0, 54, 128, BLACK, WHITE);
-          display.setCursor(84, 56);
-          display.print(F("[Write]"));
-          if(focusedItem == numItems + 1)
-            drawCursor(76, 56);
-          
-          //Handle navigation
-          changeFocusOnUpDown(numItems + 1); //+1 for button focus
-          if(focusedItem < topItem)
-            topItem = focusedItem;
-          while(focusedItem >= topItem + 5 && focusedItem < numItems + 1)
-            topItem++;
-          toggleEditModeOnSelectClicked();
+            break;
+            
+          case VIEWING_CONFIG:
+            {
+              drawHeader(PSTR("Rcvr output config"));
 
-          //edit params
-          uint8_t idx = startIdx + focusedItem - 1;
-          if(idx <= endIdx)
-            outputChConfig[idx] = incDec(outputChConfig[idx], 0, maxOutputChConfig[idx], INCDEC_WRAP, INCDEC_SLOW);
-          
-          //write configuration
-          if(focusedItem == numItems + 1 && clickedButton == KEY_SELECT)
-          {
-            state = SENDING_CONFIG;
-            entryTime = millis();
-            gotOutputChConfig = false;
-            actionStarted = false;
-            viewInitialised = false;
-          }
-          
-          //exit without writing changes
-          if(heldButton == KEY_SELECT)
-          {
-            stateInitialised = false;
-            actionStarted = false;
-            viewInitialised = false;
-            changeToScreen(SCREEN_RECEIVER);
-          }
-        }
-        else if(state == SENDING_CONFIG)
-        {
-          printFullScreenMsg(PSTR("Writing settings"));
-          if(Sys.animationsEnabled)
-            drawLoaderSpinner(60, display.getCursorY() + 12, 2);
-          
-          if(!actionStarted)
-          {
-            isSendOutputChConfig = true;
-            actionStarted = true;
-          }
-          if(receiverConfigStatusCode > 0)
-          {
-            if(receiverConfigStatusCode == 1) makeToast(PSTR("Write success"), 2000, 0);
-            if(receiverConfigStatusCode == 2) makeToast(PSTR("Write failed"), 2000, 0);
-            stateInitialised = false;
-            actionStarted = false;
-            changeToScreen(SCREEN_RECEIVER);
-          }
-          //Time out
-          if(millis() - entryTime > 2500)
-          {
-            makeToast(PSTR("No response"), 2000, 0);
-            stateInitialised = false;
-            actionStarted = false;
-            changeToScreen(SCREEN_RECEIVER);
-          }
+              display.setCursor(0, 9);
+              display.print(F("Type of signal"));
+            
+              //--scrollable list--
+              
+              static uint8_t topItem;
+              static bool viewInitialised = false;
+              if(!viewInitialised)
+              {
+                focusedItem = 1;
+                topItem = 1;
+                isEditMode = false;
+                viewInitialised = true;
+              }
+            
+              uint8_t startIdx = 0; 
+              uint8_t endIdx = MAX_CHANNELS_PER_RECEIVER - 1;
+              if(!isMainReceiver)
+              {
+                startIdx = endIdx + 1; 
+                endIdx = startIdx + MAX_CHANNELS_PER_RECEIVER - 1;
+                if(endIdx >= NUM_RC_CHANNELS)
+                  endIdx = NUM_RC_CHANNELS - 1;
+              }
+              
+              //fill list
+              uint8_t numItems = (endIdx - startIdx) + 1; 
+              for(uint8_t line = 0; line < 4 && line < numItems; line++)
+              {
+                uint8_t ypos = 18 + line * 9;
+                uint8_t item = topItem + line;
+                if(focusedItem == item)
+                  drawCursor(34, ypos);
+                
+                display.setCursor(0, ypos);
+                uint8_t idx = startIdx + item - 1; 
+                if(idx <= endIdx)
+                {
+                  display.print(F("Ch"));
+                  display.print(idx + 1);
+                  display.print(F(":"));
+                  display.setCursor(42, ypos);
+                  uint8_t val = outputChConfig[idx] & 0x03;
+                  display.print(findStringInIdStr(enum_outputChConfig, val));
+                }
+              }
+              
+              //Draw scroll bar
+              drawScrollBar(125, 9, numItems, topItem, 4, 44);
+              
+              //show the write button
+              drawDottedHLine(0, 54, 128, BLACK, WHITE);
+              display.setCursor(90, 56);
+              display.print(F("[Next]"));
+              if(focusedItem == numItems + 1)
+                drawCursor(82, 56);
+              
+              //Handle navigation
+              changeFocusOnUpDown(numItems + 1); //+1 for button focus
+              if(focusedItem < topItem)
+                topItem = focusedItem;
+              while(focusedItem >= topItem + 4 && focusedItem < numItems + 1)
+                topItem++;
+              toggleEditModeOnSelectClicked();
+            
+              //edit params
+              uint8_t idx = startIdx + focusedItem - 1;
+              if(idx <= endIdx)
+              {
+                uint8_t signalType = outputChConfig[idx] & 0x03;
+                uint8_t maxSignalType = (outputChConfig[idx] >> 2) & 0x03;
+                signalType = incDec(signalType, 0, maxSignalType, INCDEC_WRAP, INCDEC_SLOW);
+                outputChConfig[idx] &= ~0x03;
+                outputChConfig[idx] |= signalType;
+              }
+              
+              //move to next 
+              if(focusedItem == numItems + 1 && clickedButton == KEY_SELECT)
+              {
+                state = VIEWING_CONFIG_SERVOPWM;
+                viewInitialised = false;
+              }
+              
+              //exit
+              if(heldButton == KEY_SELECT)
+              {
+                stateInitialised = false;
+                actionStarted = false;
+                viewInitialised = false;
+                changeToScreen(SCREEN_RECEIVER);
+              }
+            }
+            break;
+            
+          case VIEWING_CONFIG_SERVOPWM:
+            {
+              drawHeader(PSTR("Rcvr output config"));
+
+              display.setCursor(0, 9);
+              display.print(F("Servo PWM range"));
+            
+              //--scrollable list--
+              
+              static uint8_t topItem;
+              static bool viewInitialised = false;
+              if(!viewInitialised)
+              {
+                focusedItem = 1;
+                topItem = 1;
+                isEditMode = false;
+                viewInitialised = true;
+              }
+            
+              uint8_t startIdx = 0; 
+              uint8_t endIdx = MAX_CHANNELS_PER_RECEIVER - 1;
+              if(!isMainReceiver)
+              {
+                startIdx = endIdx + 1; 
+                endIdx = startIdx + MAX_CHANNELS_PER_RECEIVER - 1;
+                if(endIdx >= NUM_RC_CHANNELS)
+                  endIdx = NUM_RC_CHANNELS - 1;
+              }
+              
+              //fill list
+              uint8_t numItems = (endIdx - startIdx) + 1; 
+              for(uint8_t line = 0; line < 4 && line < numItems; line++)
+              {
+                uint8_t ypos = 18 + line * 9;
+                uint8_t item = topItem + line;
+                if(focusedItem == item)
+                  drawCursor(34, ypos);
+                
+                display.setCursor(0, ypos);
+                uint8_t idx = startIdx + item - 1; 
+                if(idx <= endIdx)
+                {
+                  display.print(F("Ch"));
+                  display.print(idx + 1);
+                  display.print(F(":"));
+                  display.setCursor(42, ypos);
+                  if((outputChConfig[idx] & 0x03) == SIGNAL_TYPE_SERVOPWM)
+                  {
+                    uint8_t servoPWMRangeIdx = (outputChConfig[idx] >> 4) & 0x0F;
+                    display.print(500 + (servoPWMRangeIdx * 50));
+                    display.print(F(" to "));
+                    display.print(2500 - (servoPWMRangeIdx * 50));
+                    display.print(F("\xE6s"));
+                  }
+                  else
+                    display.print(F("N/A"));
+                }
+              }
+              
+              //Draw scroll bar
+              drawScrollBar(125, 9, numItems, topItem, 4, 44);
+              
+              //show the write button
+              drawDottedHLine(0, 54, 128, BLACK, WHITE);
+              display.setCursor(84, 56);
+              display.print(F("[Write]"));
+              if(focusedItem == numItems + 1)
+                drawCursor(76, 56);
+              
+              //Handle navigation
+              changeFocusOnUpDown(numItems + 1); //+1 for button focus
+              if(focusedItem < topItem)
+                topItem = focusedItem;
+              while(focusedItem >= topItem + 4 && focusedItem < numItems + 1)
+                topItem++;
+              toggleEditModeOnSelectClicked();
+            
+              //edit params
+              uint8_t idx = startIdx + focusedItem - 1;
+              if(idx <= endIdx && ((outputChConfig[idx] & 0x03) == SIGNAL_TYPE_SERVOPWM))
+              {
+                uint8_t servoPWMRangeIdx = (outputChConfig[idx] >> 4) & 0x0F;
+                servoPWMRangeIdx = incDec(servoPWMRangeIdx, 0, 15, INCDEC_NOWRAP, INCDEC_SLOW);
+                outputChConfig[idx] &= 0x0F;
+                outputChConfig[idx] |= servoPWMRangeIdx << 4;
+              }
+              
+              //write configuration
+              if(focusedItem == numItems + 1 && clickedButton == KEY_SELECT)
+              {
+                state = SENDING_CONFIG;
+                entryTime = millis();
+                gotOutputChConfig = false;
+                actionStarted = false;
+                viewInitialised = false;
+              }
+              
+              //exit without writing changes
+              if(heldButton == KEY_SELECT)
+              {
+                stateInitialised = false;
+                actionStarted = false;
+                viewInitialised = false;
+                changeToScreen(SCREEN_RECEIVER);
+              }
+            }
+            break;
+            
+          case SENDING_CONFIG:
+            {
+              printFullScreenMsg(PSTR("Writing settings"));
+              if(Sys.animationsEnabled)
+                drawLoaderSpinner(60, display.getCursorY() + 12, 2);
+              
+              if(!actionStarted)
+              {
+                isSendOutputChConfig = true;
+                actionStarted = true;
+              }
+              if(receiverConfigStatusCode > 0)
+              {
+                if(receiverConfigStatusCode == 1) makeToast(PSTR("Write success"), 2000, 0);
+                if(receiverConfigStatusCode == 2) makeToast(PSTR("Write failed"), 2000, 0);
+                stateInitialised = false;
+                actionStarted = false;
+                changeToScreen(SCREEN_RECEIVER);
+              }
+              //Time out
+              if(millis() - entryTime > 2500)
+              {
+                makeToast(PSTR("No response"), 2000, 0);
+                stateInitialised = false;
+                actionStarted = false;
+                changeToScreen(SCREEN_RECEIVER);
+              }
+            }
+            break;
         }
       }
       break;
