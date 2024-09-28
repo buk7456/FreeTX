@@ -187,12 +187,17 @@ extern bool     isRequestingBind;
 extern uint8_t  bindStatusCode;  //1 on success, 2 on fail
 extern bool     isMainReceiver;
 
-extern uint8_t  outputChConfig[NUM_RC_CHANNELS]; 
-extern uint8_t  maxOutputChConfig[NUM_RC_CHANNELS];
+extern uint8_t  outputChConfig[NUM_RC_CHANNELS];
 extern bool     gotOutputChConfig;
 extern bool     isRequestingOutputChConfig;
 extern bool     isSendOutputChConfig;
 extern uint8_t  receiverConfigStatusCode; //1 on success, 2 on fail
+
+enum {
+  SIGNAL_TYPE_DIGITAL = 0,
+  SIGNAL_TYPE_SERVOPWM = 1,
+  SIGNAL_TYPE_PWM = 2
+};
 
 //---- Telemetry --------------------------
 
