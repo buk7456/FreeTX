@@ -422,10 +422,7 @@ void doSerialCommunication()
   if(gotOutputChConfig) //output configuration
   {
     for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-    {
-      outputChConfig[i]    = tmpBuff[3 + i] & 0x0F;
-      maxOutputChConfig[i] = (tmpBuff[3 + i] >> 4) & 0x0F;
-    }
+      outputChConfig[i] = tmpBuff[3 + i];
   }
   else //telemetry
   {
