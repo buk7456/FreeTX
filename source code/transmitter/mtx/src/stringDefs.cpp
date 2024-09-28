@@ -84,6 +84,13 @@ const id_string_t enum_KnobType[] PROGMEM = {
   {0, ""}
 };
 
+const id_string_t enum_outputChConfig[] PROGMEM = {
+  {SIGNAL_TYPE_DIGITAL, "Digital"},
+  {SIGNAL_TYPE_SERVOPWM, "Servo PWM"},
+  {SIGNAL_TYPE_PWM, "PWM"},
+  {0, ""}
+};
+
 //Model related
 
 const id_string_t enum_ModelType[] PROGMEM = {
