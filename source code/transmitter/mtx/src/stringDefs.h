@@ -34,6 +34,7 @@ extern const id_string_t enum_StickMode[] PROGMEM;
 extern const id_string_t enum_StickAxisType[] PROGMEM;
 extern const id_string_t enum_StickAxisName[] PROGMEM;
 extern const id_string_t enum_KnobType[] PROGMEM;
+extern const id_string_t enum_outputChConfig[] PROGMEM;
 
 //model related
 extern const id_string_t enum_ModelType[] PROGMEM;
