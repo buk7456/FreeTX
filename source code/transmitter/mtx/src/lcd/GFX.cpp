@@ -1,5 +1,5 @@
 /*
-  Adapted by BUK, from Adafruit GFX lib.
+  Adapted by Buk, from Adafruit GFX lib.
   
   This library has been tailored to this project. Some features have been removed or 
   modified for lower flash usage, reduced overhead, and improved speed.
