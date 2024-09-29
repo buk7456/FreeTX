@@ -83,16 +83,16 @@ typedef struct {
 
 class Servo
 {
-public:
-  Servo();
-  uint8_t attach(int16_t pin);       // attach the given pin to the next free channel, sets pinMode, returns channel number or 0 if failure
-  uint8_t attach(int16_t pin, int16_t min, int16_t max); // as above but also sets min and max values for writes. 
-  void detach();
-  void writeMicroseconds(int16_t value); 
-private:
-   uint8_t servoIndex;  // index into the channel data for this servo
-   int16_t min;         // minimum is this value times 4 added to MIN_PULSE_WIDTH    
-   int16_t max;         // maximum is this value times 4 added to MAX_PULSE_WIDTH   
+  public:
+    Servo();
+    uint8_t attach(int16_t pin);       // attach the given pin to the next free channel, sets pinMode, returns channel number or 0 if failure
+    uint8_t attach(int16_t pin, int16_t min, int16_t max); // as above but also sets min and max values for writes. 
+    void detach();
+    void writeMicroseconds(int16_t value); 
+  private:
+    uint8_t servoIndex;  // index into the channel data for this servo
+    int16_t min;         // minimum is this value times 4 added to MIN_PULSE_WIDTH    
+    int16_t max;         // maximum is this value times 4 added to MAX_PULSE_WIDTH   
 };
 
 
