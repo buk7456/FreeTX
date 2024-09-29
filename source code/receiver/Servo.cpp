@@ -120,7 +120,7 @@ Servo::Servo()
   if(ServoCount < MAX_SERVOS) 
   {
     this->servoIndex = ServoCount++;  // assign a servo index to this instance
-	  servos[this->servoIndex].ticks = usToTicks(DEFAULT_PULSE_WIDTH); // store default values
+    servos[this->servoIndex].ticks = usToTicks(DEFAULT_PULSE_WIDTH); // store default values
   }
   else
     this->servoIndex = INVALID_SERVO;  // too many servos
