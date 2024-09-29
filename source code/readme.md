@@ -4,4 +4,4 @@ I highly recommend browsing or editing the code with an editor such as Visual St
 If you are using the legacy Arduino 1.8.x IDE, you need to enable the "Use external editor" option.  
 For VScode, simply open the folder (e.g. mtx) as project. For notepad++, use the "Open folder as workspace".  
 
-
+Unless stated otherwise, the source code is licensed under the MIT license.
