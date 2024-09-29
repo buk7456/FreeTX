@@ -29,7 +29,7 @@ bool    isRequestingOutputChConfig = false;
 bool    isSendOutputChConfig = false;
 bool    gotOutputChConfig = false;
 
-uint8_t chConfigData[NUM_RC_CHANNELS]; 
+uint8_t outputChConfig[NUM_RC_CHANNELS]; 
 
 uint8_t receiverConfigStatusCode;
 

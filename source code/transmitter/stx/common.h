@@ -48,7 +48,7 @@ extern bool    isSendOutputChConfig;
 extern bool    gotOutputChConfig;
 extern bool    isMainReceiver;
 
-extern uint8_t chConfigData[NUM_RC_CHANNELS]; //Lower nibble is current config, upper nibble is max config
+extern uint8_t outputChConfig[NUM_RC_CHANNELS]; 
 
 extern uint8_t receiverConfigStatusCode; //1 on success, 2 on fail
 

@@ -10,7 +10,7 @@ The general format of a packet is as shown below.
   1 byte      1 byte    1 byte      (((n*10)+7)/8)+1 bytes   1 byte
   ---------------------------------------------------------------------
   
-where n is the number of rc channels. 
+where n is the number of RC channels. 
 e.g. for 20 channels, the payload size would be 26 bytes, making total packet length 30 bytes.
 
 1.1 Source ID and Destination ID 
@@ -43,7 +43,7 @@ as 'Acknowledge bind'.
 
 1.3.2 RC data
 --------------
-All rc channels are transmitted in a single packet.  
+All RC channels are transmitted in a single packet.  
 Each channel is encoded with 10 bits, flags are transmitted in the next byte. 
 The flag byte is as follows: 
   bits 0 to 2  RF power level.
@@ -54,6 +54,7 @@ The flag byte is as follows:
 -----------------------------------
   byte 0       packet rate at receiver side.
   byte 1 to k  custom telemetry fields.
+  
 Each telemetry field is formatted as follows:-
   byte 0       sensor ID, 0xFF if telemetry field is empty.
   byte 1       high byte of telemetry value.
@@ -61,15 +62,18 @@ Each telemetry field is formatted as follows:-
   
 1.3.4 Receiver output configuration settings
 ---------------------------------------------
-Reading from the receiver:
+1.3.4.1 Reading from the receiver:
+
 Reading the configuration is initiated by the transmitter. The payload is as follows:-
   byte 0       Flags, bit0 whether we are addressing the main or secondary receiver.
-The relevant receiver (main or secondary) then responds with the present configuration along 
-with the maximum supported configuration.
-Each channel's configuration is sent on a separate byte, where the lower nibble holds the 
-present configuration, and the upper nibble holds the maximum configuration.
+The relevant receiver (main or secondary) then responds with the its configuration. 
+Each channel's configuration is sent on a separate byte, with the format shown below:-
+  bits 0 to 1   signal type  (digital, servoPWM, 'normal' PWM)
+  bits 2 to 3   max signal type 
+  bits 4 to 7   index in the lookup table for servo PWM range
 
-Writing to the receiver:
+1.3.4.2 Writing to the receiver:
+
 The transmitter sends the configuration to the receiver as follows:-
   byte 0 to k  the desired configuration, 1 byte per channel.
   byte k+1     Flags, bit0 whether we are addressing the main or secondary receiver.
@@ -80,8 +84,8 @@ empty payload with packet identifier as 'Acknowledge receiver configuration'.
 2. Dual receiver setup
 ==============================================================================================
 Basic rules:
-- Depending on the setup, the main receiver may handle one half of the rc channels,
-  while the secondary handles the other half. However the entire rc channels are always sent 
+- Depending on the setup, the main receiver may handle one half of the RC channels,
+  while the secondary handles the other half. However the entire RC data is always sent 
   in a single transmission.
 - When binding to the main receiver, the transmitter generates a random transmitter ID 
   and hop sequence. The main receiver then generates a random receiver ID and sends it.

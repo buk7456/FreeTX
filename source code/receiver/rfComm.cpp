@@ -224,17 +224,15 @@ void doRfCommunication()
         }
         
         //Reply with the configuration
-        //Each byte encoded as follows: Upper nibble is max config, Lower nibble is current config
 
         uint8_t dataToSend[FIXED_PAYLOAD_SIZE]; 
         memset(dataToSend, 0, sizeof(dataToSend));
         for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
         {
-          uint8_t val = (maxOutputChConfig[i] << 4) | (Sys.outputChConfig[i] & 0x0F);
           if(Sys.isMainReceiver) 
-            dataToSend[i] = val;
+            dataToSend[i] = Sys.outputChConfig[i];
           else 
-            dataToSend[MAX_CHANNELS_PER_RECEIVER + i] = val;
+            dataToSend[MAX_CHANNELS_PER_RECEIVER + i] = Sys.outputChConfig[i];
         }
         
         buildPacket(Sys.receiverID, Sys.transmitterID, PAC_READ_OUTPUT_CH_CONFIG, dataToSend, sizeof(dataToSend));
@@ -260,10 +258,10 @@ void doRfCommunication()
         //read and save config to eeprom
         for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
         {
-          if(Sys.isMainReceiver)
-            Sys.outputChConfig[i] = msgBuff[3 + i];
-          else
-            Sys.outputChConfig[i] = msgBuff[3 + i + MAX_CHANNELS_PER_RECEIVER];
+          uint8_t val = Sys.isMainReceiver ? msgBuff[3 + i] : msgBuff[3 + i + MAX_CHANNELS_PER_RECEIVER];
+          //write the servoPWMRangeIdx and signalType, leaving the maxSignalType unchanged
+          Sys.outputChConfig[i] &= 0x0C;
+          Sys.outputChConfig[i] |= val & 0xF3;
         }
         eeSaveSysConfig();
        

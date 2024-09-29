@@ -13,10 +13,15 @@ The receiver outputs can be configured from the transmitter to any of the three 
 servo PWM, digital on-off, or 'normal' PWM. 
 For example 'normal' PWM output can be used to control brushed DC motors without the need for 
 complex electronics. The digital on-off output makes it easy to directly control components such as 
-electromechanical relays and lights.
+electromechanical relays and lights.  
+The servo PWM range can as well be adjusted to get extra travel from a servo, without making physical
+modifications to the servo.
 <br>Note: 
 1. These configuration settings are stored in the receiver, not the transmitter.
 2. Normal PWM is only available on certain pins, depending on the pin mapping.
 3. Any changes made take effect immediately upon pressing the 'Write' button.
 4. In digital on-off mode, the output value range of -100 to -50 corresponds to LOW, -49 to 49 is 
 ignored, and 50 to 100 corresponds to HIGH.
+5. When reusing a receiver between models, always check and set the appropriate signal format before connecting 
+any actuators to the receiver.
+

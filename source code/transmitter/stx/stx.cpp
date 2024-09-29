@@ -99,7 +99,7 @@ void doSerialCommunication()
   if(isSendOutputChConfig)
   {
     for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-      chConfigData[i] = tmpBuff[2 + i];
+      outputChConfig[i] = tmpBuff[2 + i];
   }
   else
   {
@@ -130,7 +130,7 @@ void doSerialCommunication()
   {
     gotOutputChConfig = false;
     for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-      dataToSend[3 + i] = chConfigData[i];
+      dataToSend[3 + i] = outputChConfig[i];
   }
   else //send telemetry
   {

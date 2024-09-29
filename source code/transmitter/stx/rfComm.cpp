@@ -320,7 +320,6 @@ void bind()
     {
       LoRa.write(packet, sizeof(packet));
       LoRa.endPacket(true); //non-blocking
-      // delay(1);
       delayMicroseconds(500);
       transmitInitiated = true;
     }
@@ -428,7 +427,6 @@ void transmitRCdata()
     {
       LoRa.write(packet, sizeof(packet));
       LoRa.endPacket(true); //async
-      // delay(1);
       delayMicroseconds(500);
       transmitInitiated = true;
       hopPending = true;
@@ -522,7 +520,6 @@ void getReceiverConfig()
     {
       LoRa.write(packet, sizeof(packet));
       LoRa.endPacket(true); //async
-      // delay(1);
       delayMicroseconds(500);
       transmitInitiated = true;
     }
@@ -546,7 +543,7 @@ void getReceiverConfig()
       {
         gotOutputChConfig = true;
         for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-          chConfigData[i] = msgBuff[3 + i];
+          outputChConfig[i] = msgBuff[3 + i];
         //Change mode
         operatingMode = MODE_RC_DATA;
         //reset
@@ -595,7 +592,7 @@ void transmitReceiverConfig()
     uint8_t i;
     for(i = 0; i < NUM_RC_CHANNELS; i++)
     {
-      dataToSend[i] = chConfigData[i];
+      dataToSend[i] = outputChConfig[i];
     }
     dataToSend[i++] = isMainReceiver & 0x01;
     
@@ -604,7 +601,6 @@ void transmitReceiverConfig()
     {
       LoRa.write(packet, sizeof(packet));
       LoRa.endPacket(true); //async
-      // delay(1);
       delayMicroseconds(500);
       transmitInitiated = true;
     }
