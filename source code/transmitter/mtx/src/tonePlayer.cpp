@@ -102,9 +102,9 @@ const uint16_t trimMovedSound[] PROGMEM = {
   250,NOTE_AS7,16
 }; 
 
-// trimCenter:d=4,o=4,b=250:16a7
+// trimCenter:d=4,o=4,b=250:16a#7
 const uint16_t trimCenterSound[] PROGMEM = {
-  250,NOTE_A7,16
+  250,NOTE_AS7,8
 }; 
 
 //trimEnter:d=4,o=5,b=120:32d#5,32g5,32a5
