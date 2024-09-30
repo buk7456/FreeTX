@@ -1246,19 +1246,19 @@ void handleMainUI()
                     //skip empty telemetry (non-extant sensors)
                     //use an array to hold extant sensors
                     uint8_t srcQQ[NUM_CUSTOM_TELEMETRY + 1]; //1 added for auto
-                    uint8_t srcCnt = 0;
+                    uint8_t srcCount = 0;
                     for(uint8_t i = 0; i < sizeof(srcQQ) - 1; i++)
                     {
                       if(isEmptyStr(Model.Telemetry[i].name, sizeof(Model.Telemetry[0].name)))
                         continue;
-                      srcQQ[srcCnt] = i;
-                      srcCnt++;
+                      srcQQ[srcCount] = i;
+                      srcCount++;
                     }
-                    srcQQ[srcCnt] = WIDGET_SRC_AUTO;
-                    srcCnt++;
+                    srcQQ[srcCount] = WIDGET_SRC_AUTO;
+                    srcCount++;
         
                     uint8_t idxQQ = 0;
-                    for(uint8_t i = 0; i < srcCnt; i++) //search for a match
+                    for(uint8_t i = 0; i < srcCount; i++) //search for a match
                     {
                       if(srcQQ[i] == widget->src)
                       {
@@ -1266,7 +1266,7 @@ void handleMainUI()
                         break;
                       }
                     }
-                    idxQQ = incDec(idxQQ, 0, srcCnt - 1, INCDEC_WRAP, INCDEC_SLOW);
+                    idxQQ = incDec(idxQQ, 0, srcCount - 1, INCDEC_WRAP, INCDEC_SLOW);
                     uint8_t prevSrc = widget->src;
                     widget->src = srcQQ[idxQQ];
                     if(widget->src != prevSrc)
@@ -4483,9 +4483,9 @@ void handleMainUI()
                       ls->val1 = movedSrc;
                     //inc dec
                     ls->val1 = incDecSource(ls->val1, INCDEC_FLAG_MIX_SRC 
-                                                    | INCDEC_FLAG_COUNTER_SRC 
-                                                    | INCDEC_FLAG_TIMER_SRC
-                                                    | INCDEC_FLAG_TELEM_SRC 
+                                                    | INCDEC_FLAG_COUNTER_AS_SRC 
+                                                    | INCDEC_FLAG_TIMER_AS_SRC
+                                                    | INCDEC_FLAG_TELEM_AS_SRC 
                                                     | INCDEC_FLAG_INACTIVITY_TIMER_AS_SRC 
                                                     | INCDEC_FLAG_TX_BATTV_AS_SRC);
                     //reset ls->val2 if out of range
@@ -4517,7 +4517,7 @@ void handleMainUI()
                   else if(ls->func <= LS_FUNC_GROUP5_LAST || ls->func == LS_FUNC_TOGGLE)
                   {
                     if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-                      ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
+                      ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE_AS_SW | INCDEC_FLAG_TRIM_AS_SW);
                     else
                       ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
                   }
@@ -4608,7 +4608,7 @@ void handleMainUI()
                   else if(ls->func <= LS_FUNC_GROUP5_LAST)
                   {
                     if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-                      ls->val2 = incDecControlSwitch(ls->val2, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
+                      ls->val2 = incDecControlSwitch(ls->val2, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE_AS_SW | INCDEC_FLAG_TRIM_AS_SW);
                     else
                       ls->val2 = incDecControlSwitch(ls->val2, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
                   }
@@ -4650,7 +4650,7 @@ void handleMainUI()
                   if(ls->func == LS_FUNC_TOGGLE)
                   {
                     if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-                      ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
+                      ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE_AS_SW | INCDEC_FLAG_TRIM_AS_SW);
                     else
                       ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
                   }
@@ -5822,7 +5822,7 @@ void handleMainUI()
                 if(edit)
                 {
                   if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-                    tempSwtch = incDecControlSwitch(tempSwtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE);
+                    tempSwtch = incDecControlSwitch(tempSwtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE_AS_SW);
                   else
                     tempSwtch = incDecControlSwitch(tempSwtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
                 }
