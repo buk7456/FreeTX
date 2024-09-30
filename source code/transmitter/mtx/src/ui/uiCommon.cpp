@@ -141,8 +141,8 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
   
   //use an array to hold the valid sources
   uint8_t srcQQ[TOTAL_SOURCES_COUNT]; 
-  uint8_t srcCnt = 0;
-  for(uint8_t i = 0; i < sizeof(srcQQ); i++)
+  uint8_t srcCount = 0;
+  for(uint8_t i = 0; i < (sizeof(srcQQ)/sizeof(srcQQ[0])); i++)
   {
     if(i == SRC_NONE)
     {
@@ -200,17 +200,17 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
     }
     else if(i >= SRC_COUNTER_FIRST && i <= SRC_COUNTER_LAST) //counters
     {
-      if(!(flag & INCDEC_FLAG_COUNTER_SRC))
+      if(!(flag & INCDEC_FLAG_COUNTER_AS_SRC))
         continue;
     }
     else if(i >= SRC_TIMER_FIRST && i <= SRC_TIMER_LAST) //timers
     {
-      if(!(flag & INCDEC_FLAG_TIMER_SRC))
+      if(!(flag & INCDEC_FLAG_TIMER_AS_SRC))
         continue;
     }
     else if(i >= SRC_TELEMETRY_FIRST && i <= SRC_TELEMETRY_LAST) //telemetry
     {
-      if(!(flag & INCDEC_FLAG_TELEM_SRC))
+      if(!(flag & INCDEC_FLAG_TELEM_AS_SRC))
         continue;
       //skip empty telemetry
       uint8_t idx = i - SRC_TELEMETRY_FIRST;
@@ -228,15 +228,15 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
         continue;
     }
     
-    srcQQ[srcCnt] = i;
-    srcCnt++;
+    srcQQ[srcCount] = i;
+    srcCount++;
   }
 
-  if(srcCnt == 0)
+  if(srcCount == 0)
     return val;
   
   uint8_t idxQQ = 0;
-  for(uint8_t i = 0; i < srcCnt; i++) //search for a match
+  for(uint8_t i = 0; i < srcCount; i++) //search for a match
   {
     if(srcQQ[i] == val)
     {
@@ -244,7 +244,8 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
       break;
     }
   }
-  idxQQ = incDec(idxQQ, 0, srcCnt - 1, INCDEC_WRAP, INCDEC_SLOW);
+
+  idxQQ = incDec(idxQQ, 0, srcCount - 1, INCDEC_WRAP, INCDEC_SLOW);
   return srcQQ[idxQQ];
 }
 
@@ -268,23 +269,30 @@ bool controlSwitchExists(uint8_t idx)
   return result;
 }
 
+//--------------------------------------------------------------------------------------------------
+
 uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
 {
   if(!isEditMode)
     return val;
-
+  
   //detect moved switch
   uint8_t movedCtrlSw = getMovedControlSwitch();
   if(movedCtrlSw != CTRL_SW_NONE)
-    val = movedCtrlSw;
-  
+  {
+    if((flag & INCDEC_FLAG_PHY_SW) && (movedCtrlSw >= CTRL_SW_PHYSICAL_FIRST && movedCtrlSw <= CTRL_SW_PHYSICAL_LAST))
+      val = movedCtrlSw;
+    else if((flag & INCDEC_FLAG_TRIM_AS_SW) && (movedCtrlSw >= CTRL_SW_TRIM_FIRST && movedCtrlSw <= CTRL_SW_TRIM_LAST))
+      val = movedCtrlSw;
+  }
+
   if(buttonCode != KEY_UP && buttonCode != KEY_DOWN)
     return val;
   
   //use an array to hold the valid parameters
   uint8_t ctrlQQ[CTRL_SW_COUNT];
   uint8_t ctrlCnt = 0; 
-  for(uint8_t i = 0; i < sizeof(ctrlQQ); i++)
+  for(uint8_t i = 0; i < (sizeof(ctrlQQ)/sizeof(ctrlQQ[0])); i++)
   {
     if(i == CTRL_SW_NONE)
     {
@@ -304,7 +312,12 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
     }
     else if(i >= CTRL_SW_FMD_FIRST && i <= CTRL_SW_FMD_LAST_INVERT)
     {
-      if(!(flag & INCDEC_FLAG_FMODE))
+      if(!(flag & INCDEC_FLAG_FMODE_AS_SW))
+        continue;
+    }
+    else if(i >= CTRL_SW_TRIM_FIRST && i <= CTRL_SW_TRIM_LAST)
+    {
+      if(!(flag & INCDEC_FLAG_TRIM_AS_SW))
         continue;
     }
     ctrlQQ[ctrlCnt] = i;
@@ -323,6 +336,7 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
       break;
     }
   }
+
   idxQQ = incDec(idxQQ, 0, ctrlCnt - 1, INCDEC_WRAP, INCDEC_SLOW);
   return ctrlQQ[idxQQ];
 }
@@ -381,25 +395,51 @@ uint8_t getLSFuncGroup(uint8_t func)
 
 uint8_t getMovedControlSwitch()
 {
-  //Detect which control switch is moved, so we can auto select it in the UI.
-  //Only UP, MID, DOWN allowed. Inverse of these, and also the logical switches don't apply here.
+  // Detects which control switch is moved, so we can auto select it in the UI.
+  // Physical Switches (up, mid, down states) are detected. Invert of these are not detected.
+  // Logical Switches are not detected.
+  // Trims as switches are detected.
+  // Flight modes as switches are not detected.
+
   if(!Sys.autoSelectMovedControl)
     return CTRL_SW_NONE;
-  static bool lastState[NUM_PHYSICAL_SWITCHES * 6]; 
+  
+  //use an array to hold the allowed control switches
+  uint8_t swQQ[(NUM_PHYSICAL_SWITCHES * 6) + (CTRL_SW_TRIM_LAST - CTRL_SW_TRIM_FIRST + 1)];
+  static bool lastState[sizeof(swQQ)/sizeof(swQQ[0])];
+  
+  //populate array
+  uint8_t swCount = 0;
+  for(uint8_t i = 0; i < CTRL_SW_COUNT; i++)
+  {
+    bool valid = false;
+    if(i >= CTRL_SW_PHYSICAL_FIRST && i <= CTRL_SW_PHYSICAL_LAST)
+    {
+      if(((i - CTRL_SW_PHYSICAL_FIRST) % 6) <= 2) // up, mid, down
+        valid = true;
+    }
+    else if(i >= CTRL_SW_TRIM_FIRST && i <= CTRL_SW_TRIM_LAST)
+      valid = true;
+    if(valid)
+    {
+      swQQ[swCount] = i;
+      swCount++;
+      if(swCount >= (sizeof(swQQ)/sizeof(swQQ[0])))
+        break;
+    }
+  }
+
+  //detect moved switch
   uint8_t movedSw = CTRL_SW_NONE;
   static uint32_t lastLoopNum;
-  for(uint8_t i = CTRL_SW_PHYSICAL_FIRST; i <= CTRL_SW_PHYSICAL_LAST; i++)
+  for(uint8_t idxQQ = 0; idxQQ < swCount; idxQQ++)
   {
-    uint8_t pos = (i - CTRL_SW_PHYSICAL_FIRST) % 6;
-    if(pos > 2) // !up, !mid, !down. Skip these
-      continue;
-    
-    bool state = checkSwitchCondition(i);
-    if(state != lastState[i - CTRL_SW_PHYSICAL_FIRST])
+    bool state = checkSwitchCondition(swQQ[idxQQ]);
+    if(state != lastState[idxQQ])
     {
-      lastState[i - CTRL_SW_PHYSICAL_FIRST] = state;
+      lastState[idxQQ] = state;
       if(state && (thisLoopNum - lastLoopNum == 1))
-        movedSw = i;
+        movedSw = swQQ[idxQQ];
     }
   }
   lastLoopNum = thisLoopNum;
@@ -410,50 +450,59 @@ uint8_t getMovedControlSwitch()
 
 uint8_t getMovedSource()
 {
-  //Detects which source is moved
-  //Only detects stick axes, knobs and physical switches.
+  //Detects which source is moved.
+  //Stick axes, knobs, physical switches, stick axis trims.
   
   if(!Sys.autoSelectMovedControl)
     return SRC_NONE;
+  
   //use array to hold values for the valid sources
-  const uint8_t srcCnt = (SRC_RAW_ANALOG_LAST - SRC_RAW_ANALOG_FIRST + 1) + NUM_PHYSICAL_SWITCHES;
-  uint8_t  srcQQ[srcCnt];
-  static int8_t lastValQQ[srcCnt];
+  uint8_t srcQQ[(SRC_RAW_ANALOG_LAST - SRC_RAW_ANALOG_FIRST + 1) + NUM_PHYSICAL_SWITCHES + (SRC_TRIM_LAST - SRC_TRIM_FIRST + 1)];
+  static int8_t lastValQQ[sizeof(srcQQ)/sizeof(srcQQ[0])];
+
   //populate array
-  uint8_t cnt = 0; 
+  uint8_t srcCount = 0; 
   for(uint8_t i = 0; i < MIXSOURCES_COUNT; i++)
   {
-    if((i >= SRC_RAW_ANALOG_FIRST && i <= SRC_RAW_ANALOG_LAST) || (i >= SRC_SW_PHYSICAL_FIRST && i <= SRC_SW_PHYSICAL_LAST))
+    bool valid = false;
+    if(i >= SRC_RAW_ANALOG_FIRST && i <= SRC_RAW_ANALOG_LAST)
+      valid = true;
+    else if(i >= SRC_SW_PHYSICAL_FIRST && i <= SRC_SW_PHYSICAL_LAST)
+      valid = true;
+    else if(i >= SRC_TRIM_FIRST && i <= SRC_TRIM_LAST)
+      valid = true;
+    if(valid)
     {
-      srcQQ[cnt] = i;
-      cnt++;
-      if(cnt >= srcCnt)
+      srcQQ[srcCount] = i;
+      srcCount++;
+      if(srcCount >= (sizeof(srcQQ)/sizeof(srcQQ[0])))
         break;
     }
   }
+
+  //detect moved source
   uint8_t movedSrc = SRC_NONE;
   static uint32_t lastLoopNum;
-  for(uint8_t i = 0; i < MIXSOURCES_COUNT; i++)
+  for(uint8_t idxQQ = 0; idxQQ < srcCount; idxQQ++)
   {
-    if((i >= SRC_RAW_ANALOG_FIRST && i <= SRC_RAW_ANALOG_LAST) || (i >= SRC_SW_PHYSICAL_FIRST && i <= SRC_SW_PHYSICAL_LAST))
+    if(srcQQ[idxQQ] >= SRC_TRIM_FIRST && srcQQ[idxQQ] <= SRC_TRIM_LAST)
     {
-      //find corresponding index in the srcQQ array
-      uint8_t idxQQ = 0;
-      for(uint8_t j = 0; j < srcCnt; j++)
+      int16_t difference = mixSources[srcQQ[idxQQ]] - lastValQQ[idxQQ];
+      if(difference != 0) 
       {
-        if(srcQQ[j] == i)
-        {
-          idxQQ = j;
-          break;
-        }
-      }
-      //check if moved
-      int16_t difference = mixSources[i]/5 - lastValQQ[idxQQ];
-      if(difference > 30 || difference < -30) 
-      {
-        lastValQQ[idxQQ] = mixSources[i] / 5;
+        lastValQQ[idxQQ] = mixSources[srcQQ[idxQQ]];
         if(thisLoopNum - lastLoopNum == 1)
-          movedSrc = i;
+          movedSrc = srcQQ[idxQQ];
+      }
+    }
+    else
+    {
+      int16_t difference = mixSources[srcQQ[idxQQ]]/5 - lastValQQ[idxQQ];
+      if(difference > 30 || difference < -30)
+      {
+        lastValQQ[idxQQ] = mixSources[srcQQ[idxQQ]] / 5;
+        if(thisLoopNum - lastLoopNum == 1)
+          movedSrc = srcQQ[idxQQ];
       }
     }
   }
