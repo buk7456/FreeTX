@@ -636,6 +636,30 @@ void getControlSwitchName(char* buff, uint8_t idx, uint8_t lenBuff)
     itoa(i + 1, suffix, 10);
     strlcat(buff, suffix, lenBuff);
   }
+  else if(idx >= CTRL_SW_TRIM_FIRST && idx <= CTRL_SW_TRIM_LAST)
+  {
+    if(idx == CTRL_SW_X1_TRIM_LEFT || idx == CTRL_SW_X1_TRIM_RIGHT) 
+    {
+      getSrcName(buff, SRC_X1_TRIM, lenBuff);
+      suffix[0] = (idx == CTRL_SW_X1_TRIM_LEFT) ? 0x1B : 0x1A;
+    }
+    else if(idx == CTRL_SW_Y1_TRIM_UP || idx == CTRL_SW_Y1_TRIM_DOWN) 
+    {
+      getSrcName(buff, SRC_Y1_TRIM, lenBuff);
+      suffix[0] = (idx == CTRL_SW_Y1_TRIM_UP) ? 0x18 : 0x19;
+    }
+    else if(idx == CTRL_SW_X2_TRIM_LEFT || idx == CTRL_SW_X2_TRIM_RIGHT) 
+    {
+      getSrcName(buff, SRC_X2_TRIM, lenBuff);
+      suffix[0] = (idx == CTRL_SW_X2_TRIM_LEFT) ? 0x1B : 0x1A;
+    }
+    else if(idx == CTRL_SW_Y2_TRIM_UP || idx == CTRL_SW_Y2_TRIM_DOWN) 
+    {
+      getSrcName(buff, SRC_Y2_TRIM, lenBuff);
+      suffix[0] = (idx == CTRL_SW_Y2_TRIM_UP) ? 0x18 : 0x19;
+    }
+    strlcat(buff, suffix, lenBuff);
+  }
 }
 
 //=================================================================================================
@@ -663,6 +687,30 @@ void getControlSwitchName_Clean(char* buff, uint8_t idx, uint8_t lenBuff)
       else if(c == '-')  { strlcpy_P(buff + i, PSTR("_Mid"), lenBuff - i); break; }
       else if(c == 0x19) { strlcpy_P(buff + i, PSTR("_Down"), lenBuff - i); break; }
     }
+  }
+  else if(idx >= CTRL_SW_TRIM_FIRST && idx <= CTRL_SW_TRIM_LAST)
+  {
+    if(idx == CTRL_SW_X1_TRIM_LEFT || idx == CTRL_SW_X1_TRIM_RIGHT) 
+    {
+      getSrcName_Clean(buff, SRC_X1_TRIM, lenBuff);
+      strlcat_P(buff, (idx == CTRL_SW_X1_TRIM_LEFT) ? PSTR("_Left") : PSTR("_Right"), lenBuff);
+    }
+    else if(idx == CTRL_SW_Y1_TRIM_UP || idx == CTRL_SW_Y1_TRIM_DOWN) 
+    {
+      getSrcName_Clean(buff, SRC_Y1_TRIM, lenBuff);
+      strlcat_P(buff, (idx == CTRL_SW_Y1_TRIM_UP) ? PSTR("_Up") : PSTR("_Down"), lenBuff);
+    }
+    else if(idx == CTRL_SW_X2_TRIM_LEFT || idx == CTRL_SW_X2_TRIM_RIGHT) 
+    {
+      getSrcName_Clean(buff, SRC_X2_TRIM, lenBuff);
+      strlcat_P(buff, (idx == CTRL_SW_X2_TRIM_LEFT) ? PSTR("_Left") : PSTR("_Right"), lenBuff);
+    }
+    else if(idx == CTRL_SW_Y2_TRIM_UP || idx == CTRL_SW_Y2_TRIM_DOWN) 
+    {
+      getSrcName_Clean(buff, SRC_Y2_TRIM, lenBuff);
+      strlcat_P(buff, (idx == CTRL_SW_Y2_TRIM_UP) ? PSTR("_Up") : PSTR("_Down"), lenBuff);
+    }
+
   }
 }
 
