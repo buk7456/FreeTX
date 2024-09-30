@@ -1247,6 +1247,17 @@ bool checkSwitchCondition(uint8_t sw)
     if(invertResult)
       result = !result;
   }
+  else if(sw >= CTRL_SW_TRIM_FIRST && sw <= CTRL_SW_TRIM_LAST)
+  {
+    if(sw == CTRL_SW_X1_TRIM_LEFT && buttonCode == KEY_X1_TRIM_DOWN) result = true;
+    else if(sw == CTRL_SW_X1_TRIM_RIGHT && buttonCode == KEY_X1_TRIM_UP) result = true;
+    else if(sw == CTRL_SW_Y1_TRIM_UP && buttonCode == KEY_Y1_TRIM_UP) result = true;
+    else if(sw == CTRL_SW_Y1_TRIM_DOWN && buttonCode == KEY_Y1_TRIM_DOWN) result = true;
+    else if(sw == CTRL_SW_X2_TRIM_LEFT && buttonCode == KEY_X2_TRIM_DOWN) result = true;
+    else if(sw == CTRL_SW_X2_TRIM_RIGHT && buttonCode == KEY_X2_TRIM_UP) result = true;
+    else if(sw == CTRL_SW_Y2_TRIM_UP && buttonCode == KEY_Y2_TRIM_UP) result = true;
+    else if(sw == CTRL_SW_Y2_TRIM_DOWN && buttonCode == KEY_Y2_TRIM_DOWN) result = true;
+  }
   
   return result;
 }
@@ -1328,8 +1339,6 @@ int16_t adjustTrim(uint8_t idx, int16_t val, uint8_t incButton, uint8_t decButto
         if(val == 0)
           audioToPlay = AUDIO_TRIM_CENTER;
       }
-      else
-        audioToPlay = AUDIO_NONE;
     }
   }
   else if((pressedButton == incButton || _heldBtn == incButton))
@@ -1355,8 +1364,6 @@ int16_t adjustTrim(uint8_t idx, int16_t val, uint8_t incButton, uint8_t decButto
         if(val == 0)
           audioToPlay = AUDIO_TRIM_CENTER;
       }
-      else
-        audioToPlay = AUDIO_NONE;
     }
   }
   
@@ -1473,11 +1480,11 @@ int16_t generateWaveform(uint8_t idx, int32_t _currTime)
         //--fixed point arithmetic with a fractional part
         // the fractional part is used for linear interpolation
         const int16_t multiplier = 32;
-        int16_t index = (timeInstance * sizeof(sineTable) * multiplier)/period; 
+        int16_t index = (timeInstance * (sizeof(sineTable)/sizeof(sineTable[0])) * multiplier)/period; 
         uint8_t indexLUT = index / multiplier;
         int16_t valL = (int16_t)5 * (int8_t)pgm_read_byte(&sineTable[indexLUT]);
         indexLUT++; 
-        if(indexLUT >= sizeof(sineTable)) 
+        if(indexLUT >= (sizeof(sineTable)/sizeof(sineTable[0]))) 
           indexLUT = 0;
         int16_t valR = (int16_t)5 * (int8_t)pgm_read_byte(&sineTable[indexLUT]);
         result = valL + (((valR - valL)*(index % multiplier))/multiplier);
