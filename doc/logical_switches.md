@@ -299,4 +299,31 @@ Then in the Mixer,
 2. Ch1  RplW  Max  (weight -33,   Switch L4)
 3. Ch1  RplW  Max  (weight  33,   Switch L5)
 4. Ch1  RplW  Max  (weight  100,  Switch L6)
+```
 
+### Example 8: Detecting when the receiver is connected or disconnected
+This relies on the Link Quality telemetry to detect connection/disconnection of a receiver.  
+First, configure the Link Quality telemetry (premade template already available).  
+Then set up a logical switch and custom notifications as follows.
+
+```txt
+L1
+---
+Functn: a>x
+Value1: LinkQlty
+Value2: 0
+
+Notification1
+-------------
+Switch: L1
+Tone:   (Your preferred tone)
+Text:   RX connect
+
+Notification2
+-------------
+Switch: !L1
+Tone:   (Your preferred tone)
+Text:   RX disconnect
+```
+
+This example can also be adapted to detect when telemetry from a sensor is lost or recovered.
