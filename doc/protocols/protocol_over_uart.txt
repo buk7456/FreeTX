@@ -24,10 +24,10 @@ Status1:
   Other bits reserved
   
 RC data:
-Each rc channel is sent as 2 bytes, with big endian ordering.
+Each RC channel is sent as 2 bytes, with big endian ordering.
 
 Receiver configuration:
-Each rc channel's configuration is sent on a separate byte.
+Each RC channel's configuration is sent on a separate byte.
 
 ==============================================================================================
 2. SECONDARY MCU TO MAIN MCU COMMUNICATION
@@ -54,6 +54,4 @@ Each telemetry field is formatted as:
 If there is more telemetry than can fit in a single message, it is sent on the next message.
 
 Receiver configuration:
-Each rc channel's configuration is sent on a separate byte, where the lower nibble holds the
-present configuration, and the upper nibble holds the maximum configuration.
-
+Each RC channel's configuration is sent on a separate byte.
