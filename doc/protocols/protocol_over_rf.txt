@@ -18,7 +18,7 @@ e.g. for 20 channels, the payload size would be 26 bytes, making total packet le
 - If packet is originating from transmitter, then Source ID is the Transmitter ID. 
   Similarly if packet is originating from the receiver, then Source ID is the Receiver ID. 
 - Allowed transmitter IDs range from 0x01 to 0xFF.  Transmitter ID 0x00 is reserved. 
-- Allowed receiver IDs range from 0x01 to 0xFF, Receiver ID 0X00 used when binding.
+- Allowed receiver IDs range from 0x01 to 0xFF, Receiver ID 0x00 used when binding.
 
 1.2 Packet Identifier
 ================================
@@ -38,6 +38,7 @@ This uniquely identifies which kind of data we are sending. Below are some ident
   byte 0 to k  Hop channels, 1 byte per channel.
   byte k+1     Flags, bit0 whether we are addressing the main or secondary receiver.
   byte k+2     Receiver Id to use if binding as a secondary receiver.
+  
 To acknowledge bind, the receiver simply returns its ID as the payload with packet identifier 
 as 'Acknowledge bind'.
 
@@ -66,6 +67,7 @@ Each telemetry field is formatted as follows:-
 
 Reading the configuration is initiated by the transmitter. The payload is as follows:-
   byte 0       Flags, bit0 whether we are addressing the main or secondary receiver.
+
 The relevant receiver (main or secondary) then responds with the its configuration. 
 Each channel's configuration is sent on a separate byte, with the format shown below:-
   bits 0 to 1   signal type  (digital, servoPWM, 'normal' PWM)
@@ -77,6 +79,7 @@ Each channel's configuration is sent on a separate byte, with the format shown b
 The transmitter sends the configuration to the receiver as follows:-
   byte 0 to k  the desired configuration, 1 byte per channel.
   byte k+1     Flags, bit0 whether we are addressing the main or secondary receiver.
+
 To acknowledge the configuration sent by the transmitter, the relevant receiver returns an 
 empty payload with packet identifier as 'Acknowledge receiver configuration'.
 
