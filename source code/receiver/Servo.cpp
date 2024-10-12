@@ -9,6 +9,8 @@
     - Using int16_t instead of int8_t for the private class members min and max.
     - Removed methods that we do not need for this application.
     - Replaced generic int types with fixed width types (int16_t, etc).
+    - The writeMicroseconds() function will only disable interrupts and change the ticks value 
+      if the value has actually changed. 
     
   Original copyright notice is below.
 */
@@ -167,10 +169,13 @@ void Servo::writeMicroseconds(int16_t value)
 
     value = value - TRIM_DURATION;
     value = usToTicks(value);  // convert to ticks after compensating for interrupt overhead
-
-    uint8_t oldSREG = SREG;
-    cli();
-    servos[channel].ticks = value;
-    SREG = oldSREG;
+    
+    if(servos[channel].ticks != (uint16_t) value)
+    {
+      uint8_t oldSREG = SREG;
+      cli();
+      servos[channel].ticks = value;
+      SREG = oldSREG;
+    }
   }
 }
