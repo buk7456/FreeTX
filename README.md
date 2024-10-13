@@ -51,3 +51,4 @@ Three buttons are used for navigation; Up, Select, Down. Long press Select to go
 
 ## Frequently Asked Questions
 [Got a question? See the FAQ first.](doc/faq.md)
+<br> This project is based on an older project found [here.](https://github.com/buk7456/Arduino-LoRa-RC-transmitter-and-reciever)
