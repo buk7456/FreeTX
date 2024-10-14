@@ -235,7 +235,7 @@ void resetSystemParams()
   Sys.password[0] = '\0';
   
   Sys.showMenuIcons = true;
-  Sys.rememberMenuPosition = true;
+  Sys.rememberMenuPosition = false;
   Sys.useRoundRect = true;
   Sys.useDenserMenus = false;
   Sys.animationsEnabled = true;
