@@ -14,8 +14,10 @@
 #include "../ee/eestore.h"
 #include "../sd/sdStore.h"
 #include "bitmaps.h"
+#include "about.h"
 #include "ui.h"
 #include "uiCommon.h"
+
 
 #if defined (UI_128X64)
 
@@ -1606,7 +1608,7 @@ void handleMainUI()
             for(uint8_t i = 0; i < numVisible && i < maxNumOfModels; i++)
             {
               uint8_t modelIdx = topItem - 1 + i;
-              if(eeModelIsFree(modelIdx)) // write 0xFF to indicate its free
+              if(eeModelIsFree(modelIdx)) // write 0xFF to indicate it is free
                 mdlStr[i][0] = 0xFF;
               else //get the name
               {
@@ -4223,7 +4225,7 @@ void handleMainUI()
         if(clickedButton == KEY_SELECT)
         {
           //calculate x and y values for the new point
-          //For non-smooth curve, its simply the midpoint. If the curve has smoothing enabled,
+          //For non-smooth curve, it is simply the midpoint. If the curve has smoothing enabled,
           //use cubic interpolation to get the new value for y, as long as the xVal are different.
           int8_t xNew = ((int16_t)crv->xVal[insertionPt - 1] + crv->xVal[insertionPt]) / 2;
           int8_t yNew = ((int16_t)crv->yVal[insertionPt - 1] + crv->yVal[insertionPt]) / 2;
@@ -8512,45 +8514,52 @@ void handleMainUI()
       
     case SCREEN_ABOUT:
       {
-        drawHeader(systemMenu[SYSTEM_MENU_ABOUT]);
+        drawHeader_Menu(systemMenu[SYSTEM_MENU_ABOUT]);
+        
+        static uint8_t topItem = 1, highlightedItem = 1;
+        
+        enum {
+          ITEM_VERSION_INFO,
+          ITEM_DISCLAIMER,
+          ITEM_THIRD_PARTY,
+          ITEM_EASTER_EGG,
+        };
 
-        printFullScreenMsg(PSTR("FW version: " _SKETCHVERSION "\n(c) 2023 Buk7456" 
-                                "\nhttps://github.com/" "\nbuk7456/FreeTX"));
-        
-        display.drawBitmap(61, 61, icon_down_arrow_small, 5, 3, BLACK);
-        
-        static const char disclaimerText[] PROGMEM = 
-           "-----Disclaimer-----\nThe software is provided \"as is\" without warranty of any "
-           "kind, express or implied. In no event shall the authors or copyright holders be liable "
-           "for any direct, indirect, incidental, special, exemplary or consequential "
-           "damages (including but not limited to personal and/or property damage) or "
-           "other liability arising from the use of the software.\n\nImproperly "
-           "operating RC models can cause serious injury or death.";
-        
-        if(clickedButton == KEY_DOWN)
+        menuInitialise();
+        menuAddItem(PSTR("Version info"), ITEM_VERSION_INFO, NULL);
+        menuAddItem(PSTR("Disclaimer"), ITEM_DISCLAIMER, NULL);
+        menuAddItem(PSTR("Third party notices"), ITEM_THIRD_PARTY, NULL);
+        menuAddItem(PSTR(" "), ITEM_EASTER_EGG, NULL);
+        menuDraw(&topItem, &highlightedItem);
+
+        if(menuSelectedItemID == ITEM_VERSION_INFO)
+        {
+          textViewerText = versionText;
+          changeToScreen(SCREEN_TEXT_VIEWER);
+        }
+        else if(menuSelectedItemID == ITEM_DISCLAIMER)
         {
           textViewerText = disclaimerText;
           changeToScreen(SCREEN_TEXT_VIEWER);
         }
-        
-        //--- Trigger launching the Easter egg 
-        static uint8_t cntr = 0;
-        if(clickedButton == KEY_SELECT)
+        else if (menuSelectedItemID == ITEM_THIRD_PARTY)
         {
-          cntr++;
-          if(cntr >= 3) 
-          {
-            cntr = 0;
-            changeToScreen(SCREEN_EASTER_EGG);
-          }
+          textViewerText = thirdPartyNoticesText;
+          changeToScreen(SCREEN_TEXT_VIEWER);
         }
-        if(millis() - buttonStartTime > 500)
-          cntr = 0;
+        else if(menuSelectedItemID == ITEM_EASTER_EGG)
+        {
+          changeToScreen(SCREEN_EASTER_EGG);
+        }
 
-        //Exit
+        //exit
         if(heldButton == KEY_SELECT)
         {
-          cntr = 0;
+          if(!Sys.rememberMenuPosition)
+          {
+            topItem = 1;
+            highlightedItem = 1;
+          }
           changeToScreen(SCREEN_SYSTEM_MENU);
         }
       }
@@ -9308,7 +9317,7 @@ void handleMainUI()
             }
             //Figure out how long the word is. If it is longer than the space left on the 
             //line, force it onto a new line. If the word is longer than the total space on the line, 
-            //just print anyway. 
+            //just print anyway but starting on a new line. 
             if(pgm_read_byte(textViewerText + pos - 1) == ' ' || pos == 0) //start of word, prev character is a space
             {
               uint8_t wordLen = 0;
@@ -9322,7 +9331,7 @@ void handleMainUI()
                 j++;
               }
               uint8_t remainingSpace = 20 - i;
-              if(wordLen > remainingSpace && wordLen <= 21)
+              if(wordLen > remainingSpace && i != 0)
                 break;
             }
             //Write the character to the screen
