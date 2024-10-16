@@ -60,19 +60,20 @@ void parser(File& file)
     numLeadingSpaces++;
   }
   indentLevel = numLeadingSpaces / 2;
-  //return if invalid indention
-  if(indentLevel >= sizeof(keyBuff)/sizeof(keyBuff[0]) || numLeadingSpaces % 2 == 1)
-  {
-    hasEncounteredInvalidParam = true;
-    return;
-  }
-  
+
   //--- Trim white space at beginning and end
   trimWhiteSpace(lineBuff, sizeof(lineBuff));
   
   //--- Check if the line is a comment line or empty line
   if(lineBuff[0] == '#' || lineBuff[0] == '\0')
     return;
+  
+  //--- Check if invalid indention
+  if(indentLevel >= sizeof(keyBuff)/sizeof(keyBuff[0]) || numLeadingSpaces % 2 == 1)
+  {
+    hasEncounteredInvalidParam = true;
+    return;
+  }
 
   //--- Find and remove inline comments
   //Find the '#' character in the line.
@@ -138,12 +139,12 @@ void readValue_bool(const char* str, bool* val)
 int32_t atoi_with_prefix(const char *str)
 {
   int32_t result = 0;
-  int32_t sign = 1; // 1 for positive, -1 for negative
+  bool isNegative = false;
   // Skip leading non-numeric characters
   while(*str && (*str < '0' || *str > '9')) 
   {
     if(*str == '-') 
-      sign = -1; // Handle negative sign if present
+      isNegative = true;
     str++;
   }
   // Process digits and build the integer
@@ -152,8 +153,7 @@ int32_t atoi_with_prefix(const char *str)
     result = result * 10 + (*str - '0');
     str++;
   }
-  // Apply the sign
-  return sign * result;
+  return isNegative ? -result : result;
 }
 
 //--------------------------------------------------------------------------------------------------
