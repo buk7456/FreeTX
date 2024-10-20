@@ -197,17 +197,21 @@ void LCDKS0108::drawChar(uint8_t x, uint8_t y, unsigned char c, uint8_t color)
   uint16_t e = y8e * LCDWIDTH; 
   uint16_t cc = (uint16_t) 5 * c; 
   uint8_t line;
-  for(uint8_t i = 0; i < 5; i++, x++)
-  { 
-    line = pgm_read_byte(&font[cc+i]);
-    if(color) 
-    {
+  if(color)
+  {
+    for(uint8_t i = 0; i < 5; i++, x++)
+    { 
+      line = pgm_read_byte(&font[cc+i]);
       dispBuffer[s+x] |= (line << sShift);
       if(y8s != y8e)           
         dispBuffer[e+x] |= (line >> eShift); 
     }
-    else
-    {
+  }
+  else
+  {
+    for(uint8_t i = 0; i < 5; i++, x++)
+    { 
+      line = pgm_read_byte(&font[cc+i]);
       dispBuffer[s+x] &= ~(line << sShift); 
       if(y8s != y8e) 
         dispBuffer[e+x] &= ~(line >> eShift); 
