@@ -1,0 +1,672 @@
+##### Model configuration file #####
+##### Exported from version 1.1.1 #####
+ModelName: 
+ModelType: Multicopter
+YawSrc: X1
+RollSrc: X2
+PitchSrc: Y2
+ThrSrc: Y1
+# ------ Warnings ------
+CheckThrottle: true
+SwitchWarn: 
+  SwA: Up
+  SwB: Up
+  SwC: Up
+  SwD: Up
+  SwE: Up
+  SwF: Up
+  SwG: Up
+  SwH: Up
+# ------ Telemetry ------
+Telemetry: 
+  No.: 1
+  Name: 
+  UnitsName: 
+  Identifier: 0
+  Factor10: 0
+  Multiplier: 100
+  Offset: 0
+  AlarmCondition: Off
+  AlarmThreshold: 0
+  ShowOnHome: true
+  RecordMaximum: true
+  RecordMinimum: true
+# ------ Timers ------
+Timer: 
+  No.: 1
+  Name: 
+  Switch: None
+  Reset: None
+  InitMin: 0
+  Persistent: false
+  PersistVal: 0
+Timer: 
+  No.: 2
+  Name: 
+  Switch: None
+  Reset: None
+  InitMin: 0
+  Persistent: false
+  PersistVal: 0
+Timer: 
+  No.: 3
+  Name: 
+  Switch: None
+  Reset: None
+  InitMin: 0
+  Persistent: false
+  PersistVal: 0
+# ------ Trims ------
+X1Trim: 
+  TrimState: Common
+  CommonTrim: 0.0
+Y1Trim: 
+  TrimState: Common
+  CommonTrim: 0.0
+X2Trim: 
+  TrimState: Common
+  CommonTrim: 0.0
+Y2Trim: 
+  TrimState: Common
+  CommonTrim: 0.0
+TrimStep: Medium
+# ------ Rates and expo ------
+YawDualRate: 
+  Rate1: 100
+  Rate2: 100
+  Expo1: 0
+  Expo2: 0
+  Switch: None
+RollDualRate: 
+  Rate1: 100
+  Rate2: 100
+  Expo1: 0
+  Expo2: 0
+  Switch: None
+PitchDualRate: 
+  Rate1: 100
+  Rate2: 100
+  Expo1: 0
+  Expo2: 0
+  Switch: None
+# ------ Throttle curve ------
+ThrottleCurve: 
+  NumPoints: 5
+  XVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  YVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  Smooth: false
+# ------ Function generators ------
+Funcgen: 
+  No.: 1
+  Waveform: Sine
+  PeriodMode: Fixed
+  Period1: 1.0s
+  Period2: 2.0s
+  ModulatorSrc: None
+  ReverseModulator: false
+  PhaseMode: Auto
+  Phase: 0
+Funcgen: 
+  No.: 2
+  Waveform: Sine
+  PeriodMode: Fixed
+  Period1: 1.0s
+  Period2: 2.0s
+  ModulatorSrc: None
+  ReverseModulator: false
+  PhaseMode: Auto
+  Phase: 0
+Funcgen: 
+  No.: 3
+  Waveform: Sine
+  PeriodMode: Fixed
+  Period1: 1.0s
+  Period2: 2.0s
+  ModulatorSrc: None
+  ReverseModulator: false
+  PhaseMode: Auto
+  Phase: 0
+Funcgen: 
+  No.: 4
+  Waveform: Sine
+  PeriodMode: Fixed
+  Period1: 1.0s
+  Period2: 2.0s
+  ModulatorSrc: None
+  ReverseModulator: false
+  PhaseMode: Auto
+  Phase: 0
+Funcgen: 
+  No.: 5
+  Waveform: Sine
+  PeriodMode: Fixed
+  Period1: 1.0s
+  Period2: 2.0s
+  ModulatorSrc: None
+  ReverseModulator: false
+  PhaseMode: Auto
+  Phase: 0
+# ------ Mixer ------
+Mixer: 
+  No.: 1
+  Name: 
+  Output: Ch1
+  Switch: None
+  Operation: Add
+  Input: Roll
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 2
+  Name: 
+  Output: Ch2
+  Switch: None
+  Operation: Add
+  Input: Pitch
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 3
+  Name: 
+  Output: Ch3
+  Switch: None
+  Operation: Add
+  Input: Thr
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+Mixer: 
+  No.: 4
+  Name: 
+  Output: Ch4
+  Switch: None
+  Operation: Add
+  Input: Yaw
+  Weight: 100
+  Offset: 0
+  CurveType: Diff
+  CurveVal: 0
+  TrimEnabled: true
+  FlightMode: All
+  DelayUp: 0.0s
+  DelayDown: 0.0s
+  SlowUp: 0.0s
+  SlowDown: 0.0s
+# ------ Custom curves ------
+CustomCurve: 
+  No.: 1
+  Name: 
+  NumPoints: 5
+  XVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  YVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  Smooth: false
+CustomCurve: 
+  No.: 2
+  Name: 
+  NumPoints: 5
+  XVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  YVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  Smooth: false
+CustomCurve: 
+  No.: 3
+  Name: 
+  NumPoints: 5
+  XVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  YVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  Smooth: false
+CustomCurve: 
+  No.: 4
+  Name: 
+  NumPoints: 5
+  XVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  YVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  Smooth: false
+CustomCurve: 
+  No.: 5
+  Name: 
+  NumPoints: 5
+  XVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  YVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  Smooth: false
+CustomCurve: 
+  No.: 6
+  Name: 
+  NumPoints: 5
+  XVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  YVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  Smooth: false
+CustomCurve: 
+  No.: 7
+  Name: 
+  NumPoints: 5
+  XVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  YVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  Smooth: false
+CustomCurve: 
+  No.: 8
+  Name: 
+  NumPoints: 5
+  XVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  YVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  Smooth: false
+CustomCurve: 
+  No.: 9
+  Name: 
+  NumPoints: 5
+  XVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  YVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  Smooth: false
+CustomCurve: 
+  No.: 10
+  Name: 
+  NumPoints: 5
+  XVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  YVal: 
+    0: -100
+    1: -50
+    2: 0
+    3: 50
+    4: 100
+  Smooth: false
+# ------ Logical switches ------
+LogicalSwitch: 
+  No.: 1
+  Func: None
+  Val1: None
+  Val2: 0
+  Val3: 0.0s
+  Val4: 0.0s
+# ------ Counters ------
+Counter: 
+  No.: 1
+  Name: 
+  Clock: None
+  Edge: Rising
+  Clear: None
+  Modulus: 1000
+  Direction: Up
+  Persistent: false
+  PersistVal: 0
+# ------ Flight modes ------
+FlightMode: 
+  No.: 1
+  Name: 
+  Switch: None
+  X1Trim: 0.0
+  Y1Trim: 0.0
+  X2Trim: 0.0
+  Y2Trim: 0.0
+  TransitionTime: 1.0s
+# ------ Output channels ------
+Channel: 
+  No.: 1
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 2
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 3
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 4
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 5
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 6
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 7
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 8
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 9
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 10
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 11
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 12
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 13
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 14
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 15
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 16
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 17
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 18
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 19
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+Channel: 
+  No.: 20
+  Name: 
+  Curve: None
+  Reverse: false
+  Subtrim: 0.0
+  OverrideSwitch: None
+  OverrideVal: -100
+  Failsafe: Hold
+  EndpointL: -100
+  EndpointR: 100
+# ------ Widgets ------
+Widget: 
+  No.: 1
+  Type: Timers
+  Src: Timer1
+Widget: 
+  No.: 2
+  Type: Telemetry
+  Src: Auto
+Widget: 
+  No.: 3
+  Type: Telemetry
+  Src: Auto
+Widget: 
+  No.: 4
+  Type: Telemetry
+  Src: Auto
+# ------ Notifications ------
+Notification: 
+  No.: 1
+  Enabled: true
+  Switch: None
+  Tone: Tone1
+  Text: 
