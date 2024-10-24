@@ -854,7 +854,8 @@ bool changeLSReference(uint8_t newRef, uint8_t oldRef)
 bool verifyModelData()
 {
   // Verify if the model data is sane. Here, we check for critical
-  // parameters that could cause a segfault if incorrect.
+  // parameters that could cause a segfault if incorrect,
+  // and a few other indicators.
 
   bool isSane = true;
 
@@ -862,6 +863,7 @@ bool verifyModelData()
   {
     if(Model.Funcgen[i].waveform >= FUNCGEN_WAVEFORM_COUNT) isSane = false;
     if(Model.Funcgen[i].phaseMode >= FUNCGEN_PHASEMODE_COUNT) isSane = false;
+    if(Model.Funcgen[i].modulatorSrc >= MIXSOURCES_COUNT) isSane = false;
   }
 
   for(uint8_t i = 0; i < NUM_MIXSLOTS; i++)
@@ -884,6 +886,9 @@ bool verifyModelData()
       isSane = false;
   }
   
+  if(Model.ThrottleCurve.numPoints > MAX_NUM_POINTS_CUSTOM_CURVE) 
+    isSane = false;
+  
   for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
   {
     if(Model.LogicalSwitch[i].func >= LS_FUNC_COUNT) 
@@ -896,6 +901,51 @@ bool verifyModelData()
       isSane = false;
   }
 
+  return isSane;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+bool verifySystemData()
+{
+  // Verify system settings. 
+  // Here we check a few indicators.
+  
+  bool isSane = true;
+  
+  for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
+  {
+    if(Sys.StickAxis[i].type >= STICK_AXIS_TYPE_COUNT)
+      isSane = false;
+  }
+  
+  for(uint8_t i = 0; i < NUM_KNOBS; i++)
+  {
+    if(Sys.Knob[i].type >= KNOB_TYPE_COUNT)
+      isSane = false;
+  }
+  
+  for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
+  {
+    if(Sys.swType[i] >= SW_TYPE_COUNT)
+      isSane = false;
+  }
+  
+  if(Sys.backlightWakeup >= BACKLIGHT_WAKEUP_COUNT) 
+    isSane = false;
+  
+  if(Sys.backlightTimeout >= BACKLIGHT_TIMEOUT_COUNT) 
+    isSane = false;
+  
+  if(Sys.rfPower >= RF_POWER_COUNT) 
+    isSane = false;
+  
+  if(Sys.defaultStickMode >= STICK_MODE_COUNT) 
+    isSane = false;
+  
+  if(Sys.trimToneFreqMode >= TRIM_TONE_FREQ_MODE_COUNT) 
+    isSane = false;
+  
   return isSane;
 }
 
