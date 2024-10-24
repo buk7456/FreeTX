@@ -44,6 +44,7 @@ void resetWidgetParams(uint8_t idx);
 
 bool changeLSReference(uint8_t newRef, uint8_t oldRef);
 
+bool verifySystemData();
 bool verifyModelData();
 
 uint16_t joinBytes(uint8_t highByte, uint8_t lowByte);
