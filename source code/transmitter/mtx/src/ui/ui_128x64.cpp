@@ -8348,7 +8348,7 @@ void handleMainUI()
             
             //show the characters
             display.setCursor(99 + col * 6, line * 8);
-            if(val == 0x20 || val == 0xFF || val == 0x00)
+            if(val == 0x00 || val == 0x20 || val == 0xFF || (val >= 0x0A && val <= 0x0D))
               display.write(0x2E);
             else
               display.write(val);
@@ -9276,13 +9276,17 @@ void handleMainUI()
     
     case SCREEN_TEXT_VIEWER:
       {
-        static uint16_t startPos;
+        static uint16_t startPos; //the offset into the string
 
+        static uint16_t scrollOffsetQQ[5]; //buffer to help with scrolling
+        static uint8_t idxQQ = 0;
+        
         static bool initialised = false;
         if(!initialised)
         {
           initialised = true;
           startPos = 0;
+          idxQQ = 0;
         }
         
         uint16_t pos = startPos; //position in string
@@ -9291,7 +9295,7 @@ void handleMainUI()
         //Print the text with both line wrap and word wrap. Word wrap prioritized. 
         //Doesn't cater for all edge cases, but works good enough.
         uint8_t line = 0, i = 0;
-        uint8_t numPrintedChars = 0; //tracks how many characters we've skipped
+        bool isPageBreak = false;
         while(line < 7 && !isEnd)
         {
           while(i < 21)
@@ -9309,12 +9313,20 @@ void handleMainUI()
               pos++; //advance position in string
               continue;
             }
-            //Check if its a new line character
+            //Check if it is a new line character
             if(c == '\n')
             {
               pos++; //advance position in string
               break;
             }
+            //check if it is a form feed character
+            if(c == '\f')
+            {
+              isPageBreak = true;
+              pos++; //advance position in string
+              break;
+            }
+            
             //Figure out how long the word is. If it is longer than the space left on the 
             //line, force it onto a new line. If the word is longer than the total space on the line, 
             //just print anyway but starting on a new line. 
@@ -9325,7 +9337,7 @@ void handleMainUI()
               char wordCharacter;
               while((wordCharacter = pgm_read_byte(textViewerText + pos + j)) != ' ')
               {
-                if(wordCharacter == '\0' || wordCharacter == '\r' || wordCharacter == '\n')
+                if(wordCharacter == '\0' || wordCharacter == '\r' || wordCharacter == '\n' || wordCharacter == '\f')
                   break;
                 wordLen++;
                 j++;
@@ -9337,37 +9349,63 @@ void handleMainUI()
             //Write the character to the screen
             display.setCursor(1 + i*6, 4 + line*8);
             display.write(c);
-            numPrintedChars++;
             pos++; //advance position in string
             i++; //advance position in line
           }
           
           line++; //advance line
           i = 0; //reset position in line
+          
+          if(isPageBreak)
+          {
+            isPageBreak = false;
+            line = 0;
+            i = 0;
+            break;
+          }
         }
         
         //Show arrow icons
         if(!isEnd)
           display.drawBitmap(61, 61, icon_down_arrow_small, 5, 3, BLACK);
-        if(pos >= 147) //21*7
+        if(startPos > 0)
           display.drawBitmap(61, 0, icon_up_arrow_small, 5, 3, BLACK);
-         
+        
         //Handle scrolling down
-        if(pressedButton == KEY_DOWN)
+        if(pressedButton == KEY_DOWN && !isEnd)
         {
-          if(!isEnd)
-            startPos = pos;
+          scrollOffsetQQ[idxQQ] = startPos; //store the current offset
+          idxQQ++;
+          if(idxQQ >= sizeof(scrollOffsetQQ)/scrollOffsetQQ[0])
+          {
+            idxQQ = sizeof(scrollOffsetQQ)/scrollOffsetQQ[0] - 1;
+            //In this case, we have reached the buffer's limit, therefore 
+            //remove the oldest offset by shifting elements in the array to the left.
+            for(uint8_t i = 0; i < sizeof(scrollOffsetQQ)/scrollOffsetQQ[0] - 1; i++)
+            {
+              scrollOffsetQQ[i] = scrollOffsetQQ[i + 1];
+            }
+          }
+          //update the start position
+          startPos = pos;
         }
-        //Handle scrolling up. Not terribly accurate for now. To make it accurate, we would need to have an 
-        //array that keeps track of all the number of printed characters per page. May not be worth 
-        //the extra memory usage.
-        if(pressedButton == KEY_UP)
+        //Handle scrolling up
+        if(pressedButton == KEY_UP && startPos > 0)
         {
-          int16_t _start = startPos;
-          _start = _start - 147;
-          if(_start < 0)
-            _start = 0;
-          startPos = _start;
+          if(idxQQ > 0)
+          {
+            startPos = scrollOffsetQQ[idxQQ - 1];
+            idxQQ--;
+          }
+          else
+          {
+            //Here, we have reached the buffer's limit and the workaround is to recalculate the startPos
+            //by simply subtracting off the number of characters that can be fitted on a single screen.
+            if(startPos >= 147) // 21*7
+              startPos -= 147;
+            else
+              startPos = 0;
+          }
         }
         
         //Exit
@@ -10188,7 +10226,6 @@ void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEm
     display.fillRect(xpos + 6 * charPos, 36, 5, 1, BLACK);
   
   //---- map characters ---
-  //(Code page 437 font)
   // Z to A  (90 ... 65)   -->  0 ... 25
   // space   (32)          -->  26
   // a to z  (97 ... 122)  -->  27 ... 52
