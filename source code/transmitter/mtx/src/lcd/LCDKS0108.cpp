@@ -171,7 +171,6 @@ void LCDKS0108::drawHLine(uint8_t x, uint8_t y, uint8_t w, uint8_t color)
 //--------------------------------------------------------------------------------------------------
 
 // Faster implementation of drawChar
-// Code page 437 character set
 // 5x7 font 
 void LCDKS0108::drawChar(uint8_t x, uint8_t y, unsigned char c, uint8_t color)
 {

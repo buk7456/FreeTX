@@ -298,7 +298,6 @@ void GFX::drawBitmap(uint8_t x, uint8_t y, const uint8_t bitmap[], uint8_t w, ui
 }
 
 // Draw a character
-// Code page 437 character set
 void GFX::drawChar(uint8_t x, uint8_t y, unsigned char c, uint8_t color)
 {
   for(uint8_t i = 0; i < 5; i++)
