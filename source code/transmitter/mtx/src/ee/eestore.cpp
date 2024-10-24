@@ -340,19 +340,8 @@ bool eeStoreIsInitialised()
 void eeReadSysConfig()
 {
   EEPROM.get(ADDRESS_INT_EE_SYS_DATA_START, Sys);
-  
-  /* 
-    Verify settings. Here we check a few crucial parameters.
-    If the settings are corrupt, load default settings.
-  */
-  bool isSane = true;
 
-  if(Sys.backlightWakeup >= BACKLIGHT_WAKEUP_COUNT) isSane = false;
-  if(Sys.backlightTimeout >= BACKLIGHT_TIMEOUT_COUNT) isSane = false;
-  if(Sys.rfPower >= RF_POWER_COUNT) isSane = false;
-  if(Sys.defaultStickMode >= STICK_MODE_COUNT) isSane = false;
-  
-  if(!isSane)
+  if(!verifySystemData())
   {
     turnOnBacklight();
     showMsg(PSTR("Bad system data.\nLoading defaults"));
