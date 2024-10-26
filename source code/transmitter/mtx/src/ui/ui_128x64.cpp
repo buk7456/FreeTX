@@ -9296,7 +9296,7 @@ void handleMainUI()
         //Doesn't cater for all edge cases, but works good enough.
         uint8_t line = 0, i = 0;
         bool isPageBreak = false;
-        while(line < 7 && !isEnd)
+        while(line < 6 && !isEnd)
         {
           while(i < 21)
           {
@@ -9347,7 +9347,7 @@ void handleMainUI()
                 break;
             }
             //Write the character to the screen
-            display.setCursor(1 + i*6, 4 + line*8);
+            display.setCursor(1 + i*6, 6 + line*9);
             display.write(c);
             pos++; //advance position in string
             i++; //advance position in line
@@ -9401,8 +9401,8 @@ void handleMainUI()
           {
             //Here, we have reached the buffer's limit and the workaround is to recalculate the startPos
             //by simply subtracting off the number of characters that can be fitted on a single screen.
-            if(startPos >= 147) // 21*7
-              startPos -= 147;
+            if(startPos >= 126) // 21*6
+              startPos -= 126;
             else
               startPos = 0;
           }
