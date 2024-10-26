@@ -14,8 +14,8 @@
 static const char versionText[] PROGMEM = 
   "FW version: "
   _SKETCHVERSION
-  "\n\n(c) 2020-2024 Buk7456"
-  "\n\nhttps://github.com/\nbuk7456/FreeTX";
+  "\n(c) 2020-2024 Buk7456"
+  "\nhttps://github.com/\nbuk7456/FreeTX";
 
 static const char thirdPartyNoticesText[] PROGMEM =
   "The software uses, with permissions, code from the following open source libraries: "
@@ -30,7 +30,7 @@ static const char thirdPartyNoticesText[] PROGMEM =
   "\nCopyright (c) 2016 Sandeep Mistry"
   "\f"
   "Special thanks to all the contributors to the Arduino core "
-  "and standard libraries that this software makes use of.";
+  "and standard libraries that this software uses.";
 
 static const char disclaimerText[] PROGMEM = 
   "The software is provided \"as is\" without warranty of any "
