@@ -49,20 +49,20 @@ enum {
 };
 
 char const systemMenu[][20] PROGMEM = { 
-  "RF setup", "Sound", "Backlight", "Appearance", "Advanced", "About"
+  "RF setup", "Sound", "Backlight", "Appearance", "Advanced"
 };
 enum {
-  SYSTEM_MENU_RF, SYSTEM_MENU_SOUND, SYSTEM_MENU_BACKLIGHT, SYSTEM_MENU_APPEARANCE, SYSTEM_MENU_ADVANCED,
-  SYSTEM_MENU_ABOUT
+  SYSTEM_MENU_RF, SYSTEM_MENU_SOUND, SYSTEM_MENU_BACKLIGHT, SYSTEM_MENU_APPEARANCE, SYSTEM_MENU_ADVANCED
 };
 
 char const advancedMenu[][20] PROGMEM = { 
-  "Sticks", "Knobs", "Switches", "Battery", "Security", "Miscellaneous", "Debug"
+  "Sticks", "Knobs", "Switches", "Battery", "Security", "Miscellaneous", "Debug", "About"
 };
 enum {
   ADVANCED_MENU_STICKS, ADVANCED_MENU_KNOBS, ADVANCED_MENU_SWITCHES, 
   ADVANCED_MENU_BATTERY, ADVANCED_MENU_SECURITY,
-  ADVANCED_MENU_MISCELLANEOUS, ADVANCED_MENU_DEBUG
+  ADVANCED_MENU_MISCELLANEOUS, ADVANCED_MENU_DEBUG,
+  ADVANCED_MENU_ABOUT
 };
 
 //---------------------------- Main UI states ------------------------------------------------------
@@ -6706,14 +6706,12 @@ void handleMainUI()
         menuAddItem(systemMenu[SYSTEM_MENU_BACKLIGHT], SYSTEM_MENU_BACKLIGHT, NULL);
         menuAddItem(systemMenu[SYSTEM_MENU_APPEARANCE], SYSTEM_MENU_APPEARANCE, NULL);
         menuAddItem(systemMenu[SYSTEM_MENU_ADVANCED], SYSTEM_MENU_ADVANCED, NULL);
-        menuAddItem(systemMenu[SYSTEM_MENU_ABOUT], SYSTEM_MENU_ABOUT, NULL);
         menuDraw(&topItem, &highlightedItem);
 
         if(menuSelectedItemID == SYSTEM_MENU_RF) changeToScreen(SCREEN_RF);
         else if(menuSelectedItemID == SYSTEM_MENU_SOUND) changeToScreen(SCREEN_SOUND);
         else if(menuSelectedItemID == SYSTEM_MENU_BACKLIGHT) changeToScreen(SCREEN_BACKLIGHT);
         else if(menuSelectedItemID == SYSTEM_MENU_APPEARANCE) changeToScreen(SCREEN_APPEARANCE);
-        else if(menuSelectedItemID == SYSTEM_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
         else if(menuSelectedItemID == SYSTEM_MENU_ADVANCED)
         {
           if(!isEmptyStr(Sys.password, sizeof(Sys.password))) 
@@ -7129,6 +7127,7 @@ void handleMainUI()
         menuAddItem(advancedMenu[ADVANCED_MENU_SECURITY], ADVANCED_MENU_SECURITY, NULL);
         menuAddItem(advancedMenu[ADVANCED_MENU_MISCELLANEOUS], ADVANCED_MENU_MISCELLANEOUS, NULL);
         menuAddItem(advancedMenu[ADVANCED_MENU_DEBUG], ADVANCED_MENU_DEBUG, NULL);
+        menuAddItem(advancedMenu[ADVANCED_MENU_ABOUT], ADVANCED_MENU_ABOUT, NULL);
         menuDraw(&topItem, &highlightedItem);
 
         if(menuSelectedItemID == ADVANCED_MENU_STICKS) changeToScreen(SCREEN_STICKS);
@@ -7138,6 +7137,7 @@ void handleMainUI()
         else if(menuSelectedItemID == ADVANCED_MENU_DEBUG) changeToScreen(SCREEN_DEBUG);
         else if(menuSelectedItemID == ADVANCED_MENU_SECURITY) changeToScreen(SCREEN_SECURITY);
         else if(menuSelectedItemID == ADVANCED_MENU_MISCELLANEOUS) changeToScreen(SCREEN_MISCELLANEOUS);
+        else if(menuSelectedItemID == ADVANCED_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
 
         //exit
         if(heldButton == KEY_SELECT)
@@ -8514,7 +8514,7 @@ void handleMainUI()
       
     case SCREEN_ABOUT:
       {
-        drawHeader_Menu(systemMenu[SYSTEM_MENU_ABOUT]);
+        drawHeader_Menu(advancedMenu[ADVANCED_MENU_ABOUT]);
         
         static uint8_t topItem = 1, highlightedItem = 1;
         
@@ -8560,7 +8560,7 @@ void handleMainUI()
             topItem = 1;
             highlightedItem = 1;
           }
-          changeToScreen(SCREEN_SYSTEM_MENU);
+          changeToScreen(SCREEN_ADVANCED_MENU);
         }
       }
       break;
