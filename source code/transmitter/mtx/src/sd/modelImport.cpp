@@ -17,8 +17,8 @@ bool hasEncounteredInvalidParam = false; //for basic error detection only
 char keyBuff[3][MAX_STR_SIZE];
 char valueBuff[MAX_STR_SIZE];
 
-// uint16_t dbgLineNumber = 0;
-// uint16_t dbgfirstErrorAt = 0;
+uint16_t dbgLineNumber = 0;
+uint16_t dbgFirstErrorLineNumber = 0;
 
 //--------------------------- Parser ---------------------------------------------------------------
 
@@ -37,7 +37,7 @@ void parser(File& file)
       continue;
     if(c == '\n')
     {
-      // dbgLineNumber++;
+      dbgLineNumber++;
       break;
     }
     if(count < sizeof(lineBuff) - 1)
@@ -241,6 +241,11 @@ void extractConfig_ModelType()
   findIdInIdStr(enum_ModelType, valueBuff, Model.type);
 }
 
+void extractConfig_SecondaryRcvrEnabled()
+{
+  readValue_bool(valueBuff, &Model.secondaryRcvrEnabled);
+}
+
 void extractConfig_RudSrc()
 {
   Model.rudSrcRaw = getSrcId(valueBuff);
@@ -283,7 +288,9 @@ void extractConfig_Telemetry()
   else if(idx < NUM_CUSTOM_TELEMETRY)
   {
     telemetry_params_t* tlm = &Model.Telemetry[idx];
-    if(MATCH_P(keyBuff[1], key_Name))
+    if(MATCH_P(keyBuff[1], key_Type))
+      findIdInIdStr(enum_TelemetryType, valueBuff, tlm->type);
+    else if(MATCH_P(keyBuff[1], key_Name))
       strlcpy(tlm->name, valueBuff, sizeof(tlm->name));
     else if(MATCH_P(keyBuff[1], key_UnitsName))
       strlcpy(tlm->unitsName, valueBuff, sizeof(tlm->unitsName));
@@ -326,8 +333,10 @@ void extractConfig_Timers()
       tmr->swtch = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_ResetSwitch))
       tmr->resetSwitch = getControlSwitchID(valueBuff);
-    else if(MATCH_P(keyBuff[1], key_InitialMinutes))
-      tmr->initialMinutes = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_InitialMinutes)) //deprecated
+      tmr->initialSeconds = atoi_with_prefix(valueBuff) * 60;
+    else if(MATCH_P(keyBuff[1], key_InitialSeconds))
+      tmr->initialSeconds = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_IsPersistent))
       readValue_bool(valueBuff, &tmr->isPersistent);
     else if(MATCH_P(keyBuff[1], key_PersistVal))
@@ -519,7 +528,7 @@ void extractConfig_Mixer()
   static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
     idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_MIXSLOTS)
+  else if(idx < NUM_MIX_SLOTS)
   {
     mixer_params_t* mxr = &Model.Mixer[idx];
     if(MATCH_P(keyBuff[1], key_Name))
@@ -917,6 +926,7 @@ void importModelData(File& file)
   isEndOfFile = false;
   hasEncounteredInvalidParam = false;
   idNotFoundInIdStr = false;
+  dbgFirstErrorLineNumber = 0;
   memset(keyBuff[0], 0, sizeof(keyBuff[0]));
   memset(keyBuff[1], 0, sizeof(keyBuff[0]));
   memset(keyBuff[2], 0, sizeof(keyBuff[0]));
@@ -938,6 +948,7 @@ void importModelData(File& file)
     //call the appropriate extractor function, depending on the root key
     if(MATCH_P(keyBuff[0], key_ModelName)) extractConfig_ModelName();
     else if(MATCH_P(keyBuff[0], key_ModelType)) extractConfig_ModelType();
+    else if(MATCH_P(keyBuff[0], key_SecondaryRcvrEnabled)) extractConfig_SecondaryRcvrEnabled();
     else if(MATCH_P(keyBuff[0], key_RudSrc)) extractConfig_RudSrc();
     else if(MATCH_P(keyBuff[0], key_YawSrc)) extractConfig_RudSrc();
     else if(MATCH_P(keyBuff[0], key_AilSrc)) extractConfig_AilSrc();
@@ -973,14 +984,14 @@ void importModelData(File& file)
     else 
       hasEncounteredInvalidParam = true;
     
-    // if(hasEncounteredInvalidParam && dbgfirstErrorAt == 0)
-      // dbgfirstErrorAt = dbgLineNumber;
+    if((hasEncounteredInvalidParam || idNotFoundInIdStr) && dbgFirstErrorLineNumber == 0)
+      dbgFirstErrorLineNumber = dbgLineNumber;
   }
   
   //show message if errors were encountered
-  if(hasEncounteredInvalidParam || idNotFoundInIdStr)
+  if(dbgFirstErrorLineNumber != 0)
   {
-    showMsg(PSTR("Some data skipped"));
+    showDataImportErrorMessage(PSTR("Some data skipped"), dbgFirstErrorLineNumber);
     delay(2000);
   }
 }
