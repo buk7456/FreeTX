@@ -3,10 +3,11 @@
 
 void initialiseDisplay();
 
-void showMsg(const char* str);
-void showProgressMsg(const char* str, uint8_t percent);
-void showWaitMsg();
-void showMuteMsg();
+void showMessage(const char* str);
+void showProgressMessage(const char* str, uint8_t percent);
+void showWaitMessage();
+void showMuteMessage();
+void showDataImportErrorMessage(const char* str, uint16_t lineNumber);
 
 void startInitialSetup();
 
