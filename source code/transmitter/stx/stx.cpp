@@ -6,7 +6,28 @@
 #include "eestore.h"
 #include "rfComm.h"
 
-void doSerialCommunication();
+void getSerialData();
+void sendSerialData();
+
+#define UART_FIXED_PACKET_SIZE 48
+
+enum {
+  MESSAGE_TYPE_NONE = 0x00,
+  
+  //mtx to stx
+  MESSAGE_TYPE_RC_DATA = 0x01, 
+  MESSAGE_TYPE_ENTER_BIND = 0X02,
+  MESSAGE_TYPE_GET_RECEIVER_CONFIG = 0x03,
+  MESSAGE_TYPE_WRITE_RECEIVER_CONFIG = 0x04,
+  
+  //stx to mtx
+  MESSAGE_TYPE_BIND_STATUS_CODE = 0x10,
+  MESSAGE_TYPE_RECEIVER_CONFIG = 0x11,
+  MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE = 0x12,
+  MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE = 0x13,
+  MESSAGE_TYPE_TELEMETRY_GENERAL = 0x14,
+  MESSAGE_TYPE_TELEMETRY_GNSS = 0x15,
+};
 
 //==================================================================================================
 
@@ -37,132 +58,275 @@ void setup()
 
 void loop()
 {
-  //--- SERIAL COMMUNICATION
-  doSerialCommunication();
-  
-  //--- RF COMMUNICATION
+  getSerialData();
   doRfCommunication();
-  
+  sendSerialData();
 }
 
 //==================================================================================================
 
-void doSerialCommunication()
+void getSerialData()
 {
-  //See the 'protocol_over_uart.txt' in the doc folder for information about the formats used.
-  
-  ///------------- GET FROM MAIN MCU ------------------
-  
-  //Read into temp buff
- 
-  const uint8_t NUM_CRC_BYTES = 1;
-  const uint8_t msgLength = 2 + (2 * NUM_RC_CHANNELS) + NUM_CRC_BYTES;
-  
-  uint8_t tmpBuff[msgLength];
-  memset(tmpBuff, 0, sizeof(tmpBuff));
-  
-  if(Serial.available() < msgLength)
+  uint8_t buffer[UART_FIXED_PACKET_SIZE];
+  memset(buffer, 0, sizeof(buffer));
+
+  if(Serial.available() < UART_FIXED_PACKET_SIZE) 
     return;
-  
+
   uint8_t cntr = 0;
-  while (Serial.available() > 0)
+  while(Serial.available() > 0)
   {
-    if(cntr < msgLength) 
+    if(cntr < sizeof(buffer)) 
     {
-      tmpBuff[cntr] = Serial.read();
+      buffer[cntr] = Serial.read();
       cntr++;
     }
     else //Discard any extra data
       Serial.read();
   }
-  
-  //Check crc and extract data
-  
-  if(tmpBuff[msgLength - 1] != crc8(tmpBuff, msgLength - 1))
-    return;
-  
-  //status byte 0
-  uint8_t status0 = tmpBuff[0];
-  rfPower = status0 & 0x07;
-  rfEnabled = (status0 >> 3) & 0x01;
-  isSendOutputChConfig = (status0 >> 4) & 0x01;
-  isRequestingOutputChConfig = (status0 >> 5) & 0x01;
-  isRequestingTelemetry = (status0 >> 6) & 0x01; 
-  isRequestingBind = (status0 >> 7) & 0x01;
-  
-  //status byte 1
-  uint8_t status1 = tmpBuff[1];
-  isFailsafeData = status1 & 0x01;
-  isMainReceiver = (status1 >> 1) & 0x01;
-  
-  //general data
-  if(isSendOutputChConfig)
-  {
-    for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-      outputChConfig[i] = tmpBuff[2 + i];
-  }
-  else
-  {
-    hasPendingRCData = true;
-    for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-      chData[i] = joinBytes(tmpBuff[2 + i * 2], tmpBuff[3 + i * 2]);
-    //Skip this rc data if we were previously requesting for telemetry
-    //to allow enough time to listen. 
-    static bool wasRequestingTelemetry = false;
-    if(wasRequestingTelemetry)
-      hasPendingRCData = false;
-    wasRequestingTelemetry = isRequestingTelemetry;
-  }
-  
-  ///------------- REPLY TO MAIN MCU ------------------
-  
-  uint8_t dataToSend[3 + NUM_RC_CHANNELS + NUM_CRC_BYTES];
-  memset(dataToSend, 0, sizeof(dataToSend));
 
-  dataToSend[0] |= (gotOutputChConfig & 0x01) << 4;
-  dataToSend[0] |= (receiverConfigStatusCode & 0x03) << 2;
-  dataToSend[0] |= (bindStatusCode & 0x03);
-  
-  dataToSend[1] = transmitterPacketRate;
-  dataToSend[2] = receiverPacketRate;
-  
+  //exit if busy, to prevent modifications to transmitPayloadBuffer
+  if(hasPendingRCData || isRequestingBind || isRequestingOutputChConfig || isSendOutputChConfig)
+    return;
+
+  //check CRC and extract data
+  uint8_t dataLength = buffer[4];
+  uint8_t receivedCRC = buffer[5 + dataLength];
+  uint8_t computedCRC = crc8(buffer, 5 + dataLength);
+  if(computedCRC != receivedCRC)
+    return;
+
+  //get message type, extract the data
+  uint8_t messageType = buffer[3];
+  switch(messageType)
+  {
+    case MESSAGE_TYPE_RC_DATA:
+      {
+        hasPendingRCData = true;
+        
+        //read flags
+        uint8_t flagsIdx = 5 + dataLength - 1;
+        isRequestingTelemetry = ((buffer[flagsIdx] >> 3) & 0x01);
+        rfPower = buffer[flagsIdx] & 0x07;
+
+        //Skip this rc data if we were previously requesting for telemetry
+        //to allow enough time to listen. 
+        static bool wasRequestingTelemetry = false;
+        if(wasRequestingTelemetry)
+          hasPendingRCData = false;
+        wasRequestingTelemetry = isRequestingTelemetry;
+
+        //copy to transmitPayloadBuffer
+        if(hasPendingRCData)
+        {
+          memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
+          if(dataLength > sizeof(transmitPayloadBuffer))
+          {
+            //buffer is not large enough, do not send partial data
+            hasPendingRCData = false;
+            break;
+          }
+          for(uint8_t i = 0; i < dataLength; i++)
+          {
+            transmitPayloadBuffer[i] = buffer[5 + i];
+          }
+          transmitPayloadLength = dataLength;
+        }
+      }
+      break;
+
+    case MESSAGE_TYPE_ENTER_BIND:
+      {
+        isRequestingBind = true;
+        isMainReceiver = buffer[5] & 0x01;
+      }
+      break;
+    
+    case MESSAGE_TYPE_GET_RECEIVER_CONFIG:
+      {
+        isRequestingOutputChConfig = true;
+        //copy to transmitPayloadBuffer
+        memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
+        if(dataLength > sizeof(transmitPayloadBuffer))
+        {
+          //buffer is not large enough, do not send partial data
+          isRequestingOutputChConfig = false;
+          break;
+        }
+        for(uint8_t i = 0; i < dataLength; i++)
+        {
+          transmitPayloadBuffer[i] = buffer[5 + i];
+        }
+        transmitPayloadLength = dataLength;
+      }
+      break;
+
+    case MESSAGE_TYPE_WRITE_RECEIVER_CONFIG:
+      {
+        isSendOutputChConfig = true;
+        //copy to transmitPayloadBuffer
+        memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
+        if(dataLength > sizeof(transmitPayloadBuffer))
+        {
+          //buffer is not large enough, do not send partial data
+          isSendOutputChConfig = false;
+          break;
+        }
+        for(uint8_t i = 0; i < dataLength; i++)
+        {
+          transmitPayloadBuffer[i] = buffer[5 + i];
+        }
+        transmitPayloadLength = dataLength;
+      }
+      break;
+  }
+
+}
+
+//==================================================================================================
+
+void sendSerialData()
+{
+  uint8_t buffer[UART_FIXED_PACKET_SIZE];
+  memset(buffer, 0, sizeof(buffer));
+
+  uint8_t messageType = MESSAGE_TYPE_NONE;
+
+  static bool hasPendingRFLinkMessage = false;
+
+  static uint32_t rfLinkTelemetryMessageDispatchTime;
+
+  if(hasReceivedTelemetry)
+  {
+    hasReceivedTelemetry = false;
+    if(receivedTelemetryType == TELEMETRY_TYPE_GNSS)
+      messageType = MESSAGE_TYPE_TELEMETRY_GNSS;
+    else if(receivedTelemetryType == TELEMETRY_TYPE_GENERAL)
+    {
+      messageType = MESSAGE_TYPE_TELEMETRY_GENERAL;
+      hasPendingRFLinkMessage = true;
+      rfLinkTelemetryMessageDispatchTime = millis() + 100;
+    }
+  }
+  else if(hasPendingRFLinkMessage)
+  {
+    if(millis() > rfLinkTelemetryMessageDispatchTime)
+    {
+      hasPendingRFLinkMessage = false;
+      messageType = MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE;
+    }
+  }
+
   if(gotOutputChConfig)
   {
     gotOutputChConfig = false;
-    for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-      dataToSend[3 + i] = outputChConfig[i];
+    messageType = MESSAGE_TYPE_RECEIVER_CONFIG;
   }
-  else //send telemetry
+
+  if(bindStatusCode != 0)
   {
-    //The telemetry gets sent in a circular manner
-    //e.g. if we have 6 fields a,b,c,d,e,f and the maximum we can send at a time is 4 fields,
-    //then we would send a,b,c,d and the next time send e,f,a,b
-    
-    const uint8_t MAX_FIELDS = NUM_RC_CHANNELS / 3; // there are 3 bytes per telemetry field
-    static uint8_t cntr = 0;
-    for(uint8_t i = 0; i < MAX_FIELDS; i++)
-    {
-      if(i >= MAX_TELEMETRY_COUNT)
-        break;
-      dataToSend[3 + i * 3] = telemID[cntr];
-      uint16_t _tlmVal = telemVal[cntr];
-      dataToSend[4 + i * 3] = (_tlmVal >> 8) & 0xFF;
-      dataToSend[5 + i * 3] = _tlmVal & 0xFF;
-      //increment counter
-      cntr++;
-      if(cntr >= MAX_TELEMETRY_COUNT)
-        cntr = 0;
-    }
+    messageType = MESSAGE_TYPE_BIND_STATUS_CODE;
+    buffer[5] = bindStatusCode;
+    bindStatusCode = 0;
   }
+
+  if(receiverConfigStatusCode != 0)
+  {
+    messageType = MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE;
+    buffer[5] = receiverConfigStatusCode;
+    receiverConfigStatusCode = 0;
+  }
+
+  switch(messageType)
+  {
+    case MESSAGE_TYPE_TELEMETRY_GNSS:
+    case MESSAGE_TYPE_RECEIVER_CONFIG:
+      {
+        uint8_t dataLength = 0;
+        for(uint8_t i = 0; i < receivePayloadLength; i++)
+        {
+          uint8_t buffIdx = 5 + i;
+          if(buffIdx < sizeof(buffer) - 1)
+          {
+            buffer[buffIdx] = receivePayloadBuffer[i];
+            dataLength++;
+          }
+          else
+          {
+            //buffer is not large enough, do not send partial data
+            messageType = MESSAGE_TYPE_NONE;
+            break;
+          }
+        }
+        buffer[4] = dataLength;
+      }
+      break;
+    
+    case MESSAGE_TYPE_TELEMETRY_GENERAL:
+      {
+        uint8_t dataLength = 0;
+        for(uint8_t i = 0; i < (receivePayloadLength - 1); i++)
+        {
+          uint8_t buffIdx = 5 + i;
+          if(buffIdx < sizeof(buffer) - 1)
+          {
+            buffer[buffIdx] = receivePayloadBuffer[i + 1];
+            dataLength++;
+          }
+          else
+          {
+            //buffer is not large enough, do not send partial data
+            messageType = MESSAGE_TYPE_NONE;
+            break;
+          }
+        }
+        buffer[4] = dataLength;
+      }
+      break;
+
+    case MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE:
+      {
+        buffer[4] = 1; //data length
+        //data already handled
+      }
+      break;
+    case MESSAGE_TYPE_BIND_STATUS_CODE: //data already handled
+      {
+        buffer[4] = 1; //data length
+        //data already handled
+      }
+      break;
+
+    case MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE:
+      {
+        buffer[4] = 2; //data length
+        buffer[5] = transmitterPacketRate;
+        buffer[6] = receiverPacketRate;
+      }
+      break;
+  }
+
+  if(messageType == MESSAGE_TYPE_NONE) //nothing to send, quit
+    return;
+
+  //--- Add other fields and send
+
+  //Preamble
+  buffer[0] = 0xAA;
+  buffer[1] = 0xAA;
+  buffer[2] = 0xAA;
   
-  //add a CRC
-  dataToSend[sizeof(dataToSend) - 1] = crc8(dataToSend, sizeof(dataToSend) - 1);
+  //Message type
+  buffer[3] = messageType;
   
-  //send
-  Serial.write(dataToSend, sizeof(dataToSend));
-  
-  //reset flags
-  bindStatusCode = 0;
-  receiverConfigStatusCode = 0;
-  gotOutputChConfig = false;
+  //CRC
+  uint8_t dataLength = buffer[4];
+  buffer[5 + dataLength] = crc8(buffer, 5 + dataLength);
+
+  //Padding bytes
+  //Already set.
+
+  //Send
+  Serial.write(buffer, sizeof(buffer));
 }
+
