@@ -52,9 +52,7 @@ uint16_t joinBytes(uint8_t highByte, uint8_t lowByte);
 bool isEmptyStr(char* buff, uint8_t lenBuff);
 void trimWhiteSpace(char* buff, uint8_t lenBuff);
 
-//====================== MISC =====================================================================
-
-//---- Output channels -------------------
+//----------------- Output channels -----------------------
 
 /* NOTE: Changing these will need updating the stx and receiver code,
 as well as the schematics and all related stuff */
@@ -63,7 +61,7 @@ as well as the schematics and all related stuff */
 
 extern int16_t  channelOut[NUM_RC_CHANNELS];  //Range is -500 to 500
 
-//---- Sticks and pots -------------------
+//----------------- Sticks and potentiometers -------------
 
 // Leave as is unless you've physically added or removed the corresponding pins in the schematics
 // If you must change this, you also need to add the axis names manually
@@ -74,29 +72,31 @@ extern int16_t stickAxisIn[NUM_STICK_AXES];
 extern int16_t knobIn[NUM_KNOBS];
 
 extern bool isCalibratingControls;
-enum {
+
+enum calibration_stage_e {
   //calibration stages
   CALIBRATE_INIT,
   CALIBRATE_MOVE,
   CALIBRATE_DEADBAND
 };
 
-//---- Physical Switches -----------------
+//----------------- Physical Switches ---------------------
 
 /* Leave as is unless you've physically added or removed the corresponding pins in the schematics */
 #define NUM_PHYSICAL_SWITCHES  8 
 
 extern uint8_t swState[NUM_PHYSICAL_SWITCHES];
-enum {  
+
+enum switch_state_e {  
   //Switch states
   SWUPPERPOS = 0, 
   SWLOWERPOS = 1, 
   SWMIDPOS   = 2
 };
 
-//---- Buttons and button events ----------
+//----------------- Buttons and button events -------------
 
-enum {
+enum button_code_e {
   KEY_SELECT = 1, 
   KEY_UP, 
   KEY_DOWN,
@@ -126,21 +126,21 @@ extern uint8_t  pressedButton; //triggered once when the button goes down
 extern uint8_t  clickedButton; //triggered when the button is released before heldButton event
 extern uint8_t  heldButton;    //triggered when button is held down long enough
 
-//---- Transmitter Battery -----------------
+//----------------- Transmitter Battery -------------------
 
 extern int16_t  battVoltsNow; //millivolts
 extern uint8_t  battState;
 
-enum {
+enum batt_state_e {
   BATTLOW, 
   BATTHEALTY
 };
 
-//---- Audio ------------------------------
+//----------------- Audio ---------------------------------
 
 #define NOTIFICATION_TONE_COUNT 5
 
-enum {  
+enum audio_tone_e {  
   AUDIO_NONE, 
   AUDIO_BATTERY_WARN, 
   AUDIO_SAFETY_WARN, 
@@ -170,16 +170,16 @@ extern uint8_t  audioToPlay;
 
 extern int16_t  audioTrimVal; //fixed point representation with scaling factor 1/10
 
-//---- Misc -------------------------------
+//----------------- Miscellaneous -------------------------
 
 extern uint8_t  maxNumOfModels;
 
-extern uint32_t inputsLastMoved; //inactivity detection
+extern uint32_t inputsLastMovedTime; //inactivity detection
 extern bool     backlightIsOn;
 
 extern uint8_t  activeFmdIdx; 
 
-//---- Receiver related -----
+//----------------- Receiver related ----------------------
 
 extern uint8_t  transmitterPacketRate;
 extern uint8_t  receiverPacketRate;
@@ -188,25 +188,34 @@ extern bool     isRequestingBind;
 extern uint8_t  bindStatusCode;  //1 on success, 2 on fail
 extern bool     isMainReceiver;
 
-extern uint8_t  outputChConfig[NUM_RC_CHANNELS];
+extern uint8_t  outputChConfig[MAX_CHANNELS_PER_RECEIVER];
 extern bool     gotOutputChConfig;
 extern bool     isRequestingOutputChConfig;
 extern bool     isSendOutputChConfig;
 extern uint8_t  receiverConfigStatusCode; //1 on success, 2 on fail
 
-enum {
+enum signal_type_e {
   SIGNAL_TYPE_DIGITAL = 0,
   SIGNAL_TYPE_SERVOPWM = 1,
   SIGNAL_TYPE_PWM = 2
 };
 
-//---- Telemetry --------------------------
+//----------------- Telemetry --------------------------
+
+extern uint8_t telemetryType;
+
+enum telemetry_type_e {
+  TELEMETRY_TYPE_GENERAL = 0,
+  TELEMETRY_TYPE_GNSS = 1,
+};
+
+//--- General telemetry
 
 #define NUM_CUSTOM_TELEMETRY  6
 
 extern int16_t  telemetryReceivedValue[NUM_CUSTOM_TELEMETRY]; //stores the raw received telemetry
-extern int16_t  telemetryMaxReceivedValue[NUM_CUSTOM_TELEMETRY]; //for stats
-extern int16_t  telemetryMinReceivedValue[NUM_CUSTOM_TELEMETRY]; //for stats
+extern int16_t  telemetryMaxReceivedValue[NUM_CUSTOM_TELEMETRY]; //for statistics
+extern int16_t  telemetryMinReceivedValue[NUM_CUSTOM_TELEMETRY]; //for statistics
 extern int16_t  telemetryLastReceivedValue[NUM_CUSTOM_TELEMETRY];
 extern uint32_t telemetryLastReceivedTime[NUM_CUSTOM_TELEMETRY]; 
 extern uint8_t  telemetryAlarmState[NUM_CUSTOM_TELEMETRY];
@@ -215,33 +224,66 @@ extern bool     telemetryForceRequest;
 
 #define TELEMETRY_NO_DATA  0x7FFF
 
-//---- Main loop control -------------------
+//--- GNSS telemetry
+
+typedef struct {
+  int32_t  latitude;     //in degrees, fixed point representation; 5 decimal places of precision 
+  int32_t  longitude;    //in degrees, fixed point representation; 5 decimal places of precision
+  int16_t  altitude;     //Mean Sea Level altitude in meters,  fixed point representation; 0 decimal places of precision
+  uint16_t speed;        //speed over ground in m/s, fixed point representation; 1 decimal places of precision
+  uint16_t course;       //course over ground in degrees, fixed point representation; 1 decimal places of precision
+  uint8_t  positionFix;  //position fix indicator
+  uint8_t  satellitesInUse;  //number of satellites in use
+  uint8_t  satellitesInView; //number of satellites in view
+} gnss_telemetry_data_t;
+
+extern gnss_telemetry_data_t GNSSTelemetryData;
+
+extern uint32_t gnssTelemetrylastReceivedTime; //in milliseconds
+extern int32_t  gnssDistanceFromHome;  //in meters, 0 decimal places of precision
+
+//--- Allocated telemetry sensor IDs
+
+enum sensor_ID_e {
+  SENSOR_ID_EXT_VOLTAGE = 0x01,
+  SENSOR_ID_RSSI = 0x7F,
+  SENSOR_ID_LINK_QLTY = 0x70,
+  SENSOR_ID_SIMULATED = 0x30,
+
+  SENSOR_ID_GNSS_SPEED = 0x60,
+  SENSOR_ID_GNSS_DISTANCE = 0x61,
+  SENSOR_ID_GNSS_MSL_ALTITUDE = 0x62,
+  SENSOR_ID_GNSS_AGL_ALTITUDE = 0x63,
+};
+
+//----------------- Main loop control ---------------------
 
 #define fixedLoopTime  20
 /* in milliseconds. Should be greater than the time taken by radio module to transmit the 
 entire packet or else the window is missed resulting in much less throughput. 
 It should also be close to the average worst case time to do the main loop i.e when all features 
 are active (mixers, logical switches, ui, etc).
-The main loop time can be displayed by holding the select key while powering on.
+The main loop time can be displayed by enabling the option in the debug menu.
 */
 
 extern uint32_t thisLoopNum; //main loop counter
 
-//---- Debug -------------------------------
-extern uint32_t DBG_loopTime;
+//----------------- Debug ---------------------------------
 
+extern uint32_t DBG_loopTime;
 extern uint8_t screenshotSwtch;
+
 
 //====================== SYSTEM PARAMETERS =========================================================
 
 /* 
   NOTES & WARNINGS
   - The odering in the enumerations should match the ordering in the UI.
-  - Adding new fields or parameters can corrupt the system data. This is no big deal however.
+  - Adding new fields or parameters can corrupt the system settings. This is no big deal however.
 */
 
 //------------------------------------------------
-// structure for stick axis data
+// structure for stick axis parameters
 //------------------------------------------------
 
 typedef struct {
@@ -252,7 +294,7 @@ typedef struct {
   uint8_t type;
 } stick_axis_params_t;
 
-enum {
+enum stick_axis_type_e {
   //stick axis types
   STICK_AXIS_SELF_CENTERING,
   STICK_AXIS_NON_CENTERING,
@@ -263,7 +305,7 @@ enum {
 
 typedef stick_axis_params_t knob_params_t;
 
-enum {
+enum knob_type_e {
   //type of knob
   KNOB_CENTER_DETENT,
   KNOB_NO_CENTER_DETENT,
@@ -273,8 +315,8 @@ enum {
 };
 
 //================================================
-// Structure for the entire system data. This is
-// also the data we store to the eeprom.
+// STRUCTURE FOR THE ENTIRE SYSTEM PARAMETERS. 
+// THIS IS ALSO THE DATA WE STORE TO THE EEPROM.
 //================================================
 
 typedef struct {
@@ -333,8 +375,8 @@ typedef struct {
   bool     autohideTrims;
   bool     useNumericalBatteryIndicator;
   bool     showSplashScreen;
-  bool     showWelcomeMsg;
-  uint8_t  scrollBarStyle;
+  bool     showWelcomeMessage;
+  bool     alwaysShowHours; //todo better name
   
   //--- misc
   bool     autoSelectMovedControl;
@@ -349,12 +391,19 @@ typedef struct {
 
   //--- screenshots
   uint16_t screenshotSeqNo;
-  
+
+  //--- gnss telemetry
+  int16_t gnssAltitudeOffset;
+  int32_t gnssHomeLatitude;
+  int32_t gnssHomeLongitude;
+  int32_t gnssLastKnownLatitude;
+  int32_t gnssLastKnownLongitude;
+
 } sys_params_t;
 
 extern sys_params_t Sys;
 
-enum {
+enum switch_type_e {
   SW_ABSENT,
   SW_2POS,
   SW_3POS,
@@ -362,7 +411,7 @@ enum {
   SW_TYPE_COUNT
 };
 
-enum {
+enum rf_power_level_e {
   RF_POWER_LOW,
   RF_POWER_MEDIUM,
   RF_POWER_MAX,
@@ -370,21 +419,21 @@ enum {
   RF_POWER_COUNT
 };
 
-enum {
+enum trim_tone_freq_e {
   TRIM_TONE_FREQ_FIXED,
   TRIM_TONE_FREQ_VARIABLE,
 
   TRIM_TONE_FREQ_MODE_COUNT
 };
 
-enum { 
+enum backlight_wakeup_e { 
   BACKLIGHT_WAKEUP_KEYS, 
   BACKLIGHT_WAKEUP_ACTIVITY, 
   
   BACKLIGHT_WAKEUP_COUNT
 };
 
-enum {
+enum backlight_timeout_e {
   BACKLIGHT_TIMEOUT_5SEC,
   BACKLIGHT_TIMEOUT_15SEC,
   BACKLIGHT_TIMEOUT_1MIN,
@@ -397,7 +446,7 @@ enum {
   BACKLIGHT_TIMEOUT_COUNT
 };
 
-enum {
+enum stick_mode_e {
   //ordered x1y1x2y2
   STICK_MODE_RTAE,
   STICK_MODE_AERT,
@@ -419,7 +468,7 @@ enum {
 */
 
 //------------------------------------------------
-// structure for channel params
+// structure for channel parameters
 //------------------------------------------------
 
 typedef struct {
@@ -435,26 +484,25 @@ typedef struct {
 } channel_params_t;
 
 //------------------------------------------------
-// structure for custom telemetry
+// structure for custom telemetry parameters
 //------------------------------------------------
 
 typedef struct {
   char     name[9];        //8 chars + Null. If no name, the telemetry doesn't then exist
   char     unitsName[6];   //5 chars + null
+  uint8_t  type;           
   uint8_t  identifier;     //ID 00 to FE. FF is unused
   int16_t  multiplier;     //1 to 1000, scales to 0.01 to 10.00
-  int8_t   factor10;       //-2, 1, 0, 1, 2. Means x10^
+  int8_t   factor10;       //-3 to 3. Means x10^
   int16_t  offset;         //-30000 to 30000
-  bool     logEnabled;     //
   uint8_t  alarmCondition; //None, >Thresh, <Thresh
   int16_t  alarmThreshold; //-30000 to 30000
-  uint8_t  alarmMelody;
   bool     showOnHome; 
   bool     recordMaximum;
   bool     recordMinimum;
 } telemetry_params_t;
 
-enum {
+enum telemetry_alarm_condition_e {
   TELEMETRY_ALARM_CONDITION_NONE,
   TELEMETRY_ALARM_CONDITION_GREATER_THAN,
   TELEMETRY_ALARM_CONDITION_LESS_THAN,
@@ -463,7 +511,7 @@ enum {
 };
 
 ////----------------------------------------------
-// structure for dual rates and expo
+// structure for dual rates and expo parameters
 //------------------------------------------------
 
 typedef struct {
@@ -475,7 +523,7 @@ typedef struct {
 } rate_expo_t;
 
 //------------------------------------------------
-// structure for function generator data
+// structure for function generator parameters
 //------------------------------------------------
 
 typedef struct {
@@ -502,7 +550,7 @@ typedef struct {
 
 #define NUM_FUNCGEN 5
 
-enum { 
+enum funcgen_waveform_e { 
   FUNCGEN_WAVEFORM_SINE,
   FUNCGEN_WAVEFORM_SQUARE,
   FUNCGEN_WAVEFORM_TRIANGLE,
@@ -513,21 +561,21 @@ enum {
   FUNCGEN_WAVEFORM_COUNT
 };
 
-enum { 
+enum funcgen_phase_mode_e { 
   FUNCGEN_PHASEMODE_AUTO, //automatic phase compensation for smoothly transitioning to new period
   FUNCGEN_PHASEMODE_FIXED, //no compensation
   
   FUNCGEN_PHASEMODE_COUNT
 };
 
-enum { 
+enum funcgen_period_mode_e { 
   FUNCGEN_PERIODMODE_VARIABLE,
   FUNCGEN_PERIODMODE_FIXED, 
   
   FUNCGEN_PERIODMODE_COUNT
 };
 
-enum {
+enum funcgen_pulse_width_mode_e {
   FUNCGEN_PULSE_WIDTH_VARIABLE,
   FUNCGEN_PULSE_WIDTH_FIXED,
 
@@ -535,7 +583,7 @@ enum {
 };
 
 //-----------------------------------------------
-// structure for custom curve data
+// structure for custom curve parameters
 //-----------------------------------------------
 
 #define MIN_NUM_POINTS_CUSTOM_CURVE     2
@@ -553,7 +601,7 @@ typedef struct {
 #define NUM_CUSTOM_CURVES 10
 
 //------------------------------------------------
-// structure for logical switch data
+// structure for logical switch parameters
 //------------------------------------------------
 
 typedef struct {
@@ -566,7 +614,7 @@ typedef struct {
 
 #define NUM_LOGICAL_SWITCHES 20
 
-enum { 
+enum ls_func_e { 
   LS_FUNC_NONE,
   LS_FUNC_A_GREATER_THAN_X,
   LS_FUNC_A_LESS_THAN_X,
@@ -608,7 +656,7 @@ enum {
 };
 
 //-----------------------------------------------
-// structure for mixer data
+// structure for mixer parameters
 //-----------------------------------------------
 
 typedef struct {
@@ -629,9 +677,9 @@ typedef struct {
   uint16_t slowDown;
 } mixer_params_t;
 
-#define NUM_MIXSLOTS 40
+#define NUM_MIX_SLOTS 40
 
-enum { 
+enum mix_operator_e { 
   MIX_ADD,
   MIX_MULTIPLY,
   MIX_REPLACE,
@@ -640,7 +688,7 @@ enum {
   MIX_OPERATOR_COUNT
 };
 
-enum { 
+enum mix_curve_type_e { 
   MIX_CURVE_TYPE_DIFF,
   MIX_CURVE_TYPE_EXPO,
   MIX_CURVE_TYPE_FUNCTION,
@@ -649,7 +697,7 @@ enum {
   MIX_CURVE_TYPE_COUNT
 };
 
-enum {
+enum mix_curve_func_e {
   MIX_CURVE_FUNC_NONE,
   MIX_CURVE_FUNC_X_GREATER_THAN_ZERO,
   MIX_CURVE_FUNC_X_LESS_THAN_ZERO,
@@ -667,7 +715,7 @@ typedef struct {
   int16_t  commonTrim; //fixed point representation with scaling factor 1/10
 } trim_params_t;
 
-enum {
+enum trim_state_e {
   TRIM_DISABLED,
   TRIM_COMMON,
   TRIM_FLIGHT_MODE,
@@ -680,7 +728,7 @@ enum {
 #define TRIM_MIN_VAL  (-TRIM_MAX_VAL)
 
 //------------------------------------------------
-// structure for flight mode data
+// structure for flight mode parameters
 //------------------------------------------------
 
 typedef struct {
@@ -696,7 +744,7 @@ typedef struct {
 #define NUM_FLIGHT_MODES 5
 
 //------------------------------------------------
-// structure for counter data
+// structure for counter parameters
 //------------------------------------------------
 
 typedef struct {
@@ -722,7 +770,7 @@ typedef struct {
   char     name[7]; //6 chars + null
   uint8_t  swtch;    //switch that starts or stops the timer
   uint8_t  resetSwitch;  //
-  uint8_t  initialMinutes;  //if 0, timer will count up, else count down
+  uint32_t initialSeconds;  //if 0, timer will count up, else count down
   bool     isPersistent; 
   uint32_t persistVal;
 } timer_params_t;
@@ -736,7 +784,7 @@ extern bool     timerIsRunning[NUM_TIMERS];
 extern bool     timerForceRun[NUM_TIMERS];
 
 //------------------------------------------------
-// structure for home screen widget data
+// structure for home screen widget parameters
 //------------------------------------------------
 
 typedef struct {
@@ -749,7 +797,7 @@ typedef struct {
 
 #define NUM_WIDGETS  4
 
-enum {
+enum widget_type_e {
   WIDGET_TYPE_TELEMETRY,
   WIDGET_TYPE_MIXSOURCES,
   WIDGET_TYPE_OUTPUTS,
@@ -759,11 +807,11 @@ enum {
   WIDGET_TYPE_COUNT
 };
 
-enum {
+enum widget_src_e {
   WIDGET_SRC_AUTO = NUM_CUSTOM_TELEMETRY,
 };
 
-enum {
+enum widget_display_e {
   WIDGET_DISP_NUMERICAL,
   WIDGET_DISP_GAUGE,
   WIDGET_DISP_GAUGE_ZERO_CENTERED,
@@ -772,7 +820,7 @@ enum {
 };
 
 //------------------------------------------------
-// structure for custom notifications
+// structure for custom notification parameters
 //------------------------------------------------
 
 typedef struct {
@@ -799,6 +847,9 @@ typedef struct {
   //---Model type 
   //This should be the second member in structure
   uint8_t type;
+
+  //--
+  bool secondaryRcvrEnabled;
   
   //--- Raw sources for rud, thr, ail, ele inputs
   uint8_t rudSrcRaw;
@@ -829,7 +880,7 @@ typedef struct {
   funcgen_t Funcgen[NUM_FUNCGEN];
   
   //--- Mixers
-  mixer_params_t Mixer[NUM_MIXSLOTS];
+  mixer_params_t Mixer[NUM_MIX_SLOTS];
   
   //--- Custom curves
   custom_curve_t CustomCurve[NUM_CUSTOM_CURVES];
@@ -863,7 +914,7 @@ typedef struct {
 
 extern model_params_t Model; 
 
-enum {
+enum model_type_e {
   MODEL_TYPE_AIRPLANE,
   MODEL_TYPE_MULTICOPTER,
   MODEL_TYPE_OTHER,
@@ -871,7 +922,7 @@ enum {
   MODEL_TYPE_COUNT
 };
 
-enum {
+enum trim_step_e {
   TRIM_STEP_COARSE,
   TRIM_STEP_MEDIUM,
   TRIM_STEP_FINE,
@@ -882,7 +933,7 @@ enum {
 
 #define NUM_VIRTUAL_CHANNELS  5
 
-enum {
+enum source_e {
   //mix sources
 
   SRC_NONE,
@@ -934,11 +985,11 @@ enum {
   SRC_VIRTUAL_FIRST = SRC_CH1 + NUM_RC_CHANNELS,
   SRC_VIRTUAL_LAST  = SRC_VIRTUAL_FIRST + NUM_VIRTUAL_CHANNELS - 1,  
   
-  MIXSOURCES_COUNT,
+  MIX_SOURCES_COUNT,
 
   //other sources
 
-  SRC_COUNTER_FIRST = MIXSOURCES_COUNT,
+  SRC_COUNTER_FIRST = MIX_SOURCES_COUNT,
   SRC_COUNTER_LAST = SRC_COUNTER_FIRST + NUM_COUNTERS - 1,
 
   SRC_TIMER_FIRST,
@@ -954,7 +1005,7 @@ enum {
 };
 
 
-enum { 
+enum ctrl_sw_e { 
   CTRL_SW_NONE,
 
   //physical switches
