@@ -9,6 +9,19 @@
 #include "eestore.h"
 #include "rfComm.h"
 
+#define MAX_PAYLOAD_SIZE 26
+#define MAX_PACKET_SIZE  (4 + MAX_PAYLOAD_SIZE)
+
+uint8_t transmitPayloadBuffer[MAX_PAYLOAD_SIZE];
+uint8_t receivePayloadBuffer[MAX_PAYLOAD_SIZE];
+uint8_t transmitPayloadLength;
+uint8_t receivePayloadLength;
+
+uint8_t transmitPacketBuffer[MAX_PACKET_SIZE];
+uint8_t receivePacketBuffer[MAX_PACKET_SIZE];
+uint8_t transmitPacketLength;
+uint8_t receivePacketLength;
+
 //--------------- Freq allocation --------------------
 
 /* 
@@ -45,24 +58,22 @@
 
 //------------------------------------------------
 
-#if NUM_HOP_CHANNELS > FIXED_PAYLOAD_SIZE
-  #error Number of hop channels cannot exceed size of payload
+#if NUM_HOP_CHANNELS > (MAX_PAYLOAD_SIZE - 2)
+  #error Number of hop channels exceeds allowable value
 #endif 
 
-#define FIXED_PACKET_SIZE  (FIXED_PAYLOAD_SIZE + 4)
-
-uint8_t packet[FIXED_PACKET_SIZE];   //for messages to transmit
-uint8_t msgBuff[FIXED_PACKET_SIZE]; //for received messages
 
 enum {
-  PAC_BIND,
-  PAC_ACK_BIND,
-  PAC_READ_OUTPUT_CH_CONFIG,
-  PAC_SET_OUTPUT_CH_CONFIG,
-  PAC_ACK_OUTPUT_CH_CONFIG,
-  PAC_RC_DATA,
-  PAC_TELEMETRY,
-  PAC_INVALID
+  PACKET_BIND = 0,
+  PACKET_ACK_BIND = 1,
+  PACKET_READ_OUTPUT_CH_CONFIG = 2,
+  PACKET_SET_OUTPUT_CH_CONFIG = 3,
+  PACKET_ACK_OUTPUT_CH_CONFIG = 4,
+  PACKET_RC_DATA = 5,
+  PACKET_TELEMETRY_GENERAL = 6,
+  PACKET_TELEMETRY_GNSS = 7,
+
+  PACKET_INVALID = 0xFF
 };
 
 bool radioInitialised = false;
@@ -79,9 +90,9 @@ void setRfPower(uint8_t dBm);
 void bind();
 void hop();
 void sendTelemetry();
-void buildPacket(uint8_t srcID, uint8_t destID, uint8_t dataIdentifier, uint8_t *dataBuff, uint8_t dataLen);
-void readReceivedMessage();
-uint8_t checkReceivedMessage(uint8_t srcID, uint8_t destID);
+void buildPacket(uint8_t sourceID, uint8_t destinationID, uint8_t dataIdentifier, uint8_t *dataBuffer, uint8_t dataLength);
+void readReceivedPacket();
+uint8_t checkReceivedPacket(uint8_t sourceID, uint8_t destinationID);
 
 //==================================================================================================
 
@@ -94,7 +105,6 @@ void initialiseRfModule()
     LoRa.setSpreadingFactor(7);
     LoRa.setCodingRate4(5);
     LoRa.setSignalBandwidth(500E3);
-    //delay a bit (might not be necessary)
     delay(20);
     //start in low power level
     LoRa.sleep();
@@ -132,7 +142,7 @@ void doRfCommunication()
     
   //--- READ INCOMING PACKET (NONBIND PACKETS)
  
-  uint8_t packetType = PAC_INVALID;
+  uint8_t packetType = PACKET_INVALID;
   static uint32_t timeOfLastPacket = millis();
   
   if(millis() - timeOfLastPacket > MAX_LISTEN_TIME_ON_HOP_CHANNEL)
@@ -145,61 +155,66 @@ void doRfCommunication()
   {
     timeOfLastPacket = millis();
     telem_rssi = LoRa.packetRssi();
-    readReceivedMessage();
+    readReceivedPacket();
     hop();
-    packetType = checkReceivedMessage(Sys.transmitterID, Sys.receiverID);
+    packetType = checkReceivedPacket(Sys.transmitterID, Sys.receiverID);
   }
 
   switch(packetType)
   {
-    case PAC_RC_DATA:
+    case PACKET_RC_DATA:
       {
+        uint8_t numReceivedChannels = ((receivePayloadLength - 1) * 8) / 10; // subtract 1 for flags byte
+
+        if(!Sys.isMainReceiver && numReceivedChannels <= MAX_CHANNELS_PER_RECEIVER)
+        {
+          //no data for secondary receiver has been received, quit
+          break;
+        }
+
         rcPacketCount++;
         lastRCPacketMillis = millis();
-
         digitalWrite(PIN_LED, HIGH);
-        
+
         //Decode the rc data
         uint16_t chTemp[NUM_RC_CHANNELS];
-        for(uint8_t chIdx = 0; chIdx < NUM_RC_CHANNELS; chIdx++)
+        memset(chTemp, 0, sizeof(chTemp));
+        for(uint8_t chIdx = 0; chIdx < NUM_RC_CHANNELS && chIdx < numReceivedChannels; chIdx++)
         {
-          uint8_t aIdx = 3 + chIdx + (chIdx / 4); //3 is the index in msgBuff where the data begins
+          uint8_t aIdx = chIdx + (chIdx / 4);
           uint8_t bIdx = aIdx + 1;
           uint8_t aShift = ((chIdx % 4) + 1) * 2;
           uint8_t bShift = 8 - aShift;
           uint16_t aMask = ((uint16_t)0x0400) - ((uint16_t)1 << aShift);
-          uint8_t  bMask = ((uint16_t)1 << (8-bShift)) - 1;
-          chTemp[chIdx] = (((uint16_t)msgBuff[aIdx] << aShift) & aMask) | (((uint16_t)msgBuff[bIdx] >> bShift) & bMask);
+          uint8_t  bMask = ((uint16_t)1 << (8 - bShift)) - 1;
+          chTemp[chIdx] = (((uint16_t)receivePayloadBuffer[aIdx] << aShift) & aMask) | (((uint16_t)receivePayloadBuffer[bIdx] >> bShift) & bMask);
         }
-        
-        uint16_t chData[MAX_CHANNELS_PER_RECEIVER];
-        memset(chData, 0, sizeof(chData));
-        for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
+
+        uint8_t flag = receivePayloadBuffer[receivePayloadLength - 1];
+        bool isFailsafeData = (flag >> 4) & 0x01;
+
+        uint8_t startIdx = 0;
+        uint8_t endIdx = MAX_CHANNELS_PER_RECEIVER - 1;
+        if(!Sys.isMainReceiver)
         {
-          if(Sys.isMainReceiver) //copy the lower channels
-            chData[i] = chTemp[i];
-          else //Secondary receiver, copy the upper channels
-            chData[i] = chTemp[MAX_CHANNELS_PER_RECEIVER + i];
-        }      
-        
-        uint8_t flag = msgBuff[3 + FIXED_PAYLOAD_SIZE - 1];
-        
-        //Check if failsafe data. If so, don't modify outputs
-        if((flag >> 4) & 0x01)
+          startIdx = MAX_CHANNELS_PER_RECEIVER;
+          endIdx = numReceivedChannels - 1;
+          if((endIdx - startIdx) > (MAX_CHANNELS_PER_RECEIVER - 1))
+            endIdx = MAX_CHANNELS_PER_RECEIVER * 2 - 1;
+        }
+
+        for(uint8_t i = startIdx; i <= endIdx; i++)
         {
-          failsafeEverBeenReceived = true;
-          for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
+          if(isFailsafeData)
           {
-            channelFailsafe[i] = chData[i]; 
-            channelFailsafe[i] -= 500;
+            failsafeEverBeenReceived[i - startIdx] = true;
+            channelFailsafe[i - startIdx] = chTemp[i]; 
+            channelFailsafe[i - startIdx] -= 500;
           }
-        }
-        else //normal channel values
-        {
-          for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
+          else
           {
-            channelOut[i] = chData[i]; 
-            channelOut[i] -= 500;
+            channelOut[i - startIdx] = chTemp[i]; 
+            channelOut[i - startIdx] -= 500;
           }
         }
         
@@ -214,9 +229,9 @@ void doRfCommunication()
       }
       break;
       
-    case PAC_READ_OUTPUT_CH_CONFIG:
+    case PACKET_READ_OUTPUT_CH_CONFIG:
       {
-        if((uint8_t)Sys.isMainReceiver != (msgBuff[3] & 0x01))
+        if((uint8_t)Sys.isMainReceiver != (receivePayloadBuffer[0] & 0x01))
         {
           //This isn't the receiver we intended, bail out.
           hop();
@@ -224,31 +239,27 @@ void doRfCommunication()
         }
         
         //Reply with the configuration
-
-        uint8_t dataToSend[FIXED_PAYLOAD_SIZE]; 
-        memset(dataToSend, 0, sizeof(dataToSend));
-        for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
+        memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
+        uint8_t idx;
+        for(idx = 0; idx < MAX_CHANNELS_PER_RECEIVER; idx++)
         {
-          if(Sys.isMainReceiver) 
-            dataToSend[i] = Sys.outputChConfig[i];
-          else 
-            dataToSend[MAX_CHANNELS_PER_RECEIVER + i] = Sys.outputChConfig[i];
+          transmitPayloadBuffer[idx] = Sys.outputChConfig[idx];
         }
-        
-        buildPacket(Sys.receiverID, Sys.transmitterID, PAC_READ_OUTPUT_CH_CONFIG, dataToSend, sizeof(dataToSend));
+        transmitPayloadLength = idx;
+        buildPacket(Sys.receiverID, Sys.transmitterID, PACKET_READ_OUTPUT_CH_CONFIG, transmitPayloadBuffer, transmitPayloadLength);
         delayMicroseconds(500);
         if(LoRa.beginPacket())
         {
-          LoRa.write(packet, sizeof(packet));
+          LoRa.write(transmitPacketBuffer, transmitPacketLength);
           LoRa.endPacket(); //block until done transmitting
           hop();
         }
       }
       break;
     
-    case PAC_SET_OUTPUT_CH_CONFIG:
+    case PACKET_SET_OUTPUT_CH_CONFIG:
       {
-        if((uint8_t)Sys.isMainReceiver != (msgBuff[3 + NUM_RC_CHANNELS] & 0x01))
+        if((uint8_t)Sys.isMainReceiver != (receivePayloadBuffer[receivePayloadLength - 1] & 0x01))
         {
           //This isn't the receiver we intended.
           hop();
@@ -258,19 +269,20 @@ void doRfCommunication()
         //read and save config to eeprom
         for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
         {
-          uint8_t val = Sys.isMainReceiver ? msgBuff[3 + i] : msgBuff[3 + i + MAX_CHANNELS_PER_RECEIVER];
+          uint8_t val = receivePayloadBuffer[i];
           //write the servoPWMRangeIdx and signalType, leaving the maxSignalType unchanged
           Sys.outputChConfig[i] &= 0x0C;
           Sys.outputChConfig[i] |= val & 0xF3;
         }
         eeSaveSysConfig();
        
-        //reply 
-        buildPacket(Sys.receiverID, Sys.transmitterID, PAC_ACK_OUTPUT_CH_CONFIG, NULL, 0);
+        //reply with acknowledgement
+        memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
+        buildPacket(Sys.receiverID, Sys.transmitterID, PACKET_ACK_OUTPUT_CH_CONFIG, transmitPayloadBuffer, 0);
         delayMicroseconds(500);
         if(LoRa.beginPacket())
         {
-          LoRa.write(packet, sizeof(packet));
+          LoRa.write(transmitPacketBuffer, transmitPacketLength);
           LoRa.endPacket(); //block until done transmitting
           hop();
         }
@@ -336,12 +348,15 @@ void bind()
   {
     if(LoRa.parsePacket()) //received a packet
     {
-      readReceivedMessage();
-      uint8_t txId = msgBuff[0];
-      if(txId != 0x00 && checkReceivedMessage(txId, 0x00) == PAC_BIND)
+      readReceivedPacket();
+      uint8_t txId = (receivePacketBuffer[0] >> 1) & 0x7F;;
+      if(txId != 0x00 && checkReceivedPacket(txId, 0x00) == PACKET_BIND)
       {
-        receivedBind = true;
-        break;
+        if(receivePayloadLength == (NUM_HOP_CHANNELS + 2)) // +2 bytes for flag and receiverID
+        {
+          receivedBind = true;
+          break;
+        }
       }
     }
     delay(10);
@@ -355,38 +370,39 @@ void bind()
   
   //--- Extract data
 
-  Sys.transmitterID = msgBuff[0];
+  Sys.transmitterID = (receivePacketBuffer[0] >> 1) & 0x7F;
   
   //get hop channels
-  uint8_t idx = 3; //index in msgBuff
+  uint8_t idx = 0;
   for(uint8_t i = 0; i < NUM_HOP_CHANNELS; i++)
   {
-    if(msgBuff[idx] < NUM_FREQ)
-      Sys.fhss_schema[i] = msgBuff[idx];
+    if(receivePayloadBuffer[idx] < NUM_FREQ)
+      Sys.fhss_schema[i] = receivePayloadBuffer[idx];
     idx++;
   }
   
   //check if we are binding as main or secondary
-  Sys.isMainReceiver = msgBuff[idx] & 0x01;
+  Sys.isMainReceiver = receivePayloadBuffer[idx] & 0x01;
   idx++;
   if(!Sys.isMainReceiver)
-    Sys.receiverID = msgBuff[idx];
+    Sys.receiverID = receivePayloadBuffer[idx];
 
   //--- Send reply
-  
-  uint8_t dataToSend[FIXED_PAYLOAD_SIZE];
-  memset(dataToSend, 0, sizeof(dataToSend));
+
+  memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
   if(Sys.isMainReceiver) //generate receiverID
   {
     randomSeed(micros());
-    Sys.receiverID = random(0x01, 0xFF);
+    Sys.receiverID = random(0x01, 0x7F);
   }
-  dataToSend[0] = Sys.receiverID;
-  buildPacket(0x00, Sys.transmitterID, PAC_ACK_BIND, dataToSend, sizeof(dataToSend));
+  transmitPayloadBuffer[0] = Sys.receiverID;
+  transmitPayloadLength = 1;
+
+  buildPacket(0x00, Sys.transmitterID, PACKET_ACK_BIND, transmitPayloadBuffer, transmitPayloadLength);
   delayMicroseconds(500);
   if(LoRa.beginPacket())
   {
-    LoRa.write(packet, sizeof(packet));
+    LoRa.write(transmitPacketBuffer, transmitPacketLength);
     LoRa.endPacket(); //block until done transmitting
     hop();
   }
@@ -425,32 +441,59 @@ void sendTelemetry() //### TODO implement custom telemetry, establish standard I
       rcPacketsPerSecond = 0;
     
     //--- Prepare telemetry data and send it
-    
-    uint8_t dataToSend[FIXED_PAYLOAD_SIZE]; 
-    memset(dataToSend, 0, sizeof(dataToSend));
-    
-    //packet rate
-    dataToSend[0] = rcPacketsPerSecond;
-    
-    //external voltage
-    uint16_t telem_volts = externalVolts / 10; //convert to 10mV scale
-    if(externalVolts < 2000 || millis() < 5000UL)
-      telem_volts = TELEMETRY_NO_DATA;
-    dataToSend[1] = 0x01; //sensor ID
-    dataToSend[2] = (telem_volts >> 8) & 0xFF; //high byte
-    dataToSend[3] = telem_volts & 0xFF; //low byte
-    
-    //rssi
-    dataToSend[4] = 0x7F; //sensor ID
-    dataToSend[5] = (telem_rssi >> 8) & 0xFF; //high byte
-    dataToSend[6] = telem_rssi & 0xFF; //low byte
-    
 
-    //--- Build packet and start transmit ---
-    buildPacket(Sys.receiverID, Sys.transmitterID, PAC_TELEMETRY, dataToSend, sizeof(dataToSend));
+    memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
+
+    //alternate between telemetry types
+    static uint8_t counter = 0;
+    counter++;
+    if(counter % 2 == 0 && hasGNSSReceiver && sizeof(GNSSTelemetryData) <= sizeof(transmitPayloadBuffer))
+      telemetryType = TELEMETRY_TYPE_GNSS;
+    else
+      telemetryType = TELEMETRY_TYPE_GENERAL;
+
+    switch(telemetryType)
+    {
+      case TELEMETRY_TYPE_GENERAL: //todo improve this section to avoid possible buffer overflows
+        {
+          uint8_t idx = 0;
+
+          //packet rate
+          transmitPayloadBuffer[idx++] = rcPacketsPerSecond;
+          
+          //external voltage
+          uint16_t telem_volts = externalVolts / 10; //convert to 10mV scale
+          if(externalVolts < 2000 || millis() < 5000UL)
+            telem_volts = TELEMETRY_NO_DATA;
+          transmitPayloadBuffer[idx++] = 0x01; //sensor ID
+          transmitPayloadBuffer[idx++] = (telem_volts >> 8) & 0xFF; //high byte
+          transmitPayloadBuffer[idx++] = telem_volts & 0xFF; //low byte
+          
+          //rssi
+          transmitPayloadBuffer[idx++] = 0x7F; //sensor ID
+          transmitPayloadBuffer[idx++] = (telem_rssi >> 8) & 0xFF; //high byte
+          transmitPayloadBuffer[idx++] = telem_rssi & 0xFF; //low byte
+
+          transmitPayloadLength = idx;
+
+          buildPacket(Sys.receiverID, Sys.transmitterID, PACKET_TELEMETRY_GENERAL, transmitPayloadBuffer, transmitPayloadLength);
+        }
+        break;
+      
+      case TELEMETRY_TYPE_GNSS: //todo
+        {
+          memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
+          memcpy(transmitPayloadBuffer, &GNSSTelemetryData, sizeof(GNSSTelemetryData));
+          transmitPayloadLength = sizeof(GNSSTelemetryData);
+          buildPacket(Sys.receiverID, Sys.transmitterID, PACKET_TELEMETRY_GNSS, transmitPayloadBuffer, transmitPayloadLength);
+        }
+        break;
+    }
+
+    //start transmit
     if(LoRa.beginPacket())
     {
-      LoRa.write(packet, sizeof(packet));
+      LoRa.write(transmitPacketBuffer, transmitPacketLength);
       LoRa.endPacket(true); //async
       delayMicroseconds(500);
       transmitInitiated = true;
@@ -469,35 +512,49 @@ void sendTelemetry() //### TODO implement custom telemetry, establish standard I
 
 //--------------------------------------------------------------------------------------------------
 
-void buildPacket(uint8_t srcID, uint8_t destID, uint8_t dataIdentifier, uint8_t *dataBuff, uint8_t dataLen)
+void buildPacket(uint8_t sourceID, uint8_t destinationID, uint8_t dataIdentifier, uint8_t *dataBuffer, uint8_t dataLength)
 {
-  memset(packet, 0, sizeof(packet));
-  packet[0] = srcID;
-  packet[1] = destID;
-  packet[2] = dataIdentifier;
-  for(uint8_t i = 0; i < dataLen; i++)
+  memset(transmitPacketBuffer, 0, sizeof(transmitPacketBuffer));
+  
+  //sourceID 7 bits, destinationID 7 bits, dataIdentifier 5 bits, dataLength 5 bits
+  transmitPacketBuffer[0] = sourceID << 1;
+  transmitPacketBuffer[0] |= (destinationID >> 6) & 0x01;
+  transmitPacketBuffer[1] = destinationID << 2;
+  transmitPacketBuffer[1] |= (dataIdentifier >> 3) & 0x03;
+  transmitPacketBuffer[2] = dataIdentifier << 5;
+  transmitPacketBuffer[2] |= (dataLength & 0x1F);
+  
+  //payload
+  uint8_t payloadLength = 0;
+  for(uint8_t i = 0; i < dataLength; i++)
   {
     uint8_t idx = 3 + i;
-    if(idx < sizeof(packet) - 1)
+    if(idx < (sizeof(transmitPacketBuffer) - 1))
     {
-      packet[idx] = *dataBuff;
-      ++dataBuff;
+      transmitPacketBuffer[idx] = *dataBuffer;
+      dataBuffer++;
+      payloadLength++;
     }
   }
-  packet[sizeof(packet) - 1] = crc8(packet, sizeof(packet) - 1);
+  
+  //add a crc
+  transmitPacketBuffer[3 + payloadLength] = crc8(transmitPacketBuffer, 3 + payloadLength);
+ 
+  //calculate the packet length
+  transmitPacketLength = 4 + payloadLength;
 }
 
 //--------------------------------------------------------------------------------------------------
 
-void readReceivedMessage()
+void readReceivedPacket()
 {
-  memset(msgBuff, 0, sizeof(msgBuff));
+  memset(receivePacketBuffer, 0, sizeof(receivePacketBuffer));
   uint8_t cntr = 0;
   while (LoRa.available() > 0) 
   {
-    if(cntr < sizeof(msgBuff))
+    if(cntr < sizeof(receivePacketBuffer))
     {
-      msgBuff[cntr] = LoRa.read();
+      receivePacketBuffer[cntr] = LoRa.read();
       cntr++;
     }
     else // discard any extra data
@@ -507,17 +564,31 @@ void readReceivedMessage()
 
 //--------------------------------------------------------------------------------------------------
 
-uint8_t checkReceivedMessage(uint8_t srcID, uint8_t destID)
+uint8_t checkReceivedPacket(uint8_t sourceID, uint8_t destinationID)
 {
-  if(msgBuff[0] != srcID || msgBuff[1] != destID)
-    return PAC_INVALID;
-  
-  //check crc
-  uint8_t crcQQ = msgBuff[sizeof(msgBuff) - 1];
-  uint8_t computedCRC = crc8(msgBuff, sizeof(msgBuff) - 1);
-  if(crcQQ != computedCRC)
-    return PAC_INVALID;
-  
-  return msgBuff[2];
-}
+  uint8_t _sourceID = (receivePacketBuffer[0] >> 1) & 0x7F;
+  uint8_t _destinationID = ((receivePacketBuffer[0] & 0x01) << 6) | ((receivePacketBuffer[1] >> 2) & 0x3F);
+  uint8_t _dataIdentifier = ((receivePacketBuffer[1] & 0x03) << 3) | ((receivePacketBuffer[2] >> 5) & 0x07);
+  uint8_t _dataLength = receivePacketBuffer[2] & 0x1F;
 
+  if(_sourceID != sourceID || _destinationID != destinationID)
+    return PACKET_INVALID;
+
+  if(_dataLength > MAX_PAYLOAD_SIZE)
+    return PACKET_INVALID;
+
+  //check crc
+  uint8_t receivedCRC = receivePacketBuffer[3 + _dataLength];
+  uint8_t computedCRC = crc8(receivePacketBuffer, 3 + _dataLength);
+  if(computedCRC != receivedCRC)
+    return PACKET_INVALID;
+
+  receivePayloadLength = _dataLength;
+  memset(receivePayloadBuffer, 0, sizeof(receivePayloadBuffer));
+  for(uint8_t i = 0; i < receivePayloadLength; i++)
+  {
+    receivePayloadBuffer[i] = receivePacketBuffer[3 + i];
+  }
+
+  return _dataIdentifier;
+}
