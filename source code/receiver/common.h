@@ -11,18 +11,28 @@ extern int16_t channelFailsafe[MAX_CHANNELS_PER_RECEIVER];
 
 extern uint16_t externalVolts; //in millivolts
 
-extern bool failsafeEverBeenReceived;
+extern bool failsafeEverBeenReceived[MAX_CHANNELS_PER_RECEIVER];
 extern bool isRequestingBind;
 extern uint32_t lastRCPacketMillis;
 
 #define TELEMETRY_NO_DATA  0x7FFF
 
-#define FIXED_PAYLOAD_SIZE ((((NUM_RC_CHANNELS * 10) + 7) / 8) + 1)
+//--- GNSS telemetry
 
-#if FIXED_PAYLOAD_SIZE < 10
-  #undef  FIXED_PAYLOAD_SIZE
-  #define FIXED_PAYLOAD_SIZE  10
-#endif
+typedef struct {
+  int32_t  latitude;     //in degrees, fixed point representation; 5 decimal places of precision 
+  int32_t  longitude;    //in degrees, fixed point representation; 5 decimal places of precision
+  int16_t  altitude;     //Mean Sea Level altitude in meters,  fixed point representation; 0 decimal places of precision
+  uint16_t speed;        //speed over ground in m/s, fixed point representation; 1 decimal places of precision
+  uint16_t course;       //course over ground in degrees, fixed point representation; 1 decimal places of precision
+  uint8_t  positionFix;  //position fix indicator
+  uint8_t  satellitesInUse;  //number of satellites in use
+  uint8_t  satellitesInView; //number of satellites in view
+} gnss_telemetry_data_t;
+
+extern gnss_telemetry_data_t GNSSTelemetryData;
+
+extern bool hasGNSSReceiver;
 
 //====================== SYSTEM PARAMETERS =========================================================
 
@@ -38,11 +48,17 @@ typedef struct {
 
 extern sys_params_t Sys;
 
-enum {
+enum signal_type_e {
   SIGNAL_TYPE_DIGITAL = 0,
   SIGNAL_TYPE_SERVOPWM = 1,
   SIGNAL_TYPE_PWM = 2  
 };
 
+enum telemetry_type_e {
+  TELEMETRY_TYPE_GENERAL = 0,
+  TELEMETRY_TYPE_GNSS = 1,
+};
+
+extern uint8_t telemetryType;
 
 #endif
