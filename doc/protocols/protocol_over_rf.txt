@@ -22,7 +22,7 @@ Encoded from left to right as follows:
 If packet is originating from transmitter, then Source ID is the Transmitter ID. 
 Similarly if a packet is originating from the receiver, then Source ID is the Receiver ID. 
 The allowed transmitter IDs range from 0x01 to 0x7F.  Transmitter ID 0x00 is reserved. 
-The allowed receiver IDs range from 0x01 to 0xFF. Receiver ID 0x00 used when binding.
+The allowed receiver IDs range from 0x01 to 0x7F. Receiver ID 0x00 used when binding.
 
 
 Packet types
