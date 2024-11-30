@@ -67,7 +67,7 @@ void eeStoreInit()
   if(maxModelsInternal == 0)
   {
     turnOnBacklight();
-    showMsg(PSTR("------ERROR------\nNot enough memory\nfor model storage"));
+    showMessage(PSTR("------ERROR------\nNot enough memory\nfor model storage"));
     while(1)
     {
       delay(30);
@@ -177,7 +177,7 @@ void checkAndFormatEEPROM()
   if(fileSignature != FILE_SIGNATURE) //force format
   {
     turnOnBacklight();
-    showMsg(PSTR("Internal EEPROM\nnot formatted.\nPress any key"));
+    showMessage(PSTR("Internal EEPROM\nnot formatted.\nPress any key"));
     while(buttonCode == 0)
     {
       delay(30);
@@ -193,7 +193,7 @@ void checkAndFormatEEPROM()
     if(EEPROM.read(ADDRESS_INT_EE_INIT_FLAG_SYS) != eeInitFlagSys)
     {
       turnOnBacklight();
-      showMsg(PSTR("System data\npossibly corrupt.\nReset it?\n\nYes [Up] \nNo [Down]"));
+      showMessage(PSTR("System data\npossibly corrupt.\nReset it?\n\nYes [Up] \nNo [Down]"));
       while(buttonCode != KEY_UP && buttonCode != KEY_DOWN)
       {
         delay(30);
@@ -216,7 +216,7 @@ void checkAndFormatEEPROM()
     if(EEPROM.read(ADDRESS_INT_EE_INIT_FLAG_MODEL) != eeInitFlagModel)
     {
       turnOnBacklight();
-      showMsg(PSTR("Model data in\nInternal EEPROM\npossibly corrupt.\nReset it?\n\nYes [Up] \nNo [Down]"));
+      showMessage(PSTR("Model data in\nInternal EEPROM\npossibly corrupt.\nReset it?\n\nYes [Up] \nNo [Down]"));
       while(buttonCode != KEY_UP && buttonCode != KEY_DOWN)
       {
         delay(30);
@@ -233,9 +233,9 @@ void checkAndFormatEEPROM()
 
   if(clearEESysData)
   {
-    //show msg
+    //show message
     turnOnBacklight();
-    showMsg(PSTR("Preparing storage"));
+    showMessage(PSTR("Preparing storage"));
     delay(2000);
     //clear (unnecessary)
     //write system data
@@ -251,9 +251,9 @@ void checkAndFormatEEPROM()
   
   if(clearEEModelData)
   {
-    //show msg
+    //show message
     turnOnBacklight();
-    showMsg(PSTR("Preparing storage"));
+    showMessage(PSTR("Preparing storage"));
     delay(2000);
     //clear
     //much faster way, though doesnt actually clear everything out
@@ -280,7 +280,7 @@ void checkAndFormatEEPROM()
     if(fileSignature != FILE_SIGNATURE) //force format
     {
       turnOnBacklight();
-      showMsg(PSTR("External EEPROM\nnot formatted.\nPress any key"));
+      showMessage(PSTR("External EEPROM\nnot formatted.\nPress any key"));
       while(buttonCode == 0)
       {
         delay(30);
@@ -295,7 +295,7 @@ void checkAndFormatEEPROM()
       if(myMem.read(ADDRESS_EXT_EE_INIT_FLAG_MODEL) != eeInitFlagModel)
       {
         turnOnBacklight();
-        showMsg(PSTR("Model data in\nExternal EEPROM\npossibly corrupt.\nReset it?\n\nYes [Up] \nNo [Down]"));
+        showMessage(PSTR("Model data in\nExternal EEPROM\npossibly corrupt.\nReset it?\n\nYes [Up] \nNo [Down]"));
         while(buttonCode != KEY_UP && buttonCode != KEY_DOWN)
         {
           delay(30);
@@ -313,7 +313,7 @@ void checkAndFormatEEPROM()
     if(clearEEModelData)
     {
       turnOnBacklight();
-      showMsg(PSTR("Preparing storage"));
+      showMessage(PSTR("Preparing storage"));
       delay(2000);
       //clear
       //much faster way, though doesnt actually clear everything out
@@ -344,7 +344,7 @@ void eeReadSysConfig()
   if(!verifySystemData())
   {
     turnOnBacklight();
-    showMsg(PSTR("Bad system data.\nLoading defaults"));
+    showMessage(PSTR("Bad system data.\nLoading defaults"));
     delay(2000);
     resetSystemParams();
     eeSaveSysConfig();
@@ -392,7 +392,7 @@ void eeReadModelData(uint8_t modelIdx)
   if(!verifyModelData())
   {
     turnOnBacklight();
-    showMsg(PSTR("Bad model data.\nLoading defaults"));
+    showMessage(PSTR("Bad model data.\nLoading defaults"));
     delay(2000);
     resetModelName();
     resetModelParams();
@@ -414,29 +414,29 @@ void eeSaveModelData(uint8_t modelIdx)
 void eeLazyWriteModelData(uint8_t modelIdx)
 {
   //This function writes model data one byte at a time so as to improve system perfomance
-  static bool lazyWriteInitialized = false;
+  static bool lazyWriteInitialised = false;
   static uint8_t lastModelIdx = 0xff;
   
   if(modelIdx != lastModelIdx)
   {
     lastModelIdx = modelIdx;
-    lazyWriteInitialized = false;
+    lazyWriteInitialised = false;
   }
   
   static uint32_t address = 0;
   static uint32_t finalAddress = 0;
   
-  if(!lazyWriteInitialized) //reset address counter
+  if(!lazyWriteInitialised) //reset address counter
   {
     if(isInternalEE(modelIdx))
       address = getModelAddressInternalEE(modelIdx);
     else if(hasExternalEE)
       address = getModelAddressExternalEE(modelIdx);
     finalAddress = address + sizeof(Model) - 1;
-    lazyWriteInitialized = true;
+    lazyWriteInitialised = true;
   }
   
-  if(lazyWriteInitialized)
+  if(lazyWriteInitialised)
   {
     if(isInternalEE(modelIdx))
     {
@@ -453,7 +453,7 @@ void eeLazyWriteModelData(uint8_t modelIdx)
     //increment address
     address++;
     if(address > finalAddress) //all writes completed, start over
-      lazyWriteInitialized = false;
+      lazyWriteInitialised = false;
   }
 }
 
@@ -618,7 +618,7 @@ void eeFactoryReset()
     if(i % 32 == 0)
     {
       uint8_t percent = ((i + 1) * 100) / totalBytes;
-      showProgressMsg(PSTR("Erasing internal\nEEPROM"), percent);
+      showProgressMessage(PSTR("Erasing internal\nEEPROM"), percent);
     }
   }
   
@@ -632,7 +632,7 @@ void eeFactoryReset()
       if(i % 256 == 0)
       {
         uint8_t percent = ((i + 1) * 100) / totalBytes;
-        showProgressMsg(PSTR("Erasing external\nEEPROM"), percent);
+        showProgressMessage(PSTR("Erasing external\nEEPROM"), percent);
       }
     }
   }
