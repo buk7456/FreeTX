@@ -33,14 +33,14 @@ L1
 ---
 Functn: a<x
 Value1: FlghtBatt
-Value2: 10.80V
-Delay:  5.0s
+Value2: 10.80 V
+Delay:  5.0 s
 
 L2
 ---
 Functn: Pulse
-Width:  1.0s
-Period: 2.0s
+Width:  1.0 s
+Period: 2.0 s
 
 ``` 
 Then in the mixer, we simply use L2 as the input source and L1 as the control switch for the mix, to
@@ -64,7 +64,7 @@ L2
 Functn:   a>x
 Value1:   SwH
 Value2:   0
-Delay:    0.5s
+Delay:    0.5 s
 
 Timer1
 ------
@@ -112,7 +112,7 @@ Waveform:  Pulse
 WidthMode: Variable
 Modulator: Y1
 Reverse:   False
-Period:    1.0s
+Period:    1.0 s
 
 L1
 ---
@@ -138,13 +138,13 @@ Using the mixer and a virtual channel to create a pulse width modulated signal t
 ```txt
 Mixer
 -----
-1. Virt1  Add  L1 (Weight 99, SlowUp 0.5s, SlowDown 0.5s)
+1. Virt1  Add  L1 (Weight 99, SlowUp 0.5 s, SlowDown 0.5 s)
 
 L1
 ---
 Functn: Pulse
-Width:  0.5s
-Period: 1.0s
+Width:  0.5 s
+Period: 1.0 s
 
 L2
 ---
