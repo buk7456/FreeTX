@@ -39,6 +39,11 @@ void setup()
   //--- setup pins
   pinMode(PIN_LED, OUTPUT);
   digitalWrite(PIN_LED, LOW);
+
+#ifdef LEGACY_HARDWARE
+  pinMode(PIN_PWR_LED, OUTPUT);
+  digitalWrite(PIN_PWR_LED, HIGH);
+#endif
   
   //--- use analog reference internal 1.1V
   analogReference(INTERNAL);
@@ -82,15 +87,24 @@ void loop()
 
   //--- EXTERNAL VOLTAGE
   getExternalVoltage();
+
+  //--- GNSS telemetry
+  //### dummy data
+  hasGNSSReceiver = true;
+  GNSSTelemetryData.latitude = 28365;
+  GNSSTelemetryData.longitude = -70269;
+  GNSSTelemetryData.satellitesInUse = 4;
+  GNSSTelemetryData.satellitesInView = 12;
+  GNSSTelemetryData.positionFix = 1;
+  GNSSTelemetryData.altitude = 50;
+  GNSSTelemetryData.speed = 123;
+  GNSSTelemetryData.course = 1278;
 }
 
 //==================================================================================================
 
 void writeOutputs()
-{ 
-  if(!failsafeEverBeenReceived)
-    return;
-  
+{
   static uint8_t prevSignalType[MAX_CHANNELS_PER_RECEIVER];
   static uint8_t prevServoPWMRangeIdx[MAX_CHANNELS_PER_RECEIVER];
   static bool    initialised[MAX_CHANNELS_PER_RECEIVER];
@@ -101,6 +115,9 @@ void writeOutputs()
   
   for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
   {
+    if(!failsafeEverBeenReceived[i])
+      continue;
+ 
     //--- SETUP OUTPUTS
     
     if(!initialised[i])
