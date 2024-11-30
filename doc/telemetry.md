@@ -20,7 +20,7 @@ for simple stats. Note that max and min are sensitive to outliers hence the filt
 should be done before sending the telemetry to the transmitter.
 
 <p align="left">
-<img src="img6.png" width = "192"/>
+<img src="img7.png" width = "192"/>
 </p>
 
 ## GNSS telemetry
@@ -28,7 +28,7 @@ The system also supports GNSS/GPS telemetry.
 A premade template is used to add the GNSS sensor to the telemetry screen. 
 
 <p align="left">
-<img src="img7.png" width = "396"/>
+<img src="img8.png" width = "396"/>
 </p>
  
 The structure below is used to send the GNSS telemetry data to the transmitter.
