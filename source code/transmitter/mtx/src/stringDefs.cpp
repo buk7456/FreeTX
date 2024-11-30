@@ -24,13 +24,13 @@ const id_string_t enum_BacklightWakeup[] PROGMEM = {
 };
 
 const id_string_t enum_BacklightTimeout[] PROGMEM = {
-  {BACKLIGHT_TIMEOUT_5SEC, "5s"},
-  {BACKLIGHT_TIMEOUT_15SEC, "15s"},
-  {BACKLIGHT_TIMEOUT_1MIN, "1min"},
-  {BACKLIGHT_TIMEOUT_2MIN, "2min"},
-  {BACKLIGHT_TIMEOUT_5MIN, "5min"},
-  {BACKLIGHT_TIMEOUT_10MIN, "10min"},
-  {BACKLIGHT_TIMEOUT_30MIN, "30min"},
+  {BACKLIGHT_TIMEOUT_5SEC, "5 s"},
+  {BACKLIGHT_TIMEOUT_15SEC, "15 s"},
+  {BACKLIGHT_TIMEOUT_1MIN, "1 min"},
+  {BACKLIGHT_TIMEOUT_2MIN, "2 min"},
+  {BACKLIGHT_TIMEOUT_5MIN, "5 min"},
+  {BACKLIGHT_TIMEOUT_10MIN, "10 min"},
+  {BACKLIGHT_TIMEOUT_30MIN, "30 min"},
   {BACKLIGHT_TIMEOUT_NEVER, "Never"},
   {0, ""}
 };
@@ -43,8 +43,8 @@ const id_string_t enum_TrimToneFreqMode[] PROGMEM = {
 
 const id_string_t enum_SwitchType[] PROGMEM = {
   {SW_ABSENT, "Absent"},
-  {SW_2POS, "2pos"},
-  {SW_3POS, "3pos"},
+  {SW_2POS, "2 position"},
+  {SW_3POS, "3 position"},
   {0, ""}
 };
 
@@ -91,7 +91,7 @@ const id_string_t enum_outputChConfig[] PROGMEM = {
   {0, ""}
 };
 
-//Model related
+//=== Model related ===
 
 const id_string_t enum_ModelType[] PROGMEM = {
   {MODEL_TYPE_AIRPLANE, "Airplane"},
@@ -221,6 +221,12 @@ const id_string_t enum_ChannelCurve[] PROGMEM = {
   {0, ""}
 };
 
+const id_string_t enum_TelemetryType[] PROGMEM = {
+  {TELEMETRY_TYPE_GENERAL, "General"},
+  {TELEMETRY_TYPE_GNSS, "GNSS"},
+  {0, ""}
+};
+
 const id_string_t enum_TelemetryAlarmCondition[] PROGMEM = {
   {TELEMETRY_ALARM_CONDITION_NONE, "Off"},
   {TELEMETRY_ALARM_CONDITION_GREATER_THAN, ">Threshold"},
@@ -232,7 +238,8 @@ const id_string_t enum_TelemetryAlarmCondition[] PROGMEM = {
 
 const id_string_t enum_WidgetType[] PROGMEM = {
   {WIDGET_TYPE_TELEMETRY, "Telemetry"},
-  {WIDGET_TYPE_MIXSOURCES, "MixSources"},
+  {WIDGET_TYPE_MIXSOURCES, "Mix sources"},
+  {WIDGET_TYPE_MIXSOURCES, "MixSources"}, //legacy support
   {WIDGET_TYPE_OUTPUTS, "Outputs"},
   {WIDGET_TYPE_TIMERS, "Timers"},
   {WIDGET_TYPE_COUNTERS, "Counters"},
@@ -247,7 +254,8 @@ const id_string_t enum_WidgetSource[] PROGMEM = {
 const id_string_t enum_WidgetDisplay[] PROGMEM = {
   {WIDGET_DISP_NUMERICAL, "Numerical"},
   {WIDGET_DISP_GAUGE, "Gauge"},
-  {WIDGET_DISP_GAUGE_ZERO_CENTERED, "CenterGauge"},
+  {WIDGET_DISP_GAUGE_ZERO_CENTERED, "Center gauge"},
+  {WIDGET_DISP_GAUGE_ZERO_CENTERED, "CenterGauge"}, //legacy support
   {0, ""}
 };
 
@@ -274,6 +282,8 @@ const id_string_t enum_ClockEdge[] PROGMEM = {
 const char key_ModelName[] PROGMEM = "ModelName";
 const char key_ModelType[] PROGMEM = "ModelType";
 
+const char key_SecondaryRcvrEnabled[] PROGMEM = "SecondaryRcvrEnabled";
+
 const char key_RudSrc[] PROGMEM = "RudSrc";
 const char key_ThrSrc[] PROGMEM = "ThrSrc";
 const char key_AilSrc[] PROGMEM = "AilSrc";
@@ -288,7 +298,8 @@ const char key_Number[] PROGMEM = "No.";
 
 const char key_Timer[] PROGMEM = "Timer";
 const char key_ResetSwitch[] PROGMEM = "Reset";
-const char key_InitialMinutes[] PROGMEM = "InitMin";
+const char key_InitialMinutes[] PROGMEM = "InitMin"; //deprecated, legacy support
+const char key_InitialSeconds[] PROGMEM = "InitialTimeSeconds";
 const char key_IsPersistent[] PROGMEM = "Persistent";
 const char key_PersistVal[] PROGMEM = "PersistVal";
 
@@ -393,16 +404,15 @@ const char key_EndpointL[] PROGMEM = "EndpointL";
 const char key_EndpointR[] PROGMEM = "EndpointR";
 
 const char key_Telemetry[] PROGMEM = "Telemetry";
+// const char key_Type[] PROGMEM = "Type";
 // const char key_Name[] PROGMEM = "Name";
 const char key_UnitsName[] PROGMEM = "UnitsName";
 const char key_Identifier[] PROGMEM = "Identifier";
 const char key_Multiplier[] PROGMEM = "Multiplier";
 const char key_Factor10[] PROGMEM = "Factor10";
 // const char key_Offset[] PROGMEM = "Offset";
-const char key_LogEnabled[] PROGMEM = "LogEnabled";
 const char key_AlarmCondition[] PROGMEM = "AlarmCondition";
 const char key_AlarmThreshold[] PROGMEM = "AlarmThreshold";
-const char key_AlarmMelody[] PROGMEM = "AlarmMelody";
 const char key_ShowOnHome[] PROGMEM = "ShowOnHome";
 const char key_RecordMaximum[] PROGMEM = "RecordMaximum";
 const char key_RecordMinimum[] PROGMEM = "RecordMinimum";

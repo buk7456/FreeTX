@@ -18,7 +18,6 @@
 #include "ui.h"
 #include "uiCommon.h"
 
-
 #if defined (UI_128X64)
 
 #if defined (DISPLAY_KS0108)
@@ -153,6 +152,7 @@ enum {
   SCREEN_SAFETY_CHECKS,
   //timers
   SCREEN_TIMERS,
+  DIALOG_TIMER_INITIAL_TIME,
   CONTEXT_MENU_TIMERS,
   //notifications
   SCREEN_NOTIFICATION_SETUP,
@@ -160,14 +160,17 @@ enum {
   DIALOG_COPY_NOTIFICATION,
 
   //---- Telemetry ----
+  //general telemetry
   SCREEN_TELEMETRY,
   CONTEXT_MENU_ACTIVE_SENSOR,
   CONTEXT_MENU_FREE_SENSOR,
   SCREEN_CREATE_SENSOR,
   CONTEXT_MENU_SENSOR_TEMPLATES,
-  SCREEN_SENSOR_STATS,
+  SCREEN_SENSOR_STATISTICS,
   SCREEN_EDIT_SENSOR,
   CONFIRMATION_DELETE_SENSOR,
+  //gnss telemetry
+  SCREEN_TELEMETRY_GNSS,
   
   //---- System settings ----
   SCREEN_SYSTEM_MENU,
@@ -175,8 +178,6 @@ enum {
   SCREEN_SOUND,
   SCREEN_BACKLIGHT,
   SCREEN_APPEARANCE,
-  SCREEN_ABOUT,
-  SCREEN_EASTER_EGG,
   SCREEN_UNLOCK_ADVANCED_MENU,
   SCREEN_ADVANCED_MENU,
   SCREEN_STICKS,
@@ -185,6 +186,8 @@ enum {
   SCREEN_BATTERY,
   SCREEN_SECURITY,
   SCREEN_MISCELLANEOUS,
+  SCREEN_ABOUT,
+  SCREEN_EASTER_EGG,
   SCREEN_DEBUG,
   SCREEN_INTERNAL_EEPROM_DUMP,
   SCREEN_EXTERNAL_EEPROM_DUMP,
@@ -203,7 +206,7 @@ enum {
 
 //---------------------------- Misc ----------------------------------------------------------------
 
-char txtBuff[32]; //generic buffer for working with strings. Leave at 32 as it's also reused to dump eeprom
+char textBuff[32]; //generic buffer for working with strings. Leave at 32 as it's also reused to dump eeprom.
 
 uint8_t theScreen = SCREEN_HOME;
 uint8_t lastScreen = SCREEN_HOME;
@@ -212,6 +215,10 @@ uint8_t focusedItem = 1;
 
 bool isEditTextDialog = false;
 bool isDisplayingBattWarn = false;
+
+//Cache the graph y coordinates to avoid unnecessary recomputation.
+int8_t graphYCoord[51]; //51 points total to plot. 
+bool   graphYCoordinatesInvalid = true;
 
 //menu
 uint8_t menuSelectedItemID = 0xff;
@@ -302,11 +309,12 @@ void drawDialogCopyMove(const char* str, uint8_t srcIdx, uint8_t destIdx, bool i
 void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src);
 void drawToast();
 void drawTelemetryValue(uint8_t xpos, uint8_t ypos, uint8_t idx, int16_t rawVal, bool blink);
-void printTelemParam(uint8_t xpos, uint8_t ypos, uint8_t idx, int32_t val);
-void printFullScreenMsg(const char* str);
+void printTelemParam(uint8_t idx, int32_t val, bool showUnits);
+void printFullScreenMessage(const char* str);
 void printHHMMSS(int32_t millisecs);
 void printVoltage(int16_t millivolts);
 void printSeconds(int16_t decisecs);
+void printFixedPointVal(int32_t val, uint8_t decimals);
 void printModelName(char* buff, uint8_t modelIdx);
 void printTimerValue(uint8_t idx);
 void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEmpty, bool trimStr, bool isSecureMode);
@@ -345,23 +353,23 @@ void startInitialSetup()
 
 //============================ Generic messages ====================================================
 
-void showMsg(const char* str)
+void showMessage(const char* str)
 {
   display.clearDisplay();
-  printFullScreenMsg(str);
+  printFullScreenMessage(str);
   display.setInterlace(false);
   display.display();
 }
 
-void showWaitMsg()
+void showWaitMessage()
 {
   display.clearDisplay();
-  printFullScreenMsg(PSTR("Please wait"));
+  printFullScreenMessage(PSTR("Please wait"));
   display.setInterlace(false);
   display.display();
 }
 
-void showMuteMsg()
+void showMuteMessage()
 {
   display.clearDisplay();
   display.drawBitmap(56, 24, icon_mute_large, 16, 16, BLACK);
@@ -369,11 +377,28 @@ void showMuteMsg()
   display.display();
 }
 
-void showProgressMsg(const char* str, uint8_t percent)
+void showProgressMessage(const char* str, uint8_t percent)
 {
   display.clearDisplay();
-  printFullScreenMsg(str);
+  printFullScreenMessage(str);
   drawHorizontalBarChart(38, display.getCursorY() + 9, 52, 7, BLACK, percent, 0, 100);
+  display.setInterlace(false);
+  display.display();
+}
+
+void showDataImportErrorMessage(const char* str, uint16_t lineNumber)
+{
+  display.clearDisplay();
+  printFullScreenMessage(str);
+  memset(textBuff, 0, sizeof(textBuff));
+  char tmp[12];
+  strlcpy_P(textBuff, PSTR("(Line "), sizeof(textBuff));
+  utoa(lineNumber, tmp, 10);
+  strlcat(textBuff, tmp, sizeof(textBuff));
+  strlcat_P(textBuff, PSTR(")"), sizeof(textBuff));
+  uint8_t textWidthPix = strlen(textBuff) * 6;
+  display.setCursor((display.width() - textWidthPix) / 2, display.getCursorY() + 9);
+  display.print(textBuff);
   display.setInterlace(false);
   display.display();
 }
@@ -395,7 +420,7 @@ void handleBatteryWarnUI()
       //show warning
       display.clearDisplay();
       drawAnimatedSprite(50, 14, animation_low_batt, 27, 11, BLACK, 7, 300, battWarnMillis);
-      printFullScreenMsg(PSTR("\nBattery low"));
+      printFullScreenMessage(PSTR("\nBattery low"));
       display.display();
       
       isDisplayingBattWarn = true;
@@ -492,8 +517,8 @@ void handleSafetyWarnUI()  //blocking function
         if(!isThrottleWarn)
           ypos -= 17;
         display.setCursor(xpos, ypos);
-        getSrcName(txtBuff, SRC_SW_PHYSICAL_FIRST + i, sizeof(txtBuff));
-        display.print(txtBuff);
+        getSrcName(textBuff, SRC_SW_PHYSICAL_FIRST + i, sizeof(textBuff));
+        display.print(textBuff);
       }
     }
     
@@ -519,8 +544,8 @@ void handleSafetyWarnUI()  //blocking function
         display.print(F("\x07"));
         display.print(F("Check throttle:"));
         display.setCursor(6, 21);
-        getSrcName(txtBuff, Model.thrSrcRaw, sizeof(txtBuff));
-        display.print(txtBuff);
+        getSrcName(textBuff, Model.thrSrcRaw, sizeof(textBuff));
+        display.print(textBuff);
       }
       
       if(numSwitchWarnings)
@@ -659,8 +684,7 @@ void handleMainUI()
           //Using a hack to measure the width of text first before actually printing.
           display.setCursor(0, 64);
           printVoltage(battVoltsNow);
-          uint8_t len = display.getCursorX() / 6;
-          icon_xpos = 127 - len * 6;
+          icon_xpos = 127 - display.getCursorX();
           display.setCursor(icon_xpos, 0);
           printVoltage(battVoltsNow);
         }
@@ -687,26 +711,33 @@ void handleMainUI()
         //Rf icon and tx power level as signal strength bars
         if(Sys.rfEnabled)
         {
-          icon_xpos -= 16;
+          icon_xpos -= 17;
           display.drawBitmap(icon_xpos, 0, icon_rf, 7, 7, BLACK);
           uint8_t bars = 2 + (4 * Sys.rfPower) / (RF_POWER_COUNT - 1);
           for(uint8_t i = 0; i < bars; i++)
             display.drawVLine(icon_xpos + 6 + i, 6 - i, i + 1, BLACK);
         }
-        
+
         //Mute icon
         if(!Sys.soundEnabled)
         {
-          icon_xpos -= 12;
+          icon_xpos -= 13;
           display.drawBitmap(icon_xpos, 0, icon_mute, 8, 7, BLACK);
         }
-        
+
+        //Telemetry mute icon
+        if(telemetryMuteAlarms && Sys.soundEnabled)
+        {
+          icon_xpos -= 19;
+          display.drawBitmap(icon_xpos, 0, icon_telemetry_mute, 14, 7, BLACK);
+        }
+
         //Lock icon
         if(mainMenuLocked)
         {
-          icon_xpos -= 9;
+          icon_xpos -= 10;
           display.drawBitmap(icon_xpos, 0, icon_padlock, 5, 7, BLACK);
-        }          
+        }
 
         //------------ Trims --------------------
         static uint32_t endTime; 
@@ -717,7 +748,7 @@ void handleMainUI()
 
         //------------ Model name, flight modes -------------
         //Model name
-        display.setCursor(14, 9);
+        display.setCursor(11, 9);
         printModelName(Model.name, Sys.activeModelIdx);
 
         //Flightmode
@@ -736,24 +767,24 @@ void handleMainUI()
         {
           if(isEmptyStr(Model.FlightMode[activeFmdIdx].name, sizeof(Model.FlightMode[0].name)))
           {
-            strlcpy_P(txtBuff, PSTR("Fmd"), sizeof(txtBuff));
+            strlcpy_P(textBuff, PSTR("Fmd"), sizeof(textBuff));
             char suffix[5];
             memset(suffix, 0, sizeof(suffix));
             itoa(activeFmdIdx + 1, suffix, 10);
-            strlcat(txtBuff, suffix, sizeof(txtBuff));
+            strlcat(textBuff, suffix, sizeof(textBuff));
           }
           else
-            strlcpy(txtBuff, Model.FlightMode[activeFmdIdx].name, sizeof(txtBuff));
+            strlcpy(textBuff, Model.FlightMode[activeFmdIdx].name, sizeof(textBuff));
           //print right aligned
-          uint8_t len = strlen(txtBuff) + 2; //add 2 for brackets 
-          display.setCursor(115 - len * 6, 9);
+          uint8_t len = strlen(textBuff) + 2; //add 2 for brackets 
+          display.setCursor(118 - len * 6, 9);
           display.print(F("("));
-          display.print(txtBuff);
+          display.print(textBuff);
           display.print(F(")"));
         }
         
         //separator line
-        display.drawHLine(14, 18, 100, BLACK);
+        display.drawHLine(11, 18, 106, BLACK);
         
         //------------ Widgets ------------------
         
@@ -769,6 +800,9 @@ void handleMainUI()
               continue;
             //skip "no data" sensors
             if(telemetryReceivedValue[i] == TELEMETRY_NO_DATA) 
+              continue;
+            //skip special telemetry
+            if(Model.Telemetry[i].type == TELEMETRY_TYPE_GNSS)
               continue;
             //check if already assigned to a widget
             bool skip = false;
@@ -805,17 +839,11 @@ void handleMainUI()
               idx = tlmQQ[tlmCntr];
               tlmCntr++;
             }
-            uint8_t xpos = 14;
-            if(telemetryMuteAlarms && Model.Telemetry[idx].alarmCondition != TELEMETRY_ALARM_CONDITION_NONE)
-            {
-              display.drawBitmap(11, ypos + 1, icon_mute_small, 7, 5, BLACK);
-              xpos = 20;
-            }
-            display.setCursor(xpos, ypos);
+            display.setCursor(11, ypos);
             display.print(Model.Telemetry[idx].name);
             display.print(F(":"));
             if(widget->disp == WIDGET_DISP_NUMERICAL || telemetryReceivedValue[idx] == TELEMETRY_NO_DATA)
-              drawTelemetryValue(73, ypos, idx, telemetryReceivedValue[idx], true);
+              drawTelemetryValue(67, ypos, idx, telemetryReceivedValue[idx], true);
             else if(widget->disp == WIDGET_DISP_GAUGE)
             {
               bool show = true;
@@ -825,7 +853,7 @@ void handleMainUI()
               {
                 int32_t tVal = ((int32_t) telemetryReceivedValue[idx] * Model.Telemetry[idx].multiplier) / 100;
                 tVal += Model.Telemetry[idx].offset;
-                drawHorizontalBarChart(73, ypos + 1, 41, 4, BLACK, tVal, widget->gaugeMin, widget->gaugeMax);
+                drawHorizontalBarChart(70, ypos + 1, 41, 4, BLACK, tVal, widget->gaugeMin, widget->gaugeMax);
               }
             }
             hasPrinted = true;
@@ -834,22 +862,22 @@ void handleMainUI()
           {
             if(widget->src == SRC_NONE)
               continue;
-            display.setCursor(14, ypos);
-            getSrcName(txtBuff, widget->src, sizeof(txtBuff));
-            display.print(txtBuff);
+            display.setCursor(11, ypos);
+            getSrcName(textBuff, widget->src, sizeof(textBuff));
+            display.print(textBuff);
             display.print(F(":"));
-            display.setCursor(73, ypos);
+            display.setCursor(67, ypos);
             if(widget->disp == WIDGET_DISP_NUMERICAL)
               display.print(mixSources[widget->src]/5);
             else if(widget->disp == WIDGET_DISP_GAUGE)
-              drawHorizontalBarChart(73, ypos + 1, 41, 4, BLACK, mixSources[widget->src]/5, widget->gaugeMin, widget->gaugeMax);
+              drawHorizontalBarChart(70, ypos + 1, 41, 4, BLACK, mixSources[widget->src]/5, widget->gaugeMin, widget->gaugeMax);
             else if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
-              drawHorizontalBarChartZeroCentered(74, ypos + 2, 39, 3, BLACK, mixSources[widget->src]/5, widget->gaugeMax - widget->gaugeMin);
+              drawHorizontalBarChartZeroCentered(71, ypos + 2, 39, 3, BLACK, mixSources[widget->src]/5, widget->gaugeMax - widget->gaugeMin);
             hasPrinted = true;
           }
           else if(widget->type == WIDGET_TYPE_OUTPUTS)
           {
-            display.setCursor(14, ypos);
+            display.setCursor(11, ypos);
             if(!isEmptyStr(Model.Channel[widget->src].name, sizeof(Model.Channel[0].name)))
               display.print(Model.Channel[widget->src].name);
             else
@@ -859,27 +887,30 @@ void handleMainUI()
               display.print(F(" out"));
             }
             display.print(F(":"));
-            display.setCursor(73, ypos);
+            display.setCursor(67, ypos);
             if(widget->disp == WIDGET_DISP_NUMERICAL)
               display.print(channelOut[widget->src]/5);
             else if(widget->disp == WIDGET_DISP_GAUGE)
-              drawHorizontalBarChart(73, ypos + 1, 41, 4, BLACK, channelOut[widget->src]/5, widget->gaugeMin, widget->gaugeMax);
+              drawHorizontalBarChart(70, ypos + 1, 41, 4, BLACK, channelOut[widget->src]/5, widget->gaugeMin, widget->gaugeMax);
             else if(widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED)
-              drawHorizontalBarChartZeroCentered(74, ypos + 2, 39, 3, BLACK, channelOut[widget->src]/5, widget->gaugeMax - widget->gaugeMin);
+              drawHorizontalBarChartZeroCentered(71, ypos + 2, 39, 3, BLACK, channelOut[widget->src]/5, widget->gaugeMax - widget->gaugeMin);
             hasPrinted = true;
           }
           else if(widget->type == WIDGET_TYPE_TIMERS)
           {
-            display.setCursor(14, ypos);
+            display.setCursor(11, ypos);
             printTimerValue(widget->src);
             //print timer name
-            display.setCursor(display.getCursorX() + 6, ypos);
+            uint8_t name_xpos = display.getCursorX() + 6;
+            if(name_xpos < 67)
+              name_xpos = 67;
+            display.setCursor(name_xpos, ypos);
             display.print(Model.Timer[widget->src].name);
             hasPrinted = true;
           }
           else if(widget->type == WIDGET_TYPE_COUNTERS)
           {
-            display.setCursor(14, ypos);
+            display.setCursor(11, ypos);
             if(!isEmptyStr(Model.Counter[widget->src].name, sizeof(Model.Counter[0].name)))
               display.print(Model.Counter[widget->src].name);
             else
@@ -888,7 +919,7 @@ void handleMainUI()
               display.print(widget->src + 1);
             }
             display.print(F(":"));
-            display.setCursor(73, ypos);
+            display.setCursor(67, ypos);
             display.print(counterOut[widget->src]);
             hasPrinted = true;
           }
@@ -1055,7 +1086,7 @@ void handleMainUI()
           }
         }
         //show scrollbar
-        drawScrollBar(125, 9, numPages, thisPage, 1, 1 * 54);
+        drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
 
         if(heldButton == KEY_SELECT)
         {
@@ -1246,12 +1277,15 @@ void handleMainUI()
                   if(edit)
                   {
                     //skip empty telemetry (non-extant sensors)
+                    //skip special telemetry
                     //use an array to hold extant sensors
                     uint8_t srcQQ[NUM_CUSTOM_TELEMETRY + 1]; //1 added for auto
                     uint8_t srcCount = 0;
                     for(uint8_t i = 0; i < sizeof(srcQQ) - 1; i++)
                     {
                       if(isEmptyStr(Model.Telemetry[i].name, sizeof(Model.Telemetry[0].name)))
+                        continue;
+                      if(Model.Telemetry[i].type == TELEMETRY_TYPE_GNSS)
                         continue;
                       srcQQ[srcCount] = i;
                       srcCount++;
@@ -1292,8 +1326,8 @@ void handleMainUI()
                 }
                 else if(widget->type == WIDGET_TYPE_MIXSOURCES)
                 {
-                  getSrcName(txtBuff, widget->src, sizeof(txtBuff));
-                  display.print(txtBuff);
+                  getSrcName(textBuff, widget->src, sizeof(textBuff));
+                  display.print(textBuff);
                   if(edit)
                   {
                     //detect moved source
@@ -1362,8 +1396,8 @@ void handleMainUI()
                 display.setCursor(48, ypos);
                 if(widget->type == WIDGET_TYPE_TELEMETRY)
                 {
-                  printTelemParam(display.getCursorX(), display.getCursorY(), widget->src, widget->gaugeMin);
-                  display.print(Model.Telemetry[widget->src].unitsName);
+                  display.setCursor(display.getCursorX(), display.getCursorY());
+                  printTelemParam(widget->src, widget->gaugeMin, true);
                 }
                 else if(widget->type == WIDGET_TYPE_OUTPUTS || widget->type == WIDGET_TYPE_MIXSOURCES)
                   display.print(widget->gaugeMin);
@@ -1385,8 +1419,8 @@ void handleMainUI()
                 display.setCursor(48, ypos);
                 if(widget->type == WIDGET_TYPE_TELEMETRY)
                 {
-                  printTelemParam(display.getCursorX(), display.getCursorY(), widget->src, widget->gaugeMax);
-                  display.print(Model.Telemetry[widget->src].unitsName);
+                  display.setCursor(display.getCursorX(), display.getCursorY());
+                  printTelemParam(widget->src, widget->gaugeMax, true);
                 }
                 else if(widget->type == WIDGET_TYPE_OUTPUTS || widget->type == WIDGET_TYPE_MIXSOURCES)
                   display.print(widget->gaugeMax);
@@ -1405,7 +1439,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -1612,8 +1646,8 @@ void handleMainUI()
                 mdlStr[i][0] = 0xFF;
               else //get the name
               {
-                eeGetModelName(txtBuff, modelIdx, sizeof(txtBuff));
-                strlcpy(&mdlStr[i][0], txtBuff, sizeof(Model.name));
+                eeGetModelName(textBuff, modelIdx, sizeof(textBuff));
+                strlcpy(&mdlStr[i][0], textBuff, sizeof(Model.name));
               }
             }
           }
@@ -1645,7 +1679,7 @@ void handleMainUI()
         }
         
         //scroll bar
-        drawScrollBar(125, 9, maxNumOfModels, topItem, numVisible, numVisible * 9);
+        drawScrollBar(127, 9, maxNumOfModels, topItem, numVisible, numVisible * 9);
 
         //----- end of list ----------------------
         
@@ -1743,7 +1777,7 @@ void handleMainUI()
               destination = (distRight <= distLeft) ? nearestRight : nearestLeft;
             }
             //--- copy
-            showWaitMsg();
+            showWaitMessage();
             stopTones();
             //save the active model
             eeSaveModelData(Sys.activeModelIdx);
@@ -1788,7 +1822,7 @@ void handleMainUI()
         
         if(contextMenuSelectedItemID == ITEM_LOAD_MODEL) 
         {
-          showWaitMsg();
+          showWaitMessage();
           stopTones();
           //Save the active model before changing to another model
           eeSaveModelData(Sys.activeModelIdx);
@@ -1842,7 +1876,7 @@ void handleMainUI()
       
     case CONFIRMATION_CREATE_MODEL:
       {
-        printFullScreenMsg(PSTR("Model data will\nbe overwritten.\nContinue?\n\nYes [Up] \nNo [Down]"));
+        printFullScreenMessage(PSTR("Model data will\nbe overwritten.\nContinue?\n\nYes [Up] \nNo [Down]"));
         if(clickedButton == KEY_UP)
           changeToScreen(DIALOG_MODEL_TYPE);
         else if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT)
@@ -1873,7 +1907,7 @@ void handleMainUI()
         
         if(clickedButton == KEY_SELECT) //create the model
         {
-          showWaitMsg();
+          showWaitMessage();
           stopTones();
           //Save the current active model first
           if(maxNumOfModels > 1)
@@ -1921,7 +1955,7 @@ void handleMainUI()
         editTextDialog(PSTR("Model name"), Model.name, sizeof(Model.name), true, true, false);
         if(!isEditTextDialog) //exited
         {
-          showWaitMsg();
+          showWaitMessage();
           stopTones();
           if(maxNumOfModels > 1)
             eeSaveModelData(Sys.activeModelIdx);
@@ -1942,8 +1976,8 @@ void handleMainUI()
         display.setCursor(17, 18);
         display.print(F("Copy from"));
         display.setCursor(29, 28);
-        eeGetModelName(txtBuff, thisModelIdx, sizeof(txtBuff)); 
-        printModelName(txtBuff, thisModelIdx);
+        eeGetModelName(textBuff, thisModelIdx, sizeof(textBuff)); 
+        printModelName(textBuff, thisModelIdx);
         drawCursor(21, 28);
 
         if(clickedButton == KEY_SELECT)
@@ -1972,7 +2006,7 @@ void handleMainUI()
         {
           initialised = true;
           //show wait message as getting the count may take some time when there are many models
-          showWaitMsg();
+          showWaitMessage();
           stopTones();
           //find how many models we have backed up on the sd card
           mdlCount = sdGetModelCount();
@@ -2005,10 +2039,10 @@ void handleMainUI()
         if(clickedButton == KEY_SELECT)
         {
           initialised = false;
-          //Copy name into txtBuff. 
-          //Assumption is txtBuff won't be modified by something else. This isn't much of an issue 
+          //Copy name into textBuff. 
+          //Assumption is textBuff won't be modified by something else. This isn't much of an issue 
           //since we can always retry if the restore fails.         
-          strlcpy(txtBuff, nameStr, sizeof(txtBuff));
+          strlcpy(textBuff, nameStr, sizeof(textBuff));
           changeToScreen(CONFIRMATION_MODEL_RESTORE);
         }
 
@@ -2023,17 +2057,17 @@ void handleMainUI()
     case CONFIRMATION_MODEL_RESTORE:
       {
         if(thisModelIdx == Sys.activeModelIdx)
-          printFullScreenMsg(PSTR("Model data will be\noverwritten.\nContinue?\n\nYes [Up] \nNo [Down]"));
+          printFullScreenMessage(PSTR("Model data will be\noverwritten.\nContinue?\n\nYes [Up] \nNo [Down]"));
         if(clickedButton == KEY_UP || thisModelIdx != Sys.activeModelIdx)
         {
-          showWaitMsg();
+          showWaitMessage();
           stopTones();
           //save active model first but only if we aren't restoring to active slot
           //otherwise there is no point in saving first
           if(maxNumOfModels > 1 && thisModelIdx != Sys.activeModelIdx)
             eeSaveModelData(Sys.activeModelIdx);
           //restore the model
-          if(sdRestoreModel(txtBuff))
+          if(sdRestoreModel(textBuff))
           {
             //save it to eeprom
             if(maxNumOfModels > 1)
@@ -2150,7 +2184,7 @@ void handleMainUI()
           // strlcat(nameStr, ".MDL", sizeof(nameStr)); //is this really necessary??
           
           //show wait message as checking may take some time when there are many models
-          showWaitMsg();
+          showWaitMessage();
           stopTones();
           
           //check if the name already exists
@@ -2159,11 +2193,11 @@ void handleMainUI()
         }
         
         if(modelBackupExists)
-          printFullScreenMsg(PSTR("A backup with\na similar name\nexists.\nOverwrite it?\n\nYes [Up] \nNo [Down]"));
+          printFullScreenMessage(PSTR("A backup with\na similar name\nexists.\nOverwrite it?\n\nYes [Up] \nNo [Down]"));
         
         if(clickedButton == KEY_UP || !modelBackupExists)
         {
-          showWaitMsg();
+          showWaitMessage();
           stopTones();
           
           if(maxNumOfModels > 1)
@@ -2198,17 +2232,17 @@ void handleMainUI()
       
     case CONFIRMATION_MODEL_COPY:
       {
-        printFullScreenMsg(PSTR("Model data will\nbe overwritten.\nContinue?\n\nYes [Up] \nNo [Down]"));
+        printFullScreenMessage(PSTR("Model data will\nbe overwritten.\nContinue?\n\nYes [Up] \nNo [Down]"));
         if(clickedButton == KEY_UP)
         {
-          showWaitMsg();
+          showWaitMessage();
           stopTones();
           //temporarily store model name as we shall maintain it 
-          strlcpy(txtBuff, Model.name, sizeof(txtBuff));
+          strlcpy(textBuff, Model.name, sizeof(textBuff));
           //load source model into ram
           eeReadModelData(thisModelIdx);
           //restore the model name
-          strlcpy(Model.name, txtBuff, sizeof(Model.name));
+          strlcpy(Model.name, textBuff, sizeof(Model.name));
           //save
           eeSaveModelData(Sys.activeModelIdx);
           //reinitiailise other stuff
@@ -2231,10 +2265,10 @@ void handleMainUI()
       
     case CONFIRMATION_MODEL_RESET:
       {
-        printFullScreenMsg(PSTR("Model data will\nbe reset.\nContinue?\n\nYes [Up] \nNo [Down]"));
+        printFullScreenMessage(PSTR("Model data will\nbe reset.\nContinue?\n\nYes [Up] \nNo [Down]"));
         if(clickedButton == KEY_UP)
         {
-          showWaitMsg();
+          showWaitMessage();
           stopTones();
           //temporarily store the model type for later restoring
           uint8_t mdlType = Model.type;
@@ -2267,10 +2301,10 @@ void handleMainUI()
       
     case CONFIRMATION_MODEL_DELETE:
       {
-        printFullScreenMsg(PSTR("Delete model?\n\nYes [Up] \nNo [Down]"));
+        printFullScreenMessage(PSTR("Delete model?\n\nYes [Up] \nNo [Down]"));
         if(clickedButton == KEY_UP)
         {
-          showWaitMsg();
+          showWaitMessage();
           stopTones();
           eeDeleteModel(thisModelIdx);
           changeToScreen(SCREEN_MODEL);
@@ -2310,6 +2344,8 @@ void handleMainUI()
         toggleEditModeOnSelectClicked();
         if(focusedItem == 1)
         {
+          uint8_t lastPage = page;
+
           if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
             page = incDec(page, 0, NUM_PAGES - 1, INCDEC_WRAP, INCDEC_SLOW);
           else if(Model.type == MODEL_TYPE_OTHER) 
@@ -2319,6 +2355,10 @@ void handleMainUI()
               page = incDec(page, 0, NUM_PAGES - 1, INCDEC_WRAP, INCDEC_SLOW);
             } while(page == PAGE_RUD_CURVE || page == PAGE_AIL_CURVE || page == PAGE_ELE_CURVE || page == PAGE_THR_CURVE);
           }
+
+          if(page != lastPage)
+            graphYCoordinatesInvalid = true;
+
           //Show cursor
           drawCursor(0, 9);
         }
@@ -2388,15 +2428,15 @@ void handleMainUI()
           //--- Draw text
           
           display.setCursor(8, 9);
-          getSrcName(txtBuff, qqSrc[idx], sizeof(txtBuff));
-          display.print(txtBuff);
+          getSrcName(textBuff, qqSrc[idx], sizeof(textBuff));
+          display.print(textBuff);
           display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
           
           display.setCursor(0, 20);
           display.print(F("Src:"));
           display.setCursor(42, 20);
-          getSrcName(txtBuff, *qqSrcRaw[idx], sizeof(txtBuff));
-          display.print(txtBuff);
+          getSrcName(textBuff, *qqSrcRaw[idx], sizeof(textBuff));
+          display.print(textBuff);
 
           display.setCursor(0, 29);
           display.print(F("Rate:"));
@@ -2413,8 +2453,8 @@ void handleMainUI()
           display.setCursor(0, 47);
           display.print(F("D/R:"));
           display.setCursor(42, 47);
-          getControlSwitchName(txtBuff, *swtch, sizeof(txtBuff));
-          display.print(txtBuff);
+          getControlSwitchName(textBuff, *swtch, sizeof(textBuff));
+          display.print(textBuff);
           
           //--- Show the current D/R in use. Only show if we have dual rates enabled
           if(*swtch != CTRL_SW_NONE)
@@ -2454,24 +2494,24 @@ void handleMainUI()
           
           //cache the y values so we don't have to recalculate them every time
           static int8_t lastRate, lastExpo;
-          static int8_t graphYVals[26]; 
-          if(lastRate != *rate || lastExpo != *expo)
+          if(lastRate != *rate || lastExpo != *expo || graphYCoordinatesInvalid)
           {
             lastRate = *rate;
             lastExpo = *expo;
+            graphYCoordinatesInvalid = false;
             for(int16_t i = 0; i <= 25; i++)
-              graphYVals[i] = calcRateExpo(i * 20, *rate, *expo) / 20;
+              graphYCoord[i] = calcRateExpo(i * 20, *rate, *expo) / 20;
           }
           
           //plot the points
           for(int16_t i = 0; i <= 25; i++)
           {
-            display.drawPixel(100 + i, 36 - graphYVals[i], BLACK);
-            display.drawPixel(100 - i, 36 + graphYVals[i], BLACK);
+            display.drawPixel(100 + i, 36 - graphYCoord[i], BLACK);
+            display.drawPixel(100 - i, 36 + graphYCoord[i], BLACK);
             if(i > 0)
             {
-              int8_t y0 = graphYVals[i - 1];
-              int8_t y1 = graphYVals[i];
+              int8_t y0 = graphYCoord[i - 1];
+              int8_t y1 = graphYCoord[i];
               if(abs(y1 - y0) > 1)
               {
                 display.drawLine(100 + i - 1, 36 - y0, 100 + i, 36 - y1, BLACK);
@@ -2485,8 +2525,8 @@ void handleMainUI()
         if(page == PAGE_THR_CURVE)
         {
           display.setCursor(8, 9);
-          getSrcName(txtBuff, SRC_THR, sizeof(txtBuff));
-          display.print(txtBuff);
+          getSrcName(textBuff, SRC_THR, sizeof(textBuff));
+          display.print(textBuff);
           display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
           
           custom_curve_t *crv = &Model.ThrottleCurve;
@@ -2544,8 +2584,8 @@ void handleMainUI()
                 {
                   display.print(F("Src:"));
                   display.setCursor(40, ypos);
-                  getSrcName(txtBuff, Model.thrSrcRaw, sizeof(txtBuff));
-                  display.print(txtBuff);
+                  getSrcName(textBuff, Model.thrSrcRaw, sizeof(textBuff));
+                  display.print(textBuff);
                   if(edit)
                   {
                     //auto detect moved
@@ -2633,7 +2673,7 @@ void handleMainUI()
           }
           
           //scrollbar
-          drawScrollBar(69, 19, ITEM_COUNT, topItem, 5, 5 * 9);
+          drawScrollBar(71, 19, ITEM_COUNT, topItem, 5, 5 * 9);
         
           //--- draw graph
           //draw stick input marker
@@ -2659,8 +2699,8 @@ void handleMainUI()
         if(page == PAGE_STICKS)
         {
           display.setCursor(8, 9);
-          strlcpy_P(txtBuff, PSTR("Sticks"), sizeof(txtBuff));
-          display.print(txtBuff);
+          strlcpy_P(textBuff, PSTR("Sticks"), sizeof(textBuff));
+          display.print(textBuff);
           display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
 
           uint8_t cntr = 0;
@@ -2676,8 +2716,8 @@ void handleMainUI()
               ypos = 20 + (cntr-5)*9;
             }
             display.setCursor(xpos, ypos);
-            getSrcName(txtBuff, SRC_STICK_AXIS_FIRST + i, sizeof(txtBuff));
-            display.print(txtBuff);
+            getSrcName(textBuff, SRC_STICK_AXIS_FIRST + i, sizeof(textBuff));
+            display.print(textBuff);
             display.print(F(":"));
             display.setCursor(display.getCursorX() + 6, ypos);
             display.print(stickAxisIn[i]/5);
@@ -2689,8 +2729,8 @@ void handleMainUI()
         if(page == PAGE_KNOBS)
         {
           display.setCursor(8, 9);
-          strlcpy_P(txtBuff, PSTR("Knobs"), sizeof(txtBuff));
-          display.print(txtBuff);
+          strlcpy_P(textBuff, PSTR("Knobs"), sizeof(textBuff));
+          display.print(textBuff);
           display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
           
           for(uint8_t i = 0; i < NUM_KNOBS; i++)
@@ -2700,8 +2740,8 @@ void handleMainUI()
             uint8_t xpos = 0;
             uint8_t ypos = 20 + i*9;
             display.setCursor(xpos, ypos);
-            getSrcName(txtBuff, SRC_KNOB_FIRST + i, sizeof(txtBuff));
-            display.print(txtBuff);
+            getSrcName(textBuff, SRC_KNOB_FIRST + i, sizeof(textBuff));
+            display.print(textBuff);
             display.print(F(":"));
             display.setCursor(display.getCursorX() + 6, ypos);
             display.print(knobIn[i]/5);
@@ -2712,8 +2752,8 @@ void handleMainUI()
         if(page == PAGE_SWITCHES)
         {
           display.setCursor(8, 9);
-          strlcpy_P(txtBuff, PSTR("Switches"), sizeof(txtBuff));
-          display.print(txtBuff);
+          strlcpy_P(textBuff, PSTR("Switches"), sizeof(textBuff));
+          display.print(textBuff);
           display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
           
           //show switches
@@ -2731,8 +2771,8 @@ void handleMainUI()
               ypos = 20 + (cntr - 5)*9;
             }
             display.setCursor(xpos, ypos);
-            getSrcName(txtBuff, SRC_SW_PHYSICAL_FIRST + i, sizeof(txtBuff));
-            display.print(txtBuff);
+            getSrcName(textBuff, SRC_SW_PHYSICAL_FIRST + i, sizeof(textBuff));
+            display.print(textBuff);
             display.print(F(": "));
             if(swState[i] == SWUPPERPOS) display.print(F("-100"));
             else if(swState[i] == SWLOWERPOS) display.print(F("100"));
@@ -2866,8 +2906,8 @@ void handleMainUI()
               {
                 display.print(F("Output:"));
                 display.setCursor(60, ypos);
-                getSrcName(txtBuff, tempMixerOutput, sizeof(txtBuff));
-                display.print(txtBuff);
+                getSrcName(textBuff, tempMixerOutput, sizeof(textBuff));
+                display.print(textBuff);
                 if(tempMixerOutput >= SRC_CH1 && tempMixerOutput < SRC_CH1 + NUM_RC_CHANNELS)
                 {
                   uint8_t chIdx = tempMixerOutput - SRC_CH1;
@@ -2887,8 +2927,8 @@ void handleMainUI()
               {
                 display.print(F("Switch:"));
                 display.setCursor(60, ypos);
-                getControlSwitchName(txtBuff, mxr->swtch, sizeof(txtBuff));
-                display.print(txtBuff);
+                getControlSwitchName(textBuff, mxr->swtch, sizeof(textBuff));
+                display.print(textBuff);
                 if(edit)
                   mxr->swtch = incDecControlSwitch(mxr->swtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
               }
@@ -2908,8 +2948,8 @@ void handleMainUI()
               {
                 display.print(F("Input:"));
                 display.setCursor(60, ypos);
-                getSrcName(txtBuff, mxr->input, sizeof(txtBuff));
-                display.print(txtBuff);
+                getSrcName(textBuff, mxr->input, sizeof(textBuff));
+                display.print(textBuff);
                 if(edit)
                 {
                   //auto detect moved source
@@ -2959,7 +2999,7 @@ void handleMainUI()
               
             case ITEM_MIX_CURVE_VAL:
               {
-                display.print(F("CrvVal:"));
+                display.print(F("Crv val:"));
                 display.setCursor(60, ypos);
                 if(mxr->curveType == MIX_CURVE_TYPE_DIFF || mxr->curveType == MIX_CURVE_TYPE_EXPO)
                   display.print(mxr->curveVal);
@@ -3009,7 +3049,7 @@ void handleMainUI()
               
             case ITEM_MIX_FLIGHT_MODE:
               {
-                display.print(F("F-Mode:"));
+                display.print(F("F-mode:"));
                 display.setCursor(60, ypos);
                 if(mxr->flightMode == 0xff)
                   display.print(F("All"));
@@ -3034,7 +3074,7 @@ void handleMainUI()
               
             case ITEM_MIX_DELAY_UP:
               {
-                display.print(F("Dly Up:"));
+                display.print(F("Dly up:"));
                 display.setCursor(60, ypos);
                 printSeconds(mxr->delayUp);
                 if(edit)
@@ -3044,7 +3084,7 @@ void handleMainUI()
               
             case ITEM_MIX_DELAY_DOWN:
               {
-                display.print(F("Dly Dn:"));
+                display.print(F("Dly dn:"));
                 display.setCursor(60, ypos);
                 printSeconds(mxr->delayDown);
                 if(edit)
@@ -3054,7 +3094,7 @@ void handleMainUI()
               
             case ITEM_MIX_SLOW_UP:
               {
-                display.print(F("Slow Up:"));
+                display.print(F("Slow up:"));
                 display.setCursor(60, ypos);
                 printSeconds(mxr->slowUp);
                 if(edit)
@@ -3064,7 +3104,7 @@ void handleMainUI()
               
             case ITEM_MIX_SLOW_DOWN:
               {
-                display.print(F("Slow Dn:"));
+                display.print(F("Slow dn:"));
                 display.setCursor(60, ypos);
                 printSeconds(mxr->slowDown);
                 if(edit)
@@ -3075,7 +3115,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
         
         //Show context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -3098,7 +3138,7 @@ void handleMainUI()
             mxr->output = tempMixerOutput;
             tempInitialised = false;
             //change to another mix
-            thisMixIdx = incDec(thisMixIdx, 0, NUM_MIXSLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
+            thisMixIdx = incDec(thisMixIdx, 0, NUM_MIX_SLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
           }
         }
         
@@ -3162,7 +3202,7 @@ void handleMainUI()
         //scroll bar
         uint8_t  y = Sys.useRoundRect ? y0 : y0 - 1;
         uint16_t h = Sys.useRoundRect ? numVisible * 9 - 2 : numVisible * 9;
-        drawScrollBar(110, y, NUM_FLIGHT_MODES, topItem, numVisible, h);
+        drawScrollBar(112, y, NUM_FLIGHT_MODES, topItem, numVisible, h);
         
         //--- edit items
         toggleEditModeOnSelectClicked();
@@ -3235,7 +3275,7 @@ void handleMainUI()
           //Find a slot that is empty.
           //If the slot exists after thisMixIdx, move it here, otherwise we dont.
           uint8_t freeSlot = 0xFF;
-          uint8_t mixIdx = NUM_MIXSLOTS - 1;
+          uint8_t mixIdx = NUM_MIX_SLOTS - 1;
           uint8_t occupiedCount = 0;
           while(mixIdx > thisMixIdx)
           {
@@ -3274,7 +3314,7 @@ void handleMainUI()
           
           //find the rearmost occupied slot
           uint8_t rearmostIdx = 0;
-          for(uint8_t mixIdx = NUM_MIXSLOTS - 1; mixIdx > 0; mixIdx--)
+          for(uint8_t mixIdx = NUM_MIX_SLOTS - 1; mixIdx > 0; mixIdx--)
           {
             if(Model.Mixer[mixIdx].output != SRC_NONE || Model.Mixer[mixIdx].input != SRC_NONE)
             {
@@ -3288,7 +3328,7 @@ void handleMainUI()
           {
             if(Model.Mixer[mixIdx].output == SRC_NONE && Model.Mixer[mixIdx].input == SRC_NONE)
             {
-              moveMix(NUM_MIXSLOTS - 1, mixIdx);
+              moveMix(NUM_MIX_SLOTS - 1, mixIdx);
               rearmostIdx--;
               //we don't immediately increment the mixIdx to also move any adjacent free slots
             }
@@ -3406,7 +3446,7 @@ void handleMainUI()
           
           //show warning
           if(hasWarning)
-            printFullScreenMsg(PSTR("One or more\ndestination slots\nalready occupied.\nContinue?\n\nYes [Up] \nNo [Down]"));
+            printFullScreenMessage(PSTR("One or more\ndestination slots\nalready occupied.\nContinue?\n\nYes [Up] \nNo [Down]"));
           
           //exit
           if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT)
@@ -3426,7 +3466,7 @@ void handleMainUI()
       
     case CONFIRMATION_MIXES_RESET:
       {
-        printFullScreenMsg(PSTR("Reset all mixes?\n\nYes [Up] \nNo [Down]"));
+        printFullScreenMessage(PSTR("Reset all mixes?\n\nYes [Up] \nNo [Down]"));
         if(clickedButton == KEY_UP)
         {
           resetMixerParams();
@@ -3503,7 +3543,7 @@ void handleMainUI()
         //draw midpoint
         display.drawHLine(3, 35, 9 + 16*(count - 1) , BLACK); 
         //show scrollbar
-        drawScrollBar(125, 8, numPages, thisPage, 1, 1 * 56);
+        drawScrollBar(127, 8, numPages, thisPage, 1, 1 * 56);
 
         if(heldButton == KEY_SELECT)
         {
@@ -3517,7 +3557,7 @@ void handleMainUI()
     case DIALOG_MOVE_MIX:
       {
         isEditMode = true;
-        destMixIdx = incDec(destMixIdx, 0, NUM_MIXSLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
+        destMixIdx = incDec(destMixIdx, 0, NUM_MIX_SLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
         drawDialogCopyMove(PSTR("Mix"), thisMixIdx, destMixIdx, theScreen == DIALOG_COPY_MIX);
         if(clickedButton == KEY_SELECT)
         {
@@ -3539,10 +3579,10 @@ void handleMainUI()
         
         //--- dynamic scrollable list
         
-        uint8_t listItemIDs[NUM_MIXSLOTS];
+        uint8_t listItemIDs[NUM_MIX_SLOTS];
         uint8_t listItemCount = 0;
         //add to list
-        for(uint8_t i = 0; i < NUM_MIXSLOTS; i++)
+        for(uint8_t i = 0; i < NUM_MIX_SLOTS; i++)
         {
           if(Model.Mixer[i].output == SRC_NONE)
             continue;
@@ -3554,7 +3594,7 @@ void handleMainUI()
         static uint8_t thisPage = 1;
         
         if(listItemCount == 0)
-          printFullScreenMsg(PSTR("No mixes defined yet"));
+          printFullScreenMessage(PSTR("No mixes defined yet"));
         else
         {
           uint8_t numPages = (listItemCount + 5) / 6;
@@ -3569,8 +3609,8 @@ void handleMainUI()
             
             //output
             display.setCursor(0, ypos);
-            getSrcName(txtBuff, Model.Mixer[mixIdx].output, sizeof(txtBuff));
-            display.print(txtBuff);
+            getSrcName(textBuff, Model.Mixer[mixIdx].output, sizeof(textBuff));
+            display.print(textBuff);
             
             //operation
             display.setCursor(30, ypos);
@@ -3597,24 +3637,24 @@ void handleMainUI()
               
               //input 
               display.setCursor(66, ypos);
-              getSrcName(txtBuff, Model.Mixer[mixIdx].input, sizeof(txtBuff));
-              display.print(txtBuff);
+              getSrcName(textBuff, Model.Mixer[mixIdx].input, sizeof(textBuff));
+              display.print(textBuff);
             }
             
             //swtch, right align
             if(Model.Mixer[mixIdx].swtch != CTRL_SW_NONE)
             {
-              getControlSwitchName(txtBuff, Model.Mixer[mixIdx].swtch, sizeof(txtBuff));
-              uint8_t len = strlen(txtBuff);
+              getControlSwitchName(textBuff, Model.Mixer[mixIdx].swtch, sizeof(textBuff));
+              uint8_t len = strlen(textBuff);
               uint8_t xpos = 126 - len * 6;
               display.fillRect(xpos, ypos, (len * 6) - 1, 8, WHITE); //clear area just in case the preceding text overflowed
               display.setCursor(xpos, ypos);
-              display.print(txtBuff);
+              display.print(textBuff);
             }
           }
           
           //scrollbar
-          drawScrollBar(125, 9, numPages, thisPage, 1, 1 * 54);
+          drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
         }
 
         if(heldButton == KEY_SELECT)
@@ -3746,8 +3786,8 @@ void handleMainUI()
               {
                 display.print(F("Override:"));
                 display.setCursor(62, ypos);
-                getControlSwitchName(txtBuff, ch->overrideSwitch, sizeof(txtBuff));
-                display.print(txtBuff);
+                getControlSwitchName(textBuff, ch->overrideSwitch, sizeof(textBuff));
+                display.print(textBuff);
                 if(isFocused)
                   drawCursor(54, ypos);
                 if(edit)
@@ -3838,7 +3878,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(125, 19, totalLines, topLine + 1, maxVisibleLines, maxVisibleLines * 9);
+        drawScrollBar(127, 19, totalLines, topLine + 1, maxVisibleLines, maxVisibleLines * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -4329,8 +4369,8 @@ void handleMainUI()
         
         //draw title
         display.setCursor(8, 9);
-        getSrcName(txtBuff, SRC_SW_LOGICAL_FIRST + thisLsIdx, sizeof(txtBuff));
-        display.print(txtBuff);
+        getSrcName(textBuff, SRC_SW_LOGICAL_FIRST + thisLsIdx, sizeof(textBuff));
+        display.print(textBuff);
         display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
         
         //draw switch icon
@@ -4463,14 +4503,14 @@ void handleMainUI()
                     display.print(F("--"));
                   else
                   {
-                    getSrcName(txtBuff, ls->val1, sizeof(txtBuff));
-                    display.print(txtBuff);
+                    getSrcName(textBuff, ls->val1, sizeof(textBuff));
+                    display.print(textBuff);
                   }
                 }
                 else if(ls->func <= LS_FUNC_GROUP5_LAST || ls->func == LS_FUNC_TOGGLE)
                 {
-                  getControlSwitchName(txtBuff, ls->val1, sizeof(txtBuff));
-                  display.print(txtBuff);
+                  getControlSwitchName(textBuff, ls->val1, sizeof(textBuff));
+                  display.print(textBuff);
                 }
                 else if(ls->func == LS_FUNC_PULSE)
                   printSeconds(ls->val1);
@@ -4491,7 +4531,7 @@ void handleMainUI()
                                                     | INCDEC_FLAG_INACTIVITY_TIMER_AS_SRC 
                                                     | INCDEC_FLAG_TX_BATTV_AS_SRC);
                     //reset ls->val2 if out of range
-                    if(ls->val1 < MIXSOURCES_COUNT)
+                    if(ls->val1 < MIX_SOURCES_COUNT)
                     {
                       if(ls->val2 > 100 || ls->val2 < -100)
                         ls->val2 = 0;
@@ -4541,7 +4581,7 @@ void handleMainUI()
                   display.print(F("--"));
                 else if(ls->func <= LS_FUNC_GROUP3_LAST)
                 {
-                  if(ls->val1 < MIXSOURCES_COUNT)
+                  if(ls->val1 < MIX_SOURCES_COUNT)
                     display.print(ls->val2);
                   else if(ls->val1 >= SRC_COUNTER_FIRST && ls->val1 <= SRC_COUNTER_LAST)
                     display.print(ls->val2);
@@ -4549,8 +4589,8 @@ void handleMainUI()
                     printHHMMSS((int32_t)ls->val2 * 1000);
                   else if(ls->val1 >= SRC_TELEMETRY_FIRST && ls->val1 <= SRC_TELEMETRY_LAST)
                   {
-                    printTelemParam(display.getCursorX(), display.getCursorY(), ls->val1 - SRC_TELEMETRY_FIRST, ls->val2);
-                    display.print(Model.Telemetry[ls->val1 - SRC_TELEMETRY_FIRST].unitsName);
+                    display.setCursor(display.getCursorX(), display.getCursorY());
+                    printTelemParam(ls->val1 - SRC_TELEMETRY_FIRST, ls->val2, true);
                   }
                   else if(ls->val1 == SRC_INACTIVITY_TIMER)
                     printHHMMSS((int32_t) ls->val2 * 1000);
@@ -4563,14 +4603,14 @@ void handleMainUI()
                     display.print(F("--"));
                   else
                   {
-                    getSrcName(txtBuff, ls->val2, sizeof(txtBuff));
-                    display.print(txtBuff);
+                    getSrcName(textBuff, ls->val2, sizeof(textBuff));
+                    display.print(textBuff);
                   }
                 }
                 else if(ls->func <= LS_FUNC_GROUP5_LAST)
                 {
-                  getControlSwitchName(txtBuff, ls->val2, sizeof(txtBuff));
-                  display.print(txtBuff);
+                  getControlSwitchName(textBuff, ls->val2, sizeof(textBuff));
+                  display.print(textBuff);
                 }
                 else if(ls->func == LS_FUNC_TOGGLE)
                   display.print(findStringInIdStr(enum_ClockEdge, ls->val2));
@@ -4581,7 +4621,7 @@ void handleMainUI()
                 {
                   if(ls->func <= LS_FUNC_GROUP3_LAST)
                   {
-                    if(ls->val1 < MIXSOURCES_COUNT)
+                    if(ls->val1 < MIX_SOURCES_COUNT)
                       ls->val2 = incDec(ls->val2, (ls->func <= LS_FUNC_GROUP1_LAST) ? -100 : 0, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
                     else if(ls->val1 >= SRC_COUNTER_FIRST && ls->val1 <= SRC_COUNTER_LAST)
                       ls->val2 = incDec(ls->val2, 0, 9999, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
@@ -4628,8 +4668,8 @@ void handleMainUI()
                 {
                   display.print(F("Clear:"));
                   display.setCursor(60, ypos);
-                  getControlSwitchName(txtBuff, ls->val3, sizeof(txtBuff));
-                  display.print(txtBuff);
+                  getControlSwitchName(textBuff, ls->val3, sizeof(textBuff));
+                  display.print(textBuff);
                 }
                 else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
                 {
@@ -4683,7 +4723,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -4826,7 +4866,7 @@ void handleMainUI()
             display.drawBitmap(display.getCursorX(), display.getCursorY(), icon_switch_is_off, 13, 8, BLACK);
         }
         //show scrollbar
-        drawScrollBar(125, 9, numPages, thisPage, 1, 1 * 54);
+        drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
 
         if(heldButton == KEY_SELECT)
         {
@@ -4862,8 +4902,8 @@ void handleMainUI()
         }
         
         display.setCursor(8, 9);
-        getSrcName(txtBuff, SRC_FUNCGEN_FIRST + thisFgenIdx, sizeof(txtBuff));
-        display.print(txtBuff);
+        getSrcName(textBuff, SRC_FUNCGEN_FIRST + thisFgenIdx, sizeof(textBuff));
+        display.print(textBuff);
         display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
         
         //--- dynamic scrollable list 
@@ -5060,8 +5100,8 @@ void handleMainUI()
               {
                 display.print(F("Modulator:"));
                 display.setCursor(78, ypos);
-                getSrcName(txtBuff, fgen->modulatorSrc, sizeof(txtBuff));
-                display.print(txtBuff);
+                getSrcName(textBuff, fgen->modulatorSrc, sizeof(textBuff));
+                display.print(textBuff);
                 if(edit)
                 {
                   uint8_t movedSrc = procMovedSource(getMovedSource());
@@ -5121,7 +5161,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -5224,8 +5264,8 @@ void handleMainUI()
           }
           //show name
           display.setCursor(7, ypos);
-          getSrcName(txtBuff, SRC_FUNCGEN_FIRST + i, sizeof(txtBuff));
-          display.print(txtBuff);
+          getSrcName(textBuff, SRC_FUNCGEN_FIRST + i, sizeof(textBuff));
+          display.print(textBuff);
           display.print(F(":"));
           //draw graph
           drawHorizontalBarChartZeroCentered(45, ypos + 2, 39, 3, BLACK, mixSources[SRC_FUNCGEN_FIRST + i]/5, 200);
@@ -5235,7 +5275,7 @@ void handleMainUI()
         }
         
         //show scrollbar
-        drawScrollBar(125, 9, numPages, thisPage, 1, 1 * 54);
+        drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
 
         if(heldButton == KEY_SELECT) //exit
         {
@@ -5261,18 +5301,16 @@ void handleMainUI()
         }
         display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
         
-        //show the value of the counter. Right align
-        uint8_t digits = 1;
-        int16_t num = counterOut[thisCounterIdx];          
-        while(num >= 10)
-        {
-          num /= 10;
-          digits++;
-        }
-        uint8_t xpos = 121 - (digits - 1)*6;
+        //show the value of the counter. Right align.
+        //using a hack to measure the width of the text before actually printing.
+        display.setCursor(0, 64);
+        display.print(counterOut[thisCounterIdx]);
+        uint8_t len_px = display.getCursorX();
+        //now print on screen
+        uint8_t xpos = 127 - len_px;
         display.setCursor(xpos, 9);
         display.print(counterOut[thisCounterIdx]);
-        display.drawRect(xpos - 2, 7, digits * 6 + 3, 11, BLACK);
+        display.drawRect(xpos - 2, 7, len_px + 3, 11, BLACK);
         
         //--- scrollable list 
   
@@ -5322,8 +5360,8 @@ void handleMainUI()
               {
                 display.print(F("Clock:"));
                 display.setCursor(66, ypos);
-                getControlSwitchName(txtBuff, counter->clock, sizeof(txtBuff));
-                display.print(txtBuff);
+                getControlSwitchName(textBuff, counter->clock, sizeof(textBuff));
+                display.print(textBuff);
                 if(edit)
                   counter->clock = incDecControlSwitch(counter->clock, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
               }
@@ -5363,8 +5401,8 @@ void handleMainUI()
               {
                 display.print(F("Clear:"));
                 display.setCursor(66, ypos);
-                getControlSwitchName(txtBuff, counter->clear, sizeof(txtBuff));
-                display.print(txtBuff);
+                getControlSwitchName(textBuff, counter->clear, sizeof(textBuff));
+                display.print(textBuff);
                 if(edit)
                   counter->clear = incDecControlSwitch(counter->clear, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
               }
@@ -5382,7 +5420,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(125, 19, ITEM_COUNT, topItem, 5, 5 * 9);
+        drawScrollBar(127, 19, ITEM_COUNT, topItem, 5, 5 * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -5477,7 +5515,7 @@ void handleMainUI()
       
     case CONFIRMATION_CLEAR_ALL_COUNTERS:
       {
-        printFullScreenMsg(PSTR("Clear all counter\nregisters?\n\nYes [Up] \nNo [Down]"));
+        printFullScreenMessage(PSTR("Clear all counter\nregisters?\n\nYes [Up] \nNo [Down]"));
         if(clickedButton == KEY_UP)
         {
           resetCounterRegisters();
@@ -5500,6 +5538,14 @@ void handleMainUI()
         
         drawHeader(extrasMenu[EXTRAS_MENU_TIMERS]);
 
+        static bool viewInitialised = false;
+        static uint8_t lastFocusedItem = 1;
+        if(!viewInitialised)
+        {
+          viewInitialised = true;
+          lastFocusedItem = 1;
+        }
+
         display.setCursor(8, 9);
         display.print(F("Timer"));
         display.print(thisTimerIdx + 1);
@@ -5516,20 +5562,22 @@ void handleMainUI()
         display.setCursor(0, 29);
         display.print(F("Switch:"));
         display.setCursor(60, 29);
-        getControlSwitchName(txtBuff, tmr->swtch, sizeof(txtBuff));
-        display.print(txtBuff);
+        getControlSwitchName(textBuff, tmr->swtch, sizeof(textBuff));
+        display.print(textBuff);
         
         display.setCursor(0, 38);
         display.print(F("Reset:"));
         display.setCursor(60, 38);
-        getControlSwitchName(txtBuff, tmr->resetSwitch, sizeof(txtBuff));
-        display.print(txtBuff);
+        getControlSwitchName(textBuff, tmr->resetSwitch, sizeof(textBuff));
+        display.print(textBuff);
         
         display.setCursor(0, 47);
         display.print(F("Initial:"));
         display.setCursor(60, 47);
-        display.print(tmr->initialMinutes);
-        display.print(F("min"));
+        if(tmr->initialSeconds == 0)
+          display.print(F("--"));
+        else
+          printHHMMSS((uint32_t) tmr->initialSeconds * 1000);
         
         display.setCursor(0, 56);
         display.print(F("Persist:"));
@@ -5544,12 +5592,12 @@ void handleMainUI()
         //by intentionally printing off screen and using the difference in the x position.
         display.setCursor(0, 64);
         printTimerValue(thisTimerIdx);
-        uint8_t len = display.getCursorX() / 6;
+        uint8_t len_px = display.getCursorX();
         //now print on screen
-        uint8_t xpos = 127 - len * 6;
+        uint8_t xpos = 127 - len_px;
         display.setCursor(xpos, 9);
         printTimerValue(thisTimerIdx);
-        display.drawRect(xpos - 2, 7, len * 6 + 3, 11, BLACK);
+        display.drawRect(xpos - 2, 7, len_px + 3, 11, BLACK);
         
         //show cursor
         if(focusedItem == 1)
@@ -5557,8 +5605,10 @@ void handleMainUI()
         else if(focusedItem <= 6)
           drawCursor(52, 20 + 9 * (focusedItem - 2));
         
+        focusedItem = lastFocusedItem;
         changeFocusOnUpDown(7);
         toggleEditModeOnSelectClicked();
+        lastFocusedItem = focusedItem;
         
         //edit items
         if(focusedItem == 1)
@@ -5569,17 +5619,87 @@ void handleMainUI()
           tmr->swtch = incDecControlSwitch(tmr->swtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
         else if(focusedItem == 4 && isEditMode)
           tmr->resetSwitch = incDecControlSwitch(tmr->resetSwitch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
-        else if(focusedItem == 5)
-          tmr->initialMinutes = incDec(tmr->initialMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
+        else if(focusedItem == 5 && isEditMode)
+          changeToScreen(DIALOG_TIMER_INITIAL_TIME);
         else if(focusedItem == 6)
           tmr->isPersistent = incDec(tmr->isPersistent, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 7 && isEditMode)
+        {
           changeToScreen(CONTEXT_MENU_TIMERS);
+          viewInitialised = false;
+        }
 
         //exit 
         if(heldButton == KEY_SELECT)
         {
           changeToScreen(SCREEN_EXTRAS_MENU);
+          viewInitialised = false;
+        }
+      }
+      break;
+
+    case DIALOG_TIMER_INITIAL_TIME: //todo better name
+      {
+        drawBoundingBox(11, 14, 105, 35,BLACK);
+        display.setCursor(17, 18);
+        display.print(F("Initial time"));
+
+        static bool initialised = false;
+
+        static uint8_t idxQQ = 0;
+        static uint8_t valQQ[3];
+
+        if(!initialised)
+        {
+          initialised = true;
+
+          uint32_t hh, mm, ss;
+          ss = Model.Timer[thisTimerIdx].initialSeconds;
+          hh = ss / 3600;
+          ss = ss - hh * 3600;
+          mm = ss / 60;
+          ss = ss - mm * 60;
+
+          valQQ[0] = hh;
+          valQQ[1] = mm;
+          valQQ[2] = ss;
+        }
+
+        isEditMode = true;
+        valQQ[idxQQ] = incDec(valQQ[idxQQ], 0, (idxQQ == 0) ? 23 : 59, INCDEC_WRAP, INCDEC_SLOW, INCDEC_NORMAL);
+
+        //draw values
+        display.setCursor(41, 32);
+        for(uint8_t i = 0; i < sizeof(valQQ)/sizeof(valQQ[0]); i++)
+        {
+          if(i != 0)
+            display.print(F(":"));
+          if(valQQ[i] < 10)
+            display.print(F("0"));
+          display.print(valQQ[i]);
+        }
+
+        //draw blinking cursor
+        if((millis() - buttonReleaseTime) % 1000 < 500 || buttonCode > 0)
+          display.fillRect(41 + idxQQ * 18, 40, 11, 2, BLACK);
+
+        //change to next
+        if(clickedButton == KEY_SELECT)
+          idxQQ++;
+        else if(heldButton == KEY_SELECT && idxQQ > 0)
+        {
+          //move to previous
+          idxQQ--;
+          killButtonEvents();
+        }
+
+        //done, exit
+        if(idxQQ == sizeof(valQQ)/sizeof(valQQ[0]))
+        {
+          idxQQ = 0;
+          Model.Timer[thisTimerIdx].initialSeconds = ((uint32_t) 3600 * valQQ[0]) + ((uint32_t) 60 * valQQ[1]) + valQQ[2];
+          initialised = false;
+          changeToScreen(SCREEN_TIMERS);
         }
       }
       break;
@@ -5717,7 +5837,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 9, listItemCount, topItem, 6, 6 * 9);
+        drawScrollBar(127, 9, listItemCount, topItem, 6, 6 * 9);
 
         // Exit
         if(heldButton == KEY_SELECT)
@@ -5819,8 +5939,8 @@ void handleMainUI()
               {
                 display.print(F("Switch:"));
                 display.setCursor(54, ypos);
-                getControlSwitchName(txtBuff, tempSwtch, sizeof(txtBuff));
-                display.print(txtBuff);
+                getControlSwitchName(textBuff, tempSwtch, sizeof(textBuff));
+                display.print(textBuff);
                 if(edit)
                 {
                   if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
@@ -5878,7 +5998,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -5982,8 +6102,8 @@ void handleMainUI()
         for(uint8_t i = 0; i < 4; i++)
         {
           display.setCursor(0, 9 + i * 9);
-          getSrcName(txtBuff, qqSrc[i], sizeof(txtBuff));
-          display.print(txtBuff);
+          getSrcName(textBuff, qqSrc[i], sizeof(textBuff));
+          display.print(textBuff);
           display.print(F(":"));
           display.setCursor(42, 9 + i * 9);
           display.print(findStringInIdStr(enum_TrimState, qqTrim[i]->trimState));
@@ -6064,8 +6184,8 @@ void handleMainUI()
           display.print(F("N/A")); 
         else
         {
-          getControlSwitchName(txtBuff, fmd->swtch, sizeof(txtBuff));
-          display.print(txtBuff);
+          getControlSwitchName(textBuff, fmd->swtch, sizeof(textBuff));
+          display.print(textBuff);
         }
         
         display.setCursor(0, 38);
@@ -6113,11 +6233,13 @@ void handleMainUI()
         }
         
         //handle navigation
-        changeFocusOnUpDown(NUM_CUSTOM_TELEMETRY);
+        uint8_t numFocusable = NUM_CUSTOM_TELEMETRY;
+        changeFocusOnUpDown(numFocusable);
         if(focusedItem < topItem)
           topItem = focusedItem;
         while(focusedItem >= topItem + 6)
           topItem++;
+        
         //fill list
         for(uint8_t line = 0; line < 6 && line < NUM_CUSTOM_TELEMETRY; line++)
         {
@@ -6125,36 +6247,53 @@ void handleMainUI()
           uint8_t item = topItem + line;
           if(focusedItem == topItem + line) //highlight
           {
-            display.fillRect(0, ypos - 1, item < 10 ? 7 : 13, 9, BLACK);
-            display.setTextColor(WHITE);
+            display.fillRect(0, ypos - 1, 7, 9, BLACK);
+            display.fillRect(2, ypos + 2, 3, 3, WHITE);
           }
-          display.setCursor(1, ypos);
-          display.print(item);
-          display.setTextColor(BLACK);
+          else
+            display.fillRect(2, ypos + 2, 3, 3, BLACK);
           
           uint8_t idx = item - 1;
           if(!isEmptyStr(Model.Telemetry[idx].name, sizeof(Model.Telemetry[0].name)))
           {
-            display.setCursor(16, ypos);
+            display.setCursor(11, ypos);
             display.print(Model.Telemetry[idx].name);
             display.print(F(":"));
-            drawTelemetryValue(73, ypos, idx, telemetryReceivedValue[idx], true);
+            if(Model.Telemetry[idx].type == TELEMETRY_TYPE_GENERAL)
+            {
+              drawTelemetryValue(67, ypos, idx, telemetryReceivedValue[idx], true);
+            }
+            else if(Model.Telemetry[idx].type == TELEMETRY_TYPE_GNSS)
+            {
+              display.setCursor(67, ypos);
+              if(GNSSTelemetryData.satellitesInView > 0)
+              {
+                display.print(GNSSTelemetryData.satellitesInUse);
+                display.print(F("/"));
+                display.print(GNSSTelemetryData.satellitesInView);
+                display.print(F(" sat"));
+              }
+              else
+                display.print(F("No data"));
+            }
           }
         }
+
         //scroll bar
-        drawScrollBar(125, 9, NUM_CUSTOM_TELEMETRY, topItem, 6, 6 * 9);
-        //--- end of list ---
-        
+        drawScrollBar(127, 9, NUM_CUSTOM_TELEMETRY, topItem, 6, 6 * 9);
+
+        //open sensor context menu
         if(focusedItem <= NUM_CUSTOM_TELEMETRY)
-          thisTelemIdx = focusedItem - 1;
-        
-        if(clickedButton == KEY_SELECT)
         {
-          viewInitialised = false;
-          if(isEmptyStr(Model.Telemetry[thisTelemIdx].name, sizeof(Model.Telemetry[0].name)))
-            changeToScreen(CONTEXT_MENU_FREE_SENSOR);
-          else
-            changeToScreen(CONTEXT_MENU_ACTIVE_SENSOR);
+          thisTelemIdx = focusedItem - 1;
+          if(clickedButton == KEY_SELECT)
+          {
+            viewInitialised = false;
+            if(isEmptyStr(Model.Telemetry[thisTelemIdx].name, sizeof(Model.Telemetry[0].name)))
+              changeToScreen(CONTEXT_MENU_FREE_SENSOR);
+            else
+              changeToScreen(CONTEXT_MENU_ACTIVE_SENSOR);
+          }
         }
 
         if(heldButton == KEY_SELECT)
@@ -6164,7 +6303,7 @@ void handleMainUI()
         }
       }
       break;
-      
+
     case CONTEXT_MENU_FREE_SENSOR:
       {
         enum {
@@ -6211,6 +6350,11 @@ void handleMainUI()
           ITEM_EXTVOLTS_4S,
           ITEM_RSSI,
           ITEM_LINK_QUALITY,
+          ITEM_GNSS,
+          ITEM_GNSS_MSL_ALTITUDE,
+          ITEM_GNSS_AGL_ALTITUDE,
+          ITEM_GNSS_DISTANCE,
+          ITEM_GNSS_SPEED,
         };
         
         contextMenuInitialise();
@@ -6219,6 +6363,21 @@ void handleMainUI()
         contextMenuAddItem(PSTR("ExtVolts 4S"), ITEM_EXTVOLTS_4S);
         contextMenuAddItem(PSTR("Link quality"), ITEM_LINK_QUALITY);
         contextMenuAddItem(PSTR("RSSI"), ITEM_RSSI);
+        bool isGNSSAlreadyAdded = false;
+        for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
+        {
+          if(Model.Telemetry[i].type == TELEMETRY_TYPE_GNSS)
+          {
+            isGNSSAlreadyAdded = true;
+            contextMenuAddItem(PSTR("GNSS altitude AGL"), ITEM_GNSS_AGL_ALTITUDE);
+            contextMenuAddItem(PSTR("GNSS altitude MSL"), ITEM_GNSS_MSL_ALTITUDE);
+            contextMenuAddItem(PSTR("GNSS speed"), ITEM_GNSS_SPEED);
+            contextMenuAddItem(PSTR("GNSS distance"), ITEM_GNSS_DISTANCE);
+            break;
+          }
+        }
+        if(!isGNSSAlreadyAdded)
+          contextMenuAddItem(PSTR("GNSS/GPS"), ITEM_GNSS);
         contextMenuDraw();
         
         if(contextMenuSelectedItemID == ITEM_EXTVOLTS_2S)  loadSensorTemplateExtVolts2S(thisTelemIdx);
@@ -6226,6 +6385,11 @@ void handleMainUI()
         if(contextMenuSelectedItemID == ITEM_EXTVOLTS_4S)  loadSensorTemplateExtVolts4S(thisTelemIdx);
         if(contextMenuSelectedItemID == ITEM_RSSI)         loadSensorTemplateRSSI(thisTelemIdx);
         if(contextMenuSelectedItemID == ITEM_LINK_QUALITY) loadSensorTemplateLinkQuality(thisTelemIdx);
+        if(contextMenuSelectedItemID == ITEM_GNSS)         loadSensorTemplateGNSS(thisTelemIdx);
+        if(contextMenuSelectedItemID == ITEM_GNSS_SPEED)   loadSensorTemplateGNSSSpeed(thisTelemIdx);
+        if(contextMenuSelectedItemID == ITEM_GNSS_DISTANCE)  loadSensorTemplateGNSSDistance(thisTelemIdx);
+        if(contextMenuSelectedItemID == ITEM_GNSS_AGL_ALTITUDE)  loadSensorTemplateGNSSAGLAltitude(thisTelemIdx);
+        if(contextMenuSelectedItemID == ITEM_GNSS_MSL_ALTITUDE)  loadSensorTemplateGNSSMSLAltitude(thisTelemIdx);
         
         if(contextMenuSelectedItemID != 0xff) 
           changeToScreen(SCREEN_TELEMETRY);
@@ -6238,29 +6402,77 @@ void handleMainUI()
     case CONTEXT_MENU_ACTIVE_SENSOR:
       {
         enum {
-          ITEM_VIEW_STATS,
+          ITEM_VIEW_STATISTICS,
           ITEM_EDIT_SENSOR,
-          ITEM_DELETE_SENSOR
+          ITEM_DELETE_SENSOR,
+          ITEM_VIEW_GNSS_DATA,
+          ITEM_RESET_AGL_ALTITUDE,
+          ITEM_RESET_LAST_KNOWN_LOCATION,
+          ITEM_RESET_STARTING_POINT,
         };
         
         contextMenuInitialise();
-        contextMenuAddItem(PSTR("View stats"), ITEM_VIEW_STATS);
-        contextMenuAddItem(PSTR("Edit sensor"), ITEM_EDIT_SENSOR);
-        contextMenuAddItem(PSTR("Delete sensor"), ITEM_DELETE_SENSOR);
+        if(Model.Telemetry[thisTelemIdx].type == TELEMETRY_TYPE_GENERAL)
+        {
+          contextMenuAddItem(PSTR("View statistics"), ITEM_VIEW_STATISTICS);
+          contextMenuAddItem(PSTR("Edit sensor"), ITEM_EDIT_SENSOR);
+          contextMenuAddItem(PSTR("Delete sensor"), ITEM_DELETE_SENSOR);
+        }
+        else if(Model.Telemetry[thisTelemIdx].type == TELEMETRY_TYPE_GNSS)
+        {
+          contextMenuAddItem(PSTR("View GNSS data"), ITEM_VIEW_GNSS_DATA);
+          contextMenuAddItem(PSTR("Reset altitude AGL"), ITEM_RESET_AGL_ALTITUDE);
+          contextMenuAddItem(PSTR("Reset start point"), ITEM_RESET_STARTING_POINT);
+          contextMenuAddItem(PSTR("Reset last loctn"), ITEM_RESET_LAST_KNOWN_LOCATION); //todo better name
+          //add delete option if all the child items have been deleted
+          bool hasChildren = false;
+          for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
+          {
+            uint8_t id = Model.Telemetry[i].identifier;
+            if(id == SENSOR_ID_GNSS_SPEED
+              || id == SENSOR_ID_GNSS_DISTANCE
+              || id == SENSOR_ID_GNSS_AGL_ALTITUDE
+              || id == SENSOR_ID_GNSS_MSL_ALTITUDE)
+            {
+              hasChildren = true;
+              break;
+            }
+          }
+          if(!hasChildren)
+            contextMenuAddItem(PSTR("Delete sensor"), ITEM_DELETE_SENSOR);
+        }
         contextMenuDraw();
         
-        if(contextMenuSelectedItemID == ITEM_VIEW_STATS) changeToScreen(SCREEN_SENSOR_STATS);
+        if(contextMenuSelectedItemID == ITEM_VIEW_STATISTICS) changeToScreen(SCREEN_SENSOR_STATISTICS);
         if(contextMenuSelectedItemID == ITEM_EDIT_SENSOR) changeToScreen(SCREEN_EDIT_SENSOR);
         if(contextMenuSelectedItemID == ITEM_DELETE_SENSOR) changeToScreen(CONFIRMATION_DELETE_SENSOR);
+        if(contextMenuSelectedItemID == ITEM_VIEW_GNSS_DATA) changeToScreen(SCREEN_TELEMETRY_GNSS);
+        if(contextMenuSelectedItemID == ITEM_RESET_AGL_ALTITUDE)
+        {
+          Sys.gnssAltitudeOffset = GNSSTelemetryData.altitude;
+          changeToScreen(SCREEN_TELEMETRY);
+        }
+        if(contextMenuSelectedItemID == ITEM_RESET_STARTING_POINT)
+        {
+          Sys.gnssHomeLatitude = GNSSTelemetryData.latitude;
+          Sys.gnssHomeLongitude = GNSSTelemetryData.longitude;
+          changeToScreen(SCREEN_TELEMETRY);
+        }
+        if(contextMenuSelectedItemID == ITEM_RESET_LAST_KNOWN_LOCATION)
+        {
+          Sys.gnssLastKnownLatitude = 0;
+          Sys.gnssLastKnownLongitude = 0;
+          changeToScreen(SCREEN_TELEMETRY);
+        }
 
         if(heldButton == KEY_SELECT) //exit
           changeToScreen(SCREEN_TELEMETRY);
       }
       break;
       
-    case SCREEN_SENSOR_STATS:
+    case SCREEN_SENSOR_STATISTICS:
       {
-        drawHeader(PSTR("Stats"));
+        drawHeader(PSTR("Statistics"));
         
         static uint8_t page = 0;
         static bool viewInitialised = false;
@@ -6296,6 +6508,9 @@ void handleMainUI()
             continue;
           if(!Model.Telemetry[page].recordMinimum && (i == ITEM_MINIMUM_VAL || i == ITEM_RESET_MINIMUM_VAL))
             continue;
+          //skip special telemetry
+          if(Model.Telemetry[page].type == TELEMETRY_TYPE_GNSS)
+            continue;
           listItemIDs[listItemCount++] = i;
         }
         
@@ -6320,10 +6535,10 @@ void handleMainUI()
         //show current val, right aligned.
         //using a hack to measure the width of the text before printing to actual position on screen
         drawTelemetryValue(0, 64, page, telemetryReceivedValue[page], false);
-        uint8_t len = display.getCursorX() / 6;
-        uint8_t xpos = 127 - len * 6;
+        uint8_t len_px = display.getCursorX();
+        uint8_t xpos = 127 - len_px;
         drawTelemetryValue(xpos, 9, page, telemetryReceivedValue[page], true);
-        display.drawRect(xpos - 2, 7, len * 6 + 3, 11, BLACK);
+        display.drawRect(xpos - 2, 7, len_px + 3, 11, BLACK);
 
         //fill list and edit items
         for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
@@ -6393,17 +6608,20 @@ void handleMainUI()
                   {
                     uint8_t hours = elapsedSeconds / 3600;
                     display.print(hours);
+                    display.setCursor(display.getCursorX() + 3, display.getCursorY());
                     display.print(F("hr"));
                   }
                   else if(elapsedSeconds >= 60)
                   {
                     uint8_t minutes = elapsedSeconds / 60;
                     display.print(minutes);
+                    display.setCursor(display.getCursorX() + 3, display.getCursorY());
                     display.print(F("min"));
                   }
                   else
                   {
                     display.print(elapsedSeconds);
+                    display.setCursor(display.getCursorX() + 3, display.getCursorY());
                     display.print(F("s"));
                   }
                   display.print(F(" ago"));
@@ -6423,7 +6641,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(125, 19, listItemCount, topItem, 5, 5 * 9);
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
         
         //change to next sensor
         if(focusedItem == 1)
@@ -6589,14 +6807,15 @@ void handleMainUI()
                 display.setCursor(66, ypos);
                 display.print(tlm->factor10);
                 if(edit)
-                  tlm->factor10 = incDec(tlm->factor10, -2, 2, INCDEC_NOWRAP, INCDEC_SLOW);
+                  tlm->factor10 = incDec(tlm->factor10, -3, 3, INCDEC_NOWRAP, INCDEC_SLOW);
               }
               break;
             
             case ITEM_TELEMETRY_OFFSET:
               {
                 display.print(F("Offset:"));
-                printTelemParam(66, ypos, thisTelemIdx, tlm->offset);
+                display.setCursor(66, ypos);
+                printTelemParam(thisTelemIdx, tlm->offset, false);
                 if(edit)
                   tlm->offset = incDec(tlm->offset, -30000, 30000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
               }
@@ -6615,9 +6834,8 @@ void handleMainUI()
             case ITEM_TELEMETRY_ALARM_THRESHOLD:
               {
                 display.print(F("Threshold:"));
-                printTelemParam(66, ypos, thisTelemIdx, tlm->alarmThreshold);
-                if(!isEmptyStr(tlm->unitsName, sizeof(tlm->unitsName)))
-                  display.print(tlm->unitsName);
+                display.setCursor(66, ypos);
+                printTelemParam(thisTelemIdx, tlm->alarmThreshold, true);
                 if(edit)
                   tlm->alarmThreshold = incDec(tlm->alarmThreshold, -30000, 30000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
               }
@@ -6653,7 +6871,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 8, listItemCount, topItem, 7, 7 * 8);
+        drawScrollBar(127, 8, listItemCount, topItem, 7, 7 * 8);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -6663,7 +6881,7 @@ void handleMainUI()
       
     case CONFIRMATION_DELETE_SENSOR:
       {
-        printFullScreenMsg(PSTR("Delete sensor?\n\nYes [Up] \nNo [Down]"));
+        printFullScreenMessage(PSTR("Delete sensor?\n\nYes [Up] \nNo [Down]"));
         if(clickedButton == KEY_UP)
         {
           resetTelemParams(thisTelemIdx);
@@ -6689,6 +6907,166 @@ void handleMainUI()
         }
         else if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT) //exit
           changeToScreen(SCREEN_TELEMETRY);
+      }
+      break;
+
+    case SCREEN_TELEMETRY_GNSS:
+      {
+        drawHeader(PSTR("GNSS data"));
+
+        enum {
+          ITEM_SATELLITES,
+          ITEM_DISTANCE,
+          ITEM_SPEED,
+          ITEM_COURSE,
+          ITEM_AGL_ALTITUDE,
+          ITEM_MSL_ALTITUDE,
+          ITEM_LATITUDE,
+          ITEM_LONGITUDE,
+
+          ITEM_COUNT
+        };
+
+        //initialise
+        static uint8_t thisPage = 1;
+        static bool viewInitialised = false;
+        if(!viewInitialised)
+        {
+          thisPage = 1;
+          viewInitialised = true;
+        }
+
+        //handle navigation
+        uint8_t numPages = (ITEM_COUNT + 5) / 6;
+        isEditMode = true;
+        thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+
+        //fill list
+        for(uint8_t line = 0; line < 6 && line < ITEM_COUNT; line++)
+        {
+          uint8_t ypos = 9 + line * 9;
+          uint8_t itemID = (thisPage - 1) * 6 + line;
+          if(itemID >= ITEM_COUNT)
+            break;
+
+          display.setCursor(0, ypos);
+          switch(itemID)
+          {
+            case ITEM_SATELLITES:
+              {
+                display.print(F("Satellites:"));
+                display.setCursor(66, ypos);
+                display.print(GNSSTelemetryData.satellitesInUse);
+                display.print(F("/"));
+                display.print(GNSSTelemetryData.satellitesInView);
+              }
+              break;
+
+            case ITEM_LATITUDE:
+              {
+                display.print(F("Latitude:"));
+                display.setCursor(66, ypos);
+                if(GNSSTelemetryData.satellitesInUse != 0)
+                  printFixedPointVal(GNSSTelemetryData.latitude, 5);
+                else
+                  printFixedPointVal(Sys.gnssLastKnownLatitude, 5);
+                display.write(0xF8);
+              }
+              break;
+
+            case ITEM_LONGITUDE:
+              {
+                display.print(F("Longitude:"));
+                display.setCursor(66, ypos);
+                if(GNSSTelemetryData.satellitesInUse != 0)
+                  printFixedPointVal(GNSSTelemetryData.longitude, 5);
+                else
+                  printFixedPointVal(Sys.gnssLastKnownLongitude, 5);
+                display.write(0xF8);
+              }
+              break;
+
+            case ITEM_MSL_ALTITUDE:
+              {
+                display.print(F("Altitude:"));
+                display.setCursor(66, ypos);
+                display.print(GNSSTelemetryData.altitude);
+                display.setCursor(display.getCursorX() + 3, ypos);
+                display.print(F("m"));
+                display.setCursor(108, ypos);
+                display.print(F("MSL"));
+              }
+              break;
+
+            case ITEM_AGL_ALTITUDE:
+              {
+                display.print(F("Altitude:"));
+                display.setCursor(66, ypos);
+                display.print(GNSSTelemetryData.altitude - Sys.gnssAltitudeOffset);
+                display.setCursor(display.getCursorX() + 3, ypos);
+                display.print(F("m"));
+                display.setCursor(108, ypos);
+                display.print(F("AGL"));
+              }
+              break;
+
+            case ITEM_DISTANCE:
+              {
+                display.print(F("Distance:"));
+                display.setCursor(66, ypos);
+                if(gnssDistanceFromHome < 1000)
+                {
+                  display.print(gnssDistanceFromHome);
+                  display.setCursor(display.getCursorX() + 3, ypos);
+                  display.print(F("m"));
+                }
+                else
+                {
+                  if(gnssDistanceFromHome < 100000)
+                    printFixedPointVal(gnssDistanceFromHome, 3);
+                  else
+                    printFixedPointVal(gnssDistanceFromHome / 100, 1);
+                  display.setCursor(display.getCursorX() + 3, ypos);
+                  display.print(F("km"));
+                }
+              }
+              break;
+            
+            case ITEM_SPEED:
+              {
+                display.print(F("Speed:"));
+                display.setCursor(66, ypos);
+                display.print(GNSSTelemetryData.speed / 10);
+                display.print(F("."));
+                display.print(GNSSTelemetryData.speed % 10);
+                display.setCursor(display.getCursorX() + 3, ypos);
+                display.print(F("m/s"));
+              }
+              break;
+
+            case ITEM_COURSE:
+              {
+                display.print(F("Course:"));
+                display.setCursor(66, ypos);
+                display.print(GNSSTelemetryData.course / 10);
+                display.print(F("."));
+                display.print(GNSSTelemetryData.course % 10);
+                display.write(0xF8);
+              }
+              break;
+          }
+        }
+
+        //Draw scroll bar
+        drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
+
+        //exit
+        if(heldButton == KEY_SELECT)
+        {
+          changeToScreen(SCREEN_TELEMETRY);
+          viewInitialised = false;
+        }
+
       }
       break;
       
@@ -6844,6 +7222,7 @@ void handleMainUI()
                 else
                 {
                   display.print(Sys.inactivityMinutes);
+                  display.setCursor(display.getCursorX() + 3, display.getCursorY());
                   display.print(F("min"));
                 }
                 if(edit)
@@ -6900,7 +7279,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 9, listItemCount, topItem, 6, 6 * 9);
+        drawScrollBar(127, 9, listItemCount, topItem, 6, 6 * 9);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -6917,7 +7296,7 @@ void handleMainUI()
         
         display.setCursor(0, 9);
         display.print(F("Enable:"));
-        drawCheckbox(78, 9, Sys.backlightEnabled);
+        drawCheckbox(72, 9, Sys.backlightEnabled);
         
         if(Sys.backlightEnabled)
         {
@@ -6925,27 +7304,27 @@ void handleMainUI()
           
           display.setCursor(0, 18);
           display.print(F("Brightness:"));
-          display.setCursor(78, 18);
+          display.setCursor(72, 18);
           display.print(Sys.backlightLevel);
           display.print(F("%"));
           
           display.setCursor(0, 27);
           display.print(F("Timeout:"));
-          display.setCursor(78, 27);
+          display.setCursor(72, 27);
           display.print(findStringInIdStr(enum_BacklightTimeout, Sys.backlightTimeout));
           
           display.setCursor(0, 36);
           display.print(F("Wake up:"));
-          display.setCursor(78, 36);
+          display.setCursor(72, 36);
           display.print(findStringInIdStr(enum_BacklightWakeup, Sys.backlightWakeup));
           
           display.setCursor(0, 45);
           display.print(F("Key filter:"));
-          drawCheckbox(78, 45, Sys.backlightSuppressFirstKey);
+          drawCheckbox(72, 45, Sys.backlightSuppressFirstKey);
         }
         
         toggleEditModeOnSelectClicked();
-        drawCursor(70, focusedItem * 9);
+        drawCursor(64, focusedItem * 9);
         
         //edit
         if(focusedItem == 1)
@@ -6978,8 +7357,8 @@ void handleMainUI()
           ITEM_USE_ROUND_CORNERS,
           ITEM_ENABLE_ANIMATIONS,
           ITEM_AUTOHIDE_TRIMS,
+          ITEM_ALWAYS_SHOW_HOURS_FOR_TIMERS, //todo better name
           ITEM_USE_NUMERICAL_BATTERY_INDICATOR,
-          ITEM_SCROLL_BAR_STYLE,
           ITEM_SHOW_WELCOME_MSG,
           ITEM_SHOW_SPLASH_SCREEN,
           
@@ -7023,80 +7402,98 @@ void handleMainUI()
           {
             case ITEM_SHOW_MENU_ICONS:
               {
-                display.print(F("Menu icons:")); drawCheckbox(102, ypos, Sys.showMenuIcons);
-                if(edit) Sys.showMenuIcons = incDec(Sys.showMenuIcons, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                display.print(F("Menu icons:")); 
+                drawCheckbox(102, ypos, Sys.showMenuIcons);
+                if(edit) 
+                  Sys.showMenuIcons = incDec(Sys.showMenuIcons, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
               
             case ITEM_KEEP_MENU_POSITION:
               {
-                display.print(F("Keep menu pstn:")); drawCheckbox(102, ypos, Sys.rememberMenuPosition);
-                if(edit) Sys.rememberMenuPosition = incDec(Sys.rememberMenuPosition, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                display.print(F("Keep menu pstn:")); 
+                drawCheckbox(102, ypos, Sys.rememberMenuPosition);
+                if(edit) 
+                  Sys.rememberMenuPosition = incDec(Sys.rememberMenuPosition, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
 
             case ITEM_USE_DENSER_MENUS:
               {
-                display.print(F("Denser menus:")); drawCheckbox(102, ypos, Sys.useDenserMenus);
-                if(edit) Sys.useDenserMenus = incDec(Sys.useDenserMenus, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                display.print(F("Denser menus:")); 
+                drawCheckbox(102, ypos, Sys.useDenserMenus);
+                if(edit) 
+                  Sys.useDenserMenus = incDec(Sys.useDenserMenus, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
               
             case ITEM_USE_ROUND_CORNERS:
               {
-                display.print(F("Round corners:")); drawCheckbox(102, ypos, Sys.useRoundRect);
-                if(edit) Sys.useRoundRect = incDec(Sys.useRoundRect, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-              }
-              break;
-
-            case ITEM_SCROLL_BAR_STYLE:
-              {
-                display.print(F("Scrollbar style:")); 
-                display.setCursor(102, ypos);
-                display.print(Sys.scrollBarStyle);
-                if(edit) Sys.scrollBarStyle = incDec(Sys.scrollBarStyle, 1, 3, INCDEC_WRAP, INCDEC_SLOW);
+                display.print(F("Round corners:")); 
+                drawCheckbox(102, ypos, Sys.useRoundRect);
+                if(edit) 
+                  Sys.useRoundRect = incDec(Sys.useRoundRect, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
               
             case ITEM_ENABLE_ANIMATIONS:
               {
-                display.print(F("Animations:")); drawCheckbox(102, ypos, Sys.animationsEnabled);
-                if(edit) Sys.animationsEnabled = incDec(Sys.animationsEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                display.print(F("Animations:")); 
+                drawCheckbox(102, ypos, Sys.animationsEnabled);
+                if(edit) 
+                  Sys.animationsEnabled = incDec(Sys.animationsEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
               
             case ITEM_AUTOHIDE_TRIMS:
               {
-                display.print(F("Autohide trims:")); drawCheckbox(102, ypos, Sys.autohideTrims);
-                if(edit) Sys.autohideTrims = incDec(Sys.autohideTrims, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                display.print(F("Autohide trims:")); 
+                drawCheckbox(102, ypos, Sys.autohideTrims);
+                if(edit) 
+                  Sys.autohideTrims = incDec(Sys.autohideTrims, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
             
             case ITEM_SHOW_SPLASH_SCREEN:
               {
-                display.print(F("Splash screen:")); drawCheckbox(102, ypos, Sys.showSplashScreen);
-                if(edit) Sys.showSplashScreen = incDec(Sys.showSplashScreen, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                display.print(F("Splash screen:")); 
+                drawCheckbox(102, ypos, Sys.showSplashScreen);
+                if(edit) 
+                  Sys.showSplashScreen = incDec(Sys.showSplashScreen, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
             
             case ITEM_SHOW_WELCOME_MSG:
               {
-                display.print(F("Welcome msg:")); drawCheckbox(102, ypos, Sys.showWelcomeMsg);
-                if(edit) Sys.showWelcomeMsg = incDec(Sys.showWelcomeMsg, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                display.print(F("Welcome msg:")); 
+                drawCheckbox(102, ypos, Sys.showWelcomeMessage);
+                if(edit) 
+                  Sys.showWelcomeMessage = incDec(Sys.showWelcomeMessage, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
 
             case ITEM_USE_NUMERICAL_BATTERY_INDICATOR:
               {
-                display.print(F("Numeric BattV:")); drawCheckbox(102, ypos, Sys.useNumericalBatteryIndicator);
-                if(edit) Sys.useNumericalBatteryIndicator = incDec(Sys.useNumericalBatteryIndicator, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                display.print(F("Numeric Batt V:")); 
+                drawCheckbox(102, ypos, Sys.useNumericalBatteryIndicator);
+                if(edit) 
+                  Sys.useNumericalBatteryIndicator = incDec(Sys.useNumericalBatteryIndicator, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+
+            case ITEM_ALWAYS_SHOW_HOURS_FOR_TIMERS:
+              {
+                display.print(F("Always show hr:")); //todo better name
+                drawCheckbox(102, ypos, Sys.alwaysShowHours);
+                if(edit)
+                  Sys.alwaysShowHours = incDec(Sys.alwaysShowHours, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
           }
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 9, ITEM_COUNT, topItem, 6, 6 * 9);
+        drawScrollBar(127, 9, ITEM_COUNT, topItem, 6, 6 * 9);
         
         //exit
         if(heldButton == KEY_SELECT)
@@ -7261,8 +7658,8 @@ void handleMainUI()
                 
                 display.setCursor(0, ypos);
                 uint8_t idx = item - 1;
-                getSrcName(txtBuff, SRC_STICK_AXIS_FIRST + idx, sizeof(txtBuff));
-                display.print(txtBuff);
+                getSrcName(textBuff, SRC_STICK_AXIS_FIRST + idx, sizeof(textBuff));
+                display.print(textBuff);
                 display.print(F(":"));
                 
                 display.setCursor(30, ypos);
@@ -7270,7 +7667,7 @@ void handleMainUI()
               }
               
               //Draw scroll bar
-              drawScrollBar(125, 9, numItems, topItem, 4, 44);
+              drawScrollBar(127, 9, numItems, topItem, 4, 44);
               
               //'next' or 'finish' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -7327,9 +7724,9 @@ void handleMainUI()
           case PAGE_MOVE_STICKS:
             {
               if(hasSelfCenteringAxes)
-                printFullScreenMsg(PSTR("Move sticks fully,\nthen center them.\n"));
+                printFullScreenMessage(PSTR("Move sticks fully,\nthen center them.\n"));
               else
-                printFullScreenMsg(PSTR("Move sticks fully\n"));
+                printFullScreenMessage(PSTR("Move sticks fully\n"));
                 
               calibrateSticks(CALIBRATE_MOVE);
 
@@ -7393,8 +7790,8 @@ void handleMainUI()
                 uint8_t idx = item - 1;
 
                 display.setCursor(0, ypos);
-                getSrcName(txtBuff, SRC_STICK_AXIS_FIRST + idx, sizeof(txtBuff));
-                display.print(txtBuff);
+                getSrcName(textBuff, SRC_STICK_AXIS_FIRST + idx, sizeof(textBuff));
+                display.print(textBuff);
                 display.print(F(":"));
                 
                 display.setCursor(30, ypos);
@@ -7413,7 +7810,7 @@ void handleMainUI()
               }
               
               //Draw scroll bar
-              drawScrollBar(125, 9, numItems, topItem, 4, 44);
+              drawScrollBar(127, 9, numItems, topItem, 4, 44);
               
               //'next' or 'finish' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -7562,8 +7959,8 @@ void handleMainUI()
                 
                 display.setCursor(0, ypos);
                 uint8_t idx = item - 1;
-                getSrcName(txtBuff, SRC_KNOB_FIRST + idx, sizeof(txtBuff));
-                display.print(txtBuff);
+                getSrcName(textBuff, SRC_KNOB_FIRST + idx, sizeof(textBuff));
+                display.print(textBuff);
                 display.print(F(":"));
                 
                 display.setCursor(48, ypos);
@@ -7571,7 +7968,7 @@ void handleMainUI()
               }
               
               //Draw scroll bar
-              drawScrollBar(125, 9, numItems, topItem, 4, 44);
+              drawScrollBar(127, 9, numItems, topItem, 4, 44);
               
               //'next' or 'finish' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -7628,9 +8025,9 @@ void handleMainUI()
           case PAGE_MOVE_KNOBS:
             {
               if(hasCenterDetentKnobs)
-                printFullScreenMsg(PSTR("Move knobs fully,\nthen center them.\n"));
+                printFullScreenMessage(PSTR("Move knobs fully,\nthen center them.\n"));
               else
-                printFullScreenMsg(PSTR("Move knobs fully\n"));
+                printFullScreenMessage(PSTR("Move knobs fully\n"));
               
               calibrateKnobs(CALIBRATE_MOVE);
               
@@ -7694,8 +8091,8 @@ void handleMainUI()
                 uint8_t idx = item - 1;
 
                 display.setCursor(0, ypos);
-                getSrcName(txtBuff, SRC_KNOB_FIRST + idx, sizeof(txtBuff));
-                display.print(txtBuff);
+                getSrcName(textBuff, SRC_KNOB_FIRST + idx, sizeof(textBuff));
+                display.print(textBuff);
                 display.print(F(":"));
                 
                 display.setCursor(48, ypos);
@@ -7714,7 +8111,7 @@ void handleMainUI()
               }
               
               //Draw scroll bar
-              drawScrollBar(125, 9, numItems, topItem, 4, 44);
+              drawScrollBar(127, 9, numItems, topItem, 4, 44);
               
               //'next' or 'finish' button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -7786,7 +8183,7 @@ void handleMainUI()
 
         if(showWarning)
         {
-          printFullScreenMsg(PSTR("\nThese settings might\naffect your existing\nmodels.\n\n[OK] to continue"));
+          printFullScreenMessage(PSTR("\nThese settings might\naffect your existing\nmodels.\n\n[OK] to continue"));
           if(clickedButton == KEY_SELECT)
             showWarning = false;
           else if(heldButton == KEY_SELECT)
@@ -7804,18 +8201,18 @@ void handleMainUI()
         {
           uint8_t ypos = 9 + line * 9;
           if(focusedItem == topItem + line)
-            drawCursor(64, ypos);
+            drawCursor(58, ypos);
           display.setCursor(0, ypos);
           uint8_t idx = line + topItem - 1;
           display.print(F("Switch "));
           display.write(65 + idx);
           display.print(F(":"));
-          display.setCursor(72, ypos);
+          display.setCursor(66, ypos);
           display.print(findStringInIdStr(enum_SwitchType, Sys.swType[idx]));
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 9, NUM_PHYSICAL_SWITCHES, topItem, end, hasNextButton ? 44 : 54);
+        drawScrollBar(127, 9, NUM_PHYSICAL_SWITCHES, topItem, end, hasNextButton ? 44 : 54);
         
         //show the 'next' button
         if(hasNextButton)
@@ -8219,7 +8616,7 @@ void handleMainUI()
               {
                 display.print(F("Inactvty:"));
                 display.setCursor(72, ypos);
-                printHHMMSS(millis() - inputsLastMoved);
+                printHHMMSS(millis() - inputsLastMovedTime);
               }
               break;
             
@@ -8228,6 +8625,7 @@ void handleMainUI()
                 display.print(F("Free ram:"));
                 display.setCursor(72, ypos);
                 display.print(getFreeRam());
+                display.setCursor(display.getCursorX() + 3, ypos);
                 display.print(F("bytes"));
               }
               break;
@@ -8245,6 +8643,7 @@ void handleMainUI()
                 display.print(F("Fxd loop:"));
                 display.setCursor(72, ypos);
                 display.print(fixedLoopTime);
+                display.setCursor(display.getCursorX() + 3, ypos);
                 display.print(F("ms"));
               }
               break;
@@ -8282,7 +8681,7 @@ void handleMainUI()
           needsUpdate = true;
           page = 0;
           //save data first at once, as there could be pending writes
-          showWaitMsg();
+          showWaitMessage();
           stopTones();
           eeSaveModelData(Sys.activeModelIdx);
           eeSaveSysConfig();
@@ -8299,13 +8698,13 @@ void handleMainUI()
         if(needsUpdate)
         {
           needsUpdate = false;
-          for(uint8_t idx = 0; idx < 32 && idx < sizeof(txtBuff); idx++)
+          for(uint8_t idx = 0; idx < 32 && idx < sizeof(textBuff); idx++)
           {
             uint32_t addr = ((int32_t)page * 32) + idx;
             if(theScreen == SCREEN_EXTERNAL_EEPROM_DUMP)
-              txtBuff[idx] = eeExternalEEReadByte(addr);
+              textBuff[idx] = eeExternalEEReadByte(addr);
             else
-              txtBuff[idx] = eeInternalEEReadByte(addr);
+              textBuff[idx] = eeInternalEEReadByte(addr);
           }
         }
 
@@ -8341,7 +8740,7 @@ void handleMainUI()
           {
             display.setCursor(36 + col * 15, line * 8);
             uint8_t idx = (line * 4) + col;
-            uint8_t val = txtBuff[idx];
+            uint8_t val = textBuff[idx];
             if(val < 0x10)
               display.print(F("0"));
             display.print(val, 16); //print as hex
@@ -8356,7 +8755,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(125, 0, numPages, page + 1, 1, 1 * 64);
+        drawScrollBar(127, 0, numPages, page + 1, 1, 1 * 64);
         
         //Exit
         if(heldButton == KEY_SELECT)
@@ -8400,7 +8799,7 @@ void handleMainUI()
         }
         
         //show scrollbar
-        drawScrollBar(125, 11, numPages, thisPage, 1, 1 * 53);
+        drawScrollBar(127, 11, numPages, thisPage, 1, 1 * 53);
         
         //Exit
         if(heldButton == KEY_SELECT)
@@ -8417,7 +8816,7 @@ void handleMainUI()
 
         if(!sdHasCard())
         {
-          printFullScreenMsg(PSTR("SD card not found"));
+          printFullScreenMessage(PSTR("SD card not found"));
           if(heldButton == KEY_SELECT)
             changeToScreen(SCREEN_DEBUG);
           break;
@@ -8436,8 +8835,8 @@ void handleMainUI()
         display.setCursor(0, 9);
         display.print(F("Switch:"));
         display.setCursor(66, 9);
-        getControlSwitchName(txtBuff, tempSwtch, sizeof(txtBuff));
-        display.print(txtBuff);
+        getControlSwitchName(textBuff, tempSwtch, sizeof(textBuff));
+        display.print(textBuff);
         
         display.setCursor(0, 46);
         display.print(F("(These settings are\ntemporary.)"));
@@ -8469,7 +8868,7 @@ void handleMainUI()
       
     case CONFIRMATION_FACTORY_RESET:
       {
-        printFullScreenMsg(PSTR("Factory reset will\nerase all data,\nincluding models."
+        printFullScreenMessage(PSTR("Factory reset will\nerase all data,\nincluding models."
                                 "\nPress [UP]\nrepeatedly\nto confirm."));
         //trigger action
         static uint8_t cntr = 0;
@@ -8492,7 +8891,7 @@ void handleMainUI()
             inactivityAlarmHandler();
             playTones();
             display.clearDisplay();
-            printFullScreenMsg(PSTR("All data has\nbeen erased.\nReboot to continue"));
+            printFullScreenMessage(PSTR("All data has\nbeen erased.\nReboot to continue"));
             display.display();
           }
         }
@@ -8635,7 +9034,7 @@ void handleMainUI()
           game = (struct FlappyGame *)malloc(sizeof(struct FlappyGame));
           if(game == NULL) //allocation failed
           {
-            showMsg(PSTR("Failed to allocate\nmemory for game"));
+            showMessage(PSTR("Failed to allocate\nmemory for game"));
             delay(2000);
             //force exit
             changeToScreen(SCREEN_ABOUT);
@@ -8653,7 +9052,7 @@ void handleMainUI()
         {
           case GAME_STATE_INIT:
             {
-              printFullScreenMsg(PSTR("Get ready"));
+              printFullScreenMessage(PSTR("Get ready"));
               if(clickedButton == KEY_SELECT || millis() - buttonReleaseTime > 1000)
               {
                 //initialise variables
@@ -8684,11 +9083,11 @@ void handleMainUI()
               // i.e s = ut + 1/2at^2 and v = u + at
               //As our time is discrete, we treat it as 1 time unit, and can then simply
               //add the current y position to the previous y position. We also do same for velocity.
-              //Now when we want to move the bird up on key event, we simply assign a fixed negative
-              //value to the velocity (not realistic physics).
+              //To move the bird up on key event, we simply assign a fixed negative value 
+              //to the velocity (not realistic physics).
               
               if(pressedButton == KEY_SELECT || pressedButton == KEY_UP)
-                game->velocity = -1.043; //about some constant*sqrt(GRAVITY). Constant determined to be about 4
+                game->velocity = -1.043; //about some constant * sqrt(GRAVITY). Constant determined to be about 4
               
               //s = ut + 1/2at^2, v = u + at, time is unity and discrete
               game->birdY += game->velocity + (GRAVITY / 2.0);
@@ -8905,38 +9304,125 @@ void handleMainUI()
           numPages = 1;
         
         static uint8_t page = PAGE_MAIN_RECEIVER;
-        if(focusedItem == 1)
-          page = incDec(page, 0, numPages - 1, INCDEC_WRAP, INCDEC_SLOW);
-        
+
         isMainReceiver = (page == PAGE_MAIN_RECEIVER);
-        
-        //--- draw
-        
+
         display.setCursor(8, 9);
-        strlcpy_P(txtBuff, isMainReceiver ? PSTR("Main rcvr") : PSTR("Secondary rcvr"), sizeof(txtBuff));
-        display.print(txtBuff);
+        strlcpy_P(textBuff, isMainReceiver ? PSTR("Main rcvr") : PSTR("Secondary rcvr"), sizeof(textBuff));
+        display.print(textBuff);
         display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
+
+        enum {
+          ITEM_SECONDARY_RECEIVER_ENABLED,
+          ITEM_BIND,
+          ITEM_CONFIGURE,
+
+          ITEM_COUNT
+        };
+
+        uint8_t listItemIDs[ITEM_COUNT]; 
+        uint8_t listItemCount = 0;
         
-        display.setCursor(8, 20);
-        display.print(F("[Bind]"));
-        
-        display.setCursor(8, 29);
-        display.print(F("[Configure]"));
-        
-        if(focusedItem == 1) drawCursor(0, 9);
-        else drawCursor(0, (focusedItem * 9) + 2);
-        
-        changeFocusOnUpDown(3);
-        toggleEditModeOnSelectClicked();
-        
-        //--- edit items
-        if(focusedItem == 2 && isEditMode) //Bind
+        //add item Ids to the list of Ids
+        for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
         {
-          isRequestingBind = true;
-          changeToScreen(SCREEN_RECEIVER_BINDING);
+          if(page == PAGE_MAIN_RECEIVER)
+          {
+            if(i == ITEM_SECONDARY_RECEIVER_ENABLED)
+              continue;
+          }
+          else if(page == PAGE_SECONDARY_RECEIVER)
+          {
+            if(!Model.secondaryRcvrEnabled && i != ITEM_SECONDARY_RECEIVER_ENABLED)
+              continue;
+          }
+
+          listItemIDs[listItemCount++] = i;
         }
-        else if(focusedItem == 3 && isEditMode) //Output configuration
-          changeToScreen(SCREEN_RECEIVER_CONFIG);
+        
+        //initialise
+        static uint8_t topItem;
+        static bool viewInitialised = false;
+        if(!viewInitialised)
+        {
+          focusedItem = 1;
+          topItem = 1;
+          viewInitialised = true;
+        }
+        
+        //handle navigation
+        changeFocusOnUpDown(listItemCount + 1); //+1 for title focus
+        toggleEditModeOnSelectClicked();
+        if(focusedItem == 1) //title focus
+          topItem = 1;
+        else if(focusedItem > 1)
+        {
+          if(focusedItem - 1 < topItem)
+            topItem = focusedItem - 1;
+          while(focusedItem - 1 >= topItem + 5)
+            topItem++;
+        }
+
+        //fill list and edit items
+        for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
+        {
+          uint8_t ypos = 20 + line*9;
+          if(focusedItem - 1 == topItem + line)
+            drawCursor(0, ypos);
+          
+          if((topItem - 1 + line) >= listItemCount)
+            break;
+          
+          uint8_t itemID = listItemIDs[topItem - 1 + line];
+          bool isFocused = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2]);
+          
+          display.setCursor(8, ypos);
+          switch(itemID)
+          { 
+            case ITEM_BIND:
+              {
+                display.print(F("[Bind]"));
+                if(isFocused && clickedButton == KEY_SELECT)
+                {
+                  isRequestingBind = true;
+                  changeToScreen(SCREEN_RECEIVER_BINDING);
+                }
+              }
+              break;
+            
+            case ITEM_CONFIGURE:
+              {
+                display.print(F("[Configure]"));
+                if(isFocused && clickedButton == KEY_SELECT)
+                {
+                  changeToScreen(SCREEN_RECEIVER_CONFIG);
+                }
+              }
+              break;
+              
+            case ITEM_SECONDARY_RECEIVER_ENABLED:
+              {
+                drawCheckbox(8, ypos, Model.secondaryRcvrEnabled);
+                display.setCursor(18, ypos);
+                display.print(F("Enable"));
+                if(isFocused && isEditMode)
+                {
+                  Model.secondaryRcvrEnabled = incDec(Model.secondaryRcvrEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                }
+              }
+              break;
+          }
+        }
+        
+        //scrollbar
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
+
+        //change to next receiver
+        if(focusedItem == 1)
+        {
+          drawCursor(0, 9);
+          page = incDec(page, 0, numPages - 1, INCDEC_WRAP, INCDEC_SLOW);
+        }
 
         //exit
         if(heldButton == KEY_SELECT)
@@ -8955,7 +9441,7 @@ void handleMainUI()
           bindStatusCode = 0;
         }
 
-        printFullScreenMsg(PSTR("Binding"));
+        printFullScreenMessage(PSTR("Binding"));
         if(Sys.animationsEnabled)
           drawLoaderSpinner(60, display.getCursorY() + 12, 2);
         
@@ -9002,13 +9488,14 @@ void handleMainUI()
           entryTime = millis();
           gotOutputChConfig = false;
           stateInitialised = true;
+          receiverConfigStatusCode = 0;
         }
         
         switch(state)
         {
           case QUERYING_CONFIG:
             {
-              printFullScreenMsg(PSTR("Reading settings"));
+              printFullScreenMessage(PSTR("Reading settings"));
               if(Sys.animationsEnabled)
                 drawLoaderSpinner(60, display.getCursorY() + 12, 2);
               
@@ -9023,7 +9510,7 @@ void handleMainUI()
                 state = VIEWING_CONFIG;
               }
               //Time out
-              if(millis() - entryTime > 2500)
+              if(millis() - entryTime > 3000)
               {
                 makeToast(PSTR("No response"), 2000, 0);
                 stateInitialised = false;
@@ -9054,13 +9541,6 @@ void handleMainUI()
             
               uint8_t startIdx = 0; 
               uint8_t endIdx = MAX_CHANNELS_PER_RECEIVER - 1;
-              if(!isMainReceiver)
-              {
-                startIdx = endIdx + 1; 
-                endIdx = startIdx + MAX_CHANNELS_PER_RECEIVER - 1;
-                if(endIdx >= NUM_RC_CHANNELS)
-                  endIdx = NUM_RC_CHANNELS - 1;
-              }
               
               //fill list
               uint8_t numItems = (endIdx - startIdx) + 1; 
@@ -9076,7 +9556,10 @@ void handleMainUI()
                 if(idx <= endIdx)
                 {
                   display.print(F("Ch"));
-                  display.print(idx + 1);
+                  if(isMainReceiver)
+                    display.print(idx + 1);
+                  else
+                    display.print(idx + 1 + MAX_CHANNELS_PER_RECEIVER);
                   display.print(F(":"));
                   display.setCursor(42, ypos);
                   uint8_t val = outputChConfig[idx] & 0x03;
@@ -9085,7 +9568,7 @@ void handleMainUI()
               }
               
               //Draw scroll bar
-              drawScrollBar(125, 9, numItems, topItem, 4, 44);
+              drawScrollBar(127, 9, numItems, topItem, 4, 44);
               
               //show the write button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -9152,13 +9635,6 @@ void handleMainUI()
             
               uint8_t startIdx = 0; 
               uint8_t endIdx = MAX_CHANNELS_PER_RECEIVER - 1;
-              if(!isMainReceiver)
-              {
-                startIdx = endIdx + 1; 
-                endIdx = startIdx + MAX_CHANNELS_PER_RECEIVER - 1;
-                if(endIdx >= NUM_RC_CHANNELS)
-                  endIdx = NUM_RC_CHANNELS - 1;
-              }
               
               //fill list
               uint8_t numItems = (endIdx - startIdx) + 1; 
@@ -9167,22 +9643,26 @@ void handleMainUI()
                 uint8_t ypos = 18 + line * 9;
                 uint8_t item = topItem + line;
                 if(focusedItem == item)
-                  drawCursor(34, ypos);
+                  drawCursor(32, ypos);
                 
                 display.setCursor(0, ypos);
                 uint8_t idx = startIdx + item - 1; 
                 if(idx <= endIdx)
                 {
                   display.print(F("Ch"));
-                  display.print(idx + 1);
+                  if(isMainReceiver)
+                    display.print(idx + 1);
+                  else
+                    display.print(idx + 1 + MAX_CHANNELS_PER_RECEIVER);
                   display.print(F(":"));
-                  display.setCursor(42, ypos);
+                  display.setCursor(40, ypos);
                   if((outputChConfig[idx] & 0x03) == SIGNAL_TYPE_SERVOPWM)
                   {
                     uint8_t servoPWMRangeIdx = (outputChConfig[idx] >> 4) & 0x0F;
                     display.print(500 + (servoPWMRangeIdx * 50));
                     display.print(F(" to "));
                     display.print(2500 - (servoPWMRangeIdx * 50));
+                    display.setCursor(display.getCursorX() + 3, ypos);
                     display.print(F("\xE6s"));
                   }
                   else
@@ -9191,7 +9671,7 @@ void handleMainUI()
               }
               
               //Draw scroll bar
-              drawScrollBar(125, 9, numItems, topItem, 4, 44);
+              drawScrollBar(127, 9, numItems, topItem, 4, 44);
               
               //show the write button
               drawDottedHLine(0, 54, 128, BLACK, WHITE);
@@ -9241,7 +9721,7 @@ void handleMainUI()
             
           case SENDING_CONFIG:
             {
-              printFullScreenMsg(PSTR("Writing settings"));
+              printFullScreenMessage(PSTR("Writing settings"));
               if(Sys.animationsEnabled)
                 drawLoaderSpinner(60, display.getCursorY() + 12, 2);
               
@@ -9259,7 +9739,7 @@ void handleMainUI()
                 changeToScreen(SCREEN_RECEIVER);
               }
               //Time out
-              if(millis() - entryTime > 2500)
+              if(millis() - entryTime > 3000)
               {
                 makeToast(PSTR("No response"), 2000, 0);
                 stateInitialised = false;
@@ -9276,9 +9756,9 @@ void handleMainUI()
     
     case SCREEN_TEXT_VIEWER:
       {
-        static uint16_t startPos; //the offset into the string
+        static uint16_t startPos; //the offset into the text
 
-        static uint16_t scrollOffsetQQ[5]; //buffer to help with scrolling
+        static uint16_t scrollOffsetQQ[6]; //buffer to help with scrolling. Stores offsets into the text.
         static uint8_t idxQQ = 0;
         
         static bool initialised = false;
@@ -9289,7 +9769,7 @@ void handleMainUI()
           idxQQ = 0;
         }
         
-        uint16_t pos = startPos; //position in string
+        uint16_t pos = startPos; //position in text
         bool isEnd = false;
         
         //Print the text with both line wrap and word wrap. Word wrap prioritized. 
@@ -9310,20 +9790,20 @@ void handleMainUI()
             //Skip carriage return, or if we are at start of line and the character is a space
             if(c == '\r' || (i == 0 && c == ' '))
             {
-              pos++; //advance position in string
+              pos++; //advance position in text
               continue;
             }
             //Check if it is a new line character
             if(c == '\n')
             {
-              pos++; //advance position in string
+              pos++; //advance position in text
               break;
             }
             //check if it is a form feed character
             if(c == '\f')
             {
               isPageBreak = true;
-              pos++; //advance position in string
+              pos++; //advance position in text
               break;
             }
             
@@ -9349,7 +9829,7 @@ void handleMainUI()
             //Write the character to the screen
             display.setCursor(1 + i*6, 6 + line*9);
             display.write(c);
-            pos++; //advance position in string
+            pos++; //advance position in text
             i++; //advance position in line
           }
           
@@ -9357,12 +9837,7 @@ void handleMainUI()
           i = 0; //reset position in line
           
           if(isPageBreak)
-          {
-            isPageBreak = false;
-            line = 0;
-            i = 0;
             break;
-          }
         }
         
         //Show arrow icons
@@ -9502,6 +9977,7 @@ void changeToScreen(uint8_t scrn)
   isEditMode = false;
   contextMenuTopItem = 1;
   contextMenuFocusedItem = 1;
+  graphYCoordinatesInvalid = true;
   killButtonEvents();
 }
 
@@ -9520,7 +9996,7 @@ void printModelName(char* buff, uint8_t modelIdx)
 
 //--------------------------------------------------------------------------------------------------
 
-void printFullScreenMsg(const char* str)
+void printFullScreenMessage(const char* str)
 {
   if(pgm_read_byte(str) == '\0')
     return;
@@ -9574,8 +10050,10 @@ void printHHMMSS(int32_t millisecs)
   ss = ss - hh * 3600;
   mm = ss / 60;
   ss = ss - mm * 60;
-  if(hh > 0)
+  if(hh > 0 || Sys.alwaysShowHours)
   {
+    if(Sys.alwaysShowHours && hh < 10)
+      display.print(F("0"));
     display.print(hh);
     display.print(F(":"));
   }
@@ -9592,11 +10070,11 @@ void printHHMMSS(int32_t millisecs)
 
 void printTimerValue(uint8_t idx)
 {
-  if(Model.Timer[idx].initialMinutes == 0) //a count up timer
+  if(Model.Timer[idx].initialSeconds == 0) //a count up timer
     printHHMMSS(timerElapsedTime[idx]);
   else //a count down timer
   {
-    uint32_t initMillis = Model.Timer[idx].initialMinutes * 60000UL;
+    uint32_t initMillis = (uint32_t) Model.Timer[idx].initialSeconds * 1000;
     if(timerElapsedTime[idx] < initMillis)
     {
       uint32_t ttqq = initMillis - timerElapsedTime[idx];
@@ -9629,6 +10107,7 @@ void printVoltage(int16_t millivolts)
   if(val < 10) 
     display.print(F("0"));
   display.print(val);
+  display.setCursor(display.getCursorX() + 3, display.getCursorY());
   display.print(F("V"));
 }
 
@@ -9644,7 +10123,57 @@ void printSeconds(int16_t decisecs)
   display.print(decisecs / 10);
   display.print(F("."));
   display.print(decisecs % 10);
+  display.setCursor(display.getCursorX() + 3, display.getCursorY());
   display.print(F("s"));
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void printFixedPointVal(int32_t val, uint8_t decimals) 
+{
+  if(decimals > 9) 
+    decimals = 9; //limit to avoid overflow
+  
+  //handle case of 0 decimals
+  if(decimals == 0) 
+  {
+    display.print(val);
+    return;
+  }
+
+  //precomputed powers of 10 for faster scaling factor calculation
+  static const int32_t powersOf10[] PROGMEM = {
+    1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000
+  };
+  int32_t factor = pgm_read_dword(&powersOf10[decimals]);
+
+  //handle negative values
+  bool isNegative = (val < 0);
+  if(isNegative) 
+  {
+    display.print(F("-"));
+    val = -val;
+  }
+
+  //split the value into integer and fractional parts
+  int32_t integerPart = val / factor;
+  int32_t fractionalPart = val % factor;
+  
+  //print the integer part
+  display.print(integerPart);
+  
+  display.print(F("."));
+  
+  //convert fractional part to string with leading zeros
+  char buffer[12]; //large enough
+  int8_t index = decimals - 1;
+  for(uint8_t i = 0; i < decimals; i++)
+  {
+    buffer[index--] = '0' + (fractionalPart % 10);
+    fractionalPart /= 10;
+  }
+  buffer[decimals] = '\0';
+  display.print(buffer);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -9682,13 +10211,13 @@ void drawCursor(uint8_t xpos, uint8_t ypos)
 
 void drawHeader(const char* str)
 {
-  strlcpy_P(txtBuff, str, sizeof(txtBuff));
-  uint8_t txtWidthPix = strlen(txtBuff) * 6;
-  uint8_t headingXOffset = (display.width() - txtWidthPix) / 2; //middle align heading
+  strlcpy_P(textBuff, str, sizeof(textBuff));
+  uint8_t textWidthPix = strlen(textBuff) * 6;
+  uint8_t headingXOffset = (display.width() - textWidthPix) / 2; //middle align heading
   display.setCursor(headingXOffset, 0);
-  display.print(txtBuff);
+  display.print(textBuff);
   display.drawHLine(0, 3, headingXOffset - 2, BLACK);
-  display.drawHLine(headingXOffset + txtWidthPix + 1, 3, 128 - (headingXOffset + txtWidthPix + 1), BLACK);
+  display.drawHLine(headingXOffset + textWidthPix + 1, 3, 128 - (headingXOffset + textWidthPix + 1), BLACK);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -9699,11 +10228,11 @@ void drawHeader_Menu(const char* str)
     drawHeader(str);
   else
   {
-    strlcpy_P(txtBuff, str, sizeof(txtBuff));
-    uint8_t txtWidthPix = strlen(txtBuff) * 6;
-    uint8_t headingXOffset = (display.width() - txtWidthPix) / 2; //middle align heading
+    strlcpy_P(textBuff, str, sizeof(textBuff));
+    uint8_t textWidthPix = strlen(textBuff) * 6;
+    uint8_t headingXOffset = (display.width() - textWidthPix) / 2; //middle align heading
     display.setCursor(headingXOffset, 0);
-    display.print(txtBuff);
+    display.print(textBuff);
     display.drawHLine(0, 9, 128, BLACK);
   }
 }
@@ -9765,21 +10294,7 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
     if((barYpos + barHeight) > (ypos + viewportHeight))
       barYpos -= 1;
     //draw
-    
-    if(Sys.scrollBarStyle == 1)
-    {
-      display.drawVLine(xpos + 1, barYpos, barHeight, BLACK);
-    }
-    else if(Sys.scrollBarStyle == 2)
-    {
-      display.drawRoundRect(xpos, barYpos, 3, barHeight, Sys.useRoundRect ? 1 : 0, BLACK);
-    }
-    else if(Sys.scrollBarStyle == 3)
-    {
-      display.drawVLine(xpos + 1, ypos, viewportHeight, BLACK);
-      display.drawRoundRect(xpos, barYpos, 3, barHeight, Sys.useRoundRect ? 1 : 0, BLACK);
-      display.drawVLine(xpos + 1, barYpos + 1, barHeight - 2, WHITE);
-    }
+    display.drawVLine(xpos, barYpos, barHeight, BLACK);
   }
 }
 
@@ -9787,7 +10302,7 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
 
 void drawTrimSliders()
 {
-  int8_t x[4] = {12, 2, 71, 125};
+  int8_t x[4] = {15, 2, 68, 125};
   int8_t y[4] = {61, 13, 61, 13};
 
   int16_t val[4];
@@ -9897,16 +10412,16 @@ void drawToast()
         idxLUT = ((endTime - currTime) * (numElem - 1)) / transitionDuration;
       ypos = 63 - pgm_read_byte(&transitionLUT[idxLUT]);
     }
-    uint8_t txtWidthPix = 6 * strlen_P((const char*)toastText); 
-    uint8_t xpos = (display.width() - txtWidthPix) / 2; //middle align text
+    uint8_t textWidthPix = 6 * strlen_P((const char*)toastText); 
+    uint8_t xpos = (display.width() - textWidthPix) / 2; //middle align text
     if(xpos < 5)
       xpos = 5;
-    display.drawRoundRect(xpos - 5, ypos, txtWidthPix + 9, 11, Sys.useRoundRect ? 4 : 0, WHITE);
-    display.fillRoundRect(xpos - 4, ypos + 1, txtWidthPix + 7, 9, Sys.useRoundRect ? 3 : 0, BLACK);
+    display.drawRoundRect(xpos - 5, ypos, textWidthPix + 9, 11, Sys.useRoundRect ? 4 : 0, WHITE);
+    display.fillRoundRect(xpos - 4, ypos + 1, textWidthPix + 7, 9, Sys.useRoundRect ? 3 : 0, BLACK);
     display.setTextColor(WHITE);
     display.setCursor(xpos, ypos + 2);
-    strlcpy_P(txtBuff, toastText, sizeof(txtBuff));
-    display.print(txtBuff);
+    strlcpy_P(textBuff, toastText, sizeof(textBuff));
+    display.print(textBuff);
     display.setTextColor(BLACK);
   }
   else if(currTime > endTime)
@@ -9949,13 +10464,13 @@ void drawDialogCopyMove(const char* str, uint8_t srcIdx, uint8_t destIdx, bool i
   display.setCursor(17, 18);
   if(isCopy) display.print(F("Copy "));
   else display.print(F("Move "));
-  strlcpy_P(txtBuff, str, sizeof(txtBuff));
-  display.print(txtBuff);
+  strlcpy_P(textBuff, str, sizeof(textBuff));
+  display.print(textBuff);
   display.print(srcIdx + 1); 
   display.setCursor(17, 28);
   display.print(F("to:"));
   display.setCursor(47, 28);
-  display.print(txtBuff);
+  display.print(textBuff);
   display.print(destIdx + 1);
   drawCursor(39, 28);
 }
@@ -10029,9 +10544,6 @@ void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src)
   //--- plot graph. Plot area is 50x50 px
   if(crv->smooth)
   {
-    //We cache the y cordinates so we dont have to recompute unnecessarily.
-    static int8_t yCoord[51]; //cache. 51 points to plot in total
-    
     bool changed = false;
     //Instead of wasting RAM storing all previous xVal and yVal, we simply store a 
     //checksum of the curve struct data that has been passed to this function. 
@@ -10051,9 +10563,11 @@ void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src)
       changed = true;
     }
     
-    //recalculate if changed
-    if(changed)
+    //recalculate if changed or invalid
+    if(changed || graphYCoordinatesInvalid)
     {
+      graphYCoordinatesInvalid = false;
+
       int16_t xQQ[MAX_NUM_POINTS_CUSTOM_CURVE];
       int16_t yQQ[MAX_NUM_POINTS_CUSTOM_CURVE];
       for(uint8_t pt = 0; pt < crv->numPoints; pt++)
@@ -10061,11 +10575,11 @@ void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src)
         xQQ[pt] = 5 * crv->xVal[pt];
         yQQ[pt] = 5 * crv->yVal[pt];
       }
-      //compute yCoord
+      //compute y coordinate
       for(int8_t xCoord = -25; xCoord <= 25; xCoord++)
       {
         uint8_t i = 25 + xCoord;
-        yCoord[i] = cubicHermiteInterpolate(xQQ, yQQ, crv->numPoints, xCoord * 20) / 20; 
+        graphYCoord[i] = cubicHermiteInterpolate(xQQ, yQQ, crv->numPoints, xCoord * 20) / 20; 
       }
     }
     
@@ -10091,13 +10605,13 @@ void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src)
           //If the difference between successive y coordinates is more than 1 pixel then draw a line 
           //between the two points to make the graph visually continuous (not broken)
           if(xCoord == xStart)
-            yCoord[i] = yStart;
+            graphYCoord[i] = yStart;
           if(xCoord == xEnd)
-            yCoord[i] = yEnd;
-          if(xCoord > xStart && (abs(yCoord[i] - yCoord[i-1]) > 1))
-            display.drawLine(100 + xCoord - 1, 36 - yCoord[i-1], 100 + xCoord, 36 - yCoord[i], BLACK); 
+            graphYCoord[i] = yEnd;
+          if(xCoord > xStart && (abs(graphYCoord[i] - graphYCoord[i-1]) > 1))
+            display.drawLine(100 + xCoord - 1, 36 - graphYCoord[i-1], 100 + xCoord, 36 - graphYCoord[i], BLACK); 
           else
-            display.drawPixel(100 + xCoord, 36 - yCoord[i], BLACK);
+            display.drawPixel(100 + xCoord, 36 - graphYCoord[i], BLACK);
         }
       }
     }
@@ -10138,51 +10652,48 @@ void drawTelemetryValue(uint8_t xpos, uint8_t ypos, uint8_t idx, int16_t rawVal,
     display.print(F("No data"));
     return;
   }
+
   if(blink && telemetryAlarmState[idx] && (millis() % 1000 > 700)) //flashing effect
     return;
   int32_t tVal = ((int32_t) rawVal * Model.Telemetry[idx].multiplier) / 100;
   tVal += Model.Telemetry[idx].offset;
-  printTelemParam(xpos, ypos, idx, tVal);
-  display.print(Model.Telemetry[idx].unitsName);
+
+  display.setCursor(xpos, ypos);
+  printTelemParam(idx, tVal, true);
 }
 
 //--------------------------------------------------------------------------------------------------
 
-void printTelemParam(uint8_t xpos, uint8_t ypos, uint8_t idx, int32_t val)
+void printTelemParam(uint8_t idx, int32_t val, bool showUnits)
 {
-  uint8_t prec = Model.Telemetry[idx].factor10 >= 0 ? 0 : abs(Model.Telemetry[idx].factor10);
-  bool isNeg = false;
-  bool isDivide = false;
-  int16_t f = 1;
-  if(Model.Telemetry[idx].factor10 < 0) isDivide = true;
-  if(abs(Model.Telemetry[idx].factor10) == 1) f = 10;
-  if(abs(Model.Telemetry[idx].factor10) == 2) f = 100;
-  if(val < 0)
+  int8_t qq = Model.Telemetry[idx].factor10;
+  if(qq < 0)
+    printFixedPointVal(val, -qq);
+  else if(qq == 0)
+    display.print(val);
+  else if(qq > 0)
   {
-    isNeg = true;
-    val = -val;
+    display.print(val);
+    if(val != 0)
+    {
+      while(qq)
+      {
+        display.print(F("0"));
+        qq--;
+      }
+    }
   }
-  int32_t whole = 0, frac = 0, rem = 0;
-  if(isDivide)
+
+  if(showUnits)
   {
-    whole = val / f;
-    rem = val % f;
-    if(prec == 1) frac = (10 * rem) / f;
-    if(prec == 2) frac = (100 * rem) / f;
-  }
-  else
-    whole = val * f; //could overflow
-  
-  display.setCursor(xpos, ypos);
-  if(isNeg)
-    display.print(F("-"));
-  display.print(whole);
-  if(prec > 0)
-  {
-    display.print(F("."));
-    if(prec == 2 && frac < 10) 
-      display.print(F("0"));
-    display.print(frac);
+    bool addSpaceBeforeUnit = true;
+    uint8_t a = Model.Telemetry[idx].unitsName[0];
+    uint8_t b = Model.Telemetry[idx].unitsName[1];
+    if(b == '\0' && (a == '%' || a == 0xF8))
+      addSpaceBeforeUnit = false;
+    if(addSpaceBeforeUnit)
+      display.setCursor(display.getCursorX() + 3, display.getCursorY());
+    display.print(Model.Telemetry[idx].unitsName);
   }
 }
 
@@ -10202,11 +10713,11 @@ void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEm
   //--- draw ---
   drawBoundingBox(11, 14, 105, 35,BLACK);
   display.setCursor(17, 18);
-  strlcpy_P(txtBuff, title, sizeof(txtBuff));
-  display.print(txtBuff);
+  strlcpy_P(textBuff, title, sizeof(textBuff));
+  display.print(textBuff);
   
-  uint8_t txtWidthPix = (lenBuff - 1) * 6;
-  uint8_t xpos = (display.width() - txtWidthPix) / 2; //middle align
+  uint8_t textWidthPix = (lenBuff - 1) * 6;
+  uint8_t xpos = (display.width() - textWidthPix) / 2; //middle align
   display.setCursor(xpos, 28);
   for(uint8_t i = 0; i < lenBuff; i++)
   {
@@ -10354,10 +10865,10 @@ void drawNotificationOverlay(uint8_t idx, uint32_t startTime, uint32_t endTime)
       ypos = 63 - pgm_read_byte(&transitionLUT[idxLUT]);
     }
 
-    uint8_t txtWidthPix = 6 * strlen(Model.CustomNotification[idx].text); 
-    uint8_t xpos = (128 - txtWidthPix) / 2; //middle align text
-    display.drawRoundRect(xpos - 5, ypos, txtWidthPix + 9, 11, Sys.useRoundRect ? 4 : 0, WHITE);
-    display.fillRoundRect(xpos - 4, ypos + 1, txtWidthPix + 7, 9, Sys.useRoundRect ? 3 : 0, BLACK);
+    uint8_t textWidthPix = 6 * strlen(Model.CustomNotification[idx].text); 
+    uint8_t xpos = (128 - textWidthPix) / 2; //middle align text
+    display.drawRoundRect(xpos - 5, ypos, textWidthPix + 9, 11, Sys.useRoundRect ? 4 : 0, WHITE);
+    display.fillRoundRect(xpos - 4, ypos + 1, textWidthPix + 7, 9, Sys.useRoundRect ? 3 : 0, BLACK);
     display.setCursor(xpos, ypos + 2);
     display.setTextColor(WHITE);
     display.print(Model.CustomNotification[idx].text);
@@ -10446,12 +10957,8 @@ void menuDraw(uint8_t *topItem, uint8_t *highlightedItem)
     //highlight selection
     if(*highlightedItem == item)
     {
-      display.fillRoundRect(3, 
-                            Sys.useDenserMenus ? ypos - 2 : ypos - 3, 
-                            _menuItemCount <= numVisible ? 122 : 121, 
-                            lineHeight, 
-                            Sys.useRoundRect ? 4 : 0, 
-                            BLACK);
+      display.fillRoundRect(2, Sys.useDenserMenus ? ypos - 2 : ypos - 3, _menuItemCount <= numVisible ? 124 : 123, 
+                            lineHeight, Sys.useRoundRect ? 4 : 0, BLACK);
       display.setTextColor(WHITE);
     }
     //show icon
@@ -10460,13 +10967,13 @@ void menuDraw(uint8_t *topItem, uint8_t *highlightedItem)
     
     //show text
     display.setCursor((hasMenuIcons && Sys.showMenuIcons) ? 26 : 10, ypos);
-    strlcpy_P(txtBuff, _menuItems[item - 1], sizeof(txtBuff));
-    display.print(txtBuff);
+    strlcpy_P(textBuff, _menuItems[item - 1], sizeof(textBuff));
+    display.print(textBuff);
     display.setTextColor(BLACK);
   }
   
   //scroll bar
-  drawScrollBar(125, Sys.useDenserMenus ? 9 : 11, _menuItemCount, *topItem, numVisible, numVisible * lineHeight);
+  drawScrollBar(127, Sys.useDenserMenus ? 9 : 11, _menuItemCount, *topItem, numVisible, numVisible * lineHeight);
 
   //get the id of the item selected
   menuSelectedItemID = 0xff;
@@ -10517,28 +11024,28 @@ void contextMenuDraw()
   uint8_t y0 = ((display.height() - (numVisible * 10)) / 2) + 1;  //10 is line height
   
   //draw bounding box
-  drawBoundingBox(11, y0 - 4, 105, numVisible * 10 + 5, BLACK);  
+  drawBoundingBox(5, y0 - 4, 117, numVisible * 10 + 5, BLACK);  
   
   //fill list
   for(uint8_t line = 0; line < numVisible; line++)
   {
     uint8_t ypos = y0 + line * 10;
     uint8_t item = contextMenuTopItem + line;
-    strlcpy_P(txtBuff, _menuItems[item-1], sizeof(txtBuff));
+    strlcpy_P(textBuff, _menuItems[item-1], sizeof(textBuff));
     if(item == contextMenuFocusedItem)
     {
-      display.fillRoundRect(13, ypos - 2, _menuItemCount <= maxVisible ? 101 : 97, 11, Sys.useRoundRect ? 4 : 0, BLACK);
+      display.fillRoundRect(7, ypos - 2, _menuItemCount <= maxVisible ? 113 : 109, 11, Sys.useRoundRect ? 4 : 0, BLACK);
       display.setTextColor(WHITE);
     }
-    display.setCursor(17, ypos);
-    display.print(txtBuff);
+    display.setCursor(11, ypos);
+    display.print(textBuff);
     display.setTextColor(BLACK);
   }
   
   //scroll bar
   uint8_t  y = Sys.useRoundRect ? y0 - 1 : y0 - 2;
   uint16_t h = Sys.useRoundRect ? numVisible * 10 - 1 : numVisible * 10 + 1;
-  drawScrollBar(111, y, _menuItemCount, contextMenuTopItem, numVisible, h);
+  drawScrollBar(118, y, _menuItemCount, contextMenuTopItem, numVisible, h);
   
   //get the id of the item selected
   contextMenuSelectedItemID = 0xff;

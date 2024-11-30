@@ -148,7 +148,7 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
     {
       //nothing here
     }
-    else if(i < MIXSOURCES_COUNT) //mix sources
+    else if(i < MIX_SOURCES_COUNT) //mix sources
     {
       if(!(flag & INCDEC_FLAG_MIX_SRC))
       {
@@ -212,9 +212,12 @@ uint8_t incDecSource(uint8_t val, uint8_t flag)
     {
       if(!(flag & INCDEC_FLAG_TELEM_AS_SRC))
         continue;
-      //skip empty telemetry
       uint8_t idx = i - SRC_TELEMETRY_FIRST;
+      //skip empty telemetry
       if(isEmptyStr(Model.Telemetry[idx].name, sizeof(Model.Telemetry[0].name)))
+        continue;
+      //skip special telemetry
+      if(Model.Telemetry[idx].type == TELEMETRY_TYPE_GNSS)
         continue;
     }
     else if(i == SRC_INACTIVITY_TIMER) //inactivity timer
@@ -355,7 +358,7 @@ void makeToast(const char* text, uint16_t duration, uint16_t dly)
 
 bool hasEnoughMixSlots(uint8_t start, uint8_t numRequired)
 {
-  if((start + numRequired) > NUM_MIXSLOTS)
+  if((start + numRequired) > NUM_MIX_SLOTS)
   {
     makeToast(PSTR("Can't load here"), 2000, 0);
     return false;
@@ -368,7 +371,7 @@ bool hasEnoughMixSlots(uint8_t start, uint8_t numRequired)
 
 bool hasOccupiedMixSlots(uint8_t start, uint8_t numRequired)
 {
-  for(uint8_t i = start; i < (start + numRequired) && i < NUM_MIXSLOTS; i++)
+  for(uint8_t i = start; i < (start + numRequired) && i < NUM_MIX_SLOTS; i++)
   {
     if(Model.Mixer[i].output != SRC_NONE || Model.Mixer[i].input != SRC_NONE)
       return true;
@@ -406,8 +409,9 @@ uint8_t getMovedControlSwitch()
   
   //use an array to hold the allowed control switches
   uint8_t swQQ[(NUM_PHYSICAL_SWITCHES * 6) + (CTRL_SW_TRIM_LAST - CTRL_SW_TRIM_FIRST + 1)];
-  static bool lastState[sizeof(swQQ)/sizeof(swQQ[0])];
-  
+
+  static uint8_t lastState[((sizeof(swQQ)/sizeof(swQQ[0])) + 7) / 8]; //store as 1 bit per control switch to save on memory
+
   //populate array
   uint8_t swCount = 0;
   for(uint8_t i = 0; i < CTRL_SW_COUNT; i++)
@@ -435,9 +439,15 @@ uint8_t getMovedControlSwitch()
   for(uint8_t idxQQ = 0; idxQQ < swCount; idxQQ++)
   {
     bool state = checkSwitchCondition(swQQ[idxQQ]);
-    if(state != lastState[idxQQ])
+    uint8_t idxLastState = idxQQ / 8;
+    uint8_t bit = idxQQ % 8;
+    if(state != ((lastState[idxLastState] >> bit) & 0x01))
     {
-      lastState[idxQQ] = state;
+      if(state) //set the bit
+        lastState[idxLastState] |= (1 << bit);
+      else //clear the bit
+        lastState[idxLastState] &= ~(1 << bit);
+        
       if(state && (thisLoopNum - lastLoopNum == 1))
         movedSw = swQQ[idxQQ];
     }
@@ -462,7 +472,7 @@ uint8_t getMovedSource()
 
   //populate array
   uint8_t srcCount = 0; 
-  for(uint8_t i = 0; i < MIXSOURCES_COUNT; i++)
+  for(uint8_t i = 0; i < MIX_SOURCES_COUNT; i++)
   {
     bool valid = false;
     if(i >= SRC_RAW_ANALOG_FIRST && i <= SRC_RAW_ANALOG_LAST)
@@ -578,9 +588,7 @@ void telemetryAlarmHandler()
   }
   
   //--- play audio
-  //TODO change implementation to actually play specified melody.
-  //TODO possibly use an audio queue. Only add melody if its not already queued
-  
+
   static uint8_t tCounter[NUM_CUSTOM_TELEMETRY];
   static bool tWarnStarted[NUM_CUSTOM_TELEMETRY];
   for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
@@ -631,7 +639,7 @@ void inactivityAlarmHandler()
     return;
   
   static uint32_t lastPlayMillis = 0;
-  if((millis() - inputsLastMoved) > ((uint32_t)Sys.inactivityMinutes * 60000 + 7000)) 
+  if((millis() - inputsLastMovedTime) > ((uint32_t)Sys.inactivityMinutes * 60000 + 7000)) 
   {
     //7 seconds added to the above comparison to reduce chances of colliding with other audio
     if(millis() - lastPlayMillis > 30000) //repeat every 30 seconds
@@ -671,9 +679,9 @@ void timerHandler()
       resetTimerRegister(i);
     
     //play sound when timer expires (if count down timer)
-    if(Model.Timer[i].initialMinutes > 0)
+    if(Model.Timer[i].initialSeconds > 0)
     {
-      uint32_t initMillis = Model.Timer[i].initialMinutes * 60000UL;
+      uint32_t initMillis = (uint32_t) Model.Timer[i].initialSeconds * 1000;
       if((timerElapsedTime[i] > initMillis) && timerElapsedTime[i] < (initMillis + 500) && !alarmTriggered[i])
       {
         audioToPlay = AUDIO_TIMER_ELAPSED;

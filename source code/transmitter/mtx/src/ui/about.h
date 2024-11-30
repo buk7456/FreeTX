@@ -13,7 +13,7 @@
 
 static const char versionText[] PROGMEM = 
   "FW version: "
-  _SKETCHVERSION
+  _FIRMWARE_VERSION
   "\n(c) 2020-2024 Buk7456"
   "\nhttps://github.com/\nbuk7456/FreeTX";
 
@@ -28,6 +28,9 @@ static const char thirdPartyNoticesText[] PROGMEM =
   "\f"
   "Arduino-Lora library"
   "\nCopyright (c) 2016 Sandeep Mistry"
+  "\f"
+  "TinyGPS++ library"
+  "\nCopyright (C) 2008-2013 Mikal Hart"
   "\f"
   "Special thanks to all the contributors to the Arduino core "
   "and standard libraries that this software uses.";

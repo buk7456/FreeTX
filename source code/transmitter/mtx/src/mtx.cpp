@@ -14,6 +14,26 @@
 
 uint32_t loopStartTime; //in microseconds
 
+#define UART_FIXED_PACKET_SIZE 48
+
+enum {
+  MESSAGE_TYPE_NONE = 0x00,
+  
+  //mtx to stx
+  MESSAGE_TYPE_RC_DATA = 0x01, 
+  MESSAGE_TYPE_ENTER_BIND = 0X02,
+  MESSAGE_TYPE_GET_RECEIVER_CONFIG = 0x03,
+  MESSAGE_TYPE_WRITE_RECEIVER_CONFIG = 0x04,
+  
+  //stx to mtx
+  MESSAGE_TYPE_BIND_STATUS_CODE = 0x10,
+  MESSAGE_TYPE_RECEIVER_CONFIG = 0x11,
+  MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE = 0x12,
+  MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE = 0x13,
+  MESSAGE_TYPE_TELEMETRY_GENERAL = 0x14,
+  MESSAGE_TYPE_TELEMETRY_GNSS = 0x15,
+};
+
 //---------- Function declarations ---------------
 
 void controlBacklight();
@@ -61,7 +81,7 @@ void setup()
   {
     isSilentMode = true;
     turnOnBacklight();
-    showMuteMsg();
+    showMuteMessage();
     readSwitchesAndButtons();
     delay(30);
   }
@@ -89,8 +109,8 @@ void setup()
   }
 
   //Welcome message
-  if(Sys.showWelcomeMsg)
-    showMsg(PSTR("Welcome"));
+  if(Sys.showWelcomeMessage)
+    showMessage(PSTR("Welcome"));
   
   uint32_t tt = millis();
   
@@ -98,7 +118,7 @@ void setup()
   //moved here as it implicitly blocks for about 2seconds when there is no sd card
   sdStoreInit();
   
-  if(Sys.showWelcomeMsg)
+  if(Sys.showWelcomeMessage)
   {
     tt = millis() - tt;
     if(tt < 1000)
@@ -228,7 +248,7 @@ void controlBacklight()
   if(buttonCode == 0)
     elapsed = millis() - buttonReleaseTime;
   if(Sys.backlightWakeup == BACKLIGHT_WAKEUP_ACTIVITY)
-    elapsed = millis() - inputsLastMoved;
+    elapsed = millis() - inputsLastMovedTime;
   
   static const uint16_t durTable[] PROGMEM = {5, 15, 60, 120, 300, 600, 1800, 0};
   uint32_t duration = (uint32_t) 1000 * pgm_read_word(&durTable[Sys.backlightTimeout]);
@@ -249,246 +269,352 @@ void controlBacklight()
 
 void doSerialCommunication()
 {
-  //See the 'protocol_over_uart.txt' in the doc folder for information about the formats used.
+  uint8_t buffer[UART_FIXED_PACKET_SIZE];
+  memset(buffer, 0, sizeof(buffer));
   
   ///------------- SEND TO SECONDARY MCU --------------
 
-  enum {
-    FLAG_RF_ENABLED       = 0x08,
-    FLAG_WRITE_RX_CONFIG  = 0x10,
-    FLAG_GET_RX_CONFIG    = 0x20,
-    FLAG_GET_TELEMETRY    = 0x40,
-    FLAG_ENTER_BIND       = 0x80,
-  };
-  
-  enum {
-    FLAG_FAILSAFE_DATA    = 0x01,
-    FLAG_MAIN_RECEIVER    = 0x02
-  };
-  
-  const uint8_t NUM_CRC_BYTES = 1;
-  
-  uint8_t dataToSend[2 + (2 * NUM_RC_CHANNELS) + NUM_CRC_BYTES];
-  memset(dataToSend, 0, sizeof(dataToSend));
+  uint8_t messageType = Sys.rfEnabled ? MESSAGE_TYPE_RC_DATA : MESSAGE_TYPE_NONE;
+  uint8_t dataLength = 0;
 
-  uint8_t status0 = 0;
-  uint8_t status1 = 0;
-  
-  //rf power level
-  status0 |= (Sys.rfPower & 0x07);
-  
-  //rf enabled
-  if(Sys.rfEnabled)
-    status0 |= FLAG_RF_ENABLED;
-  
-  //bind
   if(isRequestingBind)
   {
-    status0 |= FLAG_ENTER_BIND;
     isRequestingBind = false;
-  }
-  
-  //alternately send failsafe or request telemetry
-  const uint16_t interval = 740; //the LCM of this value and 1000 should be fairly large
-  if(thisLoopNum % (interval/fixedLoopTime) == 1) 
-    status1 |= FLAG_FAILSAFE_DATA;
-  else if(thisLoopNum % (interval/fixedLoopTime) == interval/(2*fixedLoopTime) + 1)
-  {
-    //only request telemetry when necessary i.e. if there are configured sensors
-    //or we are forcing telemetry request
-    if(telemetryForceRequest)
-      status0 |= FLAG_GET_TELEMETRY;
-    else
-    {
-      for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
-      {
-        if(!isEmptyStr(Model.Telemetry[i].name, sizeof(Model.Telemetry[0].name))) 
-        {
-          status0 |= FLAG_GET_TELEMETRY;
-          break;
-        }
-      }
-    }
+    messageType = MESSAGE_TYPE_ENTER_BIND;
   }
 
-  //requesting receiver configuration
   if(isRequestingOutputChConfig)
   {
-    status0 |= FLAG_GET_RX_CONFIG;
     isRequestingOutputChConfig = false;
-    //unset other flags
-    status0 &= ~FLAG_GET_TELEMETRY; 
+    messageType = MESSAGE_TYPE_GET_RECEIVER_CONFIG;
   }
-  
-  //sending receiver configuration
+
   if(isSendOutputChConfig)
   {
-    status0 |= FLAG_WRITE_RX_CONFIG;
     isSendOutputChConfig = false;
-    //unset other flags
-    status0 &= ~FLAG_GET_TELEMETRY;    
-    status1 &= ~FLAG_FAILSAFE_DATA;
+    messageType = MESSAGE_TYPE_WRITE_RECEIVER_CONFIG;
   }
-  
-  //Indicate which receiver it is. Only matters if bind or receiver configuration
-  if(isMainReceiver)
-    status1 |= FLAG_MAIN_RECEIVER;
 
-  //copy
-  dataToSend[0] = status0;
-  dataToSend[1] = status1;
+  // Build the message body
+  switch(messageType)
+  {
+    case MESSAGE_TYPE_ENTER_BIND:
+    case MESSAGE_TYPE_GET_RECEIVER_CONFIG:
+      {
+        dataLength = 1;
+        buffer[5] = isMainReceiver ? 1 : 0;
+      }
+      break;
+    
+    case MESSAGE_TYPE_WRITE_RECEIVER_CONFIG:
+      {
+        for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
+        {
+          buffer[5 + i] = outputChConfig[i];
+        }
+        uint8_t flagsIdx = 5 + MAX_CHANNELS_PER_RECEIVER;
+        buffer[flagsIdx] = isMainReceiver ? 1 : 0;
+        dataLength = MAX_CHANNELS_PER_RECEIVER + 1;
+      }
+      break;
 
-  //general data
-  if(status0 & FLAG_WRITE_RX_CONFIG) //receiver config data
-  {
-    for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-      dataToSend[2 + i] = outputChConfig[i];
-  }
-  else if(status1 & FLAG_FAILSAFE_DATA) //failsafe data
-  {
-    for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-    {
-      if(Model.Channel[i].failsafe == -102) //failsafe mode Hold, send 1023
+    case MESSAGE_TYPE_RC_DATA:
       {
-        dataToSend[2 + i*2] = 0x03;
-        dataToSend[3 + i*2] = 0xFF;
+        // Alternately send failsafe or request telemetry
+        bool isRequestingTelemetry = false;
+        bool isFailsafeData = false;
+        const uint16_t interval = 740; //the LCM of this value and 1000 should be fairly large
+        if(thisLoopNum % (interval/fixedLoopTime) == 1)
+          isFailsafeData = true;
+        else if(thisLoopNum % (interval/fixedLoopTime) == interval/(2*fixedLoopTime) + 1)
+        {
+          //only request telemetry when necessary i.e. if there are configured sensors
+          //or we are forcing telemetry request
+          if(telemetryForceRequest)
+            isRequestingTelemetry = true;
+          else
+          {
+            for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
+            {
+              if(!isEmptyStr(Model.Telemetry[i].name, sizeof(Model.Telemetry[0].name))) 
+              {
+                isRequestingTelemetry = true;
+                break;
+              }
+            }
+          }
+        }
+
+        uint8_t numChannels = Model.secondaryRcvrEnabled ? NUM_RC_CHANNELS : MAX_CHANNELS_PER_RECEIVER;
+
+        for(uint8_t chIdx = 0; chIdx < numChannels; chIdx++)
+        {
+          uint16_t val = 0;
+
+          if(isFailsafeData)
+          {
+            if(Model.Channel[chIdx].failsafe == -102) //failsafe mode Hold, send 1023
+              val = 1023;
+            else if(Model.Channel[chIdx].failsafe == -101) //failsafe mode No pulse, send 1022
+              val = 1022;
+            else //failsafe is custom value
+            {
+              int16_t fsf = 5 * Model.Channel[chIdx].failsafe;
+              fsf = constrain(fsf, 5 * Model.Channel[chIdx].endpointL, 5 * Model.Channel[chIdx].endpointR);
+              val = fsf + 500;
+            }
+          }
+          else //real time rc data
+          {
+            val = channelOut[chIdx] + 500; 
+          }
+
+          //encode into bit stream, with resolution of 10 bits
+          uint8_t aIdx = chIdx + (chIdx / 4);
+          uint8_t bIdx = aIdx + 1;
+          uint8_t aShift = ((chIdx % 4) + 1) * 2;
+          uint8_t bShift = 8 - aShift;
+          buffer[5 + aIdx] |= ((val >> aShift) & 0xFF);
+          buffer[5 + bIdx] |= ((val << bShift) & 0xFF);
+        }
+
+        dataLength = ((((numChannels * 10) + 7) / 8) + 1); // +1 is for the flags byte
+        
+        //write flags
+        uint8_t flagsIdx = 5 + dataLength - 1;
+        buffer[flagsIdx]  = (isFailsafeData & 0x01) << 4;
+        buffer[flagsIdx] |= (isRequestingTelemetry & 0x01) << 3;
+        buffer[flagsIdx] |= Sys.rfPower & 0x07;
       }
-      else if(Model.Channel[i].failsafe == -101) //failsafe mode No pulse, send 1022
-      {
-        dataToSend[2 + i*2] = 0x03;
-        dataToSend[3 + i*2] = 0xFE;
-      }
-      else //failsafe is custom value
-      {
-        int16_t fsf = 5 * Model.Channel[i].failsafe;
-        fsf = constrain(fsf, 5 * Model.Channel[i].endpointL, 5 * Model.Channel[i].endpointR);
-        uint16_t val = (fsf + 500) & 0xFFFF;
-        dataToSend[2 + i*2] = (val >> 8) & 0xFF;
-        dataToSend[3 + i*2] = val & 0xFF;
-      }
-    }
+      break;
   }
-  else //real time RC data
+
+  // Add other fields and send
+  if(messageType != MESSAGE_TYPE_NONE || thisLoopNum == 1)
   {
-    for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-    {
-      uint16_t val = (channelOut[i] + 500) & 0xFFFF; 
-      dataToSend[2 + i*2] = (val >> 8) & 0xFF;
-      dataToSend[3 + i*2] = val & 0xFF;
-    }
+    //Preamble
+    buffer[0] = 0xAA;
+    buffer[1] = 0xAA;
+    buffer[2] = 0xAA;
+  
+    //Message type
+    buffer[3] = messageType;
+
+    //Data length
+    buffer[4] = dataLength;
+
+    //Data
+    //Already set.
+  
+    //CRC
+    buffer[5 + dataLength] = crc8(buffer, 5 + dataLength);
+
+    //Padding bytes
+    //Already set.
+
+    //Send
+    Serial1.write(buffer, sizeof(buffer));
   }
-  
-  //add a crc
-  dataToSend[sizeof(dataToSend) - NUM_CRC_BYTES] = crc8(dataToSend, sizeof(dataToSend) - NUM_CRC_BYTES);
-  
-  //send
-  Serial1.write(dataToSend, sizeof(dataToSend));
-  
-  
+
   ///------------- GET FROM SECONDARY MCU -------------
 
-  //--- read into temp buff
-  const uint8_t msgLength = 3 + NUM_RC_CHANNELS + NUM_CRC_BYTES;
-  if(Serial1.available() < msgLength)
+  memset(buffer, 0, sizeof(buffer));
+
+  if(Serial1.available() < UART_FIXED_PACKET_SIZE)
     return;
-  
-  uint8_t tmpBuff[msgLength]; 
-  memset(tmpBuff, 0, msgLength);
 
   uint8_t cntr = 0;
   while(Serial1.available() > 0)
   {
-    if(cntr < msgLength) 
+    if(cntr < sizeof(buffer)) 
     {
-      tmpBuff[cntr] = Serial1.read();
+      buffer[cntr] = Serial1.read();
       cntr++;
     }
     else //Discard any extra data
       Serial1.read();
   }
-  
-  //check crc and extract data
-  
-  if(tmpBuff[msgLength - 1] != crc8(tmpBuff, msgLength - 1))
+
+  //check CRC and extract data
+  dataLength = buffer[4];
+  uint8_t receivedCRC = buffer[5 + dataLength];
+  uint8_t computedCRC = crc8(buffer, 5 + dataLength);
+  if(computedCRC != receivedCRC)
     return;
 
-  bindStatusCode = tmpBuff[0] & 0x03;
-  receiverConfigStatusCode = (tmpBuff[0] >> 2) & 0x03;
-  gotOutputChConfig = (tmpBuff[0] >> 4) & 0x01;
-  
-  transmitterPacketRate = tmpBuff[1];
-  receiverPacketRate    = tmpBuff[2];
-  
-  if(gotOutputChConfig) //output configuration
+  //get message type, extract the data
+  messageType = buffer[3];
+  switch(messageType)
   {
-    for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-      outputChConfig[i] = tmpBuff[3 + i];
-  }
-  else //telemetry
-  {
-    const uint8_t MAX_FIELDS = NUM_RC_CHANNELS / 3; // there are 3 bytes per telemetry field
-    for(uint8_t i = 0; i < MAX_FIELDS; i++)
-    {
-      uint8_t buffIdx = 3 + (i * 3);
-      uint8_t sensorID = tmpBuff[buffIdx];
-      //check against configured Ids and copy to telemetryReceivedValue 
-      for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++)
+    case MESSAGE_TYPE_BIND_STATUS_CODE:
       {
-        if(sensorID == Model.Telemetry[idx].identifier)
+        bindStatusCode = buffer[5];
+      }
+      break;
+
+    case MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE:
+      {
+        receiverConfigStatusCode = buffer[5];
+      }
+      break;
+
+    case MESSAGE_TYPE_RECEIVER_CONFIG:
+      {
+        gotOutputChConfig = true;
+        for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
+          outputChConfig[i] = buffer[5 + i];
+      }
+      break;
+
+    case MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE:
+      {
+        transmitterPacketRate = buffer[5];
+        receiverPacketRate = buffer[6];
+        
+        //Calculate the Link Quality indicator
+        int16_t lqi = divRoundClosest(((int16_t) receiverPacketRate * 100), transmitterPacketRate);
+        if(lqi > 100) lqi = 100;
+        else if(lqi == 0) lqi = TELEMETRY_NO_DATA;
+        //check against configured sensor IDs and write
+        for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++) 
         {
-          telemetryReceivedValue[idx] = joinBytes(tmpBuff[buffIdx + 1], tmpBuff[buffIdx + 2]);
-          if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
+          if(Model.Telemetry[idx].identifier == SENSOR_ID_LINK_QLTY)
           {
-            telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
-            telemetryLastReceivedTime[idx] = millis();
+            telemetryReceivedValue[idx] = lqi;
+            if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
+            {
+              telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
+              telemetryLastReceivedTime[idx] = millis();
+            }
           }
         }
       }
-    }
+      break;
 
-    //Calculate the Link Quality indicator
-    int16_t lqi = divRoundClosest(((int16_t) receiverPacketRate * 100), transmitterPacketRate);
-    if(lqi > 100) lqi = 100;
-    else if(lqi == 0) lqi = TELEMETRY_NO_DATA;
-    //check against configured Ids and write
-    for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++) 
-    {
-      if(Model.Telemetry[idx].identifier == 0x70)
+    case MESSAGE_TYPE_TELEMETRY_GENERAL:
       {
-        telemetryReceivedValue[idx] = lqi;
-        if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
+        uint8_t numFields = dataLength / 3; //there are 3 bytes per telemetry field
+        for(uint8_t i = 0; i < numFields; i++)
         {
-          telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
-          telemetryLastReceivedTime[idx] = millis();
+          uint8_t buffIdx = 5 + (i * 3);
+          uint8_t sensorID = buffer[buffIdx];
+          //check against configured Ids and copy to telemetryReceivedValue 
+          for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++)
+          {
+            if(sensorID == Model.Telemetry[idx].identifier)
+            {
+              telemetryReceivedValue[idx] = joinBytes(buffer[buffIdx + 1], buffer[buffIdx + 2]);
+              if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
+              {
+                telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
+                telemetryLastReceivedTime[idx] = millis();
+              }
+            }
+          }
         }
       }
-    }
+      break;
+
+    case MESSAGE_TYPE_TELEMETRY_GNSS:
+      {
+        //copy into the struct
+        memcpy(&GNSSTelemetryData, &buffer[5], sizeof(GNSSTelemetryData));
+
+        gnssTelemetrylastReceivedTime = millis();
+
+        //store last know position
+        if(GNSSTelemetryData.satellitesInUse != 0)
+        {
+          Sys.gnssLastKnownLatitude = GNSSTelemetryData.latitude;
+          Sys.gnssLastKnownLongitude = GNSSTelemetryData.longitude;
+        }
+
+        //extract individual "sensors" for use in the pre-configured GNSS telemetry sensor templates
+        static const uint8_t sensorIDs[] PROGMEM = {
+          SENSOR_ID_GNSS_SPEED,
+          SENSOR_ID_GNSS_DISTANCE,
+          SENSOR_ID_GNSS_MSL_ALTITUDE,
+          SENSOR_ID_GNSS_AGL_ALTITUDE
+        };
+        for(uint8_t i = 0; i < sizeof(sensorIDs)/sizeof(sensorIDs[0]); i++)
+        {
+          uint8_t id = pgm_read_byte(&sensorIDs[i]);
+          //get the value
+          int16_t val = TELEMETRY_NO_DATA;
+          if(GNSSTelemetryData.satellitesInUse != 0)
+          {
+            switch(id)
+            {
+              case SENSOR_ID_GNSS_SPEED:
+                val = GNSSTelemetryData.speed;
+                break;
+              
+              case SENSOR_ID_GNSS_DISTANCE:
+                {
+                  float lat1 = (float) Sys.gnssHomeLatitude / 100000;
+                  float lng1 = (float) Sys.gnssHomeLongitude / 100000;
+                  float lat2 = (float) GNSSTelemetryData.latitude / 100000;
+                  float lng2 = (float) GNSSTelemetryData.longitude / 100000; 
+                  gnssDistanceFromHome = (int32_t) distanceBetween(lat1, lng1, lat2, lng2);
+                  //limit val to maximum value representable by a 16 bit signed integer
+                  val = (gnssDistanceFromHome > 32767) ? 32767 : gnssDistanceFromHome;
+                }
+                break;
+              
+              case SENSOR_ID_GNSS_MSL_ALTITUDE:
+                val = GNSSTelemetryData.altitude;
+                break;
+              
+              case SENSOR_ID_GNSS_AGL_ALTITUDE:
+                val = GNSSTelemetryData.altitude - Sys.gnssAltitudeOffset;
+                break;
+            }
+          }
+          //check against configured Ids and copy to telemetryReceivedValue
+          for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++)
+          {
+            if(Model.Telemetry[idx].identifier == id)
+            {
+              telemetryReceivedValue[idx] = val;
+              if(telemetryReceivedValue[idx] != TELEMETRY_NO_DATA)
+              {
+                telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
+                telemetryLastReceivedTime[idx] = millis();
+              }
+            }
+          }
+        }
+      }
+      break;
   }
+
 }
 
 //==================================================================================================
 
 void handleTelemetry()
 {
+  uint32_t currMillis = millis();
+
   //-- simulated telemetry
   if(Sys.DBG_simulateTelemetry)
   {
     //check against configured Ids and copy to telemetryReceivedValue 
     for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++)
     {
-      if(Model.Telemetry[idx].identifier == 0x30)
+      if(Model.Telemetry[idx].identifier == SENSOR_ID_SIMULATED)
       {
         telemetryReceivedValue[idx] = mixSources[SRC_VIRTUAL_FIRST] / 5;
         telemetryLastReceivedValue[idx] = telemetryReceivedValue[idx];
-        telemetryLastReceivedTime[idx] = millis();
+        telemetryLastReceivedTime[idx] = currMillis;
       }
     }
   }
   
-  //-- stats
+  //-- statistics
   for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
   {
-    //-- get stats
+    //-- get statistics
     if(telemetryReceivedValue[i] != TELEMETRY_NO_DATA)
     {
       //max
@@ -499,23 +625,38 @@ void handleTelemetry()
         telemetryMinReceivedValue[i] = telemetryReceivedValue[i];
     }
     //-- reset received telemetry if timeout
-    if(millis() - telemetryLastReceivedTime[i] > 2500)
+    if(currMillis - telemetryLastReceivedTime[i] > 3000)
       telemetryReceivedValue[i] = TELEMETRY_NO_DATA; 
   }
   
-  //-- reset all telemetry on model change
+  //-- reset telemetry on model change
   static uint8_t lastModelIdx = 0xff;
   if(Sys.activeModelIdx != lastModelIdx)
   {
     lastModelIdx = Sys.activeModelIdx;
     for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
     {
-      telemetryLastReceivedTime[i] = millis();
+      telemetryLastReceivedTime[i] = currMillis;
       telemetryLastReceivedValue[i] = TELEMETRY_NO_DATA;
       telemetryReceivedValue[i] = TELEMETRY_NO_DATA;
       telemetryMaxReceivedValue[i] = TELEMETRY_NO_DATA;
       telemetryMinReceivedValue[i] = TELEMETRY_NO_DATA;
     }
+  }
+
+  //-- reset RF link statistics if RF is disabled
+  if(!Sys.rfEnabled)
+  {
+    transmitterPacketRate = 0;
+    receiverPacketRate = 0;
+  }
+
+  //reset gnss specific data
+  if(currMillis - gnssTelemetrylastReceivedTime > 3000)
+  {
+    GNSSTelemetryData.satellitesInUse = 0;
+    GNSSTelemetryData.satellitesInView = 0;
+    GNSSTelemetryData.positionFix = 0;
   }
 }
 
@@ -530,7 +671,7 @@ void handlePowerOff()
     _counter--;
   if(_counter > 1000/fixedLoopTime) //power off
   {
-    showMsg(PSTR("Shutting down"));
+    showMessage(PSTR("Shutting down"));
     if(Sys.backlightEnabled)
       analogWrite(PIN_LCD_BACKLIGHT, ((uint16_t) 255 * Sys.backlightLevel) / 100);
     delay(1000);
@@ -540,7 +681,7 @@ void handlePowerOff()
       eeSaveSysConfig();
       eeSaveModelData(Sys.activeModelIdx);
     }
-    showMsg(PSTR(""));
+    showMessage(PSTR(""));
     //power off
     delay(100);
     pinMode(PIN_POWER_LATCH, INPUT);

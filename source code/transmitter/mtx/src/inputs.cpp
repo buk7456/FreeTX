@@ -95,7 +95,7 @@ void readSwitchesAndButtons()
   if(!digitalRead(PIN_KEY_DOWN))   buttonCode = KEY_DOWN;
 
   if(buttonCode != 0)
-    inputsLastMoved = millis();
+    inputsLastMovedTime = millis();
   
   //-- play audio when switches are moved --
   uint8_t switchesSum = 0;
@@ -110,7 +110,7 @@ void readSwitchesAndButtons()
       audioToPlay = AUDIO_SWITCH_MOVED;
     
     lastSwitchesSum = switchesSum;
-    inputsLastMoved = millis();
+    inputsLastMovedTime = millis();
   }
 }
 
@@ -280,7 +280,7 @@ void readSticks()
   if(abs(sum - lastSum) > 50) //5% of 1000
   {
     lastSum = sum;
-    inputsLastMoved = millis();
+    inputsLastMovedTime = millis();
   }
 }
 

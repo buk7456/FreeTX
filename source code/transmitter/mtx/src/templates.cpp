@@ -12,7 +12,7 @@ void loadMix(
   bool trimEnabled, uint8_t flightMode, 
   uint8_t delayUp, uint8_t delayDown,uint8_t slowUp, uint8_t slowDown)
 {
-  if(idx >= NUM_MIXSLOTS)
+  if(idx >= NUM_MIX_SLOTS)
     return;
   
   if(name != NULL)
@@ -118,8 +118,8 @@ void loadMixerTemplateDiffThrust(uint8_t mixIdx)
 void loadTelemetryParams( 
   uint8_t idx, const char* name, const char* unitsName, uint8_t identifier,
   int16_t multiplier, int8_t factor10, int16_t offset,       
-  bool logEnabled,  uint8_t alarmCondition, int16_t  alarmThreshold,
-  uint8_t alarmMelody, bool showOnHome, bool recordMaximum, bool recordMinimum )
+  uint8_t alarmCondition, int16_t  alarmThreshold,
+  bool showOnHome, bool recordMaximum, bool recordMinimum )
 {
   if(idx >= NUM_CUSTOM_TELEMETRY)
     return;
@@ -136,10 +136,8 @@ void loadTelemetryParams(
   Model.Telemetry[idx].multiplier     = multiplier;
   Model.Telemetry[idx].factor10       = factor10;
   Model.Telemetry[idx].offset         = offset;
-  Model.Telemetry[idx].logEnabled     = logEnabled;
   Model.Telemetry[idx].alarmCondition = alarmCondition;
   Model.Telemetry[idx].alarmThreshold = alarmThreshold;
-  Model.Telemetry[idx].alarmMelody    = alarmMelody; 
   Model.Telemetry[idx].showOnHome     = showOnHome; 
   Model.Telemetry[idx].recordMaximum  = recordMaximum; 
   Model.Telemetry[idx].recordMinimum  = recordMinimum; 
@@ -147,30 +145,62 @@ void loadTelemetryParams(
 
 void loadSensorTemplateExtVolts2S(uint8_t telemIdx)
 {
-  loadTelemetryParams(telemIdx, PSTR("ExtVolts"), PSTR("V"), 0x01, 100, -2, 0, true, 
-                      TELEMETRY_ALARM_CONDITION_LESS_THAN, 710, 0, true, true, true);
+  loadTelemetryParams(telemIdx, PSTR("ExtVolts"), PSTR("V"), SENSOR_ID_EXT_VOLTAGE, 100, -2, 0,
+                      TELEMETRY_ALARM_CONDITION_LESS_THAN, 710, true, true, true);
 }
 
 void loadSensorTemplateExtVolts3S(uint8_t telemIdx)
 {
-  loadTelemetryParams(telemIdx, PSTR("ExtVolts"), PSTR("V"), 0x01, 100, -2, 0, true, 
-                      TELEMETRY_ALARM_CONDITION_LESS_THAN, 1065, 0, true, true, true);
+  loadTelemetryParams(telemIdx, PSTR("ExtVolts"), PSTR("V"), SENSOR_ID_EXT_VOLTAGE, 100, -2, 0, 
+                      TELEMETRY_ALARM_CONDITION_LESS_THAN, 1065, true, true, true);
 }
 
 void loadSensorTemplateExtVolts4S(uint8_t telemIdx)
 {
-  loadTelemetryParams(telemIdx, PSTR("ExtVolts"), PSTR("V"), 0x01, 100, -2, 0, true, 
-                      TELEMETRY_ALARM_CONDITION_LESS_THAN, 1420, 0, true, true, true);
+  loadTelemetryParams(telemIdx, PSTR("ExtVolts"), PSTR("V"), SENSOR_ID_EXT_VOLTAGE, 100, -2, 0,
+                      TELEMETRY_ALARM_CONDITION_LESS_THAN, 1420, true, true, true);
 }
 
 void loadSensorTemplateRSSI(uint8_t telemIdx)
 {
-  loadTelemetryParams(telemIdx, PSTR("RSSI"), PSTR("dBm"), 0x7F, 100, 0, 0, true, 
-                     TELEMETRY_ALARM_CONDITION_NONE, 0, 0, true, true, true);
+  loadTelemetryParams(telemIdx, PSTR("RSSI"), PSTR("dBm"), SENSOR_ID_RSSI, 100, 0, 0,
+                     TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
 }
 
 void loadSensorTemplateLinkQuality(uint8_t telemIdx)
 {
-  loadTelemetryParams(telemIdx, PSTR("LinkQlty"), PSTR("%"), 0x70, 100, 0, 0, true, 
-                     TELEMETRY_ALARM_CONDITION_NONE, 0, 0, true, true, true);
+  loadTelemetryParams(telemIdx, PSTR("LinkQlty"), PSTR("%"), SENSOR_ID_LINK_QLTY, 100, 0, 0,
+                     TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+}
+
+void loadSensorTemplateGNSS(uint8_t telemIdx)
+{
+  if(telemIdx >= NUM_CUSTOM_TELEMETRY)
+    return;
+  strlcpy_P(Model.Telemetry[telemIdx].name, PSTR("GNSS/GPS"), sizeof(Model.Telemetry[0].name));
+  Model.Telemetry[telemIdx].type = TELEMETRY_TYPE_GNSS;
+}
+
+void loadSensorTemplateGNSSSpeed(uint8_t telemIdx)
+{
+  loadTelemetryParams(telemIdx, PSTR("Speed"), PSTR("m/s"), SENSOR_ID_GNSS_SPEED, 100, -1, 0,
+                     TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+}
+
+void loadSensorTemplateGNSSDistance(uint8_t telemIdx)
+{
+  loadTelemetryParams(telemIdx, PSTR("Distance"), PSTR("m"), SENSOR_ID_GNSS_DISTANCE, 100, 0, 0, 
+                     TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+}
+
+void loadSensorTemplateGNSSMSLAltitude(uint8_t telemIdx)
+{
+  loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("m"), SENSOR_ID_GNSS_MSL_ALTITUDE, 100, 0, 0,
+                     TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+}
+
+void loadSensorTemplateGNSSAGLAltitude(uint8_t telemIdx)
+{
+  loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("m"), SENSOR_ID_GNSS_AGL_ALTITUDE, 100, 0, 0,
+                     TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
 }

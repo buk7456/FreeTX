@@ -13,18 +13,18 @@ void evaluateLogicalSwitches(uint32_t _currTime);
 void evaluateCounters();
 
 //mix sources array
-int16_t mixSources[MIXSOURCES_COUNT]; 
+int16_t mixSources[MIX_SOURCES_COUNT]; 
 
 //variables to help with 'delay' and 'slow' mixer features
-int16_t  dlyOldVal[NUM_MIXSLOTS];
-int16_t  dlyPrevOperand[NUM_MIXSLOTS];
-uint8_t  dlyPrevInput[NUM_MIXSLOTS];
-uint32_t dlyStartTime[NUM_MIXSLOTS];   
-int32_t  slowCurrVal[NUM_MIXSLOTS]; 
+int16_t  dlyOldVal[NUM_MIX_SLOTS];
+int8_t   dlyPrevOperand[NUM_MIX_SLOTS];  //stored as (operand / 4)
+uint8_t  dlyPrevInput[NUM_MIX_SLOTS];
+uint32_t dlyStartTime[NUM_MIX_SLOTS];
+int32_t  slowCurrVal[NUM_MIX_SLOTS];
 
 //variables to help with the mix Hold feature
-int16_t hldOldVal[NUM_MIXSLOTS];
-uint8_t hldOldState[NUM_MIXSLOTS];
+int16_t  hldOldVal[NUM_MIX_SLOTS];
+uint8_t  hldOldState[NUM_MIX_SLOTS];
 
 //variables to help with logical switches
 bool     lsDlyStarted[NUM_LOGICAL_SWITCHES];
@@ -63,7 +63,7 @@ void computeChannelOutputs()
     for(uint8_t i = 0; i < NUM_FUNCGEN; i++)
       syncWaveform(i);
     // mixSources array
-    for(uint8_t i = 0; i < MIXSOURCES_COUNT; i++)
+    for(uint8_t i = 0; i < MIX_SOURCES_COUNT; i++)
       mixSources[i] = 0;
   }
   
@@ -259,7 +259,7 @@ void computeChannelOutputs()
   
   ///----------------- MIXER LOOP ------------------------
   
-  for(uint8_t mixIdx = 0; mixIdx < NUM_MIXSLOTS; mixIdx++)
+  for(uint8_t mixIdx = 0; mixIdx < NUM_MIX_SLOTS; mixIdx++)
   {
     mixer_params_t *mxr = &Model.Mixer[mixIdx];
     
@@ -302,18 +302,16 @@ void computeChannelOutputs()
     {
       dlyPrevInput[mixIdx] = mxr->input;
       dlyOldVal[mixIdx]  = operand;
-      dlyPrevOperand[mixIdx]  = operand;
+      dlyPrevOperand[mixIdx]  = operand / 4;
       dlyStartTime[mixIdx] = currMillis;
     }
-    //For the comparisons here, we add some hysteresis because readings from potentiometers
-    //or any analog based measuring sensors always exibit jitter due to random electrical noise, 
-    //slight imperfections, etc. It's all physics :) If we don't add hysteresis, the delay could lock up
-    //and we would never get out of it. 
-    const int16_t hystVal = 4; //empirically determined value 
-    if(abs(operand - dlyPrevOperand[mixIdx]) > hystVal) 
+    //For the comparisons below, we add some hysteresis to counteract the jitter in analog readings.
+    const int16_t hystVal = 4; //empirically determined value
+    int8_t difference = (operand / 4) - dlyPrevOperand[mixIdx]; 
+    if(abs(difference) > (hystVal / 4))
     {
       dlyStartTime[mixIdx] = currMillis;
-      dlyPrevOperand[mixIdx] = operand;
+      dlyPrevOperand[mixIdx] = operand / 4;
     }
     if(operand > (dlyOldVal[mixIdx] + hystVal))
     {
@@ -406,7 +404,7 @@ void computeChannelOutputs()
     
     //--- TRIM
     //Apply weighted trim after differential to prevent the output being erratic when differential or
-    //curves are specified and trim is non-zero
+    //curves are specified and trim is non-zero.
     if(mxr->trimEnabled)
     {
       uint8_t src = mxr->input;
@@ -488,13 +486,13 @@ void computeChannelOutputs()
 
 void moveMix(uint8_t newPos, uint8_t oldPos)
 {
-  if(newPos >= NUM_MIXSLOTS || oldPos >= NUM_MIXSLOTS || newPos == oldPos)
+  if(newPos >= NUM_MIX_SLOTS || oldPos >= NUM_MIX_SLOTS || newPos == oldPos)
     return;
   
   // store temporarily the old position's data
   mixer_params_t Temp_Mixer    = Model.Mixer[oldPos];
   int16_t  tempDlyOldVal       = dlyOldVal[oldPos];
-  int16_t  tempDlyPrevOperand  = dlyPrevOperand[oldPos];
+  int8_t   tempDlyPrevOperand   = dlyPrevOperand[oldPos];
   uint8_t  tempDlyPrevInputIdx = dlyPrevInput[oldPos];
   uint32_t tempDlyStartTime    = dlyStartTime[oldPos];
   int32_t  tempSlowCurrVal     = slowCurrVal[oldPos];
@@ -551,13 +549,13 @@ void moveMix(uint8_t newPos, uint8_t oldPos)
 
 void swapMix(uint8_t posA, uint8_t posB)
 {
-  if(posA >= NUM_MIXSLOTS || posB >= NUM_MIXSLOTS || posA == posB)
+  if(posA >= NUM_MIX_SLOTS || posB >= NUM_MIX_SLOTS || posA == posB)
     return;
   
   //store posA to temp
   mixer_params_t Temp_Mixer    = Model.Mixer[posA];
   int16_t  tempDlyOldVal       = dlyOldVal[posA];
-  int16_t  tempDlyPrevOperand  = dlyPrevOperand[posA];
+  int8_t   tempDlyPrevOperand  = dlyPrevOperand[posA];
   uint8_t  tempDlyPrevInputIdx = dlyPrevInput[posA];
   uint32_t tempDlyStartTime    = dlyStartTime[posA];
   int32_t  tempSlowCurrVal     = slowCurrVal[posA];
@@ -597,8 +595,8 @@ bool moveLogicalSwitch(uint8_t newPos, uint8_t oldPos)
 
   //--- Update all references of the affected logical switches
 
-  //try finding an unreferenced logical switch, so we can use it as temporary place holder, with
-  //condition that it should lie outside of the range of newPos and oldPos
+  //Try finding an unreferenced logical switch, so we can use it as temporary place holder, with
+  //condition that it should lie outside of the range of newPos and oldPos.
   uint8_t freeLS = 0xFF;
   for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
   {
@@ -737,7 +735,7 @@ void evaluateLogicalSwitches(uint32_t _currTime)
       case LS_FUNC_ABS_DELTA_GREATER_THAN_X:
         {
           int32_t _val1 = 0, _val2 = 0;
-          if(ls->val1 < MIXSOURCES_COUNT) //mixsources
+          if(ls->val1 < MIX_SOURCES_COUNT) //mixsources
           {
             _val1 = mixSources[ls->val1];
             _val2 = 5 * ls->val2;
@@ -750,13 +748,13 @@ void evaluateLogicalSwitches(uint32_t _currTime)
           else if(ls->val1 >= SRC_TIMER_FIRST && ls->val1 <= SRC_TIMER_LAST) //timers
           {
             uint8_t tmrIdx = ls->val1 - SRC_TIMER_FIRST;
-            if(Model.Timer[tmrIdx].initialMinutes == 0) //a count up timer
+            if(Model.Timer[tmrIdx].initialSeconds == 0) //a count up timer
             {
               _val1 = timerElapsedTime[tmrIdx];
             }
             else //count down timer
             {
-              _val1 = (int32_t)Model.Timer[tmrIdx].initialMinutes * 60000;
+              _val1 = (int32_t)Model.Timer[tmrIdx].initialSeconds * 1000;
               _val1 -= timerElapsedTime[tmrIdx];
             }
             _val2 = (int32_t)ls->val2 * 1000;
@@ -775,8 +773,8 @@ void evaluateLogicalSwitches(uint32_t _currTime)
           }
           else if(ls->val1 == SRC_INACTIVITY_TIMER)
           {
-            // _val1 = _currTime - inputsLastMoved;
-            _val1 = millis() - inputsLastMoved;
+            // _val1 = _currTime - inputsLastMovedTime;
+            _val1 = millis() - inputsLastMovedTime;
             _val2 = (int32_t)ls->val2 * 1000;
           }
           else if(ls->val1 == SRC_TX_BATTERY_VOLTAGE)

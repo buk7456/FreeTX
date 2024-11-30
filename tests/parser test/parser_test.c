@@ -42,11 +42,11 @@ void trimWhiteSpace(char* buff, uint8_t lenBuff)
 {
   if(buff[0] == '\0')
     return;
-  
-  //trim leading space
+
+  //--- trim leading space
   uint8_t i = 0; 
   while(isspace(buff[i]))
-  {    
+  {
     i++;
     if(i == lenBuff - 1) //all spaces
     {
@@ -55,16 +55,26 @@ void trimWhiteSpace(char* buff, uint8_t lenBuff)
     }
   }
   
-  //trim trailing space
+  //--- trim trailing space
   if(lenBuff < 2)
     return;
-  uint8_t j = lenBuff - 2;
+  //find the first occurance of the null character (in case of a partial string)
+  uint8_t idxOfNull = 0xff;
+  for(uint8_t m = i; m < lenBuff - 1; m++)
+  {
+    if(buff[m] == '\0')
+    {
+      idxOfNull = m;
+      break;
+    }
+  }
+  uint8_t j = (idxOfNull != 0xff) ? idxOfNull - 1 : lenBuff - 2;
   while(j > i && isspace(buff[j]))
     j--;
   
-  //shift the remaining characters to the beginning of the string
+  //--- shift the remaining characters to the beginning of the string
   uint8_t k = 0;
-  while (i <= j)
+  while(i <= j)
     buff[k++] = buff[i++];
   buff[k] = '\0';  //add a null terminator
 }
@@ -208,7 +218,7 @@ int main(int argc, char *argv[])
     if(*valueBuff == '\0')
       continue;
     
-    /*     
+        
     //print the keys and values
     for(uint8_t i = 0; i < sizeof(keyBuff)/sizeof(keyBuff[0]); i++)
     {
@@ -216,8 +226,8 @@ int main(int argc, char *argv[])
         printf("%s ", keyBuff[i]);
     }
     printf("= %s\n", valueBuff); 
-    */
-    
+   
+/*     
     //--- Print in tabulated form
     // Construct the format string dynamically using MAX_STR_SIZE
     char format[20];
@@ -251,7 +261,7 @@ int main(int argc, char *argv[])
       printf(format, keyBuff[i]);
     }
     printf(format, valueBuff);
-    printf("\n");
+    printf("\n"); */
     
   }
   

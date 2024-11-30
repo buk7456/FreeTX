@@ -4,24 +4,20 @@
 
 sys_params_t Sys;
 
-bool    rfEnabled = false;
-uint8_t rfPower;
+uint8_t transmitPayloadBuffer[MAX_PAYLOAD_SIZE];
+uint8_t receivePayloadBuffer[MAX_PAYLOAD_SIZE];
+uint8_t transmitPayloadLength;
+uint8_t receivePayloadLength;
 
-uint16_t chData[NUM_RC_CHANNELS];
-bool    isFailsafeData = false;
+uint8_t rfPower;
 
 bool    isRequestingBind = false;
 uint8_t bindStatusCode;  
-
 bool    isMainReceiver = true;
-
 bool    hasPendingRCData = false;
-
+bool    hasReceivedTelemetry = false;
 uint8_t transmitterPacketRate;
 uint8_t receiverPacketRate;
-
-uint8_t telemID[MAX_TELEMETRY_COUNT];
-int16_t telemVal[MAX_TELEMETRY_COUNT];
 
 bool    isRequestingTelemetry = false;  
 
@@ -29,9 +25,9 @@ bool    isRequestingOutputChConfig = false;
 bool    isSendOutputChConfig = false;
 bool    gotOutputChConfig = false;
 
-uint8_t outputChConfig[NUM_RC_CHANNELS]; 
-
 uint8_t receiverConfigStatusCode;
+
+uint8_t receivedTelemetryType;
 
 //--------------------------------------------------------------------------------------------------
 
