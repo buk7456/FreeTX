@@ -52,6 +52,7 @@ extern const id_string_t enum_LogicalSwitch_Func[] PROGMEM;
 extern const id_string_t enum_DirectionOfChange[] PROGMEM;
 extern const id_string_t enum_ChannelFailsafe[] PROGMEM;
 extern const id_string_t enum_ChannelCurve[] PROGMEM;
+extern const id_string_t enum_TelemetryType[] PROGMEM;
 extern const id_string_t enum_TelemetryAlarmCondition[] PROGMEM;
 extern const id_string_t enum_WidgetType[] PROGMEM;
 extern const id_string_t enum_WidgetSource[] PROGMEM;
@@ -61,7 +62,7 @@ extern const id_string_t enum_ClockEdge[] PROGMEM;
 
 //---- Strings for the keys -----
 //Key descriptors should be unique, but can also be shared.
-//Repeated keys should be commented out, they are here only for convenience.
+//Already declared keys should be commented out, they are here only for convenience.
 
 extern const char key_ModelName[] PROGMEM;
 extern const char key_ModelType[] PROGMEM;
@@ -80,7 +81,8 @@ extern const char key_Number[] PROGMEM;
 
 extern const char key_Timer[] PROGMEM;
 extern const char key_ResetSwitch[] PROGMEM;
-extern const char key_InitialMinutes[] PROGMEM;
+extern const char key_InitialMinutes[] PROGMEM; //deprecated
+extern const char key_InitialSeconds[] PROGMEM;
 extern const char key_IsPersistent[] PROGMEM;
 extern const char key_PersistVal[] PROGMEM;
 
@@ -185,6 +187,7 @@ extern const char key_EndpointL[] PROGMEM;
 extern const char key_EndpointR[] PROGMEM;
 
 extern const char key_Telemetry[] PROGMEM;
+// extern const char key_Type[] PROGMEM;
 // extern const char key_Name[] PROGMEM;
 extern const char key_UnitsName[] PROGMEM;
 extern const char key_Identifier[] PROGMEM;
@@ -194,7 +197,6 @@ extern const char key_Factor10[] PROGMEM;
 extern const char key_LogEnabled[] PROGMEM;
 extern const char key_AlarmCondition[] PROGMEM;
 extern const char key_AlarmThreshold[] PROGMEM;
-extern const char key_AlarmMelody[] PROGMEM;
 extern const char key_ShowOnHome[] PROGMEM;
 extern const char key_RecordMaximum[] PROGMEM;
 extern const char key_RecordMinimum[] PROGMEM;
@@ -211,5 +213,7 @@ extern const char key_Enabled[] PROGMEM;
 // extern const char key_Switch[] PROGMEM;
 extern const char key_Tone[] PROGMEM;
 extern const char key_Text[] PROGMEM;
+
+extern const char key_SecondaryRcvrEnabled[] PROGMEM;
 
 #endif
