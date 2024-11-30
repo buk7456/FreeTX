@@ -152,7 +152,7 @@ bool sdRestoreModel(const char *name)
     //sanity check the model data we just read in
     if(!verifyModelData())
     {
-      showMsg(PSTR("Bad model data.\nLoading defaults"));
+      showMessage(PSTR("Bad model data.\nLoading defaults"));
       delay(2000);
       resetModelName();
       resetModelParams();
