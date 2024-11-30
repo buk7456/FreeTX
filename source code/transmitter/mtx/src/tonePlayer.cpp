@@ -176,7 +176,7 @@ size_t size = 0;
 
 const uint16_t* songStart;
 
-bool isTrimBeepSound = false; //TODO better name
+bool isTrimBeepSound = false; 
 
 //--------------------------------------------------------------------------------------------------
 
