@@ -9,6 +9,7 @@
 #include "eestore.h"
 #include "rfComm.h"
 
+
 //--------------- Freq allocation --------------------
 /* 
   LPD433 Band ITU region 1
@@ -44,24 +45,26 @@
 
 //------------------------------------------------
 
-#if NUM_HOP_CHANNELS > FIXED_PAYLOAD_SIZE
-  #error Number of hop channels cannot exceed size of payload
+#if NUM_HOP_CHANNELS > (MAX_PAYLOAD_SIZE - 2)
+  #error Number of hop channels exceeds allowable value
 #endif 
 
-#define FIXED_PACKET_SIZE  (FIXED_PAYLOAD_SIZE + 4)
+uint8_t transmitPacketBuffer[MAX_PACKET_SIZE];
+uint8_t receivePacketBuffer[MAX_PACKET_SIZE];
+uint8_t transmitPacketLength;
+uint8_t receivePacketLength;
 
-uint8_t packet[FIXED_PACKET_SIZE];   //for messages to transmit
-uint8_t msgBuff[FIXED_PACKET_SIZE];  //for received messages
+enum {
+  PACKET_BIND = 0,
+  PACKET_ACK_BIND = 1,
+  PACKET_READ_OUTPUT_CH_CONFIG = 2,
+  PACKET_SET_OUTPUT_CH_CONFIG = 3,
+  PACKET_ACK_OUTPUT_CH_CONFIG = 4,
+  PACKET_RC_DATA = 5,
+  PACKET_TELEMETRY_GENERAL = 6,
+  PACKET_TELEMETRY_GNSS = 7,
 
-enum{
-  PAC_BIND,
-  PAC_ACK_BIND,
-  PAC_READ_OUTPUT_CH_CONFIG,
-  PAC_SET_OUTPUT_CH_CONFIG,
-  PAC_ACK_OUTPUT_CH_CONFIG,
-  PAC_RC_DATA,
-  PAC_TELEMETRY,
-  PAC_INVALID
+  PACKET_INVALID = 0xFF
 };
 
 enum {
@@ -72,9 +75,10 @@ enum {
   MODE_SEND_RECEIVER_CONFIG
 };
 
-uint8_t  operatingMode = MODE_RC_DATA;
 bool     radioInitialised = false;
 uint32_t totalPacketsSent = 0;
+
+bool isListeningForTelemetry = false;
 
 //function declarations
 void setRfPower(uint8_t dBm);
@@ -84,10 +88,9 @@ void transmitRCdata();
 void transmitReceiverConfig();
 void getReceiverConfig();
 void getTelemetry();
-void resetTelemetry();
-void buildPacket(uint8_t srcID, uint8_t destID, uint8_t dataIdentifier, uint8_t *dataBuff, uint8_t dataLen);
-void readReceivedMessage();
-uint8_t checkReceivedMessage(uint8_t srcID, uint8_t destID);
+void buildPacket(uint8_t sourceID, uint8_t destinationID, uint8_t dataIdentifier, uint8_t *dataBuffer, uint8_t dataLength);
+void readReceivedPacket();
+uint8_t checkReceivedPacket(uint8_t sourceID, uint8_t destinationID);
 
 //==================================================================================================
 
@@ -117,78 +120,57 @@ void initialiseRfModule()
 void doRfCommunication()
 {
   if(!radioInitialised)
-  {
     return;
-  }
-  
-  if(!LoRa.isTransmitting())
+
+  if(isRequestingBind)
   {
-    //--- Change modes ---
-    if(isRequestingBind)
+    bind();
+  }
+  else if(isRequestingOutputChConfig)
+  {
+    getReceiverConfig();
+  }
+  else if(isSendOutputChConfig)
+  {
+    transmitReceiverConfig();
+  }
+  else if(hasPendingRCData)
+  {
+    if(isListeningForTelemetry)
     {
-      operatingMode = MODE_BIND;
-      isRequestingBind = false;
+      isListeningForTelemetry = false;
+      isRequestingTelemetry = false;
+      hop();
     }
-    else if(isRequestingOutputChConfig && operatingMode != MODE_BIND)
+
+    //transmit
+    transmitRCdata();
+
+    //calculate transmitted packets per second
+    static uint32_t lastTotalPacketsSent = 0;
+    static uint32_t prevMillis = 0;
+    uint32_t ttElapsed = millis() - prevMillis;
+    if(ttElapsed >= 1000)
     {
-      operatingMode = MODE_GET_RECEIVER_CONFIG;
-      isRequestingOutputChConfig = false;
+      prevMillis = millis();
+      uint32_t pps = (totalPacketsSent - lastTotalPacketsSent) * 1000;
+      pps /= ttElapsed;
+      transmitterPacketRate = pps & 0xFF;
+      lastTotalPacketsSent = totalPacketsSent;
     }
-    else if(isSendOutputChConfig && operatingMode != MODE_BIND)
-    {
-      operatingMode = MODE_SEND_RECEIVER_CONFIG;
-      isSendOutputChConfig = false;
-    }
-    else if(hasPendingRCData && operatingMode == MODE_GET_TELEM)
-    {
-      hop(); //###
-      operatingMode = MODE_RC_DATA;
-    }
-    
-    //--- set power level ---
-    if(operatingMode != MODE_BIND)
-    {
-      static uint8_t power_dBm[3] = {3, 10, 17}; //2mW, 10mW, 50mW
-      setRfPower(power_dBm[rfPower]);
-    }
+  }
+  else if((isRequestingTelemetry && !hasPendingRCData) || isListeningForTelemetry)
+  {
+    getTelemetry();
   }
 
-  //state machine
-  switch(operatingMode)
+  //set RF power level
+  if(!LoRa.isTransmitting())
   {
-    case MODE_BIND:
-      bind();
-      break;
-      
-    case MODE_GET_RECEIVER_CONFIG:
-      getReceiverConfig();
-      break;
-      
-    case MODE_SEND_RECEIVER_CONFIG:
-      transmitReceiverConfig();
-      break;
-      
-    case MODE_RC_DATA:
-      transmitRCdata();
-      break;
-      
-    case MODE_GET_TELEM:
-      getTelemetry();
-      break;
+    static uint8_t power_dBm[3] = {3, 10, 17}; //2mW, 10mW, 50mW
+    setRfPower(power_dBm[rfPower]);
   }
-  
-  //calculate transmitted packets per second
-  static uint32_t lastTotalPacketsSent = 0;
-  static uint32_t pktsPrevCalcMillis = 0;
-  uint32_t ttElapsed = millis() - pktsPrevCalcMillis;
-  if(ttElapsed >= 1000)
-  {
-    pktsPrevCalcMillis = millis();
-    uint32_t pps = (totalPacketsSent - lastTotalPacketsSent) * 1000;
-    pps /= ttElapsed;
-    transmitterPacketRate = pps & 0xFF;
-    lastTotalPacketsSent = totalPacketsSent;
-  }
+
 }
 
 //============================== Helpers ===========================================================
@@ -251,7 +233,7 @@ void bind()
   
   static bool isListeningForAck = false;
   
-  #define TIMEOUT_MODE_BIND  5000 
+  #define TIMEOUT_MODE_BIND  4500 
   #define TIMEOUT_BIND_ACK   100  //Max time waiting for receiver's ack before retransmission
   
   /// INITIALISE
@@ -265,7 +247,7 @@ void bind()
     {
      //--- generate random Sys.transmitterID and Sys.fhss_schema
       randomSeed(millis()); //Seed PRNG
-      Sys.transmitterID = random(0x01, 0xFF); //generate random ID
+      Sys.transmitterID = random(0x01, 0x7F); //generate random ID
       memset(Sys.fhss_schema, 0xFF, sizeof(Sys.fhss_schema)); //clear schema
       //generate random unique hopping sequence
       uint8_t idx = 0;
@@ -303,22 +285,20 @@ void bind()
   ///START TRANSMIT
   if(bindInitialised && !isListeningForAck && !transmitInitiated)
   {
-    uint8_t dataToSend[FIXED_PAYLOAD_SIZE];
-    memset(dataToSend, 0, sizeof(dataToSend));
+    memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
     uint8_t i;
     for(i = 0; i < NUM_HOP_CHANNELS; i++)
     {
-      if(i >= FIXED_PAYLOAD_SIZE - 2)
-        break;
-      dataToSend[i] = Sys.fhss_schema[i];
+      transmitPayloadBuffer[i] = Sys.fhss_schema[i];
     }
-    dataToSend[i++] = isMainReceiver & 0x01;
-    dataToSend[i++] = Sys.receiverID;
+    transmitPayloadBuffer[i++] = isMainReceiver & 0x01;
+    transmitPayloadBuffer[i++] = Sys.receiverID;
+    transmitPayloadLength = i;
 
-    buildPacket(Sys.transmitterID, 0x00, PAC_BIND, dataToSend, sizeof(dataToSend));
+    buildPacket(Sys.transmitterID, 0x00, PACKET_BIND, transmitPayloadBuffer, transmitPayloadLength);
     if(LoRa.beginPacket())
     {
-      LoRa.write(packet, sizeof(packet));
+      LoRa.write(transmitPacketBuffer, transmitPacketLength);
       LoRa.endPacket(true); //non-blocking
       delayMicroseconds(500);
       transmitInitiated = true;
@@ -336,19 +316,19 @@ void bind()
     
     if(LoRa.parsePacket()) //received a packet
     {
-      readReceivedMessage();
-      if(checkReceivedMessage(0x00, Sys.transmitterID) == PAC_ACK_BIND && msgBuff[3] > 0x00) //also checks receiverID
+      readReceivedPacket();
+      if(checkReceivedPacket(0x00, Sys.transmitterID) == PACKET_ACK_BIND) 
       {
         bindStatusCode = 1; //bind success
-        Sys.receiverID = msgBuff[3];
+        Sys.receiverID = receivePayloadBuffer[0];
         //Save to eeprom
         eeSaveSysConfig();
         //clear flags
         bindInitialised = false;
         isListeningForAck = false;
         transmitInitiated = false;
-        //change mode and exit
-        operatingMode = MODE_RC_DATA;
+        //exit
+        isRequestingBind = false;
         return;
       }
     }
@@ -368,8 +348,8 @@ void bind()
       bindInitialised = false;
       isListeningForAck = false;
       transmitInitiated = false;
-      //change mode and exit
-      operatingMode = MODE_RC_DATA;
+      //exit
+      isRequestingBind = false;
       return;
     }
   }
@@ -379,53 +359,16 @@ void bind()
 
 void transmitRCdata()
 {
-  if(!hasPendingRCData) //nothing to do
-    return;
-  
   static bool transmitInitiated = false;
   static bool hopPending = false;
-  
-  if(!rfEnabled) //don't send
-  {
-    transmitInitiated = false;
-    hopPending = false;
-    hasPendingRCData = false;
-    
-    resetTelemetry();
-    
-    return;
-  }
-  
+
   //START TRANSMIT
   if(!transmitInitiated) 
   {
-    //--- Encode data into a bit stream ---
-
-    uint8_t dataToSend[FIXED_PAYLOAD_SIZE];
-    memset(dataToSend, 0, sizeof(dataToSend));
-    
-    for(uint8_t chIdx = 0; chIdx < NUM_RC_CHANNELS; chIdx++)
-    {
-      uint16_t val = chData[chIdx]; 
-      //encode into bit stream, with resolution of 10 bits
-      uint8_t aIdx = chIdx + (chIdx / 4);
-      uint8_t bIdx = aIdx + 1;
-      uint8_t aShift = ((chIdx % 4) + 1) * 2;
-      uint8_t bShift = 8 - aShift;
-      dataToSend[aIdx] |= ((val >> aShift) & 0xFF);
-      dataToSend[bIdx] |= ((val << bShift) & 0xFF);
-    }
-    
-    //write flags in final byte
-    dataToSend[sizeof(dataToSend) - 1]  = (isFailsafeData & 0x01) << 4;
-    dataToSend[sizeof(dataToSend) - 1] |= (isRequestingTelemetry & 0x01) << 3;
-    dataToSend[sizeof(dataToSend) - 1] |= rfPower & 0x07;
-    
-    //--- Build packet and transmit ---
-    buildPacket(Sys.transmitterID, Sys.receiverID, PAC_RC_DATA, dataToSend, sizeof(dataToSend));
+    buildPacket(Sys.transmitterID, Sys.receiverID, PACKET_RC_DATA, transmitPayloadBuffer, transmitPayloadLength);
     if(LoRa.beginPacket())
     {
-      LoRa.write(packet, sizeof(packet));
+      LoRa.write(transmitPacketBuffer, transmitPacketLength);
       LoRa.endPacket(true); //async
       delayMicroseconds(500);
       transmitInitiated = true;
@@ -439,17 +382,10 @@ void transmitRCdata()
   {
     hasPendingRCData = false;
     transmitInitiated = false;
-    
     if(hopPending)
     {
       hop();
       hopPending = false;
-    }
-    
-    if(isRequestingTelemetry)
-    {
-      isRequestingTelemetry = false;
-      operatingMode = MODE_GET_TELEM;
     }
   }
 }
@@ -458,41 +394,27 @@ void transmitRCdata()
 
 void getTelemetry()
 {
-  static uint32_t timeOfLastTelemReception = 0;
-  
+  isListeningForTelemetry = true;
+
   if(LoRa.parsePacket()) //received a packet
   {
-    readReceivedMessage();
-    hop(); 
-    if(checkReceivedMessage(Sys.receiverID, Sys.transmitterID) == PAC_TELEMETRY)
+    readReceivedPacket();
+    hop();
+    isListeningForTelemetry = false;
+    isRequestingTelemetry = false;
+
+    if(checkReceivedPacket(Sys.receiverID, Sys.transmitterID) == PACKET_TELEMETRY_GENERAL)
     {
-      timeOfLastTelemReception = millis();
-      receiverPacketRate = msgBuff[3];
-      for(uint8_t cntr = 0; cntr < MAX_TELEMETRY_COUNT; cntr++)
-      {
-        uint8_t buffIdx = 4 + (cntr * 3);
-        if(buffIdx >= sizeof(msgBuff) - 1) //we've reached the end, no more values to read
-          break;
-        telemID[cntr]  = msgBuff[buffIdx];
-        telemVal[cntr] = joinBytes(msgBuff[buffIdx + 1], msgBuff[buffIdx + 2]);
-      }
+      hasReceivedTelemetry = true;
+      receivedTelemetryType = TELEMETRY_TYPE_GENERAL;
+      receiverPacketRate = receivePayloadBuffer[0];
     }
-    //Change mode
-    operatingMode = MODE_RC_DATA;
+    else if(checkReceivedPacket(Sys.receiverID, Sys.transmitterID) == PACKET_TELEMETRY_GNSS)
+    {
+      hasReceivedTelemetry = true;
+      receivedTelemetryType = TELEMETRY_TYPE_GNSS;
+    }
   }
-  
-  //reset telemetry
-  if(millis() - timeOfLastTelemReception > 2500)
-    resetTelemetry();
-}
-
-//--------------------------------------------------------------------------------------------------
-
-void resetTelemetry()
-{
-  receiverPacketRate = 0;
-  for(uint8_t cntr = 0; cntr < MAX_TELEMETRY_COUNT; cntr++)
-    telemVal[cntr] = TELEMETRY_NO_DATA;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -511,14 +433,10 @@ void getReceiverConfig()
   //Start transmit
   if(!transmitInitiated)
   {
-    uint8_t dataToSend[FIXED_PAYLOAD_SIZE];
-    memset(dataToSend, 0, sizeof(dataToSend));
-    dataToSend[0] = isMainReceiver & 0x01;
-
-    buildPacket(Sys.transmitterID, Sys.receiverID, PAC_READ_OUTPUT_CH_CONFIG, dataToSend, sizeof(dataToSend));
+    buildPacket(Sys.transmitterID, Sys.receiverID, PACKET_READ_OUTPUT_CH_CONFIG, transmitPayloadBuffer, transmitPayloadLength);
     if(LoRa.beginPacket())
     {
-      LoRa.write(packet, sizeof(packet));
+      LoRa.write(transmitPacketBuffer, transmitPacketLength);
       LoRa.endPacket(true); //async
       delayMicroseconds(500);
       transmitInitiated = true;
@@ -537,16 +455,12 @@ void getReceiverConfig()
     
     if(LoRa.parsePacket()) //received a packet
     {
-      readReceivedMessage();
+      readReceivedPacket();
       hop();
-      if(checkReceivedMessage(Sys.receiverID, Sys.transmitterID) == PAC_READ_OUTPUT_CH_CONFIG)
+      if(checkReceivedPacket(Sys.receiverID, Sys.transmitterID) == PACKET_READ_OUTPUT_CH_CONFIG)
       {
         gotOutputChConfig = true;
-        for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
-          outputChConfig[i] = msgBuff[3 + i];
-        //Change mode
-        operatingMode = MODE_RC_DATA;
-        //reset
+        isRequestingOutputChConfig = false;
         isListeningForReply = false;
         transmitInitiated = false;
         retryCount = 0;
@@ -564,8 +478,8 @@ void getReceiverConfig()
       if(retryCount > maxRetries) //timeout
       {
         retryCount = 0;
+        isRequestingOutputChConfig = false;
         hop();
-        operatingMode = MODE_RC_DATA;
       }
     }
   }
@@ -587,19 +501,10 @@ void transmitReceiverConfig()
   //Start transmit
   if(!transmitInitiated)
   {
-    uint8_t dataToSend[FIXED_PAYLOAD_SIZE];
-    memset(dataToSend, 0, sizeof(dataToSend));
-    uint8_t i;
-    for(i = 0; i < NUM_RC_CHANNELS; i++)
-    {
-      dataToSend[i] = outputChConfig[i];
-    }
-    dataToSend[i++] = isMainReceiver & 0x01;
-    
-    buildPacket(Sys.transmitterID, Sys.receiverID, PAC_SET_OUTPUT_CH_CONFIG, dataToSend, sizeof(dataToSend));
+    buildPacket(Sys.transmitterID, Sys.receiverID, PACKET_SET_OUTPUT_CH_CONFIG, transmitPayloadBuffer, transmitPayloadLength);
     if(LoRa.beginPacket())
     {
-      LoRa.write(packet, sizeof(packet));
+      LoRa.write(transmitPacketBuffer, transmitPacketLength);
       LoRa.endPacket(true); //async
       delayMicroseconds(500);
       transmitInitiated = true;
@@ -618,15 +523,12 @@ void transmitReceiverConfig()
     
     if(LoRa.parsePacket()) //received a packet
     {
-      readReceivedMessage();
+      readReceivedPacket();
       hop();
-      if(checkReceivedMessage(Sys.receiverID, Sys.transmitterID) == PAC_ACK_OUTPUT_CH_CONFIG)
+      if(checkReceivedPacket(Sys.receiverID, Sys.transmitterID) == PACKET_ACK_OUTPUT_CH_CONFIG)
       {
-        //indicate success
         receiverConfigStatusCode = 1;
-        //Change mode
-        operatingMode = MODE_RC_DATA;
-        //reset
+        isSendOutputChConfig = false;
         isListeningForReply = false;
         transmitInitiated = false;
         retryCount = 0;
@@ -644,10 +546,8 @@ void transmitReceiverConfig()
       if(retryCount > maxRetries) //timeout
       {
         retryCount = 0;
-        //indicate failure
         receiverConfigStatusCode = 2;
-        //change mode
-        operatingMode = MODE_RC_DATA;
+        isSendOutputChConfig = false;
         hop();
       }
     }
@@ -656,36 +556,49 @@ void transmitReceiverConfig()
 
 //--------------------------------------------------------------------------------------------------
 
-void buildPacket(uint8_t srcID, uint8_t destID, uint8_t dataIdentifier, uint8_t *dataBuff, uint8_t dataLen)
+void buildPacket(uint8_t sourceID, uint8_t destinationID, uint8_t dataIdentifier, uint8_t *dataBuffer, uint8_t dataLength)
 {
-  memset(packet, 0, sizeof(packet));
-  packet[0] = srcID;
-  packet[1] = destID;
-  packet[2] = dataIdentifier;
-  for(uint8_t i = 0; i < dataLen; i++)
+  memset(transmitPacketBuffer, 0, sizeof(transmitPacketBuffer));
+  
+  //sourceID 7 bits, destinationID 7 bits, dataIdentifier 5 bits, dataLength 5 bits
+  transmitPacketBuffer[0] = sourceID << 1;
+  transmitPacketBuffer[0] |= (destinationID >> 6) & 0x01;
+  transmitPacketBuffer[1] = destinationID << 2;
+  transmitPacketBuffer[1] |= (dataIdentifier >> 3) & 0x03;
+  transmitPacketBuffer[2] = dataIdentifier << 5;
+  transmitPacketBuffer[2] |= (dataLength & 0x1F);
+  
+  //payload
+  uint8_t payloadLength = 0;
+  for(uint8_t i = 0; i < dataLength; i++)
   {
     uint8_t idx = 3 + i;
-    if(idx < sizeof(packet) - 1)
+    if(idx < (sizeof(transmitPacketBuffer) - 1))
     {
-      packet[idx] = *dataBuff;
-      ++dataBuff;
+      transmitPacketBuffer[idx] = *dataBuffer;
+      dataBuffer++;
+      payloadLength++;
     }
   }
-  //write crc byte at the end
-  packet[sizeof(packet) - 1] = crc8(packet, sizeof(packet) - 1);
+  
+  //add a crc
+  transmitPacketBuffer[3 + payloadLength] = crc8(transmitPacketBuffer, 3 + payloadLength);
+ 
+  //calculate the packet length
+  transmitPacketLength = 4 + payloadLength;
 }
 
 //--------------------------------------------------------------------------------------------------
 
-void readReceivedMessage()
+void readReceivedPacket()
 {
-  memset(msgBuff, 0, sizeof(msgBuff));
+  memset(receivePacketBuffer, 0, sizeof(receivePacketBuffer));
   uint8_t cntr = 0;
   while (LoRa.available() > 0) 
   {
-    if(cntr < sizeof(msgBuff))
+    if(cntr < sizeof(receivePacketBuffer))
     {
-      msgBuff[cntr] = LoRa.read();
+      receivePacketBuffer[cntr] = LoRa.read();
       cntr++;
     }
     else // discard any extra data
@@ -695,16 +608,31 @@ void readReceivedMessage()
 
 //--------------------------------------------------------------------------------------------------
 
-uint8_t checkReceivedMessage(uint8_t srcID, uint8_t destID)
+uint8_t checkReceivedPacket(uint8_t sourceID, uint8_t destinationID)
 {
-  if(msgBuff[0] != srcID || msgBuff[1] != destID)
-    return PAC_INVALID;
-  
+  uint8_t _sourceID = (receivePacketBuffer[0] >> 1) & 0x7F;
+  uint8_t _destinationID = ((receivePacketBuffer[0] & 0x01) << 6) | ((receivePacketBuffer[1] >> 2) & 0x3F);
+  uint8_t _dataIdentifier = ((receivePacketBuffer[1] & 0x03) << 3) | ((receivePacketBuffer[2] >> 5) & 0x07);
+  uint8_t _dataLength = receivePacketBuffer[2] & 0x1F;
+
+  if(_sourceID != sourceID || _destinationID != destinationID)
+    return PACKET_INVALID;
+
+  if(_dataLength > MAX_PAYLOAD_SIZE)
+    return PACKET_INVALID;
+
   //check crc
-  uint8_t crcQQ = msgBuff[sizeof(msgBuff) - 1];
-  uint8_t computedCRC = crc8(msgBuff, sizeof(msgBuff) - 1);
-  if(crcQQ != computedCRC)
-    return PAC_INVALID;
-  
-  return msgBuff[2];
+  uint8_t receivedCRC = receivePacketBuffer[3 + _dataLength];
+  uint8_t computedCRC = crc8(receivePacketBuffer, 3 + _dataLength);
+  if(computedCRC != receivedCRC)
+    return PACKET_INVALID;
+
+  receivePayloadLength = _dataLength;
+  memset(receivePayloadBuffer, 0, sizeof(receivePayloadBuffer));
+  for(uint8_t i = 0; i < receivePayloadLength; i++)
+  {
+    receivePayloadBuffer[i] = receivePacketBuffer[3 + i];
+  }
+
+  return _dataIdentifier;
 }
