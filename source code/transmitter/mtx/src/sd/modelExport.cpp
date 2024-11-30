@@ -124,10 +124,12 @@ void exportModelData(File& file)
   memset(tempBuff, 0, sizeof(tempBuff));
   
   file.println(F("##### Model configuration file #####"));
-  file.println(F("##### Exported from version " _SKETCHVERSION " #####"));
+  file.println(F("##### Exported from version " _FIRMWARE_VERSION " #####"));
 
   writeKeyValue_Char(file, 0, key_ModelName, Model.name);
   writeKeyValue_Char(file, 0, key_ModelType, findStringInIdStr(enum_ModelType, Model.type));
+
+  writeKeyValue_bool(file, 0, key_SecondaryRcvrEnabled, Model.secondaryRcvrEnabled);
   
   if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
   {
@@ -165,9 +167,16 @@ void exportModelData(File& file)
     telemetry_params_t *tlm = &Model.Telemetry[idx];
     if(idx > 0 && isEmptyStr(tlm->name, sizeof(tlm->name)))
       continue;
+
     writeKeyValue_Char(file, 0, key_Telemetry, NULL);
     writeKeyValue_S32(file, 1, key_Number, idx + 1);
+
+    writeKeyValue_Char(file, 1, key_Type, findStringInIdStr(enum_TelemetryType, tlm->type));
     writeKeyValue_Char(file, 1, key_Name, tlm->name);
+    
+    if(tlm->type == TELEMETRY_TYPE_GNSS)
+      continue;
+
     writeKeyValue_Char(file, 1, key_UnitsName, tlm->unitsName);
     
     writeKey_helper(file, 1, key_Identifier);
@@ -201,7 +210,7 @@ void exportModelData(File& file)
     getControlSwitchName_Clean(tempBuff, tmr->resetSwitch, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_ResetSwitch, tempBuff);
     
-    writeKeyValue_S32(file, 1, key_InitialMinutes, tmr->initialMinutes);
+    writeKeyValue_S32(file, 1, key_InitialSeconds, tmr->initialSeconds);
     writeKeyValue_bool(file, 1, key_IsPersistent, tmr->isPersistent);
     writeKeyValue_U32(file, 1, key_PersistVal, tmr->persistVal);
   }
@@ -296,7 +305,7 @@ void exportModelData(File& file)
   
   file.println(F("# ------ Mixer ------"));
   
-  for(uint8_t idx = 0; idx < NUM_MIXSLOTS; idx++)
+  for(uint8_t idx = 0; idx < NUM_MIX_SLOTS; idx++)
   {
     mixer_params_t *mxr = &Model.Mixer[idx];
     //skip if input and output are both none
@@ -614,4 +623,5 @@ void exportModelData(File& file)
 
     writeKeyValue_Char(file, 1, key_Text, notification->text);
   }
+
 }
