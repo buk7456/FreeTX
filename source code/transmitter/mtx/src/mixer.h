@@ -12,6 +12,6 @@ void syncWaveform(uint8_t idx);
 void reinitialiseMixerCalculations();
 int16_t adjustTrim(uint8_t idx, int16_t val, uint8_t incButton, uint8_t decButton);
 
-extern int16_t mixSources[MIXSOURCES_COUNT]; 
+extern int16_t mixSources[MIX_SOURCES_COUNT]; 
 
 #endif
