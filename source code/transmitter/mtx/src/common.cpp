@@ -65,9 +65,9 @@
   #error At most 5 counters
 #endif
 
-#if NUM_MIXSLOTS < 4
+#if NUM_MIX_SLOTS < 4
   #error At least 4 mix slots 
-#elif NUM_MIXSLOTS > 40
+#elif NUM_MIX_SLOTS > 40
   #error At most 40 mix slots
 #endif
 
@@ -129,7 +129,7 @@ int16_t   audioTrimVal;
 
 bool     backlightIsOn = false;
 
-uint32_t inputsLastMoved = 0; 
+uint32_t inputsLastMovedTime = 0; 
 
 uint8_t  transmitterPacketRate = 0;
 uint8_t  receiverPacketRate = 0;
@@ -138,7 +138,7 @@ bool     isRequestingBind = false;
 uint8_t  bindStatusCode = 0;  
 bool     isMainReceiver = true;
 
-uint8_t  outputChConfig[NUM_RC_CHANNELS];
+uint8_t  outputChConfig[MAX_CHANNELS_PER_RECEIVER];
 bool     gotOutputChConfig = false;
 bool     isRequestingOutputChConfig = false;
 bool     isSendOutputChConfig = false;
@@ -152,6 +152,13 @@ int16_t  telemetryLastReceivedValue[NUM_CUSTOM_TELEMETRY];
 uint8_t  telemetryAlarmState[NUM_CUSTOM_TELEMETRY];
 bool     telemetryMuteAlarms = false;
 bool     telemetryForceRequest = false;
+
+uint8_t telemetryType;
+
+gnss_telemetry_data_t GNSSTelemetryData;
+
+uint32_t gnssTelemetrylastReceivedTime;
+int32_t  gnssDistanceFromHome;
 
 int16_t  counterOut[NUM_COUNTERS];
 
@@ -241,9 +248,9 @@ void resetSystemParams()
   Sys.animationsEnabled = true;
   Sys.autohideTrims = false;
   Sys.showSplashScreen = true;
-  Sys.showWelcomeMsg = true;
+  Sys.showWelcomeMessage = true;
   Sys.useNumericalBatteryIndicator = false;
-  Sys.scrollBarStyle = 1;
+  Sys.alwaysShowHours = true;
   
   Sys.autoSelectMovedControl = true;
   Sys.mixerTemplatesEnabled = true;
@@ -255,6 +262,12 @@ void resetSystemParams()
   Sys.DBG_disableInterlacing = false;
 
   Sys.screenshotSeqNo = 0;
+
+  Sys.gnssHomeLongitude = 0;
+  Sys.gnssHomeLatitude = 0;
+  Sys.gnssAltitudeOffset = 0;
+  Sys.gnssLastKnownLatitude = 0;
+  Sys.gnssLastKnownLongitude = 0;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -270,6 +283,9 @@ void resetModelParams()
 {
   //--- model type ---
   Model.type = MODEL_TYPE_AIRPLANE;
+
+  //---
+  Model.secondaryRcvrEnabled = false;
   
   //--- raw sources for rud, thr, ail, ele inputs ---
   if(Sys.defaultStickMode == STICK_MODE_RTAE)
@@ -451,7 +467,7 @@ void resetTimerParams(uint8_t idx)
   Model.Timer[idx].name[0] = '\0';
   Model.Timer[idx].swtch = CTRL_SW_NONE;
   Model.Timer[idx].resetSwitch = CTRL_SW_NONE;
-  Model.Timer[idx].initialMinutes = 0;
+  Model.Timer[idx].initialSeconds = 0;
   Model.Timer[idx].isPersistent = false;
   Model.Timer[idx].persistVal = 0;
 }
@@ -574,7 +590,7 @@ void resetFuncgenParams(uint8_t idx)
 
 void resetMixerParams()
 {
-  for(uint8_t i = 0; i < NUM_MIXSLOTS; i++)
+  for(uint8_t i = 0; i < NUM_MIX_SLOTS; i++)
     resetMixerParams(i);
 }
 
@@ -582,7 +598,7 @@ void resetMixerParams()
 
 void resetMixerParams(uint8_t idx)
 {
-  if(idx >= NUM_MIXSLOTS)
+  if(idx >= NUM_MIX_SLOTS)
     return;
   
   Model.Mixer[idx].name[0] = '\0';
@@ -645,14 +661,13 @@ void resetTelemParams(uint8_t idx)
   
   Model.Telemetry[idx].name[0] = '\0';
   Model.Telemetry[idx].unitsName[0] = '\0';
+  Model.Telemetry[idx].type = TELEMETRY_TYPE_GENERAL;
   Model.Telemetry[idx].identifier = 0;
   Model.Telemetry[idx].multiplier = 100;
   Model.Telemetry[idx].factor10 = 0;
   Model.Telemetry[idx].offset = 0;
-  Model.Telemetry[idx].logEnabled = false;
   Model.Telemetry[idx].alarmCondition = TELEMETRY_ALARM_CONDITION_NONE;
   Model.Telemetry[idx].alarmThreshold = 0;
-  Model.Telemetry[idx].alarmMelody = 0; 
   Model.Telemetry[idx].showOnHome = true; 
   Model.Telemetry[idx].recordMaximum = true; 
   Model.Telemetry[idx].recordMinimum = true; 
@@ -758,7 +773,7 @@ bool changeLSReference(uint8_t newRef, uint8_t oldRef)
   }
 
   //mixer
-  for(uint8_t i = 0; i < NUM_MIXSLOTS; i++)
+  for(uint8_t i = 0; i < NUM_MIX_SLOTS; i++)
   {
     mixer_params_t *mxr = &Model.Mixer[i];
     if(mxr->swtch == swOld)       {refFound = true; mxr->swtch = swNew;}
@@ -863,13 +878,13 @@ bool verifyModelData()
   {
     if(Model.Funcgen[i].waveform >= FUNCGEN_WAVEFORM_COUNT) isSane = false;
     if(Model.Funcgen[i].phaseMode >= FUNCGEN_PHASEMODE_COUNT) isSane = false;
-    if(Model.Funcgen[i].modulatorSrc >= MIXSOURCES_COUNT) isSane = false;
+    if(Model.Funcgen[i].modulatorSrc >= MIX_SOURCES_COUNT) isSane = false;
   }
 
-  for(uint8_t i = 0; i < NUM_MIXSLOTS; i++)
+  for(uint8_t i = 0; i < NUM_MIX_SLOTS; i++)
   {
-    if(Model.Mixer[i].output >= MIXSOURCES_COUNT) isSane = false;
-    if(Model.Mixer[i].input >= MIXSOURCES_COUNT) isSane = false;
+    if(Model.Mixer[i].output >= MIX_SOURCES_COUNT) isSane = false;
+    if(Model.Mixer[i].input >= MIX_SOURCES_COUNT) isSane = false;
     if(Model.Mixer[i].curveType >= MIX_CURVE_TYPE_COUNT)  isSane = false;
     if(Model.Mixer[i].operation >= MIX_OPERATOR_COUNT)  isSane = false;
   }
@@ -980,17 +995,16 @@ bool isEmptyStr(char* buff, uint8_t lenBuff)
 
 //--------------------------------------------------------------------------------------------------
 
-//Trims in place the whitespace at begining and end of a the string
-  
+//Trims in place the whitespace at beginning and end of a the string
+
 void trimWhiteSpace(char* buff, uint8_t lenBuff)
 {
   if(buff[0] == '\0')
     return;
-  
-  //trim leading space
+  //--- trim leading space
   uint8_t i = 0; 
   while(isspace(buff[i]))
-  {    
+  {
     i++;
     if(i == lenBuff - 1) //all spaces
     {
@@ -998,17 +1012,26 @@ void trimWhiteSpace(char* buff, uint8_t lenBuff)
       return;
     }
   }
-  
-  //trim trailing space
+  //--- trim trailing space
   if(lenBuff < 2)
     return;
-  uint8_t j = lenBuff - 2;
+  //find the first occurance of the null character (in case of a partial string)
+  uint8_t idxOfNull = 0xff;
+  for(uint8_t m = i; m < lenBuff - 1; m++)
+  {
+    if(buff[m] == '\0')
+    {
+      idxOfNull = m;
+      break;
+    }
+  }
+  uint8_t j = (idxOfNull != 0xff) ? idxOfNull - 1 : lenBuff - 2;
   while(j > i && isspace(buff[j]))
     j--;
-  
-  //shift the remaining characters to the beginning of the string
+  //--- shift the remaining characters to the beginning of the string
   uint8_t k = 0;
   while(i <= j)
     buff[k++] = buff[i++];
   buff[k] = '\0';  //add a null terminator
 }
+
