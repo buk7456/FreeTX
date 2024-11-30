@@ -96,9 +96,9 @@ and in lower position full flaperons.
 <br>For smooth flaperon deployment, we use the slow up/down feature.
 ```txt
 1. Ch1  Add  Ail (Weight -100, Diff 30)
-2. Ch1  Add  SwC (Weight -40, Offset -40, SlowUp 1s, SlowDown 1s)
+2. Ch1  Add  SwC (Weight -40, Offset -40, SlowUp 1 s, SlowDown 1 s)
 3. Ch8  Add  Ail (Weight 100, Diff 30)
-4. Ch8  Add  SwC (Weight -40, Offset -40, SlowUp 1s, SlowDown 1s)
+4. Ch8  Add  SwC (Weight -40, Offset -40, SlowUp 1 s, SlowDown 1 s)
 ```
 
 ### Example 7: Crow braking 
@@ -108,10 +108,10 @@ Half flaps are deployed when SwC is in middle position. When SwC is in lower pos
 move upward and full flaps are deployed.
 ```txt
 1. Ch1   Add  Ail (Weight -100, Diff 30)
-2. Ch1   Add  SwC (Weight 60, Func x>0, SlowUp 1s, SlowDown 1s)
+2. Ch1   Add  SwC (Weight 60, Func x>0, SlowUp 1 s, SlowDown 1 s)
 3. Ch8   Add  Ail (Weight 100, Diff 30)
-4. Ch8   Add  SwC (Weight 60, Func x>0, SlowUp 1s, SlowDown 1s)
-5. Ch5   Add  SwC (Weight -50, Offset -50, SlowUp 1s, SlowDown 1s)
+4. Ch8   Add  SwC (Weight 60, Func x>0, SlowUp 1 s, SlowDown 1 s)
+5. Ch5   Add  SwC (Weight -50, Offset -50, SlowUp 1 s, SlowDown 1 s)
 6. Ch6   Add  Ch5 (Weight 100)
 ```
 
@@ -214,8 +214,8 @@ override as L1 and value -100.
 ### Example 16: Landing gear sequencer (gear doors stay open after gear is extended)
 Using SwD for operation. Assuming gear doors on Ch6 and gear on Ch7.
 ```txt
-1. Ch6  Add  SwD (Weight 100, DelayUp 0s, DelayDown 3s, SlowUp 2s, SlowDown 2s)
-2. Ch7  Add  SwD (Weight 100, DelayUp 3s, DelayDown 0s, SlowUp 2s, SlowDown 2s)
+1. Ch6  Add  SwD (Weight 100, DelayUp 0 s, DelayDown 3 s, SlowUp 2 s, SlowDown 2 s)
+2. Ch7  Add  SwD (Weight 100, DelayUp 3 s, DelayDown 0 s, SlowUp 2 s, SlowDown 2 s)
 ```
 
 ### Example 17: Landing gear sequencer (gear doors close after gear is extended)
@@ -236,7 +236,7 @@ Point(x,y): PtA(-100,-100) PtB(-50,-100) PtC(50,100) PtD(100,100)
 ``` 
 Then in the mixer, assuming gear door servos on Ch7, gear servos on Ch8, and using SwD to operate,
 ```txt
-1. Virt1 Add  SwD   (Weight 100, SlowUp 7s, SlowDown 7s) //Create a source that slowly ramps
+1. Virt1 Add  SwD   (Weight 100, SlowUp 7 s, SlowDown 7 s) //Create a source that slowly ramps
 2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)          //Apply curve1 for the door sequence
 3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)          //Apply curve2 for the gear sequence
 ```
@@ -257,12 +257,12 @@ Type: 4 point
 Point(x,y): PtA(-100,-100) PtB(50,-100) PtC(50,100) PtD(100,100)
 ```
 <p align="left">
-<img src="img5.png"/>
+<img src="img5.png" width = "588"/>
 </p>
 
 Then in the mixer, assuming gear door servos on Ch7, gear retracts on Ch8, and using SwD to operate, 
 ```txt
-1. Virt1 Add  SwD   (Weight 100, SlowUp 10s, SlowDown 10s) //Create a source that slowly ramps
+1. Virt1 Add  SwD   (Weight 100, SlowUp 10 s, SlowDown 10 s) //Create a source that slowly ramps
 2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)            //Apply curve1 for the door sequence
 3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)            //Apply curve2 for the gear open sequence
 3. Ch8   RplW Virt1 (Weight 100, Custom Curve3, SwD_Up)    //Apply curve3 for the gear close sequence
@@ -287,11 +287,11 @@ random and intermittent manner.
 ```txt
 Function generator Fgen1
 Waveform: Random
-Interval: 2.0s
+Interval: 2.0 s
 
 Function generator Fgen2
 Waveform: Random
-Interval: 1.3s
+Interval: 1.3 s
 ``` 
 
 ```txt
@@ -304,7 +304,7 @@ Then in the mixer, assuming our servo is on Ch7,
 ```txt
 1. Ch7   Add  Fgen1 (Weight 100)          
 2. Ch7   Hold       (L1)          
-3. Ch7   RplW Ch7   (Weight 100, SlowUp 2s, SlowDown 2s) 
+3. Ch7   RplW Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s) 
 ```
 Explanation: 
 <br>Fgen1 generates a random position periodically, Fgen2 via Logical switch L1 is 
@@ -323,24 +323,24 @@ Furthermore, a physical switch SwE is used to start/stop the random motion of th
 Fgen1
 Waveform: Random
 IntervalMode: Variable
-Min Interval: 1.0s
-Max Interval: 2.0s
+Min Interval: 1.0 s
+Max Interval: 2.0 s
 Control: Fgen2
 
 Fgen2  (modulates the interval of Fgen1)
 Waveform: Random
 IntervalMode: Fixed
-Interval: 1.0s
+Interval: 1.0 s
 
 Fgen3  (used for the intermittent motion)
 Waveform: Random
 IntervalMode: Fixed
-Interval: 1.0s
+Interval: 1.0 s
 
 Fgen4  (used for the selection between two speeds)
 Waveform: Random
 IntervalMode: Fixed
-Interval: 2.0s
+Interval: 2.0 s
 ```
 
 Then set up two logical switches as follows.
@@ -361,8 +361,8 @@ Then in the mixer, assuming our servo is on Ch7,
 1. Ch7   Add   Fgen1 (Weight 100)          
 2. Ch7   Hold        (L1)          
 3. Ch7   RplW  Max   (Weight 0, SwE_Up) 
-4. Ch7   RplW  Ch7   (Weight 100, SlowUp 5s, SlowDown 5s, L2) 
-5. Ch7   RplW  Ch7   (Weight 100, SlowUp 2s, SlowDown 2s) 
+4. Ch7   RplW  Ch7   (Weight 100, SlowUp 5 s, SlowDown 5 s, L2) 
+5. Ch7   RplW  Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s) 
 ```
 
 ### Example 21: Oscillation without using the built-in function generator
@@ -385,7 +385,7 @@ Then in the mixer, we make use of the 'slow' feature on the L1 mixer input.
 This essentially creates a sawtooth waveform on Virt1.
 Assuming our final output is on Ch1, we specify the input as Virt1 and apply the custom curve.
 ```txt
-1. Virt1  Add  L1    (Weight 100, SlowUp 1s, SlowDown 0s)
+1. Virt1  Add  L1    (Weight 100, SlowUp 1 s, SlowDown 0 s)
 2. Ch1    Add  Virt1 (Weight 100, Custom Curve1)
 ```
 
@@ -419,7 +419,7 @@ Then in the mixer, assuming the rudder servo is on Ch4,
 ```txt
 1. Virt1 Add     Max   (Weight 100, Switch L4)
 2. Ch4   Add     Ail   (Weight 100, No trim)
-3. Ch4   Mltply  Virt1 (Weight 100, SlowDown 1s)
+3. Ch4   Mltply  Virt1 (Weight 100, SlowDown 1 s)
 4. Ch4   Add     Rud   (Weight 100, Switch !L4)
 ```
 Here, Virt1 is used to smooth the transition from the Aileron stick to the Rudder stick.
