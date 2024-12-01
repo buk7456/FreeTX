@@ -49,7 +49,7 @@ MESSAGE_TYPE_RC_DATA:
   RC channel outputs values or faisafe data, encoded as 10 bits per channel.   
   Flags are transmitted in a separate byte that is appended. 
   The flag byte is as follows: 
-    bits 0 to 2   RF power level.
+    bit 0 to 2    RF power level.
     bit 3         Return telemetry.
     bit 4         Whether this is failsafe data.
 
@@ -67,12 +67,12 @@ MESSAGE_TYPE_RECEIVER_CONFIG:
 MESSAGE_TYPE_WRITE_RECEIVER_CONFIG:
   
   Each RC channel's output configuration is sent on a separate byte, encoded as follows.
-    bits 0 to 1   The present mode. Value is as follows: 
+    bit 0 to 1    The present mode. Value is as follows: 
                     0  Digital, 
                     1  Servo PWM, 
                     2  Normal PWM.
-    bits 2 to 3   The maximum supported mode. Not applicable if writing configuration.
-    bits 4 to 7   The servo pwm range. Value is and index in the lookup table.
+    bit 2 to 3    The maximum supported mode. Not applicable if writing configuration.
+    bit 4 to 7    The servo pwm range. Value is and index in the lookup table.
                   See the "servo_PWM_range_LUT.xls" for extended description.
                   
   If the message is of type MESSAGE_TYPE_WRITE_RECEIVER_CONFIG, a byte containing a flag is 
