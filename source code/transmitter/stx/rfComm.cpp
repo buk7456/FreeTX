@@ -9,7 +9,6 @@
 #include "eestore.h"
 #include "rfComm.h"
 
-
 //--------------- Freq allocation --------------------
 /* 
   LPD433 Band ITU region 1
@@ -65,14 +64,6 @@ enum {
   PACKET_TELEMETRY_GNSS = 7,
 
   PACKET_INVALID = 0xFF
-};
-
-enum {
-  MODE_BIND, 
-  MODE_RC_DATA, 
-  MODE_GET_TELEM,
-  MODE_GET_RECEIVER_CONFIG,
-  MODE_SEND_RECEIVER_CONFIG
 };
 
 bool     radioInitialised = false;
