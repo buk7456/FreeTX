@@ -7,6 +7,7 @@
 #include "common.h"
 #include "crc.h"
 #include "eestore.h"
+#include "GPS.h"
 #include "rfComm.h"
 
 #define MAX_PAYLOAD_SIZE 26
@@ -447,7 +448,7 @@ void sendTelemetry() //### TODO implement custom telemetry, establish standard I
     //alternate between telemetry types
     static uint8_t counter = 0;
     counter++;
-    if(counter % 2 == 0 && hasGNSSReceiver && sizeof(GNSSTelemetryData) <= sizeof(transmitPayloadBuffer))
+    if(counter % 2 == 0 && hasGNSSModule && sizeof(GNSSTelemetryData) <= sizeof(transmitPayloadBuffer))
       telemetryType = TELEMETRY_TYPE_GNSS;
     else
       telemetryType = TELEMETRY_TYPE_GENERAL;
@@ -480,8 +481,13 @@ void sendTelemetry() //### TODO implement custom telemetry, establish standard I
         }
         break;
       
-      case TELEMETRY_TYPE_GNSS: //todo
+      case TELEMETRY_TYPE_GNSS:
         {
+          //Convert the GPS data to our custom format.
+          //The conversion function is called within here as it is quite CPU intensive, 
+          //and it is here that we have a large enough window to compute and send back the telemetry.
+          convertGPSData();
+
           memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
           memcpy(transmitPayloadBuffer, &GNSSTelemetryData, sizeof(GNSSTelemetryData));
           transmitPayloadLength = sizeof(GNSSTelemetryData);

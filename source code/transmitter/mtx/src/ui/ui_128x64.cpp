@@ -5638,7 +5638,7 @@ void handleMainUI()
       }
       break;
 
-    case DIALOG_TIMER_INITIAL_TIME: //todo better name
+    case DIALOG_TIMER_INITIAL_TIME:
       {
         drawBoundingBox(11, 14, 105, 35,BLACK);
         display.setCursor(17, 18);
@@ -6423,7 +6423,7 @@ void handleMainUI()
           contextMenuAddItem(PSTR("View GNSS data"), ITEM_VIEW_GNSS_DATA);
           contextMenuAddItem(PSTR("Reset altitude AGL"), ITEM_RESET_AGL_ALTITUDE);
           contextMenuAddItem(PSTR("Reset start point"), ITEM_RESET_STARTING_POINT);
-          contextMenuAddItem(PSTR("Reset last loctn"), ITEM_RESET_LAST_KNOWN_LOCATION); //todo better name
+          contextMenuAddItem(PSTR("Reset last loctn"), ITEM_RESET_LAST_KNOWN_LOCATION);
           //add delete option if all the child items have been deleted
           bool hasChildren = false;
           for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
@@ -6449,19 +6449,24 @@ void handleMainUI()
         if(contextMenuSelectedItemID == ITEM_VIEW_GNSS_DATA) changeToScreen(SCREEN_TELEMETRY_GNSS);
         if(contextMenuSelectedItemID == ITEM_RESET_AGL_ALTITUDE)
         {
-          Sys.gnssAltitudeOffset = GNSSTelemetryData.altitude;
+          if(GNSSTelemetryData.positionFix != 0)
+            Model.gnssAltitudeOffset = GNSSTelemetryData.altitude;
+          else
+            Model.gnssAltitudeOffset = Model.gnssLastKnownAltitude;
           changeToScreen(SCREEN_TELEMETRY);
         }
         if(contextMenuSelectedItemID == ITEM_RESET_STARTING_POINT)
         {
-          Sys.gnssHomeLatitude = GNSSTelemetryData.latitude;
-          Sys.gnssHomeLongitude = GNSSTelemetryData.longitude;
+          Model.gnssHomeLatitude = GNSSTelemetryData.latitude;
+          Model.gnssHomeLongitude = GNSSTelemetryData.longitude;
           changeToScreen(SCREEN_TELEMETRY);
         }
         if(contextMenuSelectedItemID == ITEM_RESET_LAST_KNOWN_LOCATION)
         {
-          Sys.gnssLastKnownLatitude = 0;
-          Sys.gnssLastKnownLongitude = 0;
+          Model.gnssLastKnownLatitude = 0;
+          Model.gnssLastKnownLongitude = 0;
+          Model.gnssLastKnownAltitude = 0;
+          Model.gnssLastKnownDistanceFromHome = 0;
           changeToScreen(SCREEN_TELEMETRY);
         }
 
@@ -6923,6 +6928,10 @@ void handleMainUI()
           ITEM_MSL_ALTITUDE,
           ITEM_LATITUDE,
           ITEM_LONGITUDE,
+          ITEM_SEPARATOR,
+          ITEM_TITLE_HOME_LOCATION,
+          ITEM_HOME_LATITUDE,
+          ITEM_HOME_LONGITUDE,
 
           ITEM_COUNT
         };
@@ -6954,8 +6963,8 @@ void handleMainUI()
           {
             case ITEM_SATELLITES:
               {
-                display.print(F("Satellites:"));
-                display.setCursor(66, ypos);
+                display.print(F("Satellite:"));
+                display.setCursor(60, ypos);
                 display.print(GNSSTelemetryData.satellitesInUse);
                 display.print(F("/"));
                 display.print(GNSSTelemetryData.satellitesInView);
@@ -6965,11 +6974,11 @@ void handleMainUI()
             case ITEM_LATITUDE:
               {
                 display.print(F("Latitude:"));
-                display.setCursor(66, ypos);
-                if(GNSSTelemetryData.satellitesInUse != 0)
+                display.setCursor(60, ypos);
+                if(GNSSTelemetryData.positionFix != 0)
                   printFixedPointVal(GNSSTelemetryData.latitude, 5);
                 else
-                  printFixedPointVal(Sys.gnssLastKnownLatitude, 5);
+                  printFixedPointVal(Model.gnssLastKnownLatitude, 5);
                 display.write(0xF8);
               }
               break;
@@ -6977,11 +6986,35 @@ void handleMainUI()
             case ITEM_LONGITUDE:
               {
                 display.print(F("Longitude:"));
-                display.setCursor(66, ypos);
-                if(GNSSTelemetryData.satellitesInUse != 0)
+                display.setCursor(60, ypos);
+                if(GNSSTelemetryData.positionFix != 0)
                   printFixedPointVal(GNSSTelemetryData.longitude, 5);
                 else
-                  printFixedPointVal(Sys.gnssLastKnownLongitude, 5);
+                  printFixedPointVal(Model.gnssLastKnownLongitude, 5);
+                display.write(0xF8);
+              }
+              break;
+
+            case ITEM_TITLE_HOME_LOCATION:
+              {
+                display.print(F("Start point"));
+              }
+              break;
+            
+            case ITEM_HOME_LATITUDE:
+              {
+                display.print(F("Latitude:"));
+                display.setCursor(60, ypos);
+                printFixedPointVal(Model.gnssHomeLatitude, 5);
+                display.write(0xF8);
+              }
+              break;
+            
+            case ITEM_HOME_LONGITUDE:
+              {
+                display.print(F("Longitude:"));
+                display.setCursor(60, ypos);
+                printFixedPointVal(Model.gnssHomeLongitude, 5);
                 display.write(0xF8);
               }
               break;
@@ -6989,8 +7022,11 @@ void handleMainUI()
             case ITEM_MSL_ALTITUDE:
               {
                 display.print(F("Altitude:"));
-                display.setCursor(66, ypos);
-                display.print(GNSSTelemetryData.altitude);
+                display.setCursor(60, ypos);
+                if(GNSSTelemetryData.positionFix != 0)
+                  display.print(GNSSTelemetryData.altitude);
+                else
+                  display.print(Model.gnssLastKnownAltitude);
                 display.setCursor(display.getCursorX() + 3, ypos);
                 display.print(F("m"));
                 display.setCursor(108, ypos);
@@ -7001,8 +7037,11 @@ void handleMainUI()
             case ITEM_AGL_ALTITUDE:
               {
                 display.print(F("Altitude:"));
-                display.setCursor(66, ypos);
-                display.print(GNSSTelemetryData.altitude - Sys.gnssAltitudeOffset);
+                display.setCursor(60, ypos);
+                if(GNSSTelemetryData.positionFix != 0)
+                  display.print(GNSSTelemetryData.altitude - Model.gnssAltitudeOffset);
+                else
+                  display.print(Model.gnssLastKnownAltitude - Model.gnssAltitudeOffset);
                 display.setCursor(display.getCursorX() + 3, ypos);
                 display.print(F("m"));
                 display.setCursor(108, ypos);
@@ -7013,19 +7052,22 @@ void handleMainUI()
             case ITEM_DISTANCE:
               {
                 display.print(F("Distance:"));
-                display.setCursor(66, ypos);
-                if(gnssDistanceFromHome < 1000)
+                display.setCursor(60, ypos);
+                int32_t distance = Model.gnssLastKnownDistanceFromHome;
+                if(GNSSTelemetryData.positionFix != 0)
+                  distance = gnssDistanceFromHome;
+                if(distance < 1000)
                 {
-                  display.print(gnssDistanceFromHome);
+                  display.print(distance);
                   display.setCursor(display.getCursorX() + 3, ypos);
                   display.print(F("m"));
                 }
                 else
                 {
-                  if(gnssDistanceFromHome < 100000)
-                    printFixedPointVal(gnssDistanceFromHome, 3);
+                  if(distance < 100000)
+                    printFixedPointVal(distance, 3);
                   else
-                    printFixedPointVal(gnssDistanceFromHome / 100, 1);
+                    printFixedPointVal(distance / 100, 1);
                   display.setCursor(display.getCursorX() + 3, ypos);
                   display.print(F("km"));
                 }
@@ -7035,7 +7077,7 @@ void handleMainUI()
             case ITEM_SPEED:
               {
                 display.print(F("Speed:"));
-                display.setCursor(66, ypos);
+                display.setCursor(60, ypos);
                 display.print(GNSSTelemetryData.speed / 10);
                 display.print(F("."));
                 display.print(GNSSTelemetryData.speed % 10);
@@ -7047,7 +7089,7 @@ void handleMainUI()
             case ITEM_COURSE:
               {
                 display.print(F("Course:"));
-                display.setCursor(66, ypos);
+                display.setCursor(60, ypos);
                 display.print(GNSSTelemetryData.course / 10);
                 display.print(F("."));
                 display.print(GNSSTelemetryData.course % 10);
@@ -7357,7 +7399,7 @@ void handleMainUI()
           ITEM_USE_ROUND_CORNERS,
           ITEM_ENABLE_ANIMATIONS,
           ITEM_AUTOHIDE_TRIMS,
-          ITEM_ALWAYS_SHOW_HOURS_FOR_TIMERS, //todo better name
+          ITEM_ALWAYS_SHOW_HOURS_FOR_TIMERS,
           ITEM_USE_NUMERICAL_BATTERY_INDICATOR,
           ITEM_SHOW_WELCOME_MSG,
           ITEM_SHOW_SPLASH_SCREEN,
@@ -7483,7 +7525,7 @@ void handleMainUI()
 
             case ITEM_ALWAYS_SHOW_HOURS_FOR_TIMERS:
               {
-                display.print(F("Always show hr:")); //todo better name
+                display.print(F("Always show hr:"));
                 drawCheckbox(102, ypos, Sys.alwaysShowHours);
                 if(edit)
                   Sys.alwaysShowHours = incDec(Sys.alwaysShowHours, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);

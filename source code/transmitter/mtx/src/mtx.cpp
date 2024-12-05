@@ -320,13 +320,12 @@ void doSerialCommunication()
 
     case MESSAGE_TYPE_RC_DATA:
       {
-        // Alternately send failsafe or request telemetry
         bool isRequestingTelemetry = false;
         bool isFailsafeData = false;
-        const uint16_t interval = 740; //the LCM of this value and 1000 should be fairly large
-        if(thisLoopNum % (interval/fixedLoopTime) == 1)
+        uint8_t qq = thisLoopNum % 64;
+        if(qq == 16) //send failsafe data
           isFailsafeData = true;
-        else if(thisLoopNum % (interval/fixedLoopTime) == interval/(2*fixedLoopTime) + 1)
+        else if(qq == 0 || qq == 32) //request telemetry
         {
           //only request telemetry when necessary i.e. if there are configured sensors
           //or we are forcing telemetry request
@@ -522,11 +521,19 @@ void doSerialCommunication()
 
         gnssTelemetrylastReceivedTime = millis();
 
-        //store last know position
-        if(GNSSTelemetryData.satellitesInUse != 0)
+        if(GNSSTelemetryData.positionFix != 0)
         {
-          Sys.gnssLastKnownLatitude = GNSSTelemetryData.latitude;
-          Sys.gnssLastKnownLongitude = GNSSTelemetryData.longitude;
+          //calculate distance
+          float lat1 = (float) Model.gnssHomeLatitude / 100000;
+          float lng1 = (float) Model.gnssHomeLongitude / 100000;
+          float lat2 = (float) GNSSTelemetryData.latitude / 100000;
+          float lng2 = (float) GNSSTelemetryData.longitude / 100000; 
+          gnssDistanceFromHome = (int32_t) distanceBetween(lat1, lng1, lat2, lng2);
+          //store last know position
+          Model.gnssLastKnownLatitude = GNSSTelemetryData.latitude;
+          Model.gnssLastKnownLongitude = GNSSTelemetryData.longitude;
+          Model.gnssLastKnownAltitude = GNSSTelemetryData.altitude;
+          Model.gnssLastKnownDistanceFromHome = gnssDistanceFromHome;
         }
 
         //extract individual "sensors" for use in the pre-configured GNSS telemetry sensor templates
@@ -541,7 +548,7 @@ void doSerialCommunication()
           uint8_t id = pgm_read_byte(&sensorIDs[i]);
           //get the value
           int16_t val = TELEMETRY_NO_DATA;
-          if(GNSSTelemetryData.satellitesInUse != 0)
+          if(GNSSTelemetryData.positionFix != 0)
           {
             switch(id)
             {
@@ -551,11 +558,6 @@ void doSerialCommunication()
               
               case SENSOR_ID_GNSS_DISTANCE:
                 {
-                  float lat1 = (float) Sys.gnssHomeLatitude / 100000;
-                  float lng1 = (float) Sys.gnssHomeLongitude / 100000;
-                  float lat2 = (float) GNSSTelemetryData.latitude / 100000;
-                  float lng2 = (float) GNSSTelemetryData.longitude / 100000; 
-                  gnssDistanceFromHome = (int32_t) distanceBetween(lat1, lng1, lat2, lng2);
                   //limit val to maximum value representable by a 16 bit signed integer
                   val = (gnssDistanceFromHome > 32767) ? 32767 : gnssDistanceFromHome;
                 }
@@ -566,7 +568,7 @@ void doSerialCommunication()
                 break;
               
               case SENSOR_ID_GNSS_AGL_ALTITUDE:
-                val = GNSSTelemetryData.altitude - Sys.gnssAltitudeOffset;
+                val = GNSSTelemetryData.altitude - Model.gnssAltitudeOffset;
                 break;
             }
           }

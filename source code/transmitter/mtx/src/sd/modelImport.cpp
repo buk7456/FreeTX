@@ -20,6 +20,8 @@ char valueBuff[MAX_STR_SIZE];
 uint16_t dbgLineNumber = 0;
 uint16_t dbgFirstErrorLineNumber = 0;
 
+uint8_t thisIdx; //used inside the extractor functions
+
 //--------------------------- Parser ---------------------------------------------------------------
 
 // Reads in the file line by line, extracts the keys and values to the appropriate buffers and skipping 
@@ -273,21 +275,20 @@ void extractConfig_ThrottleWarning()
 
 void extractConfig_SwitchWarning()
 {
-  uint8_t idx = getSrcId(keyBuff[1]) - SRC_SW_PHYSICAL_FIRST;
-  if(idx < NUM_PHYSICAL_SWITCHES)
-    findIdInIdStr(enum_SwitchWarn, valueBuff, Model.switchWarn[idx]);
+  thisIdx = getSrcId(keyBuff[1]) - SRC_SW_PHYSICAL_FIRST;
+  if(thisIdx < NUM_PHYSICAL_SWITCHES)
+    findIdInIdStr(enum_SwitchWarn, valueBuff, Model.switchWarn[thisIdx]);
   else
     hasEncounteredInvalidParam = true;
 }
 
 void extractConfig_Telemetry()
 {
-  static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
-    idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_CUSTOM_TELEMETRY)
+    thisIdx = atoi_with_prefix(valueBuff) - 1;
+  else if(thisIdx < NUM_CUSTOM_TELEMETRY)
   {
-    telemetry_params_t* tlm = &Model.Telemetry[idx];
+    telemetry_params_t* tlm = &Model.Telemetry[thisIdx];
     if(MATCH_P(keyBuff[1], key_Type))
       findIdInIdStr(enum_TelemetryType, valueBuff, tlm->type);
     else if(MATCH_P(keyBuff[1], key_Name))
@@ -321,12 +322,11 @@ void extractConfig_Telemetry()
 
 void extractConfig_Timers()
 {
-  static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
-    idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_TIMERS)
+    thisIdx = atoi_with_prefix(valueBuff) - 1;
+  else if(thisIdx < NUM_TIMERS)
   {
-    timer_params_t* tmr = &Model.Timer[idx];
+    timer_params_t* tmr = &Model.Timer[thisIdx];
     if(MATCH_P(keyBuff[1], key_Name))
       strlcpy(tmr->name, valueBuff, sizeof(tmr->name));
     else if(MATCH_P(keyBuff[1], key_Switch))
@@ -488,12 +488,11 @@ void extractConfig_ThrottleCurve()
 
 void extractConfig_FunctionGenerators()
 {
-  static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
-    idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_FUNCGEN)
+    thisIdx = atoi_with_prefix(valueBuff) - 1;
+  else if(thisIdx < NUM_FUNCGEN)
   {
-    funcgen_t* fgen = &Model.Funcgen[idx];
+    funcgen_t* fgen = &Model.Funcgen[thisIdx];
     if(MATCH_P(keyBuff[1], key_Waveform))
       findIdInIdStr(enum_FuncgenWaveform, valueBuff, fgen->waveform);
     else if(MATCH_P(keyBuff[1], key_PeriodMode))
@@ -525,12 +524,11 @@ void extractConfig_FunctionGenerators()
 
 void extractConfig_Mixer()
 {
-  static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
-    idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_MIX_SLOTS)
+    thisIdx = atoi_with_prefix(valueBuff) - 1;
+  else if(thisIdx < NUM_MIX_SLOTS)
   {
-    mixer_params_t* mxr = &Model.Mixer[idx];
+    mixer_params_t* mxr = &Model.Mixer[thisIdx];
     if(MATCH_P(keyBuff[1], key_Name))
       strlcpy(mxr->name, valueBuff, sizeof(mxr->name));
     else if(MATCH_P(keyBuff[1], key_Output))
@@ -599,12 +597,11 @@ void extractConfig_Mixer()
 
 void extractConfig_CustomCurves()
 {
-  static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
-    idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_CUSTOM_CURVES)
+    thisIdx = atoi_with_prefix(valueBuff) - 1;
+  else if(thisIdx < NUM_CUSTOM_CURVES)
   {
-    custom_curve_t* crv = &Model.CustomCurve[idx];
+    custom_curve_t* crv = &Model.CustomCurve[thisIdx];
     if(MATCH_P(keyBuff[1], key_Name))
       strlcpy(crv->name, valueBuff, sizeof(crv->name));
     else if(MATCH_P(keyBuff[1], key_NumPoints))
@@ -654,12 +651,11 @@ void extractConfig_CustomCurves()
 
 void extractConfig_LogicalSwitches()
 {
-  static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
-    idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_LOGICAL_SWITCHES)
+    thisIdx = atoi_with_prefix(valueBuff) - 1;
+  else if(thisIdx < NUM_LOGICAL_SWITCHES)
   {
-    logical_switch_t* ls = &Model.LogicalSwitch[idx];
+    logical_switch_t* ls = &Model.LogicalSwitch[thisIdx];
     if(MATCH_P(keyBuff[1], key_Func))
       findIdInIdStr(enum_LogicalSwitch_Func, valueBuff, ls->func);
     else if(MATCH_P(keyBuff[1], key_Val1))
@@ -710,12 +706,11 @@ void extractConfig_LogicalSwitches()
 
 void extractConfig_Counters()
 {
-  static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
-    idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_COUNTERS)
+    thisIdx = atoi_with_prefix(valueBuff) - 1;
+  else if(thisIdx < NUM_COUNTERS)
   {
-    counter_params_t* counter = &Model.Counter[idx];
+    counter_params_t* counter = &Model.Counter[thisIdx];
     if(MATCH_P(keyBuff[1], key_Name))
       strlcpy(counter->name, valueBuff, sizeof(counter->name));
     else if(MATCH_P(keyBuff[1], key_Clock))
@@ -741,12 +736,11 @@ void extractConfig_Counters()
 
 void extractConfig_FlightModes()
 {
-  static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
-    idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_FLIGHT_MODES)
+    thisIdx = atoi_with_prefix(valueBuff) - 1;
+  else if(thisIdx < NUM_FLIGHT_MODES)
   {
-    flight_mode_t* fmd = &Model.FlightMode[idx];
+    flight_mode_t* fmd = &Model.FlightMode[thisIdx];
     if(MATCH_P(keyBuff[1], key_Name))
       strlcpy(fmd->name, valueBuff, sizeof(fmd->name));
     else if(MATCH_P(keyBuff[1], key_Switch))
@@ -770,12 +764,11 @@ void extractConfig_FlightModes()
 
 void extractConfig_Channels()
 {
-  static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
-    idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_RC_CHANNELS)
+    thisIdx = atoi_with_prefix(valueBuff) - 1;
+  else if(thisIdx < NUM_RC_CHANNELS)
   {
-    channel_params_t* ch = &Model.Channel[idx];
+    channel_params_t* ch = &Model.Channel[thisIdx];
     if(MATCH_P(keyBuff[1], key_Name))
       strlcpy(ch->name, valueBuff, sizeof(ch->name));
     else if(MATCH_P(keyBuff[1], key_Curve))
@@ -829,12 +822,11 @@ void extractConfig_Channels()
 
 void extractConfig_Widgets()
 {
-  static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
-    idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_WIDGETS)
+    thisIdx = atoi_with_prefix(valueBuff) - 1;
+  else if(thisIdx < NUM_WIDGETS)
   {
-    widget_params_t* widget = &Model.Widget[idx];
+    widget_params_t* widget = &Model.Widget[thisIdx];
     if(MATCH_P(keyBuff[1], key_Type))
       findIdInIdStr(enum_WidgetType, valueBuff, widget->type);
     else if(MATCH_P(keyBuff[1], key_Src))
@@ -889,12 +881,11 @@ void extractConfig_Widgets()
 
 void extractConfig_Notifications()
 {
-  static uint8_t idx = 0xff;
   if(MATCH_P(keyBuff[1], key_Number))
-    idx = atoi_with_prefix(valueBuff) - 1;
-  else if(idx < NUM_CUSTOM_NOTIFICATIONS)
+    thisIdx = atoi_with_prefix(valueBuff) - 1;
+  else if(thisIdx < NUM_CUSTOM_NOTIFICATIONS)
   {
-    notification_params_t *notification = &Model.CustomNotification[idx];
+    notification_params_t *notification = &Model.CustomNotification[thisIdx];
     if(MATCH_P(keyBuff[1], key_Enabled))
       readValue_bool(valueBuff, &notification->enabled);
     else if(MATCH_P(keyBuff[1], key_Text))

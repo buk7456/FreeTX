@@ -241,7 +241,6 @@ void computeChannelOutputs()
     mixSources[SRC_FUNCGEN_FIRST + i] = generateWaveform(i, currMillis);
 
   //Evaluate counters
-  //TODO possibly use counters in the mixer
   evaluateCounters();
 
   //Mix sources logical switches

@@ -4,30 +4,27 @@
 
 sys_params_t Sys;
 
-uint8_t transmitPayloadBuffer[MAX_PAYLOAD_SIZE];
-uint8_t receivePayloadBuffer[MAX_PAYLOAD_SIZE];
-uint8_t transmitPayloadLength;
-uint8_t receivePayloadLength;
+uint8_t  transmitPayloadBuffer[MAX_PAYLOAD_SIZE];
+uint8_t  receivePayloadBuffer[MAX_PAYLOAD_SIZE];
+uint8_t  transmitPayloadLength;
+uint8_t  receivePayloadLength;
 
-uint8_t rfPower;
-
-bool    isRequestingBind = false;
-uint8_t bindStatusCode;  
-bool    isMainReceiver = true;
-bool    hasPendingRCData = false;
-bool    hasReceivedTelemetry = false;
-uint8_t transmitterPacketRate;
-uint8_t receiverPacketRate;
-
-bool    isRequestingTelemetry = false;  
-
-bool    isRequestingOutputChConfig = false;
-bool    isSendOutputChConfig = false;
-bool    gotOutputChConfig = false;
-
-uint8_t receiverConfigStatusCode;
-
-uint8_t receivedTelemetryType;
+uint8_t  rfPower;
+bool     isRequestingBind = false;
+uint8_t  bindStatusCode;  
+bool     isMainReceiver = true;
+bool     hasPendingRCData = false;
+bool     hasReceivedTelemetry = false;
+uint8_t  transmitterPacketRate;
+uint8_t  receiverPacketRate;
+uint32_t generalTelemetryLastReceiveTime;
+bool     hasPendingRFLinkMessage = false;
+bool     isRequestingTelemetry = false;  
+bool     isRequestingOutputChConfig = false;
+bool     isSendOutputChConfig = false;
+bool     gotOutputChConfig = false;
+uint8_t  receiverConfigStatusCode;
+uint8_t  receivedTelemetryType;
 
 //--------------------------------------------------------------------------------------------------
 

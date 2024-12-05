@@ -8,6 +8,7 @@
 #include "common.h"
 #include "eestore.h"
 #include "rfComm.h"
+#include "GPS.h"
 
 //array of servo objects
 Servo myServo[MAX_CHANNELS_PER_RECEIVER];
@@ -31,6 +32,7 @@ int16_t outputPin[MAX_CHANNELS_PER_RECEIVER] = {
 void writeOutputs();
 void getExternalVoltage();
 uint8_t getMaxSignalType(int16_t pin);
+void getGNSSTelemetry();
 
 //==================================================================================================
 
@@ -47,6 +49,10 @@ void setup()
   
   //--- use analog reference internal 1.1V
   analogReference(INTERNAL);
+
+  //--- Serial
+  pinMode(0, INPUT_PULLUP); //prevent rx pin from floating and picking up random noise
+  Serial.begin(9600);
   
   //--- initialise values
   for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; ++i)
@@ -88,17 +94,8 @@ void loop()
   //--- EXTERNAL VOLTAGE
   getExternalVoltage();
 
-  //--- GNSS telemetry
-  //### dummy data
-  hasGNSSReceiver = true;
-  GNSSTelemetryData.latitude = 28365;
-  GNSSTelemetryData.longitude = -70269;
-  GNSSTelemetryData.satellitesInUse = 4;
-  GNSSTelemetryData.satellitesInView = 12;
-  GNSSTelemetryData.positionFix = 1;
-  GNSSTelemetryData.altitude = 50;
-  GNSSTelemetryData.speed = 123;
-  GNSSTelemetryData.course = 1278;
+  //--- GNSS TELEMETRY
+  getGNSSTelemetry();
 }
 
 //==================================================================================================
@@ -272,5 +269,46 @@ void getExternalVoltage()
   int32_t millivolts = ((int32_t)analogRead(PIN_EXTV_SENSE) * battVfactor) / 100;
   millivolts = ((int32_t)externalVolts * (_NUM_SAMPLES - 1) + millivolts) / _NUM_SAMPLES; 
   externalVolts = int16_t(millivolts); 
+}
+
+//==================================================================================================
+
+void getGNSSTelemetry()
+{
+  //The assumption is that the incoming serial data is being dealt with in a timely fashion. This requires
+  //this function to be called frequently enough so that incoming data does not overflow the serial receive buffer.
+  //For example at 9600 baud, a new byte comes in every 1.04 ms. Assuming this function is called every 20 ms,
+  //then the maximum unread bytes we can accumulate is about 20. Thus the default 64 byte serial rx buffer is 
+  //large enough.
+
+  static char sentence[120];
+  static uint8_t idxSentence = 0;
+
+  static uint32_t lastMillis = 0;
+
+  while(Serial.available())
+  {
+    char c = Serial.read();
+    if(idxSentence < (sizeof(sentence) - 1))
+    {
+      sentence[idxSentence++] = c;
+      if(c == '\n') //got a complete sentence, parse it
+      {
+        sentence[idxSentence] = '\0'; //add a null terminator
+        parseNMEA(sentence);
+        hasGNSSModule = true;
+        lastMillis = millis();
+        idxSentence = 0;
+        break;
+      }
+    }
+  }
+
+  //detect disconnection of module
+  if(hasGNSSModule)
+  {
+    if(millis() - lastMillis > 3000)
+      hasGNSSModule = false;
+  }
 }
 

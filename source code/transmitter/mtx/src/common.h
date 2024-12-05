@@ -273,7 +273,6 @@ extern uint32_t thisLoopNum; //main loop counter
 extern uint32_t DBG_loopTime;
 extern uint8_t screenshotSwtch;
 
-
 //====================== SYSTEM PARAMETERS =========================================================
 
 /* 
@@ -376,7 +375,7 @@ typedef struct {
   bool     useNumericalBatteryIndicator;
   bool     showSplashScreen;
   bool     showWelcomeMessage;
-  bool     alwaysShowHours; //todo better name
+  bool     alwaysShowHours;
   
   //--- misc
   bool     autoSelectMovedControl;
@@ -391,13 +390,6 @@ typedef struct {
 
   //--- screenshots
   uint16_t screenshotSeqNo;
-
-  //--- gnss telemetry
-  int16_t gnssAltitudeOffset;
-  int32_t gnssHomeLatitude;
-  int32_t gnssHomeLongitude;
-  int32_t gnssLastKnownLatitude;
-  int32_t gnssLastKnownLongitude;
 
 } sys_params_t;
 
@@ -909,6 +901,16 @@ typedef struct {
   
   //--- Widgets
   widget_params_t Widget[NUM_WIDGETS];
+
+  //--- GNSS telemetry
+  //These should not be exported to the SD card, for privacy.
+  int16_t gnssAltitudeOffset;
+  int32_t gnssHomeLatitude;
+  int32_t gnssHomeLongitude;
+  int32_t gnssLastKnownLatitude;
+  int32_t gnssLastKnownLongitude;
+  int16_t gnssLastKnownAltitude;
+  int32_t gnssLastKnownDistanceFromHome;
   
 } model_params_t;
 
