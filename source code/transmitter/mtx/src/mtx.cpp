@@ -558,8 +558,10 @@ void doSerialCommunication()
               
               case SENSOR_ID_GNSS_DISTANCE:
                 {
-                  //limit val to maximum value representable by a 16 bit signed integer
-                  val = (gnssDistanceFromHome > 32767) ? 32767 : gnssDistanceFromHome;
+                  //Limit val to prevent overflow of 16 bit signed integer.
+                  //When gnssDistanceFromHome exceeds this limit, value reverts to TELEMETRY_NO_DATA.
+                  if(gnssDistanceFromHome < ((int32_t) 32767))
+                    val = gnssDistanceFromHome;
                 }
                 break;
               
