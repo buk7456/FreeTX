@@ -15,6 +15,6 @@ uint32_t lastRCPacketMillis = 0;
 
 gnss_telemetry_data_t GNSSTelemetryData;
 
-bool hasGNSSReceiver = false;
+bool hasGNSSModule = false;
 
 uint8_t telemetryType;
