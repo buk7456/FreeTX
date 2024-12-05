@@ -18,7 +18,7 @@ static const char versionText[] PROGMEM =
   "\nhttps://github.com/\nbuk7456/FreeTX";
 
 static const char thirdPartyNoticesText[] PROGMEM =
-  "The software uses, with permissions, code from the following open source libraries: "
+  "The software uses, with permissions, code or portions from the following open source libraries: "
   "\f"
   "Adafruit GFX library"
   "\nCopyright (c) 2013 Adafruit Industries"
