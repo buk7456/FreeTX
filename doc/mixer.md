@@ -39,9 +39,9 @@ When editing mixes, it is recommended to disable RF output or remove propellers 
 
 ## Example mixes
 Note: 
-<br>The convention used in these examples is -ve for left/down going control surfaces, +ve for right/up going control surfaces. 
-<br>For example if the Ail stick is moved right, the left aileron moves down and right aileron moves up.
-<br>If a servo is moving in wrong direction, reversing the direction in Outputs screen solves this.
+- The convention used in these examples is -ve for left/down going control surfaces, +ve for right/up going control surfaces. 
+- For example if the Ail stick is moved right, the left aileron moves down and right aileron moves up.
+- If a servo is moving in wrong direction, reversing the direction in Outputs screen solves this.
 
 ### Example 1: Basic 4 channel
 Assuming Aileron servo in Ch1, Elevator servo in Ch2, Throttle in Ch3, Rudder servo in Ch4
@@ -186,22 +186,23 @@ override as SwA and value -100.
 ### Example 15: Sticky throttle cut
 Assuming Ch3 is the throttle channel, and assigning SwA for cut. Also assume our Throttle source is 
 Y1 axis. We want the throttle cut whenever SwA is in Up position, but to only remove the cut when 
-the throttle is at minimum and SwA is in Down position. This example makes use of logical switches as follows.
+the throttle is at minimum and SwA is in Down position.  
+This example makes use of logical switches as follows.
 ```txt
-Logical switch L1
+L1
 Func:   Latch
-Value1: SwA_Up     //sets the latch
-Value2: L3         //resets the latch
+Set:    SwA_Up
+Reset:  L3
 
-Logical switch L2
-Func: a==x
+L2
+Func:   a==x
 Value1: Y1
-value2: -100
+Value2: -100
 
-Logical switch L3
-Func: AND
+L3
+Func:   AND
 Value1: SwA_down
-value2: L2
+Value2: L2
 ``` 
 Then in the mixer
 ```txt
@@ -285,20 +286,20 @@ random and intermittent manner.
 <br>We can achieve this with function genarators and logical switches as follows.
  
 ```txt
-Function generator Fgen1
+Fgen1
 Waveform: Random
 Interval: 2.0 s
 
-Function generator Fgen2
+Fgen2
 Waveform: Random
 Interval: 1.3 s
 ``` 
 
 ```txt
-Logical switch L1
+L1
 Func:   a>x
 Value1: Fgen2
-value2: 0
+Value2: 0
 ``` 
 Then in the mixer, assuming our servo is on Ch7,
 ```txt
@@ -321,39 +322,39 @@ Furthermore, a physical switch SwE is used to start/stop the random motion of th
 
 ```txt
 Fgen1
-Waveform: Random
+Waveform:     Random
 IntervalMode: Variable
 Min Interval: 1.0 s
 Max Interval: 2.0 s
-Control: Fgen2
+Control:      Fgen2
 
 Fgen2  (modulates the interval of Fgen1)
-Waveform: Random
+Waveform:     Random
 IntervalMode: Fixed
-Interval: 1.0 s
+Interval:     1.0 s
 
 Fgen3  (used for the intermittent motion)
-Waveform: Random
+Waveform:     Random
 IntervalMode: Fixed
-Interval: 1.0 s
+Interval:     1.0 s
 
 Fgen4  (used for the selection between two speeds)
-Waveform: Random
+Waveform:     Random
 IntervalMode: Fixed
-Interval: 2.0 s
+Interval:     2.0 s
 ```
 
 Then set up two logical switches as follows.
 ```txt
-Logical switch L1
+L1
 Func:   a>x
 Value1: Fgen3
-value2: 0
+Value2: 0
 
-Logical switch L2
+L2
 Func:   a>x
 Value1: Fgen4
-value2: 0
+Value2: 0
 ``` 
 
 Then in the mixer, assuming our servo is on Ch7,
@@ -376,10 +377,10 @@ Smooth: True
 ```
 Then define a logical switch as follows.
 ```txt
-Logical switch L1
+L1
 Func:   a<x
 Value1: Virt1
-value2: 100
+Value2: 100
 ``` 
 Then in the mixer, we make use of the 'slow' feature on the L1 mixer input.
 This essentially creates a sawtooth waveform on Virt1.
@@ -401,25 +402,25 @@ Value1: Rud
 Value2: 0         
 
 L2
-Func: a==x
+Func:   a==x
 Value1: Ail
-value2: 0
+Value2: 0
 
 L3
-Func: AND
+Func:   AND
 Value1: L1
-value2: L2
+Value2: L2
 
 L4
-Func: Latch
-Value1: L3
-value2: !L1
+Func:   Latch
+Set:    L3
+Reset:  !L1
 ``` 
 Then in the mixer, assuming the rudder servo is on Ch4,
 ```txt
 1. Virt1 Add     Max   (Weight 100, Switch L4)
 2. Ch4   Add     Ail   (Weight 100, No trim)
 3. Ch4   Mltply  Virt1 (Weight 100, SlowDown 1 s)
-4. Ch4   Add     Rud   (Weight 100, Switch !L4)
+4. Ch4   Add     Rud   (Weight 100)
 ```
 Here, Virt1 is used to smooth the transition from the Aileron stick to the Rudder stick.
