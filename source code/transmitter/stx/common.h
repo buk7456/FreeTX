@@ -21,9 +21,12 @@ extern uint8_t  bindStatusCode;  //1 on success, 2 on fail
 extern bool     hasPendingRCData;
 
 extern bool     hasReceivedTelemetry;
+extern uint32_t generalTelemetryLastReceiveTime;
 
 extern uint8_t  transmitterPacketRate;
 extern uint8_t  receiverPacketRate;
+
+extern bool hasPendingRFLinkMessage;
 
 //---- Telemetry --------------------------
 
