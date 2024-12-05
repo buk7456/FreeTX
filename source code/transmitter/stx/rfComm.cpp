@@ -129,8 +129,10 @@ void doRfCommunication()
   {
     if(isListeningForTelemetry)
     {
+      //In this case, we forcibly kick out of 'listening for telemetry' mode
       isListeningForTelemetry = false;
       isRequestingTelemetry = false;
+      hasPendingRFLinkMessage = true;
       hop();
     }
 
@@ -399,6 +401,7 @@ void getTelemetry()
       hasReceivedTelemetry = true;
       receivedTelemetryType = TELEMETRY_TYPE_GENERAL;
       receiverPacketRate = receivePayloadBuffer[0];
+      generalTelemetryLastReceiveTime = millis();
     }
     else if(checkReceivedPacket(Sys.receiverID, Sys.transmitterID) == PACKET_TELEMETRY_GNSS)
     {
