@@ -32,7 +32,7 @@ typedef struct {
 
 extern gnss_telemetry_data_t GNSSTelemetryData;
 
-extern bool hasGNSSReceiver;
+extern bool hasGNSSModule;
 
 //====================== SYSTEM PARAMETERS =========================================================
 
