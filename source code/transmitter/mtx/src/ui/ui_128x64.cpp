@@ -6245,6 +6245,7 @@ void handleMainUI()
         {
           uint8_t ypos = 10 + line * 9;
           uint8_t item = topItem + line;
+
           if(focusedItem == topItem + line) //highlight
           {
             display.fillRect(0, ypos - 1, 7, 9, BLACK);
@@ -6252,7 +6253,7 @@ void handleMainUI()
           }
           else
             display.fillRect(2, ypos + 2, 3, 3, BLACK);
-          
+
           uint8_t idx = item - 1;
           if(!isEmptyStr(Model.Telemetry[idx].name, sizeof(Model.Telemetry[0].name)))
           {
@@ -6968,6 +6969,11 @@ void handleMainUI()
                 display.print(GNSSTelemetryData.satellitesInUse);
                 display.print(F("/"));
                 display.print(GNSSTelemetryData.satellitesInView);
+                if(GNSSTelemetryData.positionFix != 0)
+                {
+                  display.setCursor(108, ypos);
+                  display.print(F("Fix"));
+                }
               }
               break;
 
