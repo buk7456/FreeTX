@@ -262,12 +262,6 @@ void resetSystemParams()
   Sys.DBG_disableInterlacing = false;
 
   Sys.screenshotSeqNo = 0;
-
-  Sys.gnssHomeLongitude = 0;
-  Sys.gnssHomeLatitude = 0;
-  Sys.gnssAltitudeOffset = 0;
-  Sys.gnssLastKnownLatitude = 0;
-  Sys.gnssLastKnownLongitude = 0;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -400,6 +394,15 @@ void resetModelParams()
   
   //--- widgets ---
   resetWidgetParams();
+
+  //--- GNSS telemetry ---
+  Model.gnssHomeLongitude = 0;
+  Model.gnssHomeLatitude = 0;
+  Model.gnssAltitudeOffset = 0;
+  Model.gnssLastKnownLatitude = 0;
+  Model.gnssLastKnownLongitude = 0;
+  Model.gnssLastKnownAltitude = 0;
+  Model.gnssLastKnownDistanceFromHome = 0;
 }
 
 //--------------------------------------------------------------------------------------------------
