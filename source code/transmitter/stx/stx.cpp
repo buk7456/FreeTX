@@ -192,8 +192,6 @@ void sendSerialData()
 
   uint8_t messageType = MESSAGE_TYPE_NONE;
 
-  static bool hasPendingRFLinkMessage = false;
-
   static uint32_t rfLinkTelemetryMessageDispatchTime;
 
   if(hasReceivedTelemetry)
@@ -301,6 +299,8 @@ void sendSerialData()
       {
         buffer[4] = 2; //data length
         buffer[5] = transmitterPacketRate;
+        if(millis() - generalTelemetryLastReceiveTime > 3000)
+          receiverPacketRate = 0;
         buffer[6] = receiverPacketRate;
       }
       break;
