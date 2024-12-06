@@ -8,7 +8,7 @@
 #include "common.h"
 #include "eestore.h"
 #include "rfComm.h"
-#include "GPS.h"
+#include "GNSS.h"
 
 //array of servo objects
 Servo myServo[MAX_CHANNELS_PER_RECEIVER];
@@ -302,6 +302,8 @@ void getGNSSTelemetry()
         break;
       }
     }
+    else
+      idxSentence = 0;
   }
 
   //detect disconnection of module
