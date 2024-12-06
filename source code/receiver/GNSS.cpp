@@ -1,7 +1,7 @@
 #include "Arduino.h"
 
 #include "common.h" 
-#include "GPS.h"
+#include "GNSS.h"
 
 #define MAX_FIELDS 16
 #define MAX_FIELD_SIZE 16
@@ -19,9 +19,9 @@ typedef struct {
   char satellites_in_view[5];
   char hdop[10];
   char msl_altitude[10];
-} gps_data_t;
+} gnss_data_t;
 
-gps_data_t GPSInfo;
+gnss_data_t GNSSInfo;
 
 void tokenize(const char *sentence, char tokens[][MAX_FIELD_SIZE], uint8_t *count, size_t maxNumTokens) 
 {
@@ -64,12 +64,12 @@ void parseGPRMC(const char *sentence)
   tokenize(sentence, fields, &count, sizeof(fields)/sizeof(fields[0]));
   if(count > 10) // Ensure enough fields exist
   {
-    strlcpy(GPSInfo.latitude, fields[3], sizeof(GPSInfo.latitude));
-    strlcpy(GPSInfo.lat_dir, fields[4], sizeof(GPSInfo.lat_dir));
-    strlcpy(GPSInfo.longitude, fields[5], sizeof(GPSInfo.longitude));
-    strlcpy(GPSInfo.lon_dir, fields[6], sizeof(GPSInfo.lon_dir));
-    strlcpy(GPSInfo.speed, fields[7], sizeof(GPSInfo.speed));
-    strlcpy(GPSInfo.course, fields[8], sizeof(GPSInfo.course));
+    strlcpy(GNSSInfo.latitude, fields[3], sizeof(GNSSInfo.latitude));
+    strlcpy(GNSSInfo.lat_dir, fields[4], sizeof(GNSSInfo.lat_dir));
+    strlcpy(GNSSInfo.longitude, fields[5], sizeof(GNSSInfo.longitude));
+    strlcpy(GNSSInfo.lon_dir, fields[6], sizeof(GNSSInfo.lon_dir));
+    strlcpy(GNSSInfo.speed, fields[7], sizeof(GNSSInfo.speed));
+    strlcpy(GNSSInfo.course, fields[8], sizeof(GNSSInfo.course));
   }
 }
 
@@ -79,14 +79,14 @@ void parseGPGGA(const char *sentence)
   tokenize(sentence, fields, &count, sizeof(fields)/sizeof(fields[0]));
   if(count > 10) // Ensure enough fields exist
   {
-    // strlcpy(GPSInfo.latitude, fields[2], sizeof(GPSInfo.latitude));
-    // strlcpy(GPSInfo.lat_dir, fields[3], sizeof(GPSInfo.lat_dir));
-    // strlcpy(GPSInfo.longitude, fields[4], sizeof(GPSInfo.longitude));
-    // strlcpy(GPSInfo.lon_dir, fields[5], sizeof(GPSInfo.lon_dir));
-    strlcpy(GPSInfo.fix_indicator, fields[6], sizeof(GPSInfo.fix_indicator));
-    strlcpy(GPSInfo.satellites_used, fields[7], sizeof(GPSInfo.satellites_used));
-    strlcpy(GPSInfo.hdop, fields[8], sizeof(GPSInfo.hdop));
-    strlcpy(GPSInfo.msl_altitude, fields[9], sizeof(GPSInfo.msl_altitude));
+    // strlcpy(GNSSInfo.latitude, fields[2], sizeof(GNSSInfo.latitude));
+    // strlcpy(GNSSInfo.lat_dir, fields[3], sizeof(GNSSInfo.lat_dir));
+    // strlcpy(GNSSInfo.longitude, fields[4], sizeof(GNSSInfo.longitude));
+    // strlcpy(GNSSInfo.lon_dir, fields[5], sizeof(GNSSInfo.lon_dir));
+    strlcpy(GNSSInfo.fix_indicator, fields[6], sizeof(GNSSInfo.fix_indicator));
+    strlcpy(GNSSInfo.satellites_used, fields[7], sizeof(GNSSInfo.satellites_used));
+    strlcpy(GNSSInfo.hdop, fields[8], sizeof(GNSSInfo.hdop));
+    strlcpy(GNSSInfo.msl_altitude, fields[9], sizeof(GNSSInfo.msl_altitude));
   }
 }
 
@@ -96,7 +96,7 @@ void parseGPGSV(const char *sentence)
   tokenize(sentence, fields, &count, sizeof(fields)/sizeof(fields[0]));
   if(count > 3) // Ensure enough fields exist
   { 
-    strlcpy(GPSInfo.satellites_in_view, fields[3], sizeof(GPSInfo.satellites_in_view));
+    strlcpy(GNSSInfo.satellites_in_view, fields[3], sizeof(GNSSInfo.satellites_in_view));
   }
 }
 
@@ -110,21 +110,21 @@ void parseNMEA(const char *sentence)
     parseGPGSV(sentence);
 }
 
-void convertGPSData()
+void convertGNSSData()
 {
   float fval;
   
   //latitude ddmm.mmmmm
-  if(*GPSInfo.latitude)
+  if(*GNSSInfo.latitude)
   {
     char latDegStr[3];
     char latMinStr[9];
-    strlcpy(latDegStr, GPSInfo.latitude, sizeof(latDegStr));
-    strlcpy(latMinStr, GPSInfo.latitude + 2, sizeof(latMinStr));
+    strlcpy(latDegStr, GNSSInfo.latitude, sizeof(latDegStr));
+    strlcpy(latMinStr, GNSSInfo.latitude + 2, sizeof(latMinStr));
     fval = atof(latDegStr);
     fval += (atof(latMinStr) / 60.0);
     fval *= 100000.0;
-    if(*GPSInfo.lat_dir == 'S')
+    if(*GNSSInfo.lat_dir == 'S')
       fval = -fval;
     GNSSTelemetryData.latitude = (int32_t) fval;
   }
@@ -132,16 +132,16 @@ void convertGPSData()
     GNSSTelemetryData.latitude = 0;
     
   //longitude dddmm.mmmmm
-  if(*GPSInfo.longitude)
+  if(*GNSSInfo.longitude)
   {
     char lngDegStr[4];
     char lngMinStr[9];
-    strlcpy(lngDegStr, GPSInfo.longitude, sizeof(lngDegStr));
-    strlcpy(lngMinStr, GPSInfo.longitude + 3, sizeof(lngMinStr));
+    strlcpy(lngDegStr, GNSSInfo.longitude, sizeof(lngDegStr));
+    strlcpy(lngMinStr, GNSSInfo.longitude + 3, sizeof(lngMinStr));
     fval = atof(lngDegStr);
     fval += (atof(lngMinStr) / 60.0);
     fval *= 100000.0;
-    if(*GPSInfo.lon_dir == 'W')
+    if(*GNSSInfo.lon_dir == 'W')
       fval = -fval;
     GNSSTelemetryData.longitude = (int32_t) fval;
   }
@@ -151,25 +151,25 @@ void convertGPSData()
   //hdop
   
   //satellites in use
-  GNSSTelemetryData.satellitesInUse = atoi(GPSInfo.satellites_used);
+  GNSSTelemetryData.satellitesInUse = atoi(GNSSInfo.satellites_used);
   
   //satellites in view
-  GNSSTelemetryData.satellitesInView = atoi(GPSInfo.satellites_in_view);
+  GNSSTelemetryData.satellitesInView = atoi(GNSSInfo.satellites_in_view);
   
   //fix indicator
-  GNSSTelemetryData.positionFix = atoi(GPSInfo.fix_indicator);
+  GNSSTelemetryData.positionFix = atoi(GNSSInfo.fix_indicator);
   
   //speed
-  fval = atof(GPSInfo.speed) * 0.51444;
+  fval = atof(GNSSInfo.speed) * 0.51444;
   fval *= 10.0;
   GNSSTelemetryData.speed = (uint16_t) fval;
   
   //course
-  fval = atof(GPSInfo.course);
+  fval = atof(GNSSInfo.course);
   fval *= 10.0;
   GNSSTelemetryData.course = (uint16_t) fval;
   
   //msl altitude
-  fval = atof(GPSInfo.msl_altitude);
+  fval = atof(GNSSInfo.msl_altitude);
   GNSSTelemetryData.altitude = (int16_t) fval;
 }
