@@ -50,5 +50,5 @@ Three buttons are used for navigation; Up, Select, Down. Long press Select to go
 [<img src="doc/yt2.jpg" width = "240"/>](https://www.youtube.com/watch?v=9EZkyRHkMpg)
 
 ## Frequently Asked Questions
-[Got a question? See the FAQ first.](doc/faq.md)
+Got a question? [See the FAQ.](doc/faq.md)  
 <br> This project is based on an older project found [here.](https://github.com/buk7456/Arduino-LoRa-RC-transmitter-and-reciever)
