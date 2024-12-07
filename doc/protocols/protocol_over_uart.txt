@@ -72,7 +72,7 @@ MESSAGE_TYPE_WRITE_RECEIVER_CONFIG:
                     1  Servo PWM, 
                     2  Normal PWM.
     bit 2 to 3    The maximum supported mode. Not applicable if writing configuration.
-    bit 4 to 7    The servo pwm range. Value is and index in the lookup table.
+    bit 4 to 7    The servo pwm range. Value is an index in the lookup table.
                   See the "servo_PWM_range_LUT.xls" for extended description.
                   
   If the message is of type MESSAGE_TYPE_WRITE_RECEIVER_CONFIG, a byte containing a flag is 
@@ -86,36 +86,36 @@ MESSAGE_TYPE_BIND_STATUS_CODE:
   This message serves to acknowledge the receiver binding to the main transmitter microcontroller.
   The returned code is 1 byte. 
   Value is as follows: 
-    1   Bind successful
-    2   Bind failed
+    1   Bind successful.
+    2   Bind failed.
     
 
 MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE:
 
-  This message serves to acknowledge the receiver configuration to the main transmitter microcontroller,
-  after a "write configuration" has been made. 
+  This message serves to acknowledge receipt of the receiver configuration 
+  to the main transmitter microcontroller, after a "write configuration" has been made. 
   The returned code is 1 byte. 
   Value is as follows: 
-    1   Write successful 
-    2   Write failed
+    1   Write successful. 
+    2   Write failed.
 
 
 MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE:
 
   Data is 2 bytes as follows:
     byte 0    Transmitter packet rate, 
-              i.e. how many packets are being sent out by transmitter.
+              i.e. how many RC packets are being sent out by transmitter.
     byte 1    Receiver packet rate, 
-              i.e. how many valid packets are being seen by the receiver.
+              i.e. how many valid RC packets are being seen by the receiver.
 
 
 MESSAGE_TYPE_TELEMETRY_GENERAL:
 
   Every 3 bytes represent a telemetry field. 
   Each telemetry field is formatted as: 
-    byte 0    SensorID
-    byte 1    high byte of telemetry value
-    byte 2    low byte of telemetry value
+    byte 0    Sensor ID.
+    byte 1    High byte of telemetry value.
+    byte 2    Low byte of telemetry value.
 
 
 MESSAGE_TYPE_TELEMETRY_GNSS:
