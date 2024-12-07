@@ -24,13 +24,14 @@ should be done before sending the telemetry to the transmitter.
 </p>
 
 ## GNSS telemetry
-The system also supports GNSS/GPS telemetry.  
-A premade template is used to add the GNSS sensor to the telemetry screen. 
+The system also supports GNSS telemetry. A premade template is used to add the GNSS sensor to the telemetry screen.  
+The receiver directly connects to the GNSS/GPS module via serial (UART), and handles parsing of the NMEA sentences 
+as well as data conversion. GPS, GLONASS, BeiDou, Galileo are supported. 
 
 <p align="left">
 <img src="img8.png" width = "396"/>
 </p>
- 
+
 The structure below is used to send the GNSS telemetry data to the transmitter.
 
 ```c
