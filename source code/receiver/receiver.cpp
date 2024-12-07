@@ -109,6 +109,11 @@ void writeOutputs()
   static bool    outputReinitialised[MAX_CHANNELS_PER_RECEIVER];
   
   bool activateFailsafe = ((millis() - lastRCPacketMillis) > 1000);
+
+  if(!hasNewRCData && !activateFailsafe) //prevent unnecessary computation
+    return;
+  
+  hasNewRCData = false;
   
   for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
   {
@@ -217,13 +222,13 @@ void writeOutputs()
     else if(signalType == SIGNAL_TYPE_SERVOPWM)
     {
       int16_t val = map(channelOut[i], -500, 500, minMicroseconds, maxMicroseconds);
-      val = constrain(val, minMicroseconds, maxMicroseconds);
+      // val = constrain(val, minMicroseconds, maxMicroseconds); //commented out for performance
       myServo[i].writeMicroseconds(val);
     }
     else if(signalType == SIGNAL_TYPE_PWM)
     {
       int16_t val = map(channelOut[i], -500, 500, 0, 255);
-      val = constrain(val, 0, 255);
+      // val = constrain(val, 0, 255); //commented out for performance
       analogWrite(outputPin[i], val);
     }
   }
@@ -260,7 +265,7 @@ void getExternalVoltage()
   Formula x = x - x/n + a/n  
   */
   static uint32_t lastMillis = 0;
-  if(millis() - lastMillis < 10)
+  if(millis() - lastMillis < 17)
     return;
 
   lastMillis = millis();
