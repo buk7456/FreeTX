@@ -14,6 +14,7 @@ extern uint16_t externalVolts; //in millivolts
 extern bool failsafeEverBeenReceived[MAX_CHANNELS_PER_RECEIVER];
 extern bool isRequestingBind;
 extern uint32_t lastRCPacketMillis;
+extern bool hasNewRCData;
 
 #define TELEMETRY_NO_DATA  0x7FFF
 
