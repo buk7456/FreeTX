@@ -12,6 +12,7 @@ uint16_t externalVolts = 0;
 bool failsafeEverBeenReceived[MAX_CHANNELS_PER_RECEIVER];
 bool isRequestingBind = false;
 uint32_t lastRCPacketMillis = 0;
+bool hasNewRCData = false;
 
 gnss_telemetry_data_t GNSSTelemetryData;
 
