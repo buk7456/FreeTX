@@ -61,7 +61,7 @@ PACKET_ACK_BIND:
   
   This is returned by the receiver to acknowledge the binding. 
   The payload is as follows:
-    byte 0      Receiver ID
+    byte 0       Receiver ID.
 
   
 PACKET_RC_DATA:
@@ -70,23 +70,23 @@ PACKET_RC_DATA:
   The data is either RC channel outputs values or faisafe data, encoded with 10 bits per channel.   
   Flags are transmitted in a separate byte that is appended. 
   The flag byte is as follows: 
-    bit 0 to 2    RF power level.
-    bit 3         Return telemetry.
-    bit 4         Whether this is failsafe data.
+    bit 0 to 2   RF power level.
+    bit 3        Return telemetry.
+    bit 4        Whether this is failsafe data.
 
 
 PACKET_TELEMETRY_GENERAL:
 
   This originates from the receiver. 
   The payload is as follows:
-    byte 0       packet rate at receiver side.
-    byte 1 to k  general telemetry fields.
+    byte 0       Packet rate at receiver side.
+    byte 1 to k  General telemetry fields.
   
   Every 3 bytes represent a telemetry field.
   Each telemetry field is formatted as: 
-    byte 0    SensorID
-    byte 1    high byte of telemetry value
-    byte 2    low byte of telemetry value
+    byte 0       Sensor ID.
+    byte 1       High byte of telemetry value.
+    byte 2       Low byte of telemetry value.
 
 
 PACKET_TELEMETRY_GNSS:
@@ -113,7 +113,7 @@ PACKET_READ_OUTPUT_CH_CONFIG:
                     1  Servo PWM, 
                     2  Normal PWM.
     bit 2 to 3    The maximum supported mode.
-    bit 4 to 7    The servo pwm range. Value is and index in the lookup table.
+    bit 4 to 7    The servo pwm range. Value is an index in the lookup table.
                   See the "servo_PWM_range_LUT.xls" for extended description.
 
 
@@ -148,7 +148,7 @@ Basic rules:
   and hop sequence. The main receiver then generates a random receiver ID and sends it.
 - When binding to a secondary receiver, the transmitter ID and receiver ID are maintained, as 
   well as the hop sequence. 
-- Only the main receiver can send telemetry, the secondary ignores the telemetry requests.
+- Only the main receiver can send telemetry; the secondary receiver ignores the telemetry requests.
 - The transmitter requests and sends configuration settings to each receiver separately 
   by way of a flag to distinguish the intended receiver from the other.
 
