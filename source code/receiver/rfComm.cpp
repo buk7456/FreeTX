@@ -173,6 +173,7 @@ void doRfCommunication()
           break;
         }
 
+        hasNewRCData = true;
         rcPacketCount++;
         lastRCPacketMillis = millis();
         digitalWrite(PIN_LED, HIGH);
@@ -427,22 +428,6 @@ void sendTelemetry() //### TODO implement custom telemetry, establish standard I
   
   if(!transmitInitiated) 
   {
-    //--- Calculate packets per second
-    static uint32_t prevRCPacketCount = 0; 
-    static uint32_t ttPrevMillis = 0;
-    static uint8_t rcPacketsPerSecond = 0; 
-    uint32_t ttElapsed = millis() - ttPrevMillis;
-    if (ttElapsed >= 1000)
-    {
-      ttPrevMillis = millis();
-      rcPacketsPerSecond = ((rcPacketCount - prevRCPacketCount) * 1000) / ttElapsed;
-      prevRCPacketCount = rcPacketCount;
-    }
-    if(millis() - lastRCPacketMillis >= 1000)
-      rcPacketsPerSecond = 0;
-    
-    //--- Prepare telemetry data and send it
-
     memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
 
     //alternate between telemetry types
@@ -457,6 +442,20 @@ void sendTelemetry() //### TODO implement custom telemetry, establish standard I
     {
       case TELEMETRY_TYPE_GENERAL: //todo improve this section to avoid possible buffer overflows
         {
+          //calculate RC packets per second
+          static uint32_t prevRCPacketCount = 0; 
+          static uint32_t ttPrevMillis = 0;
+          static uint8_t rcPacketsPerSecond = 0; 
+          uint32_t ttElapsed = millis() - ttPrevMillis;
+          if (ttElapsed >= 1000)
+          {
+            ttPrevMillis = millis();
+            rcPacketsPerSecond = ((rcPacketCount - prevRCPacketCount) * 1000) / ttElapsed;
+            prevRCPacketCount = rcPacketCount;
+          }
+          if(millis() - lastRCPacketMillis >= 1000)
+            rcPacketsPerSecond = 0;
+
           uint8_t idx = 0;
 
           //packet rate
