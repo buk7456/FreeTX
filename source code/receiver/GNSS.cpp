@@ -16,14 +16,17 @@ typedef struct {
   char course[10];
   char fix_indicator[2];
   char satellites_used[5];
-  char satellites_in_view[5];
+  char satellites_in_view_gps[5];
+  char satellites_in_view_glonass[5];
+  char satellites_in_view_beidou[5];
+  char satellites_in_view_galileo[5];
   char hdop[10];
   char msl_altitude[10];
 } gnss_data_t;
 
 gnss_data_t GNSSInfo;
 
-void tokenize(const char *sentence, char tokens[][MAX_FIELD_SIZE], uint8_t *count, size_t maxNumTokens) 
+void tokenize(const char *sentence, char tokens[][MAX_FIELD_SIZE], uint8_t *count, uint8_t maxNumTokens) 
 {
   *count = 0;
   const char *start = sentence;
@@ -34,7 +37,7 @@ void tokenize(const char *sentence, char tokens[][MAX_FIELD_SIZE], uint8_t *coun
     if(*count >= maxNumTokens - 1) //prevent buffer overflow
       break;
     
-    size_t length = end - start;
+    uint8_t length = end - start;
     if(length > 0 && length < (MAX_FIELD_SIZE - 1))
     {
       strncpy(tokens[*count], start, length);
@@ -58,7 +61,7 @@ void tokenize(const char *sentence, char tokens[][MAX_FIELD_SIZE], uint8_t *coun
   }
 }
 
-void parseGPRMC(const char *sentence) 
+void parseRMC(const char *sentence) 
 {
   uint8_t count;
   tokenize(sentence, fields, &count, sizeof(fields)/sizeof(fields[0]));
@@ -73,7 +76,7 @@ void parseGPRMC(const char *sentence)
   }
 }
 
-void parseGPGGA(const char *sentence) 
+void parseGGA(const char *sentence) 
 {
   uint8_t count;
   tokenize(sentence, fields, &count, sizeof(fields)/sizeof(fields[0]));
@@ -90,24 +93,60 @@ void parseGPGGA(const char *sentence)
   }
 }
 
-void parseGPGSV(const char *sentence) 
+void parseGSV_GPS(const char *sentence) 
 {
   uint8_t count;
   tokenize(sentence, fields, &count, sizeof(fields)/sizeof(fields[0]));
   if(count > 3) // Ensure enough fields exist
   { 
-    strlcpy(GNSSInfo.satellites_in_view, fields[3], sizeof(GNSSInfo.satellites_in_view));
+    strlcpy(GNSSInfo.satellites_in_view_gps, fields[3], sizeof(GNSSInfo.satellites_in_view_gps));
+  }
+}
+
+void parseGSV_GLONASS(const char *sentence) 
+{
+  uint8_t count;
+  tokenize(sentence, fields, &count, sizeof(fields)/sizeof(fields[0]));
+  if(count > 3) // Ensure enough fields exist
+  { 
+    strlcpy(GNSSInfo.satellites_in_view_glonass, fields[3], sizeof(GNSSInfo.satellites_in_view_glonass));
+  }
+}
+
+void parseGSV_BEIDOU(const char *sentence) 
+{
+  uint8_t count;
+  tokenize(sentence, fields, &count, sizeof(fields)/sizeof(fields[0]));
+  if(count > 3) // Ensure enough fields exist
+  { 
+    strlcpy(GNSSInfo.satellites_in_view_beidou, fields[3], sizeof(GNSSInfo.satellites_in_view_beidou));
+  }
+}
+
+void parseGSV_GALILEO(const char *sentence) 
+{
+  uint8_t count;
+  tokenize(sentence, fields, &count, sizeof(fields)/sizeof(fields[0]));
+  if(count > 3) // Ensure enough fields exist
+  { 
+    strlcpy(GNSSInfo.satellites_in_view_galileo, fields[3], sizeof(GNSSInfo.satellites_in_view_galileo));
   }
 }
 
 void parseNMEA(const char *sentence) 
 {
-  if(strncmp(sentence, "$GPRMC", 6) == 0) 
-    parseGPRMC(sentence);
-  else if(strncmp(sentence, "$GPGGA", 6) == 0) 
-    parseGPGGA(sentence);
+  if(strncmp(sentence + 3, "RMC", 3) == 0) 
+    parseRMC(sentence);
+  else if(strncmp(sentence + 3, "GGA", 3) == 0) 
+    parseGGA(sentence);
   else if(strncmp(sentence, "$GPGSV", 6) == 0) 
-    parseGPGSV(sentence);
+    parseGSV_GPS(sentence); 
+  else if(strncmp(sentence, "$GLGSV", 6) == 0) 
+    parseGSV_GLONASS(sentence);
+  else if(strncmp(sentence, "$GBGSV", 6) == 0) 
+    parseGSV_BEIDOU(sentence); 
+  else if(strncmp(sentence, "$GAGSV", 6) == 0) 
+    parseGSV_GALILEO(sentence);
 }
 
 void convertGNSSData()
@@ -154,7 +193,13 @@ void convertGNSSData()
   GNSSTelemetryData.satellitesInUse = atoi(GNSSInfo.satellites_used);
   
   //satellites in view
-  GNSSTelemetryData.satellitesInView = atoi(GNSSInfo.satellites_in_view);
+  GNSSTelemetryData.satellitesInView = atoi(GNSSInfo.satellites_in_view_gps);
+  GNSSTelemetryData.satellitesInView += atoi(GNSSInfo.satellites_in_view_glonass);
+  GNSSTelemetryData.satellitesInView += atoi(GNSSInfo.satellites_in_view_beidou);
+  GNSSTelemetryData.satellitesInView += atoi(GNSSInfo.satellites_in_view_galileo);
+  
+  if(GNSSTelemetryData.satellitesInView < GNSSTelemetryData.satellitesInUse)
+    GNSSTelemetryData.satellitesInView = GNSSTelemetryData.satellitesInUse;
   
   //fix indicator
   GNSSTelemetryData.positionFix = atoi(GNSSInfo.fix_indicator);
