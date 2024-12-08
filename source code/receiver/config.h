@@ -38,7 +38,7 @@
 #endif
 
 //--- battery voltage
-const int16_t battVfactor = 1627;  //scaling factor
+const int16_t battVfactor = 1041;  //scaling factor
 
 //--- radio frequency, select only one
 #define ISM_433MHZ
