@@ -270,8 +270,8 @@ void getExternalVoltage()
 
   lastMillis = millis();
   
-  const int16_t _NUM_SAMPLES = 30;
-  int32_t millivolts = ((int32_t)analogRead(PIN_EXTV_SENSE) * battVfactor) / 100;
+  const int16_t _NUM_SAMPLES = 32;
+  int32_t millivolts = ((int32_t)analogRead(PIN_EXTV_SENSE) * battVfactor) / 64;
   millivolts = ((int32_t)externalVolts * (_NUM_SAMPLES - 1) + millivolts) / _NUM_SAMPLES; 
   externalVolts = int16_t(millivolts); 
 }
