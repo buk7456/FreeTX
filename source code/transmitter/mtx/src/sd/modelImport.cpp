@@ -917,6 +917,7 @@ void importModelData(File& file)
   isEndOfFile = false;
   hasEncounteredInvalidParam = false;
   idNotFoundInIdStr = false;
+  dbgLineNumber = 0;
   dbgFirstErrorLineNumber = 0;
   memset(keyBuff[0], 0, sizeof(keyBuff[0]));
   memset(keyBuff[1], 0, sizeof(keyBuff[0]));
