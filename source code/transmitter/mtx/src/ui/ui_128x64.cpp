@@ -8699,7 +8699,7 @@ void handleMainUI()
         }
         
         //Draw scroll bar
-        drawScrollBar(125, 9, listItemCount, topItem, 6, 6 * 9);
+        drawScrollBar(127, 9, listItemCount, topItem, 6, 6 * 9);
         
         //exit
         if(heldButton == KEY_SELECT)
