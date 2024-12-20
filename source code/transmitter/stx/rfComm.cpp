@@ -135,6 +135,13 @@ void doRfCommunication()
       hasPendingRFLinkMessage = true;
       hop();
     }
+    
+    //set RF power level
+    if(!LoRa.isTransmitting())
+    {
+      static uint8_t power_dBm[3] = {3, 10, 17}; //2mW, 10mW, 50mW
+      setRfPower(power_dBm[rfPower]);
+    }
 
     //transmit
     transmitRCdata();
@@ -156,14 +163,6 @@ void doRfCommunication()
   {
     getTelemetry();
   }
-
-  //set RF power level
-  if(!LoRa.isTransmitting())
-  {
-    static uint8_t power_dBm[3] = {3, 10, 17}; //2mW, 10mW, 50mW
-    setRfPower(power_dBm[rfPower]);
-  }
-
 }
 
 //============================== Helpers ===========================================================
