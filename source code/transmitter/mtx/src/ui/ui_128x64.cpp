@@ -6418,6 +6418,10 @@ void handleMainUI()
           contextMenuAddItem(PSTR("View statistics"), ITEM_VIEW_STATISTICS);
           contextMenuAddItem(PSTR("Edit sensor"), ITEM_EDIT_SENSOR);
           contextMenuAddItem(PSTR("Delete sensor"), ITEM_DELETE_SENSOR);
+          if(Model.Telemetry[thisTelemIdx].identifier == SENSOR_ID_GNSS_AGL_ALTITUDE)
+            contextMenuAddItem(PSTR("Reset altitude AGL"), ITEM_RESET_AGL_ALTITUDE);
+          if(Model.Telemetry[thisTelemIdx].identifier == SENSOR_ID_GNSS_DISTANCE)
+            contextMenuAddItem(PSTR("Reset start point"), ITEM_RESET_STARTING_POINT);
         }
         else if(Model.Telemetry[thisTelemIdx].type == TELEMETRY_TYPE_GNSS)
         {
