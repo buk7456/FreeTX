@@ -26,7 +26,8 @@ should be done before sending the telemetry to the transmitter.
 ## GNSS telemetry
 The system also supports GNSS telemetry. A premade template is used to add the GNSS sensor to the telemetry screen.  
 The receiver directly connects to the GNSS/GPS module via serial (UART), and handles parsing of the NMEA sentences 
-as well as data conversion. GPS, GLONASS, BeiDou, Galileo are supported. 
+as well as data conversion. GPS, GLONASS, BeiDou, Galileo are supported.  
+The system remembers the last known location in case of a lost model, even when the transmitter is powered off.
 
 <p align="left">
 <img src="img8.png" width = "396"/>
