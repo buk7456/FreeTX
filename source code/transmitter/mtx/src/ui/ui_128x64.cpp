@@ -6518,9 +6518,6 @@ void handleMainUI()
             continue;
           if(!Model.Telemetry[page].recordMinimum && (i == ITEM_MINIMUM_VAL || i == ITEM_RESET_MINIMUM_VAL))
             continue;
-          //skip special telemetry
-          if(Model.Telemetry[page].type == TELEMETRY_TYPE_GNSS)
-            continue;
           listItemIDs[listItemCount++] = i;
         }
         
@@ -6662,8 +6659,9 @@ void handleMainUI()
           {
             do {
               page = incDec(page, 0, NUM_CUSTOM_TELEMETRY - 1, INCDEC_WRAP, INCDEC_SLOW);
-            } while(isEmptyStr(Model.Telemetry[page].name, sizeof(Model.Telemetry[0].name))); //skip empty
-          }          
+            } while(isEmptyStr(Model.Telemetry[page].name, sizeof(Model.Telemetry[0].name)) //skip empty
+                    || Model.Telemetry[page].type == TELEMETRY_TYPE_GNSS); //skip special telemetry
+          }
         }
         
         //exit
