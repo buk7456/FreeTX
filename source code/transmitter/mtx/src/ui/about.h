@@ -14,7 +14,7 @@
 static const char versionText[] PROGMEM = 
   "FW version: "
   _FIRMWARE_VERSION
-  "\n(c) 2020-2024 Buk7456"
+  "\n(c) 2020-2025 Buk7456"
   "\nhttps://github.com/\nbuk7456/FreeTX";
 
 static const char thirdPartyNoticesText[] PROGMEM =
