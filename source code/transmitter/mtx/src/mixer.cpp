@@ -228,9 +228,9 @@ void computeChannelOutputs()
   //Mix source switches
   for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
   {
-    if(Sys.swType[i] == SW_2POS)
+    if(Sys.swType[i] == SW_2POS || Sys.swType[i] == SW_2POS_MOMENTARY)
       mixSources[SRC_SW_PHYSICAL_FIRST + i] = (swState[i] == SWLOWERPOS) ? 500 : -500;
-    else if(Sys.swType[i] == SW_3POS)
+    else if(Sys.swType[i] == SW_3POS || Sys.swType[i] == SW_3POS_MOMENTARY)
       mixSources[SRC_SW_PHYSICAL_FIRST + i] = (swState[i] == SWLOWERPOS) ? 500 : ((swState[i] == SWUPPERPOS) ? -500 : 0);
     else if(Sys.swType[i] == SW_ABSENT)
       mixSources[SRC_SW_PHYSICAL_FIRST + i] = 0;
