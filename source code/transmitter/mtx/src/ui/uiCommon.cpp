@@ -262,7 +262,7 @@ bool controlSwitchExists(uint8_t idx)
     uint8_t i = (idx - CTRL_SW_PHYSICAL_FIRST) / 6;
     if(Sys.swType[i] == SW_ABSENT)
       result = false;
-    else if(Sys.swType[i] == SW_2POS) //only up and down exist for a two position switch
+    else if(Sys.swType[i] == SW_2POS || Sys.swType[i] == SW_2POS_MOMENTARY) //only up and down exist for a two position switch
     {
       uint8_t pos = (idx - CTRL_SW_PHYSICAL_FIRST) % 6;
       if(pos == 1 || pos >= 3)
@@ -283,10 +283,77 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
   uint8_t movedCtrlSw = getMovedControlSwitch();
   if(movedCtrlSw != CTRL_SW_NONE)
   {
-    if((flag & INCDEC_FLAG_PHY_SW) && (movedCtrlSw >= CTRL_SW_PHYSICAL_FIRST && movedCtrlSw <= CTRL_SW_PHYSICAL_LAST))
+    if((flag & INCDEC_FLAG_TRIM_AS_SW) && (movedCtrlSw >= CTRL_SW_TRIM_FIRST && movedCtrlSw <= CTRL_SW_TRIM_LAST))
       val = movedCtrlSw;
-    else if((flag & INCDEC_FLAG_TRIM_AS_SW) && (movedCtrlSw >= CTRL_SW_TRIM_FIRST && movedCtrlSw <= CTRL_SW_TRIM_LAST))
-      val = movedCtrlSw;
+    else if((flag & INCDEC_FLAG_PHY_SW) && (movedCtrlSw >= CTRL_SW_PHYSICAL_FIRST && movedCtrlSw <= CTRL_SW_PHYSICAL_LAST))
+    {
+      static uint8_t lastCondition[NUM_PHYSICAL_SWITCHES];
+      uint8_t idx = (movedCtrlSw - CTRL_SW_PHYSICAL_FIRST) / 6;
+      uint8_t condition = (movedCtrlSw - CTRL_SW_PHYSICAL_FIRST) % 6; //up, mid, down, !up, !mid, !down. The inverts are not relevant here.
+      enum { 
+        _UP = 0,
+        _MID = 1,
+        _DOWN = 2
+      };
+      static bool initialised = false;
+      if(!initialised)
+      {
+        initialised = true;
+        for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
+        {
+          if(Sys.swType[idx] == SW_2POS_MOMENTARY)
+            lastCondition[idx] = _UP;
+          else if(Sys.swType[idx] == SW_3POS_MOMENTARY)
+            lastCondition[idx] = _MID;
+        }
+      }
+      static uint8_t lastVal[NUM_PHYSICAL_SWITCHES];
+
+      if(Sys.swType[idx] == SW_2POS_MOMENTARY)
+      {
+        if(condition == _DOWN && lastCondition[idx] == _UP)
+        {
+          lastCondition[idx] = _DOWN;
+          //toggle between positions
+          if((lastVal[idx] - CTRL_SW_PHYSICAL_FIRST) % 6 == _DOWN)
+            val = CTRL_SW_PHYSICAL_FIRST + (idx * 6) + _UP;
+          else
+            val = CTRL_SW_PHYSICAL_FIRST + (idx * 6) + _DOWN;
+        }
+        else if(condition == _UP)
+          lastCondition[idx] = _UP;
+      }
+      else if(Sys.swType[idx] == SW_3POS_MOMENTARY)
+      {
+        if(condition == _DOWN && lastCondition[idx] == _MID)
+        {
+          lastCondition[idx] = _DOWN;
+          //toggle between positions
+          if((lastVal[idx] - CTRL_SW_PHYSICAL_FIRST) % 6 == _DOWN)
+            val = CTRL_SW_PHYSICAL_FIRST + (idx * 6) + _MID;
+          else
+            val = CTRL_SW_PHYSICAL_FIRST + (idx * 6) + _DOWN;
+        }
+        else if(condition == _UP && lastCondition[idx] == _MID) 
+        {
+          lastCondition[idx] = _UP;
+          //toggle between positions
+          if((lastVal[idx] - CTRL_SW_PHYSICAL_FIRST) % 6 == _UP)
+            val = CTRL_SW_PHYSICAL_FIRST + (idx * 6) + _MID;
+          else
+            val = CTRL_SW_PHYSICAL_FIRST + (idx * 6) + _UP;
+        }
+        else if(condition == _MID)
+          lastCondition[idx] = _MID;
+      }
+      else if(Sys.swType[idx] == SW_2POS || Sys.swType[idx] == SW_3POS)
+      {
+        val = movedCtrlSw;
+      }
+      
+      //store last value
+      lastVal[idx] = val;
+    }
   }
 
   if(buttonCode != KEY_UP && buttonCode != KEY_DOWN)
@@ -635,9 +702,9 @@ void telemetryAlarmHandler()
 
 void inactivityAlarmHandler()
 {
-  if(Sys.inactivityMinutes == 0)
+  if(!Sys.soundOnInactivity || Sys.inactivityMinutes == 0)
     return;
-  
+
   static uint32_t lastPlayMillis = 0;
   if((millis() - inputsLastMovedTime) > ((uint32_t)Sys.inactivityMinutes * 60000 + 7000)) 
   {
