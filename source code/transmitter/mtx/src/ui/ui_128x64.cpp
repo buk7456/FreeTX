@@ -48,20 +48,20 @@ enum {
 };
 
 char const systemMenu[][20] PROGMEM = { 
-  "RF setup", "Sound", "Backlight", "Appearance", "Advanced"
+  "RF setup", "Sound", "Backlight", "Appearance", "Advanced", "About"
 };
 enum {
-  SYSTEM_MENU_RF, SYSTEM_MENU_SOUND, SYSTEM_MENU_BACKLIGHT, SYSTEM_MENU_APPEARANCE, SYSTEM_MENU_ADVANCED
+  SYSTEM_MENU_RF, SYSTEM_MENU_SOUND, SYSTEM_MENU_BACKLIGHT, SYSTEM_MENU_APPEARANCE, SYSTEM_MENU_ADVANCED,
+  SYSTEM_MENU_ABOUT,
 };
 
 char const advancedMenu[][20] PROGMEM = { 
-  "Sticks", "Knobs", "Switches", "Battery", "Security", "Miscellaneous", "Debug", "About"
+  "Sticks", "Knobs", "Switches", "Battery", "Security", "Miscellaneous", "Debug"
 };
 enum {
   ADVANCED_MENU_STICKS, ADVANCED_MENU_KNOBS, ADVANCED_MENU_SWITCHES, 
   ADVANCED_MENU_BATTERY, ADVANCED_MENU_SECURITY,
-  ADVANCED_MENU_MISCELLANEOUS, ADVANCED_MENU_DEBUG,
-  ADVANCED_MENU_ABOUT
+  ADVANCED_MENU_MISCELLANEOUS, ADVANCED_MENU_DEBUG
 };
 
 //---------------------------- Main UI states ------------------------------------------------------
@@ -186,14 +186,15 @@ enum {
   SCREEN_BATTERY,
   SCREEN_SECURITY,
   SCREEN_MISCELLANEOUS,
-  SCREEN_ABOUT,
-  SCREEN_EASTER_EGG,
   SCREEN_DEBUG,
+  SCREEN_DEBUG_STATISTICS,
   SCREEN_INTERNAL_EEPROM_DUMP,
   SCREEN_EXTERNAL_EEPROM_DUMP,
   SCREEN_CHARACTER_SET,
   SCREEN_SCREENSHOT_CONFIG,
   CONFIRMATION_FACTORY_RESET,
+  SCREEN_ABOUT,
+  SCREEN_EASTER_EGG,
   
   //---- Receiver ----
   SCREEN_RECEIVER,
@@ -622,8 +623,16 @@ void handleMainUI()
   //-------------- Timers -------------------------------
   timerHandler();
 
-  //-------------- Inactivity alarm ---------------------
+  //-------------- Inactivity----------------------------
   inactivityAlarmHandler();
+  if(Sys.lockOnInactivity && !isEmptyStr(Sys.password, sizeof(Sys.password)) && theScreen == SCREEN_HOME)
+  {
+    if(Sys.inactivityMinutes > 0)
+    {
+      if((millis() - inputsLastMovedTime) > ((uint32_t)Sys.inactivityMinutes * 60000))
+        mainMenuLocked = true;
+    }
+  }
   
   //-------------- Telemetry alarms ---------------------
   telemetryAlarmHandler();
@@ -669,7 +678,7 @@ void handleMainUI()
           break;
         }
         
-        if(!Sys.lockStartup || isEmptyStr(Sys.password, sizeof(Sys.password)))
+        if((!Sys.lockStartup && !Sys.lockOnInactivity) || isEmptyStr(Sys.password, sizeof(Sys.password)))
           mainMenuLocked = false;
 
         //--------------- Icons -----------------
@@ -2245,7 +2254,7 @@ void handleMainUI()
           strlcpy(Model.name, textBuff, sizeof(Model.name));
           //save
           eeSaveModelData(Sys.activeModelIdx);
-          //reinitiailise other stuff
+          //reinitialise other stuff
           resetTimerRegisters();
           resetCounterRegisters();
           Sys.rfEnabled = false;
@@ -5828,9 +5837,9 @@ void handleMainUI()
             display.print(findStringInIdStr(enum_SwitchWarn, Model.switchWarn[sw]));
             if(edit)
             {
-              if(Sys.swType[sw] == SW_2POS)
+              if(Sys.swType[sw] == SW_2POS || Sys.swType[sw] == SW_2POS_MOMENTARY)
                 Model.switchWarn[sw] = incDec(Model.switchWarn[sw], -1, 1, INCDEC_WRAP, INCDEC_SLOW);
-              else if(Sys.swType[sw] == SW_3POS)
+              else if(Sys.swType[sw] == SW_3POS || Sys.swType[sw] == SW_3POS_MOMENTARY)
                 Model.switchWarn[sw] = incDec(Model.switchWarn[sw], -1, 2, INCDEC_WRAP, INCDEC_SLOW);
             }
           }
@@ -5889,8 +5898,8 @@ void handleMainUI()
         //add item Ids to the list of Ids
         for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
         {
-          if(!notification->enabled && i > ITEM_NOTIFICATION_ENABLED)
-            continue;
+          // if(!notification->enabled && i > ITEM_NOTIFICATION_ENABLED)
+          //   continue;
           listItemIDs[listItemCount++] = i;
         }
         
@@ -7134,12 +7143,14 @@ void handleMainUI()
         menuAddItem(systemMenu[SYSTEM_MENU_BACKLIGHT], SYSTEM_MENU_BACKLIGHT, NULL);
         menuAddItem(systemMenu[SYSTEM_MENU_APPEARANCE], SYSTEM_MENU_APPEARANCE, NULL);
         menuAddItem(systemMenu[SYSTEM_MENU_ADVANCED], SYSTEM_MENU_ADVANCED, NULL);
+        menuAddItem(systemMenu[SYSTEM_MENU_ABOUT], SYSTEM_MENU_ABOUT, NULL);
         menuDraw(&topItem, &highlightedItem);
 
         if(menuSelectedItemID == SYSTEM_MENU_RF) changeToScreen(SCREEN_RF);
         else if(menuSelectedItemID == SYSTEM_MENU_SOUND) changeToScreen(SCREEN_SOUND);
         else if(menuSelectedItemID == SYSTEM_MENU_BACKLIGHT) changeToScreen(SCREEN_BACKLIGHT);
         else if(menuSelectedItemID == SYSTEM_MENU_APPEARANCE) changeToScreen(SCREEN_APPEARANCE);
+        else if(menuSelectedItemID == SYSTEM_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
         else if(menuSelectedItemID == SYSTEM_MENU_ADVANCED)
         {
           if(!isEmptyStr(Sys.password, sizeof(Sys.password))) 
@@ -7198,7 +7209,7 @@ void handleMainUI()
         
         enum {
           ITEM_SOUND_ENABLED,
-          ITEM_INACTIVITY_MINUTES,
+          ITEM_SOUND_ON_INACTIVITY,
           ITEM_SOUND_SWITCHES,
           ITEM_SOUND_KNOBS,
           ITEM_SOUND_KEYS,
@@ -7262,21 +7273,13 @@ void handleMainUI()
                   Sys.soundEnabled = incDec(Sys.soundEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
-              
-            case ITEM_INACTIVITY_MINUTES:
+
+            case ITEM_SOUND_ON_INACTIVITY:
               {
-                display.print(F("Inactvty:"));
-                display.setCursor(72, ypos);
-                if(Sys.inactivityMinutes == 0)
-                  display.print(F("Off"));
-                else
-                {
-                  display.print(Sys.inactivityMinutes);
-                  display.setCursor(display.getCursorX() + 3, display.getCursorY());
-                  display.print(F("min"));
-                }
-                if(edit)
-                  Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 0, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
+                display.print(F("Inactvty:")); 
+                drawCheckbox(72, ypos, Sys.soundOnInactivity);
+                if(edit) 
+                  Sys.soundOnInactivity = incDec(Sys.soundOnInactivity, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
               break;
               
@@ -7574,17 +7577,15 @@ void handleMainUI()
         menuAddItem(advancedMenu[ADVANCED_MENU_SECURITY], ADVANCED_MENU_SECURITY, NULL);
         menuAddItem(advancedMenu[ADVANCED_MENU_MISCELLANEOUS], ADVANCED_MENU_MISCELLANEOUS, NULL);
         menuAddItem(advancedMenu[ADVANCED_MENU_DEBUG], ADVANCED_MENU_DEBUG, NULL);
-        menuAddItem(advancedMenu[ADVANCED_MENU_ABOUT], ADVANCED_MENU_ABOUT, NULL);
         menuDraw(&topItem, &highlightedItem);
 
         if(menuSelectedItemID == ADVANCED_MENU_STICKS) changeToScreen(SCREEN_STICKS);
         else if(menuSelectedItemID == ADVANCED_MENU_KNOBS) changeToScreen(SCREEN_KNOBS);
         else if(menuSelectedItemID == ADVANCED_MENU_SWITCHES) changeToScreen(SCREEN_SWITCHES); 
         else if(menuSelectedItemID == ADVANCED_MENU_BATTERY) changeToScreen(SCREEN_BATTERY);
-        else if(menuSelectedItemID == ADVANCED_MENU_DEBUG) changeToScreen(SCREEN_DEBUG);
         else if(menuSelectedItemID == ADVANCED_MENU_SECURITY) changeToScreen(SCREEN_SECURITY);
         else if(menuSelectedItemID == ADVANCED_MENU_MISCELLANEOUS) changeToScreen(SCREEN_MISCELLANEOUS);
-        else if(menuSelectedItemID == ADVANCED_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
+        else if(menuSelectedItemID == ADVANCED_MENU_DEBUG) changeToScreen(SCREEN_DEBUG);
 
         //exit
         if(heldButton == KEY_SELECT)
@@ -8251,13 +8252,13 @@ void handleMainUI()
         {
           uint8_t ypos = 9 + line * 9;
           if(focusedItem == topItem + line)
-            drawCursor(58, ypos);
+            drawCursor(28, ypos);
           display.setCursor(0, ypos);
           uint8_t idx = line + topItem - 1;
-          display.print(F("Switch "));
+          display.print(F("Sw"));
           display.write(65 + idx);
           display.print(F(":"));
-          display.setCursor(66, ypos);
+          display.setCursor(36, ypos);
           display.print(findStringInIdStr(enum_SwitchType, Sys.swType[idx]));
         }
         
@@ -8386,29 +8387,43 @@ void handleMainUI()
 
         drawHeader(advancedMenu[ADVANCED_MENU_SECURITY]);
         
-        drawCheckbox(8, 9, Sys.lockStartup);
+        drawCheckbox(8, 9, Sys.lockModels);
         display.setCursor(18, 9);
-        display.print(F("Lock startup"));
-        
-        drawCheckbox(8, 18, Sys.lockModels);
-        display.setCursor(18, 18);
         display.print(F("Lock models"));
+
+        drawCheckbox(8, 18, Sys.lockStartup);
+        display.setCursor(18, 18);
+        display.print(F("Lock startup"));
+
+        drawCheckbox(8, 27, Sys.lockOnInactivity);
+        display.setCursor(18, 27);
+        display.print(F("Lock on inactvty"));
         
-        display.setCursor(8, 27);
+        display.setCursor(8, 36);
         if(isEmptyStr(Sys.password, sizeof(Sys.password)))
           display.print(F("[Set password]"));
         else
           display.print(F("[Change password]"));
 
-        changeFocusOnUpDown(3);
+        changeFocusOnUpDown(4);
         toggleEditModeOnSelectClicked();
         drawCursor(0, focusedItem * 9);
         
         if(focusedItem == 1)
-          Sys.lockStartup = incDec(Sys.lockStartup, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 2)
           Sys.lockModels = incDec(Sys.lockModels, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+        else if(focusedItem == 2 && isEditMode)
+        {
+          Sys.lockStartup = incDec(Sys.lockStartup, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          if(!Sys.lockStartup)
+            Sys.lockOnInactivity = false;
+        }
         else if(focusedItem == 3 && isEditMode)
+        {
+          Sys.lockOnInactivity = incDec(Sys.lockOnInactivity, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+          if(Sys.lockOnInactivity)
+            Sys.lockStartup = true;
+        }
+        else if(focusedItem == 4 && isEditMode)
           isEditTextDialog = true;
 
         //exit
@@ -8452,7 +8467,12 @@ void handleMainUI()
         else
           display.print(F("N/A"));
 
-        changeFocusOnUpDown(4);
+        display.setCursor(0, 45);
+        display.print(F("Inactvty mins:"));
+        display.setCursor(102, 45);
+        display.print(Sys.inactivityMinutes);
+
+        changeFocusOnUpDown(5);
         toggleEditModeOnSelectClicked();
         drawCursor(94, focusedItem * 9);
         
@@ -8467,6 +8487,8 @@ void handleMainUI()
           //there are 4P4 = 4! = 24 possible arrangements. So our range is 0 to 23.  
           Sys.defaultChannelOrder = incDec(Sys.defaultChannelOrder, 0, 23, INCDEC_WRAP, INCDEC_SLOW);
         }
+        else if(focusedItem == 5)
+          Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 1, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
 
         //exit
         if(heldButton == KEY_SELECT)
@@ -8479,24 +8501,16 @@ void handleMainUI()
     case SCREEN_DEBUG:
       {
         drawHeader(advancedMenu[ADVANCED_MENU_DEBUG]);
-        
-        telemetryForceRequest = true;
-
+ 
         enum {
-          ITEM_PACKET_RATE,
-          ITEM_UP_TIME,
-          ITEM_LOOP_NUM,
-          ITEM_FIXED_LOOP_TIME,
-          ITEM_INACTIVITY_TIME,
-          ITEM_FREE_RAM,
-          ITEM_SEPARATOR,
+          ITEM_VIEW_STATISTICS,
+          ITEM_SHOW_CHARACTER_SET,
+          ITEM_CONFIGURE_SCREENSHOTS,
           ITEM_SHOW_LOOP_TIME,
           ITEM_DISABLE_INTERLACING,
           ITEM_SIMULATE_TELEMETRY,
-          ITEM_SHOW_CHARACTER_SET,
           ITEM_DUMP_INTERNAL_EEPROM,
           ITEM_DUMP_EXTERNAL_EEPROM,
-          ITEM_CONFIGURE_SCREENSHOTS,
           ITEM_FACTORY_RESET,
           
           ITEM_COUNT
@@ -8527,10 +8541,7 @@ void handleMainUI()
         
         //handle navigation
         focusedItem = lastFocusedItem;
-        do {
-          changeFocusOnUpDown(listItemCount);
-        } while(listItemIDs[focusedItem - 1] == ITEM_SEPARATOR);
-        
+        changeFocusOnUpDown(listItemCount);
         if(focusedItem < topItem)
           topItem = focusedItem;
         while(focusedItem >= topItem + 6)
@@ -8553,6 +8564,15 @@ void handleMainUI()
           display.setCursor(8, ypos);
           switch(itemID)
           {
+            case ITEM_VIEW_STATISTICS:
+              {
+                display.print(F("[View statistics]"));
+                if(isFocused && clickedButton == KEY_SELECT)
+                  changeToScreen(SCREEN_DEBUG_STATISTICS);
+              }
+              break;
+
+
             case ITEM_SHOW_LOOP_TIME:
               {
                 drawCheckbox(display.getCursorX(), ypos, Sys.DBG_showLoopTime);
@@ -8637,66 +8657,6 @@ void handleMainUI()
                   changeToScreen(CONFIRMATION_FACTORY_RESET);
               }
               break;
-              
-            case ITEM_SEPARATOR:
-              {
-                drawDottedHLine(8, ypos + 3, 112, BLACK, WHITE);
-              }
-              break;
-            
-            case ITEM_PACKET_RATE:
-              {
-                display.print(F("Pkt rate:"));
-                display.setCursor(72, ypos);
-                display.print(transmitterPacketRate);
-                display.print(F(", "));
-                display.print(receiverPacketRate);
-              }
-              break;
-            
-            case ITEM_UP_TIME:
-              {
-                display.print(F("Up time:"));
-                display.setCursor(72, ypos);
-                printHHMMSS(millis());
-              }
-              break;
-            
-            case ITEM_INACTIVITY_TIME:
-              {
-                display.print(F("Inactvty:"));
-                display.setCursor(72, ypos);
-                printHHMMSS(millis() - inputsLastMovedTime);
-              }
-              break;
-            
-            case ITEM_FREE_RAM:
-              {
-                display.print(F("Free ram:"));
-                display.setCursor(72, ypos);
-                display.print(getFreeRam());
-                display.setCursor(display.getCursorX() + 3, ypos);
-                display.print(F("bytes"));
-              }
-              break;
-            
-            case ITEM_LOOP_NUM:
-              {
-                display.print(F("Loop #:"));
-                display.setCursor(72, ypos);
-                display.print(thisLoopNum);
-              }
-              break;
-            
-            case ITEM_FIXED_LOOP_TIME:
-              {
-                display.print(F("Fxd loop:"));
-                display.setCursor(72, ypos);
-                display.print(fixedLoopTime);
-                display.setCursor(display.getCursorX() + 3, ypos);
-                display.print(F("ms"));
-              }
-              break;
           }
         }
         
@@ -8708,6 +8668,116 @@ void handleMainUI()
         {
           changeToScreen(SCREEN_ADVANCED_MENU);
           viewInitialised = false;
+        }
+      }
+      break;
+
+    case SCREEN_DEBUG_STATISTICS:
+      {
+        drawHeader(PSTR("Statistics"));
+
+        telemetryForceRequest = true;
+
+        enum {
+          ITEM_PACKET_RATE,
+          ITEM_UP_TIME,
+          ITEM_LOOP_NUM,
+          ITEM_FIXED_LOOP_TIME,
+          ITEM_INACTIVITY_TIME,
+          ITEM_FREE_RAM,
+          
+          ITEM_COUNT
+        };
+
+        //initialise
+        static uint8_t thisPage = 1;
+        static bool viewInitialised = false;
+        if(!viewInitialised)
+        {
+          thisPage = 1;
+          viewInitialised = true;
+        }
+
+        //handle navigation
+        uint8_t numPages = (ITEM_COUNT + 5) / 6;
+        isEditMode = true;
+        thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+
+        //fill list
+        for(uint8_t line = 0; line < 6 && line < ITEM_COUNT; line++)
+        {
+          uint8_t ypos = 9 + line * 9;
+          uint8_t itemID = (thisPage - 1) * 6 + line;
+          if(itemID >= ITEM_COUNT)
+            break;
+
+          display.setCursor(0, ypos);
+          switch(itemID)
+          {
+            case ITEM_PACKET_RATE:
+              {
+                display.print(F("Pkt rate:"));
+                display.setCursor(66, ypos);
+                display.print(transmitterPacketRate);
+                display.print(F(", "));
+                display.print(receiverPacketRate);
+              }
+              break;
+            
+            case ITEM_UP_TIME:
+              {
+                display.print(F("Up time:"));
+                display.setCursor(66, ypos);
+                printHHMMSS(millis());
+              }
+              break;
+            
+            case ITEM_INACTIVITY_TIME:
+              {
+                display.print(F("Inactvty:"));
+                display.setCursor(66, ypos);
+                printHHMMSS(millis() - inputsLastMovedTime);
+              }
+              break;
+            
+            case ITEM_FREE_RAM:
+              {
+                display.print(F("Free ram:"));
+                display.setCursor(66, ypos);
+                display.print(getFreeRam());
+                display.setCursor(display.getCursorX() + 3, ypos);
+                display.print(F("bytes"));
+              }
+              break;
+            
+            case ITEM_LOOP_NUM:
+              {
+                display.print(F("Loop #:"));
+                display.setCursor(66, ypos);
+                display.print(thisLoopNum);
+              }
+              break;
+            
+            case ITEM_FIXED_LOOP_TIME:
+              {
+                display.print(F("Fxd loop:"));
+                display.setCursor(66, ypos);
+                display.print(fixedLoopTime);
+                display.print(F("ms"));
+              }
+              break;
+
+          }
+        }
+
+        //Draw scroll bar
+        drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
+
+        //exit
+        if(heldButton == KEY_SELECT)
+        {
+          viewInitialised = false;
+          changeToScreen(SCREEN_DEBUG);
           telemetryForceRequest = false;
         }
       }
@@ -8963,22 +9033,22 @@ void handleMainUI()
       
     case SCREEN_ABOUT:
       {
-        drawHeader_Menu(advancedMenu[ADVANCED_MENU_ABOUT]);
+        drawHeader_Menu(systemMenu[SYSTEM_MENU_ABOUT]);
         
         static uint8_t topItem = 1, highlightedItem = 1;
         
         enum {
           ITEM_VERSION_INFO,
           ITEM_DISCLAIMER,
-          ITEM_THIRD_PARTY,
+          ITEM_THIRD_PARTY_NOTICES,
           ITEM_EASTER_EGG,
         };
 
         menuInitialise();
         menuAddItem(PSTR("Version info"), ITEM_VERSION_INFO, NULL);
         menuAddItem(PSTR("Disclaimer"), ITEM_DISCLAIMER, NULL);
-        menuAddItem(PSTR("Third party notices"), ITEM_THIRD_PARTY, NULL);
-        menuAddItem(PSTR(" "), ITEM_EASTER_EGG, NULL);
+        menuAddItem(PSTR("Third party notices"), ITEM_THIRD_PARTY_NOTICES, NULL);
+        menuAddItem(PSTR(""), ITEM_EASTER_EGG, NULL);
         menuDraw(&topItem, &highlightedItem);
 
         if(menuSelectedItemID == ITEM_VERSION_INFO)
@@ -8991,7 +9061,7 @@ void handleMainUI()
           textViewerText = disclaimerText;
           changeToScreen(SCREEN_TEXT_VIEWER);
         }
-        else if (menuSelectedItemID == ITEM_THIRD_PARTY)
+        else if (menuSelectedItemID == ITEM_THIRD_PARTY_NOTICES)
         {
           textViewerText = thirdPartyNoticesText;
           changeToScreen(SCREEN_TEXT_VIEWER);
@@ -9009,7 +9079,7 @@ void handleMainUI()
             topItem = 1;
             highlightedItem = 1;
           }
-          changeToScreen(SCREEN_ADVANCED_MENU);
+          changeToScreen(SCREEN_SYSTEM_MENU);
         }
       }
       break;
