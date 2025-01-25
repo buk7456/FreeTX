@@ -60,12 +60,12 @@ void readSwitchesAndButtons()
     for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
     {
       swState[i] = SWUPPERPOS;
-      if(Sys.swType[i] == SW_2POS) 
+      if(Sys.swType[i] == SW_2POS || Sys.swType[i] == SW_2POS_MOMENTARY) 
       {
         if(!digitalRead(pgm_read_byte(&swPin[i][1]))) 
           swState[i] = SWLOWERPOS;
       }
-      else if(Sys.swType[i] == SW_3POS) 
+      else if(Sys.swType[i] == SW_3POS || Sys.swType[i] == SW_3POS_MOMENTARY) 
       {
         swState[i] = SWMIDPOS;
         if(!digitalRead(pgm_read_byte(&swPin[i][0])))      
@@ -98,20 +98,31 @@ void readSwitchesAndButtons()
     inputsLastMovedTime = millis();
   
   //-- play audio when switches are moved --
-  uint8_t switchesSum = 0;
+  static uint8_t lastSwState[NUM_PHYSICAL_SWITCHES];
+  static bool initialised = false;
+  if(!initialised)
+  {
+    initialised = true;
+    for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
+      lastSwState[i] = swState[i];
+  }
+  bool beep = false;
   for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
   {
-    switchesSum += swState[i];
+    if(swState[i] != lastSwState[i])
+    {
+      if(Sys.swType[i] == SW_2POS || Sys.swType[i] == SW_3POS)
+        beep = true;
+      else if(Sys.swType[i] == SW_2POS_MOMENTARY && swState[i] == SWLOWERPOS)
+        beep = true;
+      else if(Sys.swType[i] == SW_3POS_MOMENTARY && swState[i] != SWMIDPOS)
+        beep = true;
+      lastSwState[i] = swState[i];
+      inputsLastMovedTime = millis(); 
+    }
   }
-  static uint8_t lastSwitchesSum = switchesSum;
-  if(switchesSum != lastSwitchesSum)
-  { 
-    if(Sys.soundSwitches) 
-      audioToPlay = AUDIO_SWITCH_MOVED;
-    
-    lastSwitchesSum = switchesSum;
-    inputsLastMovedTime = millis();
-  }
+  if(beep && Sys.soundSwitches)
+    audioToPlay = AUDIO_SWITCH_MOVED;
 }
 
 //==================================================================================================
