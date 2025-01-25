@@ -43,8 +43,10 @@ const id_string_t enum_TrimToneFreqMode[] PROGMEM = {
 
 const id_string_t enum_SwitchType[] PROGMEM = {
   {SW_ABSENT, "Absent"},
-  {SW_2POS, "2 position"},
-  {SW_3POS, "3 position"},
+  {SW_2POS, "2 pos"},
+  {SW_3POS, "3 pos"},
+  {SW_2POS_MOMENTARY, "2 pos momentary"},
+  {SW_3POS_MOMENTARY, "3 pos momentary"},
   {0, ""}
 };
 

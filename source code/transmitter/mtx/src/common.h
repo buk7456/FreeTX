@@ -342,6 +342,7 @@ typedef struct {
   //--- security
   bool     lockStartup;
   bool     lockModels;
+  bool     lockOnInactivity;
   char     password[5]; //4 chars + null. Just enough
 
   //--- rf
@@ -349,8 +350,8 @@ typedef struct {
   uint8_t  rfPower;   //3 levels. Low, Medium, Max
 
   //--- sound
-  bool     soundEnabled; 
-  uint8_t  inactivityMinutes;
+  bool     soundEnabled;
+  bool     soundOnInactivity;
   bool     soundSwitches;
   bool     soundKnobCenter;
   bool     soundKeys;
@@ -382,6 +383,7 @@ typedef struct {
   bool     mixerTemplatesEnabled;
   uint8_t  defaultChannelOrder;
   bool     onscreenTrimEnabled;
+  uint8_t  inactivityMinutes;
   
   //--- debug
   bool     DBG_showLoopTime;
@@ -399,6 +401,8 @@ enum switch_type_e {
   SW_ABSENT,
   SW_2POS,
   SW_3POS,
+  SW_2POS_MOMENTARY,
+  SW_3POS_MOMENTARY,
   
   SW_TYPE_COUNT
 };

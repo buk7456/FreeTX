@@ -216,14 +216,14 @@ void resetSystemParams()
   
   for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++) 
   {
-    Sys.swType[i] = (i%4 == 2) ? SW_3POS : SW_2POS;
+    Sys.swType[i] = (i % 4 == 2) ? SW_3POS : SW_2POS;
   }
 
   Sys.rfEnabled = false;
   Sys.rfPower = RF_POWER_MEDIUM;
 
-  Sys.soundEnabled = true; 
-  Sys.inactivityMinutes = 10;
+  Sys.soundEnabled = true;
+  Sys.soundOnInactivity = true;
   Sys.soundSwitches = true;
   Sys.soundKnobCenter = true;
   Sys.soundKeys = true;
@@ -239,6 +239,7 @@ void resetSystemParams()
 
   Sys.lockStartup = false;
   Sys.lockModels = false;
+  Sys.lockOnInactivity = false;
   Sys.password[0] = '\0';
   
   Sys.showMenuIcons = true;
@@ -256,6 +257,7 @@ void resetSystemParams()
   Sys.mixerTemplatesEnabled = true;
   Sys.defaultChannelOrder = 0;
   Sys.onscreenTrimEnabled = true;
+  Sys.inactivityMinutes = 10;
   
   Sys.DBG_showLoopTime = false;
   Sys.DBG_simulateTelemetry = false;
@@ -384,7 +386,12 @@ void resetModelParams()
   //--- safety checks ---
   Model.checkThrottle = true;
   for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
-    Model.switchWarn[i] = 0; //Up position
+  {
+    if(Sys.swType[i] == SW_3POS_MOMENTARY)
+      Model.switchWarn[i] = SWMIDPOS;
+    else
+      Model.switchWarn[i] = SWUPPERPOS;
+  }
   
   //--- notifications ---
   resetNotificationParams();
