@@ -36,6 +36,10 @@ Three buttons are used for navigation; Up, Select, Down. Long press Select to go
 [Mixer](doc/mixer.md)
 <br>[Custom curves](doc/custom_curves.md)
 <br>[Logical switches](doc/logical_switches.md)
+<br>[Function generators](doc/function_generators.md)
+<br>[Timers](doc/timers.md)
+<br>[Counters](doc/counters.md)
+<br>[Notifications](doc/notifications.md)
 <br>[Telemetry](doc/telemetry.md)
 <br>[Receiver binding and configuration](doc/receiver_config.md)
 
