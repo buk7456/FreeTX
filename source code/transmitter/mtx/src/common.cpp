@@ -534,12 +534,18 @@ void resetCounterParams(uint8_t idx)
     return;
   
   Model.Counter[idx].name[0] = '\0';
+  Model.Counter[idx].type = COUNTER_TYPE_BASIC;
   Model.Counter[idx].clock = CTRL_SW_NONE;
+  Model.Counter[idx].incrementClock = CTRL_SW_NONE;
+  Model.Counter[idx].decrementClock = CTRL_SW_NONE;
   Model.Counter[idx].edge = 0;
+  Model.Counter[idx].incrementEdge = 0;
+  Model.Counter[idx].decrementEdge = 0;
   Model.Counter[idx].clear = CTRL_SW_NONE;
   Model.Counter[idx].modulus = 1000;
-  Model.Counter[idx].direction = 0; 
-  Model.Counter[idx].isPersistent = false;
+  Model.Counter[idx].direction = 0;
+  Model.Counter[idx].rolloverEnabled = true;
+  Model.Counter[idx].isPersistent = true;
   Model.Counter[idx].persistVal = 0;
 }
 
@@ -839,7 +845,7 @@ bool changeLSReference(uint8_t newRef, uint8_t oldRef)
   for(uint8_t i = 0; i < NUM_TIMERS; i++)
   {
     timer_params_t *tmr = &Model.Timer[i];
-    if(tmr->swtch == swOld)            { refFound = true; tmr->swtch = swNew;}
+    if(tmr->swtch == swOld)             {refFound = true; tmr->swtch = swNew;}
     if(tmr->swtch == swInvertOld)       {refFound = true; tmr->swtch = swInvertNew;}
     if(tmr->resetSwitch == swOld)       {refFound = true; tmr->resetSwitch = swNew;}
     if(tmr->resetSwitch == swInvertOld) {refFound = true; tmr->resetSwitch = swInvertNew;}
@@ -849,8 +855,18 @@ bool changeLSReference(uint8_t newRef, uint8_t oldRef)
   for(uint8_t i = 0; i < NUM_COUNTERS; i++)
   {
     counter_params_t *counter = &Model.Counter[i];
-    if(counter->clock == swOld)        {refFound = true; counter->clock = swNew;}
-    if(counter->clock == swInvertOld)  {refFound = true; counter->clock = swInvertNew;}
+    if(counter->type == COUNTER_TYPE_BASIC)
+    {
+      if(counter->clock == swOld)        {refFound = true; counter->clock = swNew;}
+      if(counter->clock == swInvertOld)  {refFound = true; counter->clock = swInvertNew;}
+    }
+    else if(counter->type == COUNTER_TYPE_ADVANCED)
+    {
+      if(counter->incrementClock == swOld)        {refFound = true; counter->incrementClock = swNew;}
+      if(counter->incrementClock == swInvertOld)  {refFound = true; counter->incrementClock = swInvertNew;}
+    }
+    if(counter->decrementClock == swOld)        {refFound = true; counter->decrementClock = swNew;}
+    if(counter->decrementClock == swInvertOld)  {refFound = true; counter->decrementClock = swInvertNew;}
     if(counter->clear == swOld)        {refFound = true; counter->clear = swNew;}
     if(counter->clear == swInvertOld)  {refFound = true; counter->clear = swInvertNew;}
   }
@@ -867,8 +883,8 @@ bool changeLSReference(uint8_t newRef, uint8_t oldRef)
   for(uint8_t i = 0; i < NUM_FLIGHT_MODES; i++)
   {
     flight_mode_t *fmd = &Model.FlightMode[i];
-    if(fmd->swtch == swOld)            {refFound = true; fmd->swtch = swNew;}
-    if(fmd->swtch == swInvertOld)      {refFound = true; fmd->swtch = swInvertNew;}
+    if(fmd->swtch == swOld)        {refFound = true; fmd->swtch = swNew;}
+    if(fmd->swtch == swInvertOld)  {refFound = true; fmd->swtch = swInvertNew;}
   }
 
   return refFound;
@@ -894,7 +910,7 @@ bool verifyModelData()
   for(uint8_t i = 0; i < NUM_MIX_SLOTS; i++)
   {
     if(Model.Mixer[i].output >= MIX_SOURCES_COUNT) isSane = false;
-    if(Model.Mixer[i].input >= MIX_SOURCES_COUNT) isSane = false;
+    // if(Model.Mixer[i].input >= MIX_SOURCES_COUNT) isSane = false; //counters are now allowed in the mixer
     if(Model.Mixer[i].curveType >= MIX_CURVE_TYPE_COUNT)  isSane = false;
     if(Model.Mixer[i].operation >= MIX_OPERATOR_COUNT)  isSane = false;
   }
