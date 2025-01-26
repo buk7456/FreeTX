@@ -728,12 +728,12 @@ enum trim_state_e {
 //------------------------------------------------
 
 typedef struct {
-  char     name[7];  //6 chars + Null 
+  char     name[7]; //6 chars + Null 
   uint8_t  swtch;
-  int16_t   x1Trim; //fixed point representation with scaling factor 1/10
-  int16_t   y1Trim; //fixed point representation with scaling factor 1/10
-  int16_t   x2Trim; //fixed point representation with scaling factor 1/10
-  int16_t   y2Trim; //fixed point representation with scaling factor 1/10
+  int16_t  x1Trim;  //fixed point representation with scaling factor 1/10
+  int16_t  y1Trim;  //fixed point representation with scaling factor 1/10
+  int16_t  x2Trim;  //fixed point representation with scaling factor 1/10
+  int16_t  y2Trim;  //fixed point representation with scaling factor 1/10
   uint8_t  transitionTime;
 } flight_mode_t;
 
@@ -744,12 +744,22 @@ typedef struct {
 //------------------------------------------------
 
 typedef struct {
-  char     name[7];   //6 chars + Null 
-  uint8_t  clock;     //the control switch that clocks the counter
-  uint8_t  edge;      //0 rising, 1 falling, 2 dual
-  uint8_t  clear;     //the control switch that clears the counter
-  int16_t  modulus;   //2 to 10000
-  uint8_t  direction; //0 count upwards, 1 count downwards
+  char     name[7];          //6 chars + Null
+  uint8_t  type;             //basic, advanced
+  int16_t  modulus;          //2 to 10000
+  uint8_t  direction;        //0 count upwards, 1 count downwards (basic counter)
+  bool     rolloverEnabled;  
+  union {
+    uint8_t  clock;           //the control switch that clocks the counter (inc/dec if a basic counter)
+    uint8_t  incrementClock;  //the control switch that increments the counter (advanced counter)
+  };
+  union {
+    uint8_t  edge;           //0 rising, 1 falling, 2 dual
+    uint8_t  incrementEdge;  //0 rising, 1 falling, 2 dual  (advanced counter)
+  };
+  uint8_t  decrementClock;   //the control switch that decrements the counter (advanced counter)
+  uint8_t  decrementEdge;    //0 rising, 1 falling, 2 dual (advanced counter)
+  uint8_t  clear;            //the control switch that clears the counter
   bool     isPersistent;
   int16_t  persistVal;
 } counter_params_t;
@@ -757,6 +767,13 @@ typedef struct {
 #define NUM_COUNTERS  5
 
 extern int16_t counterOut[NUM_COUNTERS];
+
+enum counter_type_e {
+  COUNTER_TYPE_BASIC,
+  COUNTER_TYPE_ADVANCED,
+
+  COUNTER_TYPE_COUNT
+};
 
 //------------------------------------------------
 // structure for timer parameters
