@@ -137,6 +137,7 @@ enum {
   SCREEN_COUNTERS,
   CONTEXT_MENU_COUNTERS,
   DIALOG_RENAME_COUNTER,
+  DIALOG_COUNTER_TYPE,
   DIALOG_COPY_COUNTER,
   CONFIRMATION_CLEAR_ALL_COUNTERS,
   //flight modes
@@ -2966,7 +2967,7 @@ void handleMainUI()
                   if(movedSrc != SRC_NONE)
                     mxr->input = movedSrc;
                   //inc dec
-                  mxr->input = incDecSource(mxr->input, INCDEC_FLAG_MIX_SRC);
+                  mxr->input = incDecSource(mxr->input, INCDEC_FLAG_MIX_SRC | INCDEC_FLAG_COUNTER_AS_SRC);
                 }
               }
               break;
@@ -5326,16 +5327,41 @@ void handleMainUI()
         enum {
           ITEM_CLOCK,
           ITEM_EDGE,
+          ITEM_INCREMENT_CLOCK,
+          ITEM_INCREMENT_EDGE,
+          ITEM_DECREMENT_CLOCK,
+          ITEM_DECREMENT_EDGE,
+          ITEM_CLEAR,
           ITEM_MODULUS,
           ITEM_DIRECTION,
-          ITEM_CLEAR,
+          ITEM_ROLLOVER_ENABLED,
           ITEM_PERSISTENT,
           
           ITEM_COUNT
         };
 
+        uint8_t listItemIDs[ITEM_COUNT]; 
+        uint8_t listItemCount = 0;
+        
+        //add item Ids to the list of IDs
+        for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
+        {
+          if(counter->type == COUNTER_TYPE_BASIC)
+          {
+            if(i == ITEM_INCREMENT_CLOCK || i == ITEM_DECREMENT_CLOCK || i == ITEM_INCREMENT_EDGE || i == ITEM_DECREMENT_EDGE)
+              continue;
+          }
+          else if(counter->type == COUNTER_TYPE_ADVANCED)
+          {
+            if(i == ITEM_DIRECTION || i == ITEM_CLOCK || i == ITEM_EDGE)
+              continue;
+          }
+
+          listItemIDs[listItemCount++] = i;
+        }
+
         //handle navigation
-        uint8_t numFocusable = ITEM_COUNT + 2; //+1 for title focus, +1 for context menu focus
+        uint8_t numFocusable = listItemCount + 2; //+1 for title focus, +1 for context menu focus
         changeFocusOnUpDown(numFocusable); 
         toggleEditModeOnSelectClicked();
         static uint8_t topItem = 1;
@@ -5354,13 +5380,13 @@ void handleMainUI()
         {
           uint8_t ypos = 20 + line*9;
           if(focusedItem - 1 == topItem + line)
-            drawCursor(58, ypos);
-          
-          if((topItem - 1 + line) >= ITEM_COUNT)
+            drawCursor(64, ypos);
+
+          if((topItem - 1 + line) >= listItemCount)
             break;
           
-          uint8_t itemID = topItem - 1 + line;
-          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == focusedItem - 2 && isEditMode);
+          uint8_t itemID = listItemIDs[topItem - 1 + line];
+          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -5368,7 +5394,7 @@ void handleMainUI()
             case ITEM_CLOCK:
               {
                 display.print(F("Clock:"));
-                display.setCursor(66, ypos);
+                display.setCursor(72, ypos);
                 getControlSwitchName(textBuff, counter->clock, sizeof(textBuff));
                 display.print(textBuff);
                 if(edit)
@@ -5376,20 +5402,62 @@ void handleMainUI()
               }
               break;
               
+            case ITEM_INCREMENT_CLOCK:
+              {
+                display.print(F("Inc clock:"));
+                display.setCursor(72, ypos);
+                getControlSwitchName(textBuff, counter->incrementClock, sizeof(textBuff));
+                display.print(textBuff);
+                if(edit)
+                  counter->incrementClock = incDecControlSwitch(counter->incrementClock, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+              }
+              break;
+              
+            case ITEM_DECREMENT_CLOCK:
+              {
+                display.print(F("Dec clock:"));
+                display.setCursor(72, ypos);
+                getControlSwitchName(textBuff, counter->decrementClock, sizeof(textBuff));
+                display.print(textBuff);
+                if(edit)
+                  counter->decrementClock = incDecControlSwitch(counter->decrementClock, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+              }
+              break;
+              
             case ITEM_EDGE:
               {
                 display.print(F("Edge:"));
-                display.setCursor(66, ypos);
+                display.setCursor(72, ypos);
                 display.print(findStringInIdStr(enum_ClockEdge, counter->edge));
                 if(edit)
                   counter->edge = incDec(counter->edge, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
+              }
+              break;
+              
+            case ITEM_INCREMENT_EDGE:
+              {
+                display.print(F("Inc edge:"));
+                display.setCursor(72, ypos);
+                display.print(findStringInIdStr(enum_ClockEdge, counter->incrementEdge));
+                if(edit)
+                  counter->incrementEdge = incDec(counter->incrementEdge, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
+              }
+              break;
+              
+            case ITEM_DECREMENT_EDGE:
+              {
+                display.print(F("Dec edge:"));
+                display.setCursor(72, ypos);
+                display.print(findStringInIdStr(enum_ClockEdge, counter->decrementEdge));
+                if(edit)
+                  counter->decrementEdge = incDec(counter->decrementEdge, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
               }
               break;
             
             case ITEM_MODULUS:
               {
                 display.print(F("Modulus:"));
-                display.setCursor(66, ypos);
+                display.setCursor(72, ypos);
                 display.print(counter->modulus);
                 if(edit)
                   counter->modulus = incDec(counter->modulus, 2, 10000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
@@ -5399,7 +5467,7 @@ void handleMainUI()
             case ITEM_DIRECTION:
               {
                 display.print(F("Direction:"));
-                display.setCursor(66, ypos);
+                display.setCursor(72, ypos);
                 display.print(findStringInIdStr(enum_CounterDirection, counter->direction));
                 if(edit)
                   counter->direction = incDec(counter->direction, 0, 1, INCDEC_WRAP, INCDEC_SLOW);
@@ -5409,7 +5477,7 @@ void handleMainUI()
             case ITEM_CLEAR:
               {
                 display.print(F("Clear:"));
-                display.setCursor(66, ypos);
+                display.setCursor(72, ypos);
                 getControlSwitchName(textBuff, counter->clear, sizeof(textBuff));
                 display.print(textBuff);
                 if(edit)
@@ -5417,10 +5485,19 @@ void handleMainUI()
               }
               break;
               
+            case ITEM_ROLLOVER_ENABLED:
+              {
+                display.print(F("Rollover:"));
+                drawCheckbox(72, ypos, counter->rolloverEnabled);
+                if(edit)
+                  counter->rolloverEnabled = incDec(counter->rolloverEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+              
             case ITEM_PERSISTENT:
               {
                 display.print(F("Persist:"));
-                drawCheckbox(66, ypos, counter->isPersistent);
+                drawCheckbox(72, ypos, counter->isPersistent);
                 if(edit)
                   counter->isPersistent = incDec(counter->isPersistent, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
               }
@@ -5429,7 +5506,7 @@ void handleMainUI()
         }
         
         //scrollbar
-        drawScrollBar(127, 19, ITEM_COUNT, topItem, 5, 5 * 9);
+        drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -5456,6 +5533,7 @@ void handleMainUI()
       {
         enum {
           ITEM_RENAME_COUNTER,
+          ITEM_COUNTER_TYPE,
           ITEM_RESET_SETTINGS,
           ITEM_COPY_COUNTER,
           ITEM_CLEAR_COUNTER,
@@ -5465,6 +5543,7 @@ void handleMainUI()
         contextMenuInitialise();
         contextMenuAddItem(PSTR("Copy to"), ITEM_COPY_COUNTER);
         contextMenuAddItem(PSTR("Rename counter"), ITEM_RENAME_COUNTER);
+        contextMenuAddItem(PSTR("Counter type"), ITEM_COUNTER_TYPE);
         contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_SETTINGS);
         contextMenuAddItem(PSTR("Clear counter"), ITEM_CLEAR_COUNTER);
         contextMenuAddItem(PSTR("Clear all"), ITEM_CLEAR_ALL_COUNTERS);
@@ -5485,6 +5564,8 @@ void handleMainUI()
           changeToScreen(CONFIRMATION_CLEAR_ALL_COUNTERS);  
         if(contextMenuSelectedItemID == ITEM_RENAME_COUNTER)
           changeToScreen(DIALOG_RENAME_COUNTER);
+        if(contextMenuSelectedItemID == ITEM_COUNTER_TYPE)
+          changeToScreen(DIALOG_COUNTER_TYPE);
         if(contextMenuSelectedItemID == ITEM_COPY_COUNTER)
         {
           destCounterIdx = thisCounterIdx;
@@ -5518,6 +5599,23 @@ void handleMainUI()
           changeToScreen(SCREEN_COUNTERS);
         }
         if(heldButton == KEY_SELECT) //exit
+          changeToScreen(SCREEN_COUNTERS);
+      }
+      break;
+
+    case DIALOG_COUNTER_TYPE:
+      {
+        isEditMode = true;
+        Model.Counter[thisCounterIdx].type = incDec(Model.Counter[thisCounterIdx].type, 0, COUNTER_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+
+        drawBoundingBox(11, 14, 105, 35,BLACK);
+        drawCursor(21, 28);
+        display.setCursor(17, 18);
+        display.print(F("Counter type"));
+        display.setCursor(29, 28);
+        display.print(findStringInIdStr(enum_CounterType, Model.Counter[thisCounterIdx].type));
+        
+        if(heldButton == KEY_SELECT || clickedButton == KEY_SELECT ) //exit
           changeToScreen(SCREEN_COUNTERS);
       }
       break;

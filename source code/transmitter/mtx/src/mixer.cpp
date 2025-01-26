@@ -15,15 +15,15 @@ void evaluateCounters();
 //mix sources array
 int16_t mixSources[MIX_SOURCES_COUNT]; 
 
-//variables to help with 'delay' and 'slow' mixer features
-int16_t  dlyOldVal[NUM_MIX_SLOTS];
+//variables to help with 'delay', 'slow' and 'hold' mixer features
+static union {
+  int16_t  dlyOldVal[NUM_MIX_SLOTS];
+  int16_t  hldOldVal[NUM_MIX_SLOTS];
+};
 int8_t   dlyPrevOperand[NUM_MIX_SLOTS];  //stored as (operand / 4)
 uint8_t  dlyPrevInput[NUM_MIX_SLOTS];
 uint32_t dlyStartTime[NUM_MIX_SLOTS];
 int32_t  slowCurrVal[NUM_MIX_SLOTS];
-
-//variables to help with the mix Hold feature
-int16_t  hldOldVal[NUM_MIX_SLOTS];
 uint8_t  hldOldState[NUM_MIX_SLOTS];
 
 //variables to help with logical switches
@@ -293,7 +293,14 @@ void computeChannelOutputs()
       continue;
 
     //--- ASSIGN
-    int16_t operand = mixSources[mxr->input];
+    int16_t operand = 0;
+    if(mxr->input < MIX_SOURCES_COUNT)
+      operand = mixSources[mxr->input];
+    else if(mxr->input >= SRC_COUNTER_FIRST && mxr->input <= SRC_COUNTER_LAST)
+    {
+      uint8_t counterIdx = mxr->input - SRC_COUNTER_FIRST;
+      operand = -500 + ((int32_t)counterOut[counterIdx] * 1000 / (Model.Counter[counterIdx].modulus - 1));
+    }
     
     //--- DELAY
     //Reset delay variables if the input or model has been changed
@@ -491,7 +498,7 @@ void moveMix(uint8_t newPos, uint8_t oldPos)
   // store temporarily the old position's data
   mixer_params_t Temp_Mixer    = Model.Mixer[oldPos];
   int16_t  tempDlyOldVal       = dlyOldVal[oldPos];
-  int8_t   tempDlyPrevOperand   = dlyPrevOperand[oldPos];
+  int8_t   tempDlyPrevOperand  = dlyPrevOperand[oldPos];
   uint8_t  tempDlyPrevInputIdx = dlyPrevInput[oldPos];
   uint32_t tempDlyStartTime    = dlyStartTime[oldPos];
   int32_t  tempSlowCurrVal     = slowCurrVal[oldPos];
@@ -999,8 +1006,11 @@ void evaluateLogicalSwitches(uint32_t _currTime)
 
 void evaluateCounters()
 {
-  static bool counterState[NUM_COUNTERS];
-  static bool counterToggleLastState[NUM_COUNTERS];
+  static union {
+    bool counterToggleLastState[NUM_COUNTERS];
+    bool counterIncToggleLastState[NUM_COUNTERS];
+  };
+  static bool counterDecToggleLastState[NUM_COUNTERS];
 
   for(uint8_t idx = 0; idx < NUM_COUNTERS; idx++)
   {
@@ -1008,80 +1018,143 @@ void evaluateCounters()
     
     if(isReinitialiseMixer)
     {
-      counterState[idx] = false;
-      counterToggleLastState[idx] = checkSwitchCondition(counter->clock);
+      if(counter->type == COUNTER_TYPE_BASIC)
+        counterToggleLastState[idx] = checkSwitchCondition(counter->clock);
+      else if(counter->type == COUNTER_TYPE_ADVANCED)
+      {
+        counterIncToggleLastState[idx] = checkSwitchCondition(counter->incrementClock);
+        counterDecToggleLastState[idx] = checkSwitchCondition(counter->decrementClock);
+      }
       continue;
     }
     
-    //get the previous result
-    bool result = counterState[idx]; 
-    //get the state of the switch, the source of our clock
-    bool state = (counter->clock != CTRL_SW_NONE) ? checkSwitchCondition(counter->clock) : false;
-    //toggle on the rising edge
-    if(counter->edge == 0) 
+    if(counter->type == COUNTER_TYPE_BASIC)
     {
-      if(state && !counterToggleLastState[idx]) //went from low to high
+      bool state = (counter->clock != CTRL_SW_NONE) ? checkSwitchCondition(counter->clock) : false;
+      if(counter->edge == 0) //on the rising edge
       {
-        counterToggleLastState[idx] = true;
-        result = !counterState[idx];
-        if(counter->direction == 0) 
-          counterOut[idx]++;
-        else 
-          counterOut[idx]--;
+        if(state && !counterToggleLastState[idx]) //went from low to high
+        {
+          counterToggleLastState[idx] = true;
+          if(counter->direction == 0) 
+            counterOut[idx]++;
+          else 
+            counterOut[idx]--;
+        }
+        else if(!state)
+          counterToggleLastState[idx] = false;
       }
-      else if(!state)
-        counterToggleLastState[idx] = false;
-    }
-    //toggle on falling edge
-    if(counter->edge == 1) 
-    {
-      if(!state && counterToggleLastState[idx]) //went from high to low
+      else if(counter->edge == 1) //on falling edge
       {
-        counterToggleLastState[idx] = false;
-        result = !counterState[idx];
-        if(counter->direction == 0) 
-          counterOut[idx]++;
-        else 
-          counterOut[idx]--;
+        if(!state && counterToggleLastState[idx]) //went from high to low
+        {
+          counterToggleLastState[idx] = false;
+          if(counter->direction == 0) 
+            counterOut[idx]++;
+          else 
+            counterOut[idx]--;
+        }
+        else if(state)
+          counterToggleLastState[idx] = true;
       }
-      else if(state)
-        counterToggleLastState[idx] = true;
-    }
-    //dual edge triggering i.e. both rising and falling edges
-    if(counter->edge == 2)
-    {
-      if(state != counterToggleLastState[idx])
+      else if(counter->edge == 2) //dual edge triggering i.e. both rising and falling edges
       {
-        counterToggleLastState[idx] = state;
-        result = !counterState[idx];
-        if(counter->direction == 0) 
+        if(state != counterToggleLastState[idx])
+        {
+          counterToggleLastState[idx] = state;
+          if(counter->direction == 0) 
+            counterOut[idx]++;
+          else 
+            counterOut[idx]--;
+        }
+      }
+    }
+    else if(counter->type == COUNTER_TYPE_ADVANCED)
+    {
+      //--- increment ---
+      bool state = (counter->incrementClock != CTRL_SW_NONE) ? checkSwitchCondition(counter->incrementClock) : false;
+      if(counter->incrementEdge == 0) //on the rising edge
+      {
+        if(state && !counterIncToggleLastState[idx]) //went from low to high
+        {
+          counterIncToggleLastState[idx] = true;
           counterOut[idx]++;
-        else 
+        }
+        else if(!state)
+          counterIncToggleLastState[idx] = false;
+      }
+      else if(counter->incrementEdge == 1) //on falling edge
+      {
+        if(!state && counterIncToggleLastState[idx]) //went from high to low
+        {
+          counterIncToggleLastState[idx] = false;
+          counterOut[idx]++;
+        }
+        else if(state)
+          counterIncToggleLastState[idx] = true;
+      }
+      else if(counter->incrementEdge == 2) //dual edge triggering i.e. both rising and falling edges
+      {
+        if(state != counterIncToggleLastState[idx])
+        {
+          counterIncToggleLastState[idx] = state;
+          counterOut[idx]++;
+        }
+      }
+      //--- decrement ---
+      state = (counter->decrementClock != CTRL_SW_NONE) ? checkSwitchCondition(counter->decrementClock) : false;
+      if(counter->decrementEdge == 0) //on the rising edge
+      {
+        if(state && !counterDecToggleLastState[idx]) //went from low to high
+        {
+          counterDecToggleLastState[idx] = true;
           counterOut[idx]--;
+        }
+        else if(!state)
+          counterDecToggleLastState[idx] = false;
+      }
+      else if(counter->decrementEdge == 1) //on falling edge
+      {
+        if(!state && counterDecToggleLastState[idx]) //went from high to low
+        {
+          counterDecToggleLastState[idx] = false;
+          counterOut[idx]--;
+        }
+        else if(state)
+          counterDecToggleLastState[idx] = true;
+      }
+      else if(counter->decrementEdge == 2) //dual edge triggering i.e. both rising and falling edges
+      {
+        if(state != counterDecToggleLastState[idx])
+        {
+          counterDecToggleLastState[idx] = state;
+          counterOut[idx]--;
+        }
       }
     }
     
     //check against modulus
-    if(counterOut[idx] >= counter->modulus) 
-      counterOut[idx] = 0;
-    if(counterOut[idx] < 0)                 
-      counterOut[idx] = counter->modulus - 1;
-    
-    //clear. This overrides result to false.
-    if(counter->clear != CTRL_SW_NONE && checkSwitchCondition(counter->clear))
+    if(counter->rolloverEnabled)
     {
-      result = false;
-      counterOut[idx] = 0;
+      if(counterOut[idx] >= counter->modulus) 
+        counterOut[idx] = 0;
+      if(counterOut[idx] < 0)                 
+        counterOut[idx] = counter->modulus - 1;
+    }
+    else
+    {
+      if(counterOut[idx] >= counter->modulus) 
+        counterOut[idx] = counter->modulus - 1;
+      if(counterOut[idx] < 0)            
+        counterOut[idx] = 0;
     }
     
-    //store the result
-    counterState[idx] = result;
-    
+    //clear
+    if(counter->clear != CTRL_SW_NONE && checkSwitchCondition(counter->clear))
+      counterOut[idx] = 0;
+
     //store the register value
-    if(counter->isPersistent)
-      counter->persistVal = counterOut[idx];
-    else
-      counter->persistVal = 0;
+    counter->persistVal = (counter->isPersistent) ? counterOut[idx] : 0;
   }
 }
 

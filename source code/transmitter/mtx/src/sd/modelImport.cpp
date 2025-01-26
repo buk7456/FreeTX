@@ -713,16 +713,28 @@ void extractConfig_Counters()
     counter_params_t* counter = &Model.Counter[thisIdx];
     if(MATCH_P(keyBuff[1], key_Name))
       strlcpy(counter->name, valueBuff, sizeof(counter->name));
+    else if(MATCH_P(keyBuff[1], key_Type))
+      findIdInIdStr(enum_CounterType, valueBuff, counter->type);
     else if(MATCH_P(keyBuff[1], key_Clock))
       counter->clock = getControlSwitchID(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_IncrementClock))
+      counter->incrementClock = getControlSwitchID(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_DecrementClock))
+      counter->decrementClock = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Edge))
       findIdInIdStr(enum_ClockEdge, valueBuff, counter->edge);
+    else if(MATCH_P(keyBuff[1], key_IncrementEdge))
+      findIdInIdStr(enum_ClockEdge, valueBuff, counter->incrementEdge);
+    else if(MATCH_P(keyBuff[1], key_DecrementEdge))
+      findIdInIdStr(enum_ClockEdge, valueBuff, counter->decrementEdge);
     else if(MATCH_P(keyBuff[1], key_Clear))
       counter->clear = getControlSwitchID(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Modulus))
       counter->modulus = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_Direction))
       findIdInIdStr(enum_CounterDirection, valueBuff, counter->direction);
+    else if(MATCH_P(keyBuff[1], key_RolloverEnabled))
+      readValue_bool(valueBuff, &counter->rolloverEnabled);
     else if(MATCH_P(keyBuff[1], key_IsPersistent))
       readValue_bool(valueBuff, &counter->isPersistent);
     else if(MATCH_P(keyBuff[1], key_PersistVal))

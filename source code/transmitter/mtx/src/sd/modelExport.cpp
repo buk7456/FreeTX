@@ -462,21 +462,29 @@ void exportModelData(File& file)
 
     writeKeyValue_Char(file, 0, key_Counter, NULL);
     writeKeyValue_S32(file, 1, key_Number, idx + 1);
-
     writeKeyValue_Char(file, 1, key_Name, counter->name);
-
-    getControlSwitchName_Clean(tempBuff, counter->clock, sizeof(tempBuff));
-    writeKeyValue_Char(file, 1, key_Clock, tempBuff);
-
-    writeKeyValue_Char(file, 1, key_Edge, findStringInIdStr(enum_ClockEdge, counter->edge));
-
+    writeKeyValue_Char(file, 1, key_Type, findStringInIdStr(enum_CounterType, counter->type));
+    if(counter->type == COUNTER_TYPE_BASIC)
+    {
+      getControlSwitchName_Clean(tempBuff, counter->clock, sizeof(tempBuff));
+      writeKeyValue_Char(file, 1, key_Clock, tempBuff);
+      writeKeyValue_Char(file, 1, key_Edge, findStringInIdStr(enum_ClockEdge, counter->edge));
+      writeKeyValue_S32(file, 1, key_Modulus, counter->modulus);
+      writeKeyValue_Char(file, 1, key_Direction, findStringInIdStr(enum_CounterDirection, counter->direction));
+    }
+    else if(counter->type == COUNTER_TYPE_ADVANCED)
+    {
+      getControlSwitchName_Clean(tempBuff, counter->incrementClock, sizeof(tempBuff));
+      writeKeyValue_Char(file, 1, key_IncrementClock, tempBuff);
+      writeKeyValue_Char(file, 1, key_IncrementEdge, findStringInIdStr(enum_ClockEdge, counter->incrementEdge));
+      getControlSwitchName_Clean(tempBuff, counter->decrementClock, sizeof(tempBuff));
+      writeKeyValue_Char(file, 1, key_DecrementClock, tempBuff);
+      writeKeyValue_Char(file, 1, key_DecrementEdge, findStringInIdStr(enum_ClockEdge, counter->decrementEdge));
+      writeKeyValue_S32(file, 1, key_Modulus, counter->modulus);
+    }
     getControlSwitchName_Clean(tempBuff, counter->clear, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_Clear, tempBuff);
-
-    writeKeyValue_S32(file, 1, key_Modulus, counter->modulus);
-    
-    writeKeyValue_Char(file, 1, key_Direction, findStringInIdStr(enum_CounterDirection, counter->direction));
-    
+    writeKeyValue_bool(file, 1, key_RolloverEnabled, counter->rolloverEnabled);
     writeKeyValue_bool(file, 1, key_IsPersistent, counter->isPersistent);
     writeKeyValue_S32(file, 1, key_PersistVal, counter->persistVal);
   }

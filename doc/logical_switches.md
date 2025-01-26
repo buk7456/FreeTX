@@ -9,6 +9,17 @@ programmed switches. They produce an on/off output.
 - Generators (Pulse)
 
 ## Examples
+
+[1. A mix activated by combination of two switches](#section_id_mix_activated_by_two_switches)  
+[2. LED lights that flash when flight battery is low](#section_id_led_lights_flashing_low_battery)  
+[3. Stopwatch operated by a single momentary switch](#section_id_stopwatch_with_momentary_switch)  
+[4. Throttle timer - simple](#section_id_throttle_timer_simple)  
+[5. Throttle timer - advanced](#section_id_throttle_timer_advanced)  
+[6. Zero crossing detection](#section_id_zero_crossing_detection)  
+[7. Using a momentary switch to cycle among values](#section_id_cycle_among_values_with_momentary_switch)  
+[8. Detecting receiver connection or disconnection ](#section_id_detect_disconnection_of_receiver)  
+
+<a id="section_id_mix_activated_by_two_switches"></a>
 ### Example 1: A mix activated by combination of two switches
 Suppose we want a mix to be turned on only when two switches (e.g SwA, SwB) are both on. 
 We need to set up a logical switch say L1 as follows.
@@ -23,6 +34,7 @@ Value2: SwB_down
 ```
 Then in the mixer, we simply have to set the control switch to L1.
 
+<a id="section_id_led_lights_flashing_low_battery"></a>
 ### Example 2: LED lights that flash when flight battery is low
 Suppose we have a model that is equipped with some LED lights that we want to switch on when the flight battery
 voltage (telemetry) falls below a certain threshold for more than say five seconds.
@@ -46,6 +58,7 @@ Period: 2.0 s
 Then in the mixer, we simply use L2 as the input source and L1 as the control switch for the mix, to
 operate the channel assigned to the LED lights.
 
+<a id="section_id_stopwatch_with_momentary_switch"></a>
 ### Example 3: Stopwatch operated by a single momentary switch for start/stop and reset
 When the switch is clicked, the timer runs/stops. When the switch is held long enough, the timer is
 reset. 
@@ -73,6 +86,7 @@ Reset:   L2
 
 ```
 
+<a id="section_id_throttle_timer_simple"></a>
 ### Example 4: Throttle timer (simple)
 When the throttle is moved beyond a certain threshold, the timer runs.  
 Also if we have a throttle cut function on say SwA, we want the timer to only run when throttle cut is inactive.  
@@ -97,6 +111,7 @@ Switch:  L2
 
 ```
 
+<a id="section_id_throttle_timer_advanced"></a>
 ### Example 5: Throttle timer (advanced)
 Suppose we instead want the speed at which the timer runs to be proportional to the throttle value.  
 Also if we have a throttle cut function on say SwA, we want the timer to only run when throttle cut is inactive.  
@@ -167,6 +182,7 @@ Switch:  L3
 If desired, we can also include a custom curve through a virtual channel, to compensate for the real world
 nonlinear relationship between current draw and throttle value. 
 
+<a id="section_id_zero_crossing_detection"></a>
 ### Example 6: Zero crossing detection
 Suppose we want to detect whenever a value say from a function generator crosses zero, so that 
 we can trigger some other action.
@@ -189,6 +205,7 @@ Dirctn:   Both
 
 L2 will now output a brief pulse whenever the output of the function generator crosses zero.
 
+<a id="section_id_cycle_among_values_with_momentary_switch"></a>
 ### Example 7: Using a momentary switch to cycle among four values or states
 Suppose that we want an output channel to cycle among four levels whenever 
 we click the momentary switch.
@@ -301,7 +318,11 @@ Then in the Mixer,
 4. Ch1  RplW  Max  (weight  100,  Switch L6)
 ```
 
-### Example 8: Detecting when the receiver is connected or disconnected
+#### Method 3:
+This makes use of the built-in [Counter](counters.md) directly in the Mixer.
+
+<a id="section_id_detect_disconnection_of_receiver"></a>
+### Example 8: Detecting receiver connection or disconnection
 This relies on the Link Quality telemetry to detect connection/disconnection of a receiver.  
 First, configure the Link Quality telemetry (premade template already available).  
 Then set up a logical switch and custom notifications as follows.

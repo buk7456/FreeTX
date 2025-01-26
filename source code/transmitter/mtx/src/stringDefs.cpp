@@ -152,6 +152,12 @@ const id_string_t enum_CounterDirection[] PROGMEM = {
   {0, ""}
 };
 
+const id_string_t enum_CounterType[] PROGMEM = {
+  {COUNTER_TYPE_BASIC, "Basic"},
+  {COUNTER_TYPE_ADVANCED, "Advanced"},
+  {0, ""}
+};
+
 const id_string_t enum_MixerOperation[] PROGMEM = {
   {MIX_ADD, "Add"},
   {MIX_MULTIPLY, "Mltply"}, //alias
@@ -374,12 +380,18 @@ const char key_Val3[] PROGMEM = "Val3";
 const char key_Val4[] PROGMEM = "Val4";
 
 const char key_Counter[] PROGMEM = "Counter";
+// const char key_Type[] PROGMEM = "Type";
 // const char key_Name[] PROGMEM = "Name";
 const char key_Clock[] PROGMEM = "Clock";
 const char key_Edge[] PROGMEM = "Edge";
+const char key_IncrementClock[] PROGMEM = "IncrementClock";
+const char key_IncrementEdge[] PROGMEM = "IncrementEdge";
+const char key_DecrementClock[] PROGMEM = "DecrementClock";
+const char key_DecrementEdge[] PROGMEM = "DecrementEdge";
 const char key_Clear[] PROGMEM = "Clear";
 const char key_Modulus[] PROGMEM = "Modulus";
 const char key_Direction[] PROGMEM = "Direction";
+const char key_RolloverEnabled[] PROGMEM = "RolloverEnabled";
 // const char key_IsPersistent[] PROGMEM = "Persistent";
 // const char key_PersistVal[] PROGMEM = "PersistVal";
 
