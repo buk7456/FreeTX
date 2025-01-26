@@ -45,6 +45,7 @@ extern const id_string_t enum_FuncgenPeriodMode[] PROGMEM;
 extern const id_string_t enum_FuncgenWidthMode[] PROGMEM;
 extern const id_string_t enum_FuncgenPhaseMode[] PROGMEM;
 extern const id_string_t enum_CounterDirection[] PROGMEM;
+extern const id_string_t enum_CounterType[] PROGMEM;
 extern const id_string_t enum_MixerOperation[] PROGMEM;
 extern const id_string_t enum_MixerCurveType[] PROGMEM;
 extern const id_string_t enum_MixerCurveType_Func[] PROGMEM;
@@ -156,11 +157,17 @@ extern const char key_Val4[] PROGMEM;
 
 extern const char key_Counter[] PROGMEM;
 // extern const char key_Name[] PROGMEM;
+// extern const char key_Type[] PROGMEM;
 extern const char key_Clock[] PROGMEM;
 extern const char key_Edge[] PROGMEM;
+extern const char key_IncrementClock[] PROGMEM;
+extern const char key_IncrementEdge[] PROGMEM;
+extern const char key_DecrementClock[] PROGMEM;
+extern const char key_DecrementEdge[] PROGMEM;
 extern const char key_Clear[] PROGMEM;
 extern const char key_Modulus[] PROGMEM;
 extern const char key_Direction[] PROGMEM;
+extern const char key_RolloverEnabled[] PROGMEM;
 // extern const char key_IsPersistent[] PROGMEM;
 // extern const char key_PersistVal[] PROGMEM;
 
