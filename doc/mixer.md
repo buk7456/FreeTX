@@ -259,6 +259,28 @@ Using SwD for operation. Assuming gear doors on Ch6 and gear on Ch7.
 1. Ch6  Add  SwD (Weight 100, DelayUp 0 s, DelayDown 3 s, SlowUp 2 s, SlowDown 2 s)
 2. Ch7  Add  SwD (Weight 100, DelayUp 3 s, DelayDown 0 s, SlowUp 2 s, SlowDown 2 s)
 ```
+#### Alternative method
+
+Set up two custom curves as follows.
+```txt
+Curve1
+Type: 3 point
+Point(x,y): PtA(-100,-100) PtB(0,100) PtC(100,100)
+
+Curve2
+Type: 3 point
+Point(x,y): PtA(-100,-100) PtB(0,-100) PtC(100,100)
+``` 
+<p align="left">
+<img src="img20.png" width = "390"/>
+</p>
+
+Then in the mixer, assuming gear door servos on Ch7, gear servos on Ch8, and using SwD to operate,
+```txt
+1. Virt1 Add  SwD   (Weight 100, SlowUp 5 s, SlowDown 5 s) //Create a source that slowly ramps
+2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)            //Apply curve1 for the door sequence
+3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)            //Apply curve2 for the gear sequence
+```
 
 <a id="section_id_landing_gear_sequencer_v2"></a>
 ### Example 17: Landing gear sequencer (gear doors close after gear is extended)
@@ -277,12 +299,17 @@ Curve2
 Type: 4 point
 Point(x,y): PtA(-100,-100) PtB(-50,-100) PtC(50,100) PtD(100,100)
 ``` 
+<p align="left">
+<img src="img21.png" width = "390"/>
+</p>
+
 Then in the mixer, assuming gear door servos on Ch7, gear servos on Ch8, and using SwD to operate,
 ```txt
 1. Virt1 Add  SwD   (Weight 100, SlowUp 7 s, SlowDown 7 s) //Create a source that slowly ramps
-2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)          //Apply curve1 for the door sequence
-3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)          //Apply curve2 for the gear sequence
+2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)            //Apply curve1 for the door sequence
+3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)            //Apply curve2 for the gear sequence
 ```
+
 #### Retract actuator version
 Most electric retract actuators require an on/off control signal, so this example is designed to work with these. 
 <br>Set up three custom curves as follows.
@@ -306,9 +333,9 @@ Point(x,y): PtA(-100,-100) PtB(50,-100) PtC(50,100) PtD(100,100)
 Then in the mixer, assuming gear door servos on Ch7, gear retracts on Ch8, and using SwD to operate, 
 ```txt
 1. Virt1 Add  SwD   (Weight 100, SlowUp 10 s, SlowDown 10 s) //Create a source that slowly ramps
-2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)            //Apply curve1 for the door sequence
-3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)            //Apply curve2 for the gear open sequence
-3. Ch8   RplW Virt1 (Weight 100, Custom Curve3, SwD_Up)    //Apply curve3 for the gear close sequence
+2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)              //Apply curve1 for the door sequence
+3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)              //Apply curve2 for the gear open sequence
+3. Ch8   RplW Virt1 (Weight 100, Custom Curve3, SwD_Up)      //Apply curve3 for the gear close sequence
 ```
 We can, if necessary, set Ch8 to 'Digital' mode in the receiver output configuration screen.
 
