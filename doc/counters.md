@@ -22,6 +22,7 @@ In advanced mode, the counter behaves as an up/down counter using separate "up" 
 
 ## Examples
 
+<a id="section_id_select_among_values_with_momentary_switch"></a>
 ### Example 1: Using a 3 position momentary switch to sequentially select among values.
 This example demonstrates use of the counter directly inside the mixer.  
 When the momentary switch is pushed in the downward direction, the counter value increments. Similarly, pushing the momentary switch in the opposite direction decrements the counter value.  

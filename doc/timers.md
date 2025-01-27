@@ -1,5 +1,5 @@
 # Timers
-Timers can be used to time events, etc. The system provides up to 3 programmable timers.  
+Timers are used to time events, etc. The system provides up to 3 programmable timers.  
 Timers can be configured to count up or count down.  
 In count down mode, an audible alarm is played when the timer reaches zero. The timer continues to count with a negative sign.
 

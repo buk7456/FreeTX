@@ -62,7 +62,7 @@ operate the channel assigned to the LED lights.
 ### Example 3: Stopwatch operated by a single momentary switch for start/stop and reset
 When the switch is clicked, the timer runs/stops. When the switch is held long enough, the timer is
 reset. 
-<br>For this we set up two logical switches to operate the timer as below, assuming SwH is our momentary switch.
+<br>For this, we set up two logical switches to operate the timer as below, assuming SwH is our momentary switch.
 
 ```txt
 L1
@@ -113,7 +113,7 @@ Switch:  L2
 
 <a id="section_id_throttle_timer_advanced"></a>
 ### Example 5: Throttle timer (advanced)
-Suppose we instead want the speed at which the timer runs to be proportional to the throttle value.  
+Suppose we want the speed at which the timer runs to be proportional to the throttle value.  
 Also if we have a throttle cut function on say SwA, we want the timer to only run when throttle cut is inactive.  
 Assume our throttle source is the Y1 axis. 
 
@@ -184,7 +184,7 @@ nonlinear relationship between current draw and throttle value.
 
 <a id="section_id_zero_crossing_detection"></a>
 ### Example 6: Zero crossing detection
-Suppose we want to detect whenever a value say from a function generator crosses zero, so that 
+Suppose we want to detect whenever a value from say a function generator crosses zero, so that 
 we can trigger some other action.
 
 ```txt
@@ -207,11 +207,10 @@ L2 will now output a brief pulse whenever the output of the function generator c
 
 <a id="section_id_cycle_among_values_with_momentary_switch"></a>
 ### Example 7: Using a momentary switch to cycle among four values or states
-Suppose that we want an output channel to cycle among four levels whenever 
-we click the momentary switch.
+Suppose we want an output channel to cycle among four levels whenever we click the momentary switch.
 
 #### Method 1:
-Set up a 'two bit' binary counter with it's outputs on L2 and L1 as follows.
+Set up a '2-bit' binary counter with it's outputs on L2 and L1 as follows.
 
 ```txt
 L1
@@ -319,7 +318,7 @@ Then in the Mixer,
 ```
 
 #### Method 3:
-This makes use of the built-in [Counter](counters.md) directly in the Mixer.
+This makes use of the built-in counter directly in the Mixer. [See the example](./counters.md#section_id_select_among_values_with_momentary_switch) under counters.  
 
 <a id="section_id_detect_disconnection_of_receiver"></a>
 ### Example 8: Detecting receiver connection or disconnection
