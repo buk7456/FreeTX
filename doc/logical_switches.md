@@ -1,6 +1,6 @@
 # Logical switches
 These can be used to combine various conditions, compare values, etc. They are in essence user
-programmed switches. They produce an on/off output.
+programmed virtual switches. They produce an on/off output.
 <br>The available functions can be categorized into the following types.
 - Comparators (Greater than, Less than, Equal, Greater than or equal, Less than or equal)
 - Combinational (AND, OR, XOR)
