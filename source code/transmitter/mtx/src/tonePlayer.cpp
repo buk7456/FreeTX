@@ -102,7 +102,7 @@ const uint16_t trimMovedSound[] PROGMEM = {
   250,NOTE_AS7,16
 }; 
 
-// trimCenter:d=4,o=4,b=250:16a#7
+// trimCenter:d=4,o=4,b=250:8a#7
 const uint16_t trimCenterSound[] PROGMEM = {
   250,NOTE_AS7,8
 }; 
@@ -286,6 +286,7 @@ void playTones()
       
       case AUDIO_KEY_PRESSED:
       case AUDIO_SWITCH_MOVED:
+      case AUDIO_KNOB_CENTER:
         beginTone(shortBeepSound, sizeof(shortBeepSound)/sizeof(shortBeepSound[0])); 
         break;
         
