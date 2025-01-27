@@ -210,7 +210,7 @@ L2 will now output a brief pulse whenever the output of the function generator c
 Suppose we want an output channel to cycle among four levels whenever we click the momentary switch.
 
 #### Method 1:
-Set up a '2-bit' binary counter with it's outputs on L2 and L1 as follows.
+Set up a '2-bit' binary counter with its outputs on L2 and L1 as follows.
 
 ```txt
 L1
