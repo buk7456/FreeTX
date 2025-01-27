@@ -4048,6 +4048,12 @@ void handleMainUI()
         static uint8_t movedSrc = SRC_NONE;
         bool moved = false;
         uint8_t tmpMovedSrc = getMovedSource();
+        if(screenshotSwtch != CTRL_SW_NONE && tmpMovedSrc >= SRC_SW_PHYSICAL_FIRST && tmpMovedSrc <= SRC_SW_PHYSICAL_LAST)
+        {
+          //suppress if it is the switch associated with screenshots
+          if(tmpMovedSrc == (SRC_SW_PHYSICAL_FIRST + ((screenshotSwtch - CTRL_SW_PHYSICAL_FIRST) / 6)))
+            tmpMovedSrc = SRC_NONE;
+        }
         if(tmpMovedSrc != SRC_NONE)
           movedSrc = tmpMovedSrc;
         if(movedSrc != SRC_NONE)
