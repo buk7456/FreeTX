@@ -272,8 +272,8 @@ void readSticks()
     if((knobIn[i] >= 0 && knobRegion[i] == NEG_SIDE) || (knobIn[i] <= 0 && knobRegion[i] == POS_SIDE))
     {
       knobRegion[i] = CENTER;
-      if(Sys.soundKnobCenter && !isCalibratingControls)
-        audioToPlay = AUDIO_SWITCH_MOVED;
+      if(Sys.soundKnobCenter)
+        audioToPlay = AUDIO_KNOB_CENTER;
     }
     else if(knobIn[i] > 25) 
       knobRegion[i] = POS_SIDE;
