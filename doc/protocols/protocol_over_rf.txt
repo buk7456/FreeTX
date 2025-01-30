@@ -1,0 +1,154 @@
+
+====================================================================================================
+  PROTOCOL OVER RF
+====================================================================================================
+
+General format of a packet is as below.
+
+-------------------------------------------------------------------
+Field    |  Header    Payload         CRC             
+Size     |  3 bytes   0 to 26 bytes   1 byte          
+Offset   |  0         3               3 + payloadLength  
+-------------------------------------------------------------------
+
+Header
+==============
+Encoded from left to right as follows:
+  Source ID         7 bits
+  Destination ID    7 bits
+  Packet type       5 bits
+  Payload length    5 bits
+
+If packet is originating from transmitter, then Source ID is the Transmitter ID. 
+Similarly if a packet is originating from the receiver, then Source ID is the Receiver ID. 
+The allowed transmitter IDs range from 0x01 to 0x7F.  Transmitter ID 0x00 is reserved. 
+The allowed receiver IDs range from 0x01 to 0x7F. Receiver ID 0x00 used when binding.
+
+
+Packet types
+==============
+The following enumerations are used to identify the packet:-
+
+enum {
+  PACKET_BIND = 0,
+  PACKET_ACK_BIND = 1,
+  PACKET_READ_OUTPUT_CH_CONFIG = 2,
+  PACKET_SET_OUTPUT_CH_CONFIG = 3,
+  PACKET_ACK_OUTPUT_CH_CONFIG = 4,
+  PACKET_RC_DATA = 5,
+  PACKET_TELEMETRY_GENERAL = 6,
+  PACKET_TELEMETRY_GNSS = 7,
+
+  PACKET_INVALID = 0xFF
+};
+
+
+Payload
+===============
+
+PACKET_BIND:
+
+  The payload is as follows:
+    byte 0 to k  Hop channels, 1 byte per channel.
+    byte k+1     Flags, bit0 whether we are addressing the main or secondary receiver.
+    byte k+2     Receiver ID to use if binding as a secondary receiver.
+  
+  To acknowledge bind, the receiver simply returns its ID as the payload with packet identifier 
+  as "PACKET_ACK_BIND".
+  
+
+PACKET_ACK_BIND:
+  
+  This is returned by the receiver to acknowledge the binding. 
+  The payload is as follows:
+    byte 0       Receiver ID.
+
+  
+PACKET_RC_DATA:
+
+  All RC channel data are sent in a single transmission.
+  The data is either RC channel outputs values or faisafe data, encoded with 10 bits per channel.   
+  Flags are transmitted in a separate byte that is appended. 
+  The flag byte is as follows: 
+    bit 0 to 2   RF power level.
+    bit 3        Return telemetry.
+    bit 4        Whether this is failsafe data.
+
+
+PACKET_TELEMETRY_GENERAL:
+
+  This originates from the receiver. 
+  The payload is as follows:
+    byte 0       Packet rate at receiver side.
+    byte 1 to k  General telemetry fields.
+  
+  Every 3 bytes represent a telemetry field.
+  Each telemetry field is formatted as: 
+    byte 0       Sensor ID.
+    byte 1       High byte of telemetry value.
+    byte 2       Low byte of telemetry value.
+
+
+PACKET_TELEMETRY_GNSS:
+
+  This originates from the receiver.
+  The payload is a structure containing the GNSS telemetry information.
+  See the "telemetry.md" file for more details.
+
+
+PACKET_READ_OUTPUT_CH_CONFIG:
+
+  This can originate from both the transmitter and receiver.
+  
+  Case of origin from transmitter:-
+    Payload is 1 byte.
+    Value is as follows.
+      0   Secondary receiver is being addressed.
+      1   Main receiver is being addressed.
+  
+  Case of origin from receiver:-
+    Each RC channel's output configuration is sent on a separate byte, encoded as follows.
+    bit 0 to 1    The present mode. Value is as follows: 
+                    0  Digital, 
+                    1  Servo PWM, 
+                    2  Normal PWM.
+    bit 2 to 3    The maximum supported mode.
+    bit 4 to 7    The servo pwm range. Value is an index in the lookup table.
+                  See the "servo_PWM_range_LUT.xls" for extended description.
+
+
+PACKET_SET_OUTPUT_CH_CONFIG:
+
+  This originates from the transmitter. 
+  The format is the same as PACKET_READ_OUTPUT_CH_CONFIG from the receiver, except that the 
+  field "maximum supported mode" is not applicable.
+  An extra byte is appended, containing a flag that specifies which receiver is being addressed.
+   
+
+PACKET_ACK_OUTPUT_CH_CONFIG:
+
+  This originates from the receiver. 
+  The payload is empty. This packet merely tells the transmitter that the settings have been 
+  properly received and applied.
+  
+  
+CRC
+=============
+The 8 bit CRC of all the preceding bytes, including the header.
+
+
+====================================================================================================
+  Dual receiver setup
+====================================================================================================
+Basic rules:
+- Depending on the setup, the main receiver may handle one half of the RC channels,
+  while the secondary handles the other half. However the entire RC data is always sent 
+  in a single transmission.
+- When binding to the main receiver, the transmitter generates a random transmitter ID 
+  and hop sequence. The main receiver then generates a random receiver ID and sends it.
+- When binding to a secondary receiver, the transmitter ID and receiver ID are maintained, as 
+  well as the hop sequence. 
+- Only the main receiver can send telemetry; the secondary receiver ignores the telemetry requests.
+- The transmitter requests and sends configuration settings to each receiver separately 
+  by way of a flag to distinguish the intended receiver from the other.
+

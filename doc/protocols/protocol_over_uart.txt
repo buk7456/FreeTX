@@ -1,0 +1,129 @@
+
+====================================================================================================
+  PROTOCOL OVER UART
+====================================================================================================
+
+General format is as below.
+
+---------------------------------------------------------------------------------------------------
+Field    |  Preamble   Message type   Data length   Data            CRC              Padding
+Size     |  3 bytes    1 byte         1 byte        0 to 42 bytes   1 byte           0 to 42 bytes
+Offset   |  0          3              4             5               5 + dataLength   6 + dataLength
+---------------------------------------------------------------------------------------------------
+
+- The total size is fixed at 48 bytes. 
+- Preamble is three 0xAA bytes.
+- Padding bytes are added if the resulting size is less than the fixed size. 
+  Padding is done with zeroes.
+
+
+Message types
+==============
+
+The following enumerations are used:-
+
+enum {
+  MESSAGE_TYPE_NONE = 0x00,
+  
+  //mtx to stx
+  MESSAGE_TYPE_RC_DATA = 0x01, 
+  MESSAGE_TYPE_ENTER_BIND = 0X02,
+  MESSAGE_TYPE_GET_RECEIVER_CONFIG = 0x03,
+  MESSAGE_TYPE_WRITE_RECEIVER_CONFIG = 0x04,
+  
+  //stx to mtx
+  MESSAGE_TYPE_BIND_STATUS_CODE = 0x10,
+  MESSAGE_TYPE_RECEIVER_CONFIG = 0x11,
+  MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE = 0x12,
+  MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE = 0x13,
+  MESSAGE_TYPE_TELEMETRY_GENERAL = 0x14,
+  MESSAGE_TYPE_TELEMETRY_GNSS = 0x15,
+};
+
+
+Data
+==============
+
+MESSAGE_TYPE_RC_DATA:
+
+  RC channel outputs values or faisafe data, encoded as 10 bits per channel.   
+  Flags are transmitted in a separate byte that is appended. 
+  The flag byte is as follows: 
+    bit 0 to 2    RF power level.
+    bit 3         Return telemetry.
+    bit 4         Whether this is failsafe data.
+
+
+MESSAGE_TYPE_ENTER_BIND:
+MESSAGE_TYPE_GET_RECEIVER_CONFIG:
+  
+  The data is 1 byte.
+  Value is as follows.
+    0   Secondary receiver is being addressed.
+    1   Main receiver is being addressed.
+
+
+MESSAGE_TYPE_RECEIVER_CONFIG:
+MESSAGE_TYPE_WRITE_RECEIVER_CONFIG:
+  
+  Each RC channel's output configuration is sent on a separate byte, encoded as follows.
+    bit 0 to 1    The present mode. Value is as follows: 
+                    0  Digital, 
+                    1  Servo PWM, 
+                    2  Normal PWM.
+    bit 2 to 3    The maximum supported mode. Not applicable if writing configuration.
+    bit 4 to 7    The servo pwm range. Value is an index in the lookup table.
+                  See the "servo_PWM_range_LUT.xls" for extended description.
+                  
+  If the message is of type MESSAGE_TYPE_WRITE_RECEIVER_CONFIG, a byte containing a flag is 
+  appended. The value is as follows.
+    0   Secondary receiver is being addressed.
+    1   Main receiver is being addressed.
+
+
+MESSAGE_TYPE_BIND_STATUS_CODE:
+
+  This message serves to acknowledge the receiver binding to the main transmitter microcontroller.
+  The returned code is 1 byte. 
+  Value is as follows: 
+    1   Bind successful.
+    2   Bind failed.
+    
+
+MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE:
+
+  This message serves to acknowledge receipt of the receiver configuration 
+  to the main transmitter microcontroller, after a "write configuration" has been made. 
+  The returned code is 1 byte. 
+  Value is as follows: 
+    1   Write successful. 
+    2   Write failed.
+
+
+MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE:
+
+  Data is 2 bytes as follows:
+    byte 0    Transmitter packet rate, 
+              i.e. how many RC packets are being sent out by transmitter.
+    byte 1    Receiver packet rate, 
+              i.e. how many valid RC packets are being seen by the receiver.
+
+
+MESSAGE_TYPE_TELEMETRY_GENERAL:
+
+  Every 3 bytes represent a telemetry field. 
+  Each telemetry field is formatted as: 
+    byte 0    Sensor ID.
+    byte 1    High byte of telemetry value.
+    byte 2    Low byte of telemetry value.
+
+
+MESSAGE_TYPE_TELEMETRY_GNSS:
+
+   The data is a structure containing the GNSS telemetry information.
+   See the "telemetry.md" file for more details.
+
+
+CRC
+=============
+The 8 bit CRC of all the preceding bytes, including the preamble.
