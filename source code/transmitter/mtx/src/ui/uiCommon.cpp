@@ -382,7 +382,7 @@ uint8_t incDecControlSwitch(uint8_t val, uint8_t flag)
     }
     else if(i >= CTRL_SW_FMD_FIRST && i <= CTRL_SW_FMD_LAST_INVERT)
     {
-      if(!(flag & INCDEC_FLAG_FMODE_AS_SW))
+      if(!(flag & INCDEC_FLAG_FMODE_AS_SW) || Model.type == MODEL_TYPE_OTHER)
         continue;
     }
     else if(i >= CTRL_SW_TRIM_FIRST && i <= CTRL_SW_TRIM_LAST)

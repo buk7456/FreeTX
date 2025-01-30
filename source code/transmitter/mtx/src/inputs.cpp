@@ -167,7 +167,23 @@ void determineButtonEvent()
     buttonStartTime = millis();
     pressedButton = buttonCode;  //event
     lastButtonCode = buttonCode; //store the buttonCode
-    if(Sys.soundKeys)
+    //play audio
+    if(buttonCode >= KEY_TRIM_FIRST && buttonCode <= KEY_TRIM_LAST) //Trim buttons
+    {
+      if(Sys.soundSwitches)
+      {
+        //treat as generic switches if the corresponding trim is disabled
+        if(Model.X1Trim.trimState == TRIM_DISABLED && (buttonCode == KEY_X1_TRIM_DOWN || buttonCode == KEY_X1_TRIM_UP))
+          audioToPlay = AUDIO_SWITCH_MOVED;
+        if(Model.Y1Trim.trimState == TRIM_DISABLED && (buttonCode == KEY_Y1_TRIM_DOWN || buttonCode == KEY_Y1_TRIM_UP))
+          audioToPlay = AUDIO_SWITCH_MOVED;
+        if(Model.X2Trim.trimState == TRIM_DISABLED && (buttonCode == KEY_X2_TRIM_DOWN || buttonCode == KEY_X2_TRIM_UP))
+          audioToPlay = AUDIO_SWITCH_MOVED;
+        if(Model.Y2Trim.trimState == TRIM_DISABLED && (buttonCode == KEY_Y2_TRIM_DOWN || buttonCode == KEY_Y2_TRIM_UP))
+          audioToPlay = AUDIO_SWITCH_MOVED;
+      }
+    }
+    else if(Sys.soundKeys) //UI navigation buttons
       audioToPlay = AUDIO_KEY_PRESSED;
   }
   

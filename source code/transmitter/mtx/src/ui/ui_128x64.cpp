@@ -2433,7 +2433,7 @@ void handleMainUI()
           else if(focusedItem == 4)
             *expo = incDec(*expo, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
           else if(focusedItem == 5 && isEditMode)
-            *swtch = incDecControlSwitch(*swtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+            *swtch = incDecControlSwitch(*swtch);
           
           //--- Draw text
           
@@ -2940,7 +2940,7 @@ void handleMainUI()
                 getControlSwitchName(textBuff, mxr->swtch, sizeof(textBuff));
                 display.print(textBuff);
                 if(edit)
-                  mxr->swtch = incDecControlSwitch(mxr->swtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+                  mxr->swtch = incDecControlSwitch(mxr->swtch);
               }
               break;
             
@@ -3801,7 +3801,7 @@ void handleMainUI()
                 if(isFocused)
                   drawCursor(54, ypos);
                 if(edit)
-                  ch->overrideSwitch = incDecControlSwitch(ch->overrideSwitch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+                  ch->overrideSwitch = incDecControlSwitch(ch->overrideSwitch);
               }
               break;
             
@@ -4573,12 +4573,7 @@ void handleMainUI()
                     ls->val1 = incDecSource(ls->val1, INCDEC_FLAG_MIX_SRC);
                   }
                   else if(ls->func <= LS_FUNC_GROUP5_LAST || ls->func == LS_FUNC_TOGGLE)
-                  {
-                    if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-                      ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE_AS_SW | INCDEC_FLAG_TRIM_AS_SW);
-                    else
-                      ls->val1 = incDecControlSwitch(ls->val1, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
-                  }
+                    ls->val1 = incDecControlSwitch(ls->val1);
                   else if(ls->func == LS_FUNC_PULSE)
                     ls->val1 = incDec(ls->val1, 1, ls->val2 - 1, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
                 }
@@ -4664,12 +4659,7 @@ void handleMainUI()
                     ls->val2 = incDecSource(ls->val2, INCDEC_FLAG_MIX_SRC);
                   }
                   else if(ls->func <= LS_FUNC_GROUP5_LAST)
-                  {
-                    if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-                      ls->val2 = incDecControlSwitch(ls->val2, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE_AS_SW | INCDEC_FLAG_TRIM_AS_SW);
-                    else
-                      ls->val2 = incDecControlSwitch(ls->val2, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
-                  }
+                    ls->val2 = incDecControlSwitch(ls->val2);
                   else if(ls->func == LS_FUNC_TOGGLE) //change edge type
                     ls->val2 = incDec(ls->val2, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
                   else if(ls->func == LS_FUNC_PULSE) //adjust period
@@ -4706,12 +4696,7 @@ void handleMainUI()
                 if(edit && ls->func != LS_FUNC_NONE)
                 {
                   if(ls->func == LS_FUNC_TOGGLE)
-                  {
-                    if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-                      ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE_AS_SW | INCDEC_FLAG_TRIM_AS_SW);
-                    else
-                      ls->val3 = incDecControlSwitch(ls->val3, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
-                  }
+                    ls->val3 = incDecControlSwitch(ls->val3);
                   else if(ls->func == LS_FUNC_ABS_DELTA_GREATER_THAN_X)
                     ls->val3 = incDec(ls->val3, 0, 2, INCDEC_WRAP, INCDEC_SLOW);
                   else //adjust delay
@@ -5404,7 +5389,7 @@ void handleMainUI()
                 getControlSwitchName(textBuff, counter->clock, sizeof(textBuff));
                 display.print(textBuff);
                 if(edit)
-                  counter->clock = incDecControlSwitch(counter->clock, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+                  counter->clock = incDecControlSwitch(counter->clock);
               }
               break;
               
@@ -5415,7 +5400,7 @@ void handleMainUI()
                 getControlSwitchName(textBuff, counter->incrementClock, sizeof(textBuff));
                 display.print(textBuff);
                 if(edit)
-                  counter->incrementClock = incDecControlSwitch(counter->incrementClock, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+                  counter->incrementClock = incDecControlSwitch(counter->incrementClock);
               }
               break;
               
@@ -5426,7 +5411,7 @@ void handleMainUI()
                 getControlSwitchName(textBuff, counter->decrementClock, sizeof(textBuff));
                 display.print(textBuff);
                 if(edit)
-                  counter->decrementClock = incDecControlSwitch(counter->decrementClock, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+                  counter->decrementClock = incDecControlSwitch(counter->decrementClock);
               }
               break;
               
@@ -5487,7 +5472,7 @@ void handleMainUI()
                 getControlSwitchName(textBuff, counter->clear, sizeof(textBuff));
                 display.print(textBuff);
                 if(edit)
-                  counter->clear = incDecControlSwitch(counter->clear, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+                  counter->clear = incDecControlSwitch(counter->clear);
               }
               break;
               
@@ -5729,9 +5714,9 @@ void handleMainUI()
         else if(focusedItem == 2 && isEditMode)
           isEditTextDialog = true;
         else if(focusedItem == 3 && isEditMode)
-          tmr->swtch = incDecControlSwitch(tmr->swtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+          tmr->swtch = incDecControlSwitch(tmr->swtch);
         else if(focusedItem == 4 && isEditMode)
-          tmr->resetSwitch = incDecControlSwitch(tmr->resetSwitch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+          tmr->resetSwitch = incDecControlSwitch(tmr->resetSwitch);
         else if(focusedItem == 5 && isEditMode)
           changeToScreen(DIALOG_TIMER_INITIAL_TIME);
         else if(focusedItem == 6)
@@ -6055,12 +6040,7 @@ void handleMainUI()
                 getControlSwitchName(textBuff, tempSwtch, sizeof(textBuff));
                 display.print(textBuff);
                 if(edit)
-                {
-                  if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
-                    tempSwtch = incDecControlSwitch(tempSwtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE_AS_SW);
-                  else
-                    tempSwtch = incDecControlSwitch(tempSwtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
-                }
+                  tempSwtch = incDecControlSwitch(tempSwtch);
               }
               break;
               
@@ -6319,7 +6299,7 @@ void handleMainUI()
         else if(focusedItem == 2 && isEditMode)
           isEditTextDialog = true;
         else if(focusedItem == 3 && thisFmdIdx > 0 && isEditMode)
-          fmd->swtch = incDecControlSwitch(fmd->swtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW);
+          fmd->swtch = incDecControlSwitch(fmd->swtch);
         else if(focusedItem == 4)
           fmd->transitionTime = incDec(fmd->transitionTime, 0, 50, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
 
@@ -9071,7 +9051,7 @@ void handleMainUI()
         toggleEditModeOnSelectClicked();
         
         if(focusedItem == 1)
-          tempSwtch = incDecControlSwitch(tempSwtch, INCDEC_FLAG_PHY_SW);
+          tempSwtch = incDecControlSwitch(tempSwtch, INCDEC_FLAG_PHY_SW | INCDEC_FLAG_TRIM_AS_SW);
         
         //assign from temp
         if(!isEditMode || (buttonCode == 0 && millis() - buttonReleaseTime >= 1000))
