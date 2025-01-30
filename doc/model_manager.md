@@ -3,7 +3,6 @@
 <p align="left">
 <img src="images/img24.png"/>
 <img src="images/img25.png"/>
-<img src="images/img26.png"/>
 </p>
 
 The model manager enables various actions, such as creating, loading, and deleting models. By default, model settings are stored in the EEPROM.

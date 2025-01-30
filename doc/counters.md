@@ -4,7 +4,6 @@ A counters stores and shows the number of times a particular event has occurred,
 <p align="left">
 <img src="images/img9.png"/>
 <img src="images/img10.png"/>
-<img src="images/img11.png"/>
 </p>
 
 ## Fields

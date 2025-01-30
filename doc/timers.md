@@ -5,7 +5,6 @@ In count down mode, an audible alarm is played when the timer reaches zero. The 
 
 <p align="left">
 <img src="images/img12.png"/>
-<img src="images/img13.png"/>
 </p>
 
 ## Fields

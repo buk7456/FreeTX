@@ -8,7 +8,6 @@ The function generators are capable of frequency modulation, with smooth transit
 <p align="left">
 <img src="images/img14.png"/>
 <img src="images/img15.png"/>
-<img src="images/img16.png"/>
 </p>
 
 ## Usage examples

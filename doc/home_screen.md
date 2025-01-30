@@ -4,8 +4,6 @@ The home screen is the default screen shown when operating the transmitter. It d
 
 <p align="left">
 <img src="images/img38.png"/>
-<img src="images/img39.png"/>
-<img src="images/img40.png"/>
 </p>
 
 Key actions on the home screen are as follows:

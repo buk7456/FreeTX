@@ -4,7 +4,6 @@ programmed virtual switches. They produce an on/off output.
 
 <p align="left">
 <img src="images/img33.png"/>
-<img src="images/img34.png"/>
 </p>
 
 The available functions can be categorized into the following types.

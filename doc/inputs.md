@@ -11,7 +11,7 @@ The inputs screen allows setting dual rates and expo, throttle curve, as well as
 - The sources for the above inputs may default to a different order based on the chosen stick mode in System settings.
 - The system accepts both 2-position and 3-position switches, as well as their momentary variants.  
 
-The image below depicts is a typical layout of the transmitter.
+The image below shows a typical layout of the transmitter.
 
 <p align="left">
 <img src="images/controls_description.png"/>

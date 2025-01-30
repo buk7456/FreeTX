@@ -5,7 +5,6 @@ It is where final adjustments to the control data are made before transmission t
 
 <p align="left">
 <img src="images/img28.png"/>
-<img src="images/img29.png"/>
 <img src="images/img30.png"/>
 </p>
 
