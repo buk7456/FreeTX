@@ -1,4 +1,4 @@
-## Frequently asked questions
+# Frequently asked questions
 
 ### Where are the mechanical CAD files?
 As this is a DIY project, I did not make any detailed mechanical CAD; only a plan layout for the front plate of the transmitter. This is because part dimensions for example of the LCD screen differ widely between manufacturers and it is not a "one size fits all" thing. I also do not have a 3D printer.

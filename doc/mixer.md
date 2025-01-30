@@ -1,6 +1,11 @@
 # The Mixer
 The mixer is where the inputs (mixer sources) get linked to the output channels (servos, etc.).
 This controller features a mixer system that draws inspiration from that found in OpenTX(R) based RC transmitters, though not directly compatible.
+
+<p align="left">
+<img src="images/img32.png"/>
+</p>
+
 ## Mixer sources
 Mixer sources can be any of the following:
 - Raw stick axes (X1, Y1, X2, Y2, ...)
@@ -27,12 +32,12 @@ Counters can also be used as inputs in the mixer, although they are not classifi
 - Curve value: Differential {-100 to 100}, Expo {-100 to 100}, Function {x>0, x<0, |x|}, Curve name if custom curve.
 - Trim: Whether to add trim or not.
 - F-Mode: The flight mode in which the mix applies.
-- Delay Up and Down: This is used to delay the input.
-- Slow Up and Down: This when non-zero specifies how fast the input changes.
+- Delay Up and Down: This is used to delay the input. 0 to 60 seconds.
+- Slow Up and Down: This when non-zero specifies how fast the input changes. 0 to 60 seconds.
 
 ## Order of mixer operations
 <p align="left">
-<img src="Drawing1.png"/>
+<img src="images/Drawing1.png"/>
 </p>
 
 ## Important safety note
@@ -41,9 +46,9 @@ When editing mixes, it is recommended to disable RF output or remove propellers 
 
 ## Example mixes
 Note: 
-- The convention used in these examples is -ve for left/down going control surfaces, +ve for right/up going control surfaces. 
-- For example if the Ail stick is moved right, the left aileron moves down and right aileron moves up.
+- The convention used in these examples is -ve for left/downward going control surfaces, +ve for right/upward going control surfaces. For example if the Ail stick is moved right, the left aileron moves down and the right aileron moves up. Hence we use a negative weight for the left aileron and a positive weight for the right aileron.
 - If a servo is moving in wrong direction, reversing the direction in Outputs screen solves this.
+- The Mixer is all about about control logic. Any mechanical differences should be handled in the Outputs screen and not inside the Mixer.
 
 [1. Basic 4 channel](#section_id_basic_4_channel)  
 [2. Elevon](#section_id_elevon)  
@@ -272,7 +277,7 @@ Type: 3 point
 Point(x,y): PtA(-100,-100) PtB(0,-100) PtC(100,100)
 ``` 
 <p align="left">
-<img src="img20.png" width = "390"/>
+<img src="images/img20.png"/>
 </p>
 
 Then in the mixer, assuming gear door servos on Ch7, gear servos on Ch8, and using SwD to operate,
@@ -300,7 +305,7 @@ Type: 4 point
 Point(x,y): PtA(-100,-100) PtB(-50,-100) PtC(50,100) PtD(100,100)
 ``` 
 <p align="left">
-<img src="img21.png" width = "390"/>
+<img src="images/img21.png"/>
 </p>
 
 Then in the mixer, assuming gear door servos on Ch7, gear servos on Ch8, and using SwD to operate,
@@ -327,7 +332,7 @@ Type: 4 point
 Point(x,y): PtA(-100,-100) PtB(50,-100) PtC(50,100) PtD(100,100)
 ```
 <p align="left">
-<img src="img5.png" width = "588"/>
+<img src="images/img5.png"/>
 </p>
 
 Then in the mixer, assuming gear door servos on Ch7, gear retracts on Ch8, and using SwD to operate, 

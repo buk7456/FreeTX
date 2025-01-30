@@ -1,7 +1,7 @@
 # Notifications
 Notifications are user-programmable and provide audible alarms to report about events.
 <p align="left">
-<img src="img19.png" width = "192"/>
+<img src="images/img19.png"/>
 </p>
 
 ## Fields

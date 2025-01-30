@@ -4,8 +4,7 @@ Timers can be configured to count up or count down.
 In count down mode, an audible alarm is played when the timer reaches zero. The timer continues to count with a negative sign.
 
 <p align="left">
-<img src="img12.png" width = "192"/>
-<img src="img13.png" width = "192"/>
+<img src="images/img12.png"/>
 </p>
 
 ## Fields

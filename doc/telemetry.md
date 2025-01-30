@@ -1,27 +1,26 @@
 # Telemetry
+
 ## General telemetry
-The receiver has built-in basic telemetry i.e external voltage, rssi, and packet rate. 
-<br>To measure other paramaters, you will need to build custom sensors and extend the receiver firmware to support these.
-<br>Telemetry values are transmitted as 16-bit signed integers.
-<br>To quickly mute/unmute telemetry alarms, long press the Down key on the home screen.
+The receiver has built-in basic telemetry i.e external voltage, rssi, and packet rate. To measure other paramaters, you will need to build custom sensors and extend the receiver firmware to support these.  
+Telemetry values are transmitted as 16-bit signed integers.  
+To quickly mute/unmute telemetry alarms, long press the Down key on the home screen.
+
+<p align="left">
+<img src="images/img7.png"/>
+</p>
 
 ### Fields
 - Name: The sensor name.
 - Units: The units of measurement.
-- ID: This is the sensor ID. It needs to be unique, but can use the same ID if for example we want
-to display a value in two ways for example altitude as Relative altitude and Above sea level altitude.
+- ID: This is the sensor ID, which must be unique. However, the same ID can be used for example to display a value in multiple ways.
 - Factor10: The raw value is multiplied by 10 to power this factor.
 - Multiplier: The raw value is multiplied by this number. Useful when we want to scale the value.
-- Threshold: This is the value below or above which the telemetry alarm will be sounded.
 - Alerts: This parameter specifies how the alarm behaves.
+- Threshold: This is the value below or above which the telemetry alarm will be sounded. The telemetry value will also flash when in alarm state.
 - On home: Whether to automatically show the telemetry sensor on the home screen.
 - Record max, and record min: Whether to track the max/min values received from the sensor. Useful 
 for simple stats. Note that max and min are sensitive to outliers hence the filtering and smoothing
 should be done before sending the telemetry to the transmitter.
-
-<p align="left">
-<img src="img7.png" width = "192"/>
-</p>
 
 ## GNSS telemetry
 The system also supports GNSS telemetry. A premade template is used to add the GNSS sensor to the telemetry screen.  
@@ -30,7 +29,7 @@ as well as data conversion. GPS, GLONASS, BeiDou, Galileo are supported.
 The system remembers the last known location in case of a lost model, even when the transmitter is powered off.
 
 <p align="left">
-<img src="img8.png" width = "396"/>
+<img src="images/img8.png"/>
 </p>
 
 The structure below is used to send the GNSS telemetry data to the transmitter.

@@ -6,9 +6,8 @@ Supported waveforms are sine, square, triangle, sawtooth, pulse, and random.
 The function generators are capable of frequency modulation, with smooth transition between frequencies.
 
 <p align="left">
-<img src="img14.png" width = "192"/>
-<img src="img15.png" width = "192"/>
-<img src="img16.png" width = "192"/>
+<img src="images/img14.png"/>
+<img src="images/img15.png"/>
 </p>
 
 ## Usage examples

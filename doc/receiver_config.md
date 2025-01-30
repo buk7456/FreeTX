@@ -16,7 +16,13 @@ complex electronics. The digital on-off output makes it easy to directly control
 electromechanical relays and lights.  
 The servo PWM range can as well be adjusted to get extra travel from a servo, without making physical
 modifications to the servo.
-<br>Note: 
+
+<p align="left">
+<img src="images/img22.png"/>
+<img src="images/img23.png"/>
+</p>
+
+Note: 
 1. These configuration settings are stored in the receiver, not the transmitter.
 2. Normal PWM is only available on certain pins, depending on the pin mapping.
 3. Any changes made take effect immediately upon pressing the 'Write' button.
@@ -24,4 +30,3 @@ modifications to the servo.
 ignored, and 50 to 100 corresponds to HIGH.
 5. When reusing a receiver between models, always check and set the appropriate signal format before connecting 
 any actuators to the receiver.
-

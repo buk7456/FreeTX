@@ -1,14 +1,19 @@
 # Logical switches
 These can be used to combine various conditions, compare values, etc. They are in essence user
 programmed virtual switches. They produce an on/off output.
-<br>The available functions can be categorized into the following types.
+
+<p align="left">
+<img src="images/img33.png"/>
+</p>
+
+The available functions can be categorized into the following types.
 - Comparators (Greater than, Less than, Equal, Greater than or equal, Less than or equal)
 - Combinational (AND, OR, XOR)
 - Latches (SR latch)
 - Flip-flops (Toggle)
 - Generators (Pulse)
 
-## Examples
+## Usage examples
 
 [1. A mix activated by combination of two switches](#section_id_mix_activated_by_two_switches)  
 [2. LED lights that flash when flight battery is low](#section_id_led_lights_flashing_low_battery)  

@@ -2,9 +2,8 @@
 A counters stores and shows the number of times a particular event has occurred, in relationship to a clock signal.
 
 <p align="left">
-<img src="img9.png" width = "192"/>
-<img src="img10.png" width = "192"/>
-<img src="img11.png" width = "192"/>
+<img src="images/img9.png"/>
+<img src="images/img10.png"/>
 </p>
 
 ## Fields
@@ -18,7 +17,6 @@ A counters stores and shows the number of times a particular event has occurred,
 - Persist: Whether to remember the value in the counter's register between sessions.
 
 In advanced mode, the counter behaves as an up/down counter using separate "up" and "down" clocks for increment and decrement respectively.
-
 
 ## Examples
 
