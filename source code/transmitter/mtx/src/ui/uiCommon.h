@@ -53,7 +53,7 @@ void calcNewCurvePts(custom_curve_t *crv, uint8_t numOldPts);
 void makeToast(const char* text, uint16_t duration, uint16_t dly);
 
 uint8_t incDecSource(uint8_t val, uint8_t flag);
-uint8_t incDecControlSwitch(uint8_t val, uint8_t flag);
+uint8_t incDecControlSwitch(uint8_t val, uint8_t flag = INCDEC_FLAG_PHY_SW | INCDEC_FLAG_LGC_SW | INCDEC_FLAG_FMODE_AS_SW | INCDEC_FLAG_TRIM_AS_SW);
 
 int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEnabled, uint8_t speed);
 int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEnabled, uint8_t initialSpeed, uint8_t finalSpeed);
