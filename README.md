@@ -2,7 +2,7 @@
 Open source radio control system for almost anything.  
 Remotely operate model airplanes, multicopters, helicopters, boats, land vehicles, robots, animatronics, etc.
 <p align="left">
-<img src="doc/images/tx_views.jpg" width = "480"/>
+<img src="doc/images/tx_views.jpg" width="480"/>
 </p>
 
 ## Main features
@@ -35,13 +35,13 @@ Three buttons are used for navigating the user interface i.e. Up, Select, Down. 
 
 ## Gallery
 <p align="left">
-<img src="doc/images/img6.jpg" width = "240"/>
+<img src="doc/images/img6.jpg" width="240"/>
 <img src="doc/images/img2.jpg" width="240"/>
 <img src="doc/images/img4.jpg" width="240"/>
 </p>
 
-[<img src="doc/images/yt.jpg" width = "240"/>](https://www.youtube.com/watch?v=rDpRMRE8av0)
-[<img src="doc/images/yt2.jpg" width = "240"/>](https://www.youtube.com/watch?v=9EZkyRHkMpg)
+[<img src="doc/images/yt.jpg" width="240"/>](https://www.youtube.com/watch?v=rDpRMRE8av0)
+[<img src="doc/images/yt2.jpg" width="240"/>](https://www.youtube.com/watch?v=9EZkyRHkMpg)
 
 ## Frequently Asked Questions
 Got a question? [See the FAQ.](doc/faq.md)  
