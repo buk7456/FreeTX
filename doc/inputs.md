@@ -14,5 +14,5 @@ The inputs screen allows setting dual rates and expo, throttle curve, as well as
 The image below shows a typical layout of the transmitter.
 
 <p align="left">
-<img src="images/controls_description.png"/>
+<img src="images/controls_description.png" width="600"/>
 </p>
