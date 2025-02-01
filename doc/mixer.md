@@ -259,12 +259,14 @@ override as L1 and value -100.
 
 <a id="section_id_landing_gear_sequencer_v1"></a>
 ### Example 16: Landing gear sequencer (gear doors stay open after gear is extended)
-Using SwD for operation. Assuming gear doors on Ch6 and gear on Ch7.
+
+The sequence we want upon flicking the switch is: doors open, gear extends. Similarly in the opposite direction: gear retracts, doors close. 
+Using SwD for operation and assuming gear doors on Ch6 and gear on Ch7.
 ```txt
 1. Ch6  Add  SwD (Weight 100, DelayUp 0 s, DelayDown 3 s, SlowUp 2 s, SlowDown 2 s)
 2. Ch7  Add  SwD (Weight 100, DelayUp 3 s, DelayDown 0 s, SlowUp 2 s, SlowDown 2 s)
 ```
-#### Alternative method
+#### Alternative method that uses custom curves
 
 Set up two custom curves as follows.
 ```txt
@@ -339,8 +341,8 @@ Then in the mixer, assuming gear door servos on Ch7, gear retracts on Ch8, and u
 ```txt
 1. Virt1 Add  SwD   (Weight 100, SlowUp 10 s, SlowDown 10 s) //Create a source that slowly ramps
 2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)              //Apply curve1 for the door sequence
-3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)              //Apply curve2 for the gear open sequence
-3. Ch8   RplW Virt1 (Weight 100, Custom Curve3, SwD_Up)      //Apply curve3 for the gear close sequence
+3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)              //Apply curve2 for the gear extend sequence
+3. Ch8   RplW Virt1 (Weight 100, Custom Curve3, SwD_Up)      //Apply curve3 for the gear retract sequence
 ```
 We can, if necessary, set Ch8 to 'Digital' mode in the receiver output configuration screen.
 
