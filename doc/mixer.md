@@ -17,7 +17,7 @@ Mixer sources can be any of the following:
 - Physical switches (SwA, SwB, ...)
 - Logical switches (L1, L2, ...)
 - Channels (Ch1, Ch2, ...)
-- Virtual channels (Virt1, Virt2, ...)  
+- Virtual channels (Virt1, Virt2, ...)
 
 Counters can also be used as inputs in the mixer, although they are not classified as true mixer sources.
 
@@ -26,8 +26,8 @@ Counters can also be used as inputs in the mixer, although they are not classifi
 - Switch: The control switch to turn on or off the mix. The mix is always active if no is switch specified.
 - Operation: Add, Multiply, Replace, Hold.
 - Input: This is the mixer source.
-- Weight: Determines how much of an effect the input has on the output. -100 to 100. 
-- Offset: The input is offset by this value after the weight has been applied. -100 to 100. 
+- Weight: Determines how much of an effect the input has on the output. -100 to 100.
+- Offset: The input is offset by this value after the weight has been applied. -100 to 100.
 - Curve: Differential, Expo, Function, Custom curve.
 - Curve value: Differential {-100 to 100}, Expo {-100 to 100}, Function {x>0, x<0, |x|}, Curve name if custom curve.
 - Trim: Whether to add trim or not.
@@ -72,7 +72,7 @@ Note:
 [20. Random servo motion generator - advanced](#section_id_random_servo_motion_advanced)  
 [21. Oscillator from scratch](#section_id_oscillator_from_scratch)  
 [22. Automatic aileron rudder mixing](#section_id_automatic_aileron_rudder_mix)  
-
+[23. Adjust aileron differential with knob](#section_id_adjust_aileron_differential_with_knob)  
 
 <a id="section_id_basic_4_channel"></a>
 ### Example 1: Basic 4 channel
@@ -154,7 +154,7 @@ move upward and full flaps are deployed.
 ```
 
 <a id="section_id_flaps_as_ailerons"></a>
-### Example 8: Flaps working as ailerons 
+### Example 8: Flaps working as ailerons
 This mix allows the entire trailing edge of the wing (aileron and flap) to operate as ailerons. 
 Assuming the left flap servo in Ch5, right flap servo in Ch6.
 <br>Using a two position switch e.g SwD to switch between flap mode and aileron mode. 
@@ -381,9 +381,9 @@ Value2: 0
 ``` 
 Then in the mixer, assuming our servo is on Ch7,
 ```txt
-1. Ch7   Add  Fgen1 (Weight 100)          
-2. Ch7   Hold       (L1)          
-3. Ch7   RplW Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s) 
+1. Ch7   Add  Fgen1 (Weight 100)
+2. Ch7   Hold       (L1)
+3. Ch7   RplW Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s)
 ```
 Explanation: 
 <br>Fgen1 generates a random position periodically, Fgen2 via Logical switch L1 is 
@@ -438,11 +438,11 @@ Value2: 0
 
 Then in the mixer, assuming our servo is on Ch7,
 ```txt
-1. Ch7   Add   Fgen1 (Weight 100)          
-2. Ch7   Hold        (L1)          
+1. Ch7   Add   Fgen1 (Weight 100)
+2. Ch7   Hold        (L1)
 3. Ch7   RplW  Max   (Weight 0, SwE_Up) 
-4. Ch7   RplW  Ch7   (Weight 100, SlowUp 5 s, SlowDown 5 s, L2) 
-5. Ch7   RplW  Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s) 
+4. Ch7   RplW  Ch7   (Weight 100, SlowUp 5 s, SlowDown 5 s, L2)
+5. Ch7   RplW  Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s)
 ```
 
 <a id="section_id_oscillator_from_scratch"></a>
@@ -479,8 +479,8 @@ When the Rudder stick is centered and the Aileron stick is moved away from cente
 ```txt
 L1
 Func:   a==x
-Value1: Rud    
-Value2: 0         
+Value1: Rud
+Value2: 0
 
 L2
 Func:   a==x
@@ -505,3 +505,32 @@ Then in the mixer, assuming the rudder servo is on Ch4,
 4. Ch4   Add     Rud   (Weight 100)
 ```
 Here, Virt1 is used to smooth the transition from the Aileron stick to the Rudder stick.
+
+
+<a id="section_id_adjust_aileron_differential_with_knob"></a>
+### Example 23: Adjust aileron differential with the knob
+This example illustrates a method for adjusting aileron differential in-flight, eliminating the need to land whenever we want to
+tweak with the setting. It is quite handy for experimenting with different values and helping with fine tuning.  
+As we rotate the knob clockwise, the differential increases from 0% to 100%.
+
+Setup a logical switch as follows.
+```txt
+L1
+Func:   a>x
+Value1: Ail 
+Value2: 0
+``` 
+Then in the mixer, assuming the left aileron servo in Ch1, right aileron servo in Ch8
+```txt
+1. Ch1   Add     Ail    (Weight -100, No trim)
+2. Ch1   Mltply  KnobB  (Weight -50, Offset 50, Switch L1)
+3. Ch1   Add     X2Trim (Weight -100)
+4. Ch8   Add     Ail    (Weight 100, No trim)
+5. Ch8   Mltply  KnobB  (Weight -50, Offset 50, Switch !L1)
+6. Ch8   Add     X2Trim (Weight 100)
+```
+Explanation:  
+Differential is applied to the downward going aileron. When the Ail stick is moved right, we apply differential to the left aileron.
+Similarly when the Ail stick is moved left, we apply differential to the right aileron.  
+We detect the direction of the Ail stick via the logical switch L1 and use it to selectively apply the differential effect via a multiply mix.  
+For this case, we also decouple the trim and add it afterward, to prevent it being affected by the differential.
