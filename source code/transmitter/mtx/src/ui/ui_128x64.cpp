@@ -597,28 +597,35 @@ void handleMainUI()
   //-------------- Keys filtering for backlight ----------
   if(Sys.backlightSuppressFirstKey && Sys.backlightEnabled)
   {
-    static bool suppressDownClicked = false; //flag to kill the clickedButton event on home screen
-    if(!backlightIsOn)
+    static bool suppressClick = false;
+    if(!backlightIsOn && (pressedButton == KEY_UP || pressedButton == KEY_DOWN || pressedButton == KEY_SELECT))
     {
-      if(buttonCode == KEY_SELECT || buttonCode == KEY_UP)
-        killButtonEvents();
-      if(buttonCode == KEY_DOWN)
+      if(theScreen == SCREEN_HOME)
       {
-        if(theScreen == SCREEN_HOME) 
+        if(isOnscreenTrimMode)
         {
-          //Only let through the held event so we can mute/unmute telemetry alarms without
-          //requiring extra key action.
-          pressedButton = 0;
-          suppressDownClicked = true; 
+          //Nothing here, all button events are let through when we are in On-screen trim mode. 
         }
         else
-          killButtonEvents();
+        {
+          //Only let through the held event so we can perform long press actions without requiring an extra button press.
+          pressedButton = 0;
+          suppressClick = true;
+        }
       }
+      else //other screens
+        killButtonEvents();
     }
-    if(suppressDownClicked && clickedButton == KEY_DOWN)
+
+    if(suppressClick && backlightIsOn)
     {
-      suppressDownClicked = false;
-      clickedButton = 0;
+      if(clickedButton == KEY_UP || clickedButton == KEY_DOWN || clickedButton == KEY_SELECT)
+      {
+        suppressClick = false;
+        clickedButton = 0;
+      }
+      if(buttonCode == 0)
+        suppressClick = false;
     }
   }
 
