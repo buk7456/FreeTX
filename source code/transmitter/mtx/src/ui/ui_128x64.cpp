@@ -310,6 +310,7 @@ void drawTrimSliders();
 void drawDialogCopyMove(const char* str, uint8_t srcIdx, uint8_t destIdx, bool isCopy);
 void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src);
 void drawToast();
+void drawTooltip(uint8_t x, uint8_t y, char* str);
 void drawTelemetryValue(uint8_t xpos, uint8_t ypos, uint8_t idx, int16_t rawVal, bool blink);
 void printTelemParam(uint8_t idx, int32_t val, bool showUnits);
 void printFullScreenMessage(const char* str);
@@ -3500,6 +3501,8 @@ void handleMainUI()
         uint8_t numPages = numPagesPrpCh + numPagesVrtCh;
         static uint8_t thisPage = 1;
         static bool viewInitialised = false;
+        static bool hasTooltip = false;
+        static uint8_t tooltipSrcIdx;
         if(!viewInitialised) //start in the page that has the channel we want to view
         {
           uint8_t _outputIdx = Model.Mixer[thisMixIdx].output;
@@ -3508,11 +3511,9 @@ void handleMainUI()
           else if(_outputIdx >= SRC_VIRTUAL_FIRST && _outputIdx <= SRC_VIRTUAL_LAST)
             thisPage = numPagesPrpCh + ((_outputIdx - SRC_VIRTUAL_FIRST) + 8) / 8;
           viewInitialised = true;
+          hasTooltip = false;
+          tooltipSrcIdx = _outputIdx;
         }
-        
-        //change page
-        isEditMode = true;
-        thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
         
         //--- draw graphs---
         uint8_t startIdx = (thisPage - 1) * 8;
@@ -3552,8 +3553,44 @@ void handleMainUI()
         }
         //draw midpoint
         display.drawHLine(3, 35, 9 + 16*(count - 1) , BLACK); 
+
+        //show info tip
+        if(clickedButton == KEY_SELECT)
+          hasTooltip = !hasTooltip;
+        if(hasTooltip)
+        {
+          //--- draw as an overlay
+          itoa(mixSources[tooltipSrcIdx] / 5, textBuff, 10);
+          uint8_t j = ((tooltipSrcIdx - SRC_CH1) + offsetIdx) % 8;
+          drawTooltip(7 + j * 16, 14, textBuff);
+          
+          //--- scroll
+          isEditMode = true;
+          tooltipSrcIdx = incDec(tooltipSrcIdx, SRC_VIRTUAL_LAST, SRC_CH1, true, INCDEC_SLOW);
+          //set to the page that has our target
+          if(tooltipSrcIdx >= SRC_CH1 && tooltipSrcIdx < (SRC_CH1 + NUM_RC_CHANNELS))
+            thisPage = ((tooltipSrcIdx - SRC_CH1) + 8) / 8;
+          else if(tooltipSrcIdx >= SRC_VIRTUAL_FIRST && tooltipSrcIdx <= SRC_VIRTUAL_LAST)
+            thisPage = numPagesPrpCh + ((tooltipSrcIdx - SRC_VIRTUAL_FIRST) + 8) / 8;
+        }
+
         //show scrollbar
         drawScrollBar(127, 8, numPages, thisPage, 1, 1 * 56);
+
+        //change page
+        if(!hasTooltip)
+        {
+          isEditMode = true;
+          uint8_t prevPage = thisPage;
+          thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+          if(thisPage != prevPage)
+          {
+            if(thisPage <= numPagesPrpCh)
+              tooltipSrcIdx = SRC_CH1 + (thisPage - 1) * 8;
+            else
+              tooltipSrcIdx = SRC_CH1 + NUM_RC_CHANNELS + (8 * (thisPage - (numPagesPrpCh + 1)));
+          }
+        }
 
         if(heldButton == KEY_SELECT)
         {
@@ -10848,6 +10885,40 @@ void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src)
 
 //--------------------------------------------------------------------------------------------------
 
+void drawTooltip(uint8_t x, uint8_t y, char* str)
+{
+  uint8_t lenStr = strlen(str);
+  if(lenStr < 3)
+    lenStr = 3;
+  uint8_t widthPix = (lenStr * 6) + 3;
+
+  int8_t xqq = x - 7; //start position of rectangle
+  if(xqq < 0)
+  {
+    xqq = 0;
+  }
+  if(xqq + widthPix > display.width() - 2)
+  {
+    xqq = display.width() - 2 - widthPix;
+  }
+
+  display.fillRect(xqq - 1, y - 15, widthPix + 3, 16, WHITE);
+  display.drawRect(xqq, y - 14, widthPix, 11, BLACK);
+  //draw shadow
+  display.drawHLine(xqq + 1, y - 3, widthPix, BLACK);
+  display.drawVLine(xqq + widthPix, y - 13, 11, BLACK);
+
+  //draw connector
+  display.drawBitmap(x - 2, y - 4, tooltip_connector_down, 6, 5, BLACK, WHITE);
+
+  //middle align the text
+  uint8_t xOffset = ((widthPix - strlen(str) * 6) / 2) + 1;
+  display.setCursor(xqq + xOffset, y - 12);
+  display.print(str);
+}
+
+//--------------------------------------------------------------------------------------------------
+
 void drawTelemetryValue(uint8_t xpos, uint8_t ypos, uint8_t idx, int16_t rawVal, bool blink)
 {  
   if(rawVal == TELEMETRY_NO_DATA)
@@ -11258,4 +11329,3 @@ void contextMenuDraw()
 }
 
 #endif //UI_128X64
-
