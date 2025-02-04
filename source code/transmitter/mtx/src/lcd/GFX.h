@@ -67,6 +67,7 @@ public:
       drawCircleHelper(uint8_t x0, uint8_t y0, uint8_t r, uint8_t cornername, uint8_t color), 
       fillCircleHelper(uint8_t x0, uint8_t y0, uint8_t r, uint8_t cornername, uint8_t delta, uint8_t color),
       drawBitmap(uint8_t x, uint8_t y, const uint8_t bitmap[], uint8_t w, uint8_t h, uint8_t color),
+      drawBitmap(uint8_t x, uint8_t y, const uint8_t bitmap[], uint8_t w, uint8_t h, uint8_t color, uint8_t bg),
       setCursor(uint8_t x, uint8_t y),
       setTextColor(uint8_t c),
       setTextWrap(boolean w);
