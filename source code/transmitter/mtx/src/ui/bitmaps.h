@@ -107,6 +107,21 @@ const uint8_t icon_up_arrow_small [] PROGMEM = {
   0x20, 0x70, 0xf8
 };
 
+const uint8_t tooltip_connector_down_left [] PROGMEM = {
+  // 'tooltip_connector_down_left, 5x5px
+  0x88, 0x98, 0xb8, 0xf0, 0xe0
+};
+
+const uint8_t  tooltip_connector_down_right [] PROGMEM = {
+  // 'tooltip_connector_down_right, 5x5px
+  0x18, 0x98, 0xd8, 0x78, 0x38
+};
+
+const uint8_t tooltip_connector_down [] PROGMEM = {
+  // 'tooltip_connector_down, 6x5px
+  0x04, 0x8c, 0xdc, 0x78, 0x30
+};
+
 //-------------------------- Menu icons ----------------------------------
 //All are 15x11px
 const uint8_t icon_m_telemetry [] PROGMEM = {
