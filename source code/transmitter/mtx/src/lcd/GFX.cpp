@@ -297,6 +297,29 @@ void GFX::drawBitmap(uint8_t x, uint8_t y, const uint8_t bitmap[], uint8_t w, ui
   }
 }
 
+// Draw a PROGMEM-resident 1-bit image at the specified (x,y) position,
+// using the specified foreground (for set bits) and background (unset bits) colors
+void GFX::drawBitmap(uint8_t x, uint8_t y, const uint8_t bitmap[], uint8_t w, uint8_t h, uint8_t color, uint8_t bg)
+{
+  uint8_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
+  uint8_t byte = 0;
+
+  for(uint8_t j = 0; j < h; j++, y++)
+  {
+    for(uint8_t i = 0; i < w; i++)
+    {
+      if(i & 7)
+        byte <<= 1;
+      else
+        byte = pgm_read_byte(&bitmap[j * byteWidth + i / 8]);
+      if(byte & 0x80)
+        drawPixel(x + i, y, color);
+      else
+        drawPixel(x + i, y, bg);
+    }
+  }
+}
+
 // Draw a character
 void GFX::drawChar(uint8_t x, uint8_t y, unsigned char c, uint8_t color)
 {
