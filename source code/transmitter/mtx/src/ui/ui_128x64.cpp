@@ -10904,7 +10904,7 @@ void drawTooltip(uint8_t x, uint8_t y, char* str)
     xqq = 0;
   if(xqq + widthPix > display.width() - 2)
     xqq = display.width() - 2 - widthPix;
-
+  
   //clear background
   display.fillRect(xqq - 1, y - 15, widthPix + 3, 16, WHITE);
 
@@ -10928,8 +10928,21 @@ void drawTooltip(uint8_t x, uint8_t y, char* str)
   }
 
   //draw connector
-  display.drawBitmap(x - 2, y - 4, tooltip_connector_down, 6, 5, BLACK, WHITE);
-
+  if(x < 5)
+  {
+    if(x < 1)
+      x = 1;
+    display.drawBitmap(x - 1, y - 4, tooltip_connector_down_left, 5, 5, BLACK, WHITE);
+  }
+  else if(x > display.width() - 7)
+  {
+    if(x > display.width() - 3)
+      x = display.width() - 3;
+    display.drawBitmap(x - 3, y - 4, tooltip_connector_down_right, 5, 5, BLACK, WHITE);
+  }
+  else
+    display.drawBitmap(x - 2, y - 4, tooltip_connector_down, 6, 5, BLACK, WHITE);
+  
   //print the text middle aligned
   uint8_t xOffset = ((widthPix - strlen(str) * 6) / 2) + 1;
   display.setCursor(xqq + xOffset, y - 12);
