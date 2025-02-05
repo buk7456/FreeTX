@@ -1,7 +1,7 @@
 # Trim setup
 
 <p align="left">
-<img src="images/img41.png"/>
+<img src="images/screenshots/trim_setup.png"/>
 </p>
 
 Available states are as follows.

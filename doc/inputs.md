@@ -3,7 +3,7 @@
 The inputs screen allows setting dual rates and expo, throttle curve, as well as showing the values from the physical controls.
 
 <p align="left">
-<img src="images/img31.png"/>
+<img src="images/screenshots/inputs.png"/>
 </p>
 
 - For model type 'Airplane', the naming used for the main controls is Ail, Ele, Rud, Thr.

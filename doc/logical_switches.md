@@ -3,7 +3,7 @@ These can be used to combine various conditions, compare values, etc. They are i
 programmed virtual switches. They produce an on/off output.
 
 <p align="left">
-<img src="images/img33.png"/>
+<img src="images/screenshots/logical_switches.png"/>
 </p>
 
 The available functions can be categorized into the following types.

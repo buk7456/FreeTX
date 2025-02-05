@@ -2,8 +2,8 @@
 A counters stores and shows the number of times a particular event has occurred, in relationship to a clock signal.
 
 <p align="left">
-<img src="images/img9.png"/>
-<img src="images/img10.png"/>
+<img src="images/screenshots/counters_basic.png"/>
+<img src="images/screenshots/counters_advanced.png"/>
 </p>
 
 ## Fields

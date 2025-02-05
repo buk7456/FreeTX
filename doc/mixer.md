@@ -3,7 +3,7 @@ The mixer is where the inputs (mixer sources) get linked to the output channels 
 This controller features a mixer system that draws inspiration from that found in OpenTX(R) based RC transmitters, though not directly compatible.
 
 <p align="left">
-<img src="images/img32.png"/>
+<img src="images/screenshots/mixer.png"/>
 </p>
 
 ## Mixer sources
@@ -279,7 +279,7 @@ Type: 3 point
 Point(x,y): PtA(-100,-100) PtB(0,-100) PtC(100,100)
 ``` 
 <p align="left">
-<img src="images/img20.png"/>
+<img src="images/screenshots/curve_landing_gear_sequencer.png"/>
 </p>
 
 Then in the mixer, assuming gear door servos on Ch7, gear servos on Ch8, and using SwD to operate,
@@ -307,7 +307,7 @@ Type: 4 point
 Point(x,y): PtA(-100,-100) PtB(-50,-100) PtC(50,100) PtD(100,100)
 ``` 
 <p align="left">
-<img src="images/img21.png"/>
+<img src="images/screenshots/curves_landing_gear_sequencer_advanced_v1.png"/>
 </p>
 
 Then in the mixer, assuming gear door servos on Ch7, gear servos on Ch8, and using SwD to operate,
@@ -334,7 +334,7 @@ Type: 4 point
 Point(x,y): PtA(-100,-100) PtB(50,-100) PtC(50,100) PtD(100,100)
 ```
 <p align="left">
-<img src="images/img5.png"/>
+<img src="images/screenshots/curves_landing_gear_sequencer_advanced_v2.png"/>
 </p>
 
 Then in the mixer, assuming gear door servos on Ch7, gear retracts on Ch8, and using SwD to operate, 

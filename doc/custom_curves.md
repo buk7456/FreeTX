@@ -4,7 +4,7 @@ Any point/node on the curve can be freely moved around to get the desired shape 
 The curve can also be optionally smoothed, although this feature should be used sparingly as it is relatively cpu intensive.  
 
 <p align="left">
-<img src="images/img17.png"/>
+<img src="images/screenshots/custom_curves.png"/>
 </p>
 
 #### Combining two curves for extra points or nodes

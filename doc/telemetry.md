@@ -6,7 +6,7 @@ Telemetry values are transmitted as 16-bit signed integers.
 To quickly mute/unmute telemetry alarms, long press the Down key on the home screen.
 
 <p align="left">
-<img src="images/img7.png"/>
+<img src="images/screenshots/telemetry_sensor_edit.png"/>
 </p>
 
 ### Fields
@@ -29,7 +29,7 @@ as well as data conversion. GPS, GLONASS, BeiDou, Galileo are supported.
 The system remembers the last known location in case of a lost model, even when the transmitter is powered off.
 
 <p align="left">
-<img src="images/img8.png"/>
+<img src="images/screenshots/telemetry_gnss.png"/>
 </p>
 
 The structure below is used to send the GNSS telemetry data to the transmitter.
