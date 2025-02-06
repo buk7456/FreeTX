@@ -11,8 +11,8 @@ In count down mode, an audible alarm is played when the timer reaches zero. The 
 - Name: A name for the timer, otherwise a generic name is used.
 - Switch: The control switch used to start and stop the timer. This is optional, as the timer can also be started or stopped from the context menu.
 - Reset: The control switch used to reset the timer. This is optional, as the timer can also be reset from the context menu.
-- Initial: The initial time if a count down timer. If not specified, the timer will count up. A time picker dialog is used to easily set the initial time.
-- Persist: Whether the timer is persitent i.e. if the value should be remembered between sessions.
+- Initial: The initial time if a countdown timer. If not specified, the timer will count up. A time picker dialog is used to easily set the initial time.
+- Persist: Whether the timer is persistent i.e. if the value should be remembered between sessions.
 
 ## Examples
 

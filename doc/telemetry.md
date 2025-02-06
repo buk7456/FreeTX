@@ -1,7 +1,7 @@
 # Telemetry
 
 ## General telemetry
-The receiver has built-in basic telemetry i.e external voltage, rssi, and packet rate. To measure other paramaters, you will need to build custom sensors and extend the receiver firmware to support these.  
+The receiver has built-in basic telemetry i.e. external voltage, RSSI, and packet rate. To measure other parameters, you will need to build custom sensors and extend the receiver firmware to support these.  
 Telemetry values are transmitted as 16-bit signed integers.  
 To quickly mute/unmute telemetry alarms, long press the Down key on the home screen.
 

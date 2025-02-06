@@ -11,7 +11,7 @@ A counters stores and shows the number of times a particular event has occurred,
 - Clock: The control switch that triggers the counter.
 - Edge: Rising, Falling, or Dual edge triggering. Applies to the clock signal.
 - Clear: The control switch that clears the counter register to zero.
-- Modulus: The number of states in its count sequence. Eg. mod 4 produces the sequence 0, 1, 2, 3.
+- Modulus: The number of states in its count sequence. E.g. mod 4 produces the sequence 0, 1, 2, 3.
 - Direction: Determines whether counts will increment or decrement.
 - Rollover: Rolls back over to start counting again from zero.
 - Persist: Whether to remember the value in the counter's register between sessions.

@@ -11,7 +11,7 @@ Notifications are user-programmable and provide audible alarms to report about e
 - Text: Optional text that will be displayed, as a toast message on the screen.
 
 Note: 
-System events like low transmitter battery, inactivity, etc are natively handled by the system, thus there is no need to configure them inside custom notifications. 
+System events like low transmitter battery, inactivity, etc. are natively handled by the system, thus there is no need to configure them inside custom notifications. 
 
 ## Usage examples
 

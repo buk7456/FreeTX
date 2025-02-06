@@ -9,4 +9,4 @@ Available states are as follows.
 - F-mode: Applies independent trim settings for each flight mode.
 - Off:    Trim is disabled globally for this axis, for example when we do not want trim on the throttle.
 
-The step setting determines how fast and how fine the trims move. Available options are Coarse, Medium, Fine. 
+The Step setting determines how fast and how fine the trims move. Available options are Coarse, Medium, and Fine. 

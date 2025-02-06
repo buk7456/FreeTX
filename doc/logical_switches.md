@@ -26,7 +26,7 @@ The available functions can be categorized into the following types.
 
 <a id="section_id_mix_activated_by_two_switches"></a>
 ### Example 1: A mix activated by combination of two switches
-Suppose we want a mix to be turned on only when two switches (e.g SwA, SwB) are both on. 
+Suppose we want a mix to be turned on only when two switches (e.g. SwA, SwB) are both on. 
 We need to set up a logical switch say L1 as follows.
 
 ```txt
@@ -123,16 +123,16 @@ Also if we have a throttle cut function on say SwA, we want the timer to only ru
 Assume our throttle source is the Y1 axis. 
 
 #### Method 1: 
-Using the built-in function generator to genarate a pulse width modulated signal that controls the timer.
+Using the built-in function generator to generate a pulse width modulated signal that controls the timer.
 
 ```txt
 Fgen1
 -----
-Waveform:  Pulse
-WidthMode: Variable
-Modulator: Y1
-Reverse:   False
-Period:    1.0 s
+Waveform:   Pulse
+Width mode: Variable
+Modulator:  Y1
+Reverse:    False
+Period:     1.0 s
 
 L1
 ---

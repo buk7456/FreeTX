@@ -48,7 +48,7 @@ When editing mixes, it is recommended to disable RF output or remove propellers 
 Note: 
 - The convention used in these examples is -ve for left/downward going control surfaces, +ve for right/upward going control surfaces. For example if the Ail stick is moved right, the left aileron moves down and the right aileron moves up. Hence we use a negative weight for the left aileron and a positive weight for the right aileron.
 - If a servo is moving in wrong direction, reversing the direction in Outputs screen solves this.
-- The Mixer is all about about control logic. Any mechanical differences should be handled in the Outputs screen and not inside the Mixer.
+- The Mixer is all about control logic. Any mechanical differences should be handled in the Outputs screen and not inside the Mixer.
 
 [1. Basic 4 channel](#section_id_basic_4_channel)  
 [2. Elevon](#section_id_elevon)  
@@ -157,7 +157,7 @@ move upward and full flaps are deployed.
 ### Example 8: Flaps working as ailerons
 This mix allows the entire trailing edge of the wing (aileron and flap) to operate as ailerons. 
 Assuming the left flap servo in Ch5, right flap servo in Ch6.
-<br>Using a two position switch e.g SwD to switch between flap mode and aileron mode. 
+<br>Using a two position switch e.g. SwD to switch between flap mode and aileron mode. 
 <br>Using the three position SwC to set the flap position in flap mode.
 ```txt
 1. Ch5   Add   SwC (Weight -50,  Offset -50)
@@ -168,7 +168,7 @@ Assuming the left flap servo in Ch5, right flap servo in Ch6.
 
 <a id="section_id_differential_thrust"></a>
 ### Example 9: Differential thrust
-Left motor in Ch3, right motor in Ch7. We can use a switch e.g SwE to turn the differential thrust off 
+Left motor in Ch3, right motor in Ch7. We can use a switch e.g. SwE to turn the differential thrust off 
 while in the air. Also assume the Rud source is the X1 axis
 ```txt
 1. Ch3  Add  Thr (Weight 100)
@@ -218,7 +218,7 @@ We can adjust the maximum throttle without affecting the low throttle setting. A
 
 <a id="section_id_simple_throttle_cut"></a>
 ### Example 14: Simple throttle cut
-Assuming Ch3 is the throttle channel, and assigning SwA for cut. When SwA is in the Up position, Ch3 
+Assuming Ch3 is the throttle channel, and assigning SwA for cut. When SwA is in the up position, Ch3 
 is locked to -100, otherwise the Throttle input is sent to Ch3.
 ```txt
 1. Ch3  Add   Thrt (Weight 100)
@@ -230,8 +230,8 @@ override as SwA and value -100.
 <a id="section_id_stick_throttle_cut"></a>
 ### Example 15: Sticky throttle cut
 Assuming Ch3 is the throttle channel, and assigning SwA for cut. Also assume our Throttle source is 
-Y1 axis. We want the throttle cut whenever SwA is in Up position, but to only remove the cut when 
-the throttle is at minimum and SwA is in Down position.  
+Y1 axis. We want the throttle cut whenever SwA is in the up position, but to only remove the cut when 
+the throttle is at minimum and SwA is in the down position.  
 This example makes use of logical switches as follows.
 ```txt
 L1
@@ -361,7 +361,7 @@ via a switch. This is left as an exercise.
 ### Example 19: Random servo motion generator
 Suppose we have a model equipped with a turret, or a figure. We want the servo to move automatically but in a 
 random and intermittent manner.
-<br>We can achieve this with function genarators and logical switches as follows.
+<br>We can achieve this with function generators and logical switches as follows.
  
 ```txt
 Fgen1
@@ -401,26 +401,26 @@ Furthermore, a physical switch SwE is used to start/stop the random motion of th
 
 ```txt
 Fgen1
-Waveform:     Random
-IntervalMode: Variable
-Min Interval: 1.0 s
-Max Interval: 2.0 s
-Control:      Fgen2
+Waveform:      Random
+Interval mode: Variable
+Min Interval:  1.0 s
+Max Interval:  2.0 s
+Control:       Fgen2
 
 Fgen2  (modulates the interval of Fgen1)
-Waveform:     Random
-IntervalMode: Fixed
-Interval:     1.0 s
+Waveform:      Random
+Interval mode: Fixed
+Interval:      1.0 s
 
 Fgen3  (used for the intermittent motion)
-Waveform:     Random
-IntervalMode: Fixed
-Interval:     1.0 s
+Waveform:      Random
+Interval mode: Fixed
+Interval:      1.0 s
 
 Fgen4  (used for the selection between two speeds)
-Waveform:     Random
-IntervalMode: Fixed
-Interval:     2.0 s
+Waveform:      Random
+Interval mode: Fixed
+Interval:      2.0 s
 ```
 
 Then set up two logical switches as follows.
@@ -448,7 +448,7 @@ Then in the mixer, assuming our servo is on Ch7,
 <a id="section_id_oscillator_from_scratch"></a>
 ### Example 21: Oscillation without using the built-in function generator
 Here is a way to create a crude oscillator from scratch.  
-Set up a custom curve that defines the shape of our arbitrary waveform. Forexample,
+Set up a custom curve that defines the shape of our arbitrary waveform. For example,
 ```txt
 Curve1
 Type: 5 point
@@ -475,7 +475,7 @@ Assuming our final output is on Ch1, we specify the input as Virt1 and apply the
 When the Rudder stick is centered and the Aileron stick is moved away from center, the mix is activated (Aileron stick now controls the rudder).
 <br>The mix is deactivated as soon as the Rudder stick is moved away from center (Rudder stick now controls the Rudder).
 <br>When both sticks are centered the mix gets activated again.
-<br>We can achieve this behavior with the help of logical switches as follows.
+<br>We can achieve this behaviour with the help of logical switches as follows.
 ```txt
 L1
 Func:   a==x
@@ -510,7 +510,7 @@ Here, Virt1 is used to smooth the transition from the Aileron stick to the Rudde
 <a id="section_id_adjust_aileron_differential_with_knob"></a>
 ### Example 23: Adjust aileron differential with the knob
 This example illustrates a method for adjusting aileron differential in-flight, eliminating the need to land whenever we want to
-tweak with the setting. It is quite handy for experimenting with different values and helping with fine tuning.  
+tweak the setting. It is quite handy for experimenting with different values and helping with fine tuning.  
 As we rotate the knob clockwise, the differential increases from 0% to 100%.
 
 Setup a logical switch as follows.
