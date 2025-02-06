@@ -14,11 +14,11 @@ Remotely operate model airplanes, multicopters, helicopters, boats, land vehicle
 - Powerful mixer system, logical switches, function generators, counters, timers.
 - Telemetry, alarms, warnings, notifications, home screen widgets.
 - Custom splash screen, screenshot capture, etc.
-- Model memory, I2C eeprom and SD card supported. Model types, context-aware nomenclature.
+- Model memory, I2C EEPROM and SD card supported. Model types, context-aware nomenclature.
 - Intuitive user interface.
 
 ## Hardware and Schematics
-The transmiter and receiver schematics can be found in the 'schematics' folder. 
+The transmitter and receiver schematics can be found in the 'schematics' folder. 
 The major components are
 - 1x Atmega2560 microcontroller, 2x Atmega328p microcontrollers.
 - 2x SX1276/77/78/79 or RFM95 based Lora modules. Other RF modules can possibly be used with some modifications to the source code.
