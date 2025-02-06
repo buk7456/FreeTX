@@ -13,7 +13,7 @@ If more curve points are needed, a work around is to combine two curves by switc
 ## Usage examples
 Below are some examples demonstrating the use of custom curves.
 
-[Landing gear sequencer](./mixer.md#section_id_landing_gear_sequencer_v1)  
-[Landing gear sequencer - advanced](./mixer.md#section_id_landing_gear_sequencer_v2)  
-[Oscillator from scratch](./mixer.md#section_id_oscillator_from_scratch)  
+- [Landing gear sequencer](./mixer.md#section_id_landing_gear_sequencer_v1)  
+- [Landing gear sequencer - advanced](./mixer.md#section_id_landing_gear_sequencer_v2)  
+- [Oscillator from scratch](./mixer.md#section_id_oscillator_from_scratch)  
 

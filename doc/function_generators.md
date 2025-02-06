@@ -13,7 +13,7 @@ The function generators are capable of frequency modulation, with smooth transit
 ## Usage examples
 Below are some examples making use of function generators.
 
-[Servo tester](./mixer.md#section_id_servo_tester)  
-[Random servo motion generator](./mixer.md#section_id_random_servo_motion_generator)  
-[Random servo motion generator - advanced](./mixer.md#section_id_random_servo_motion_advanced)
+- [Servo tester](./mixer.md#section_id_servo_tester)  
+- [Random servo motion generator](./mixer.md#section_id_random_servo_motion_generator)  
+- [Random servo motion generator - advanced](./mixer.md#section_id_random_servo_motion_advanced)
 
