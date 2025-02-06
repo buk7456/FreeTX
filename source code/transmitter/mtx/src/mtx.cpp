@@ -242,16 +242,36 @@ void controlBacklight()
     backlightIsOn = false;
     return;
   }
+
+  static const uint16_t durTable[] PROGMEM = {5, 15, 60, 120, 300, 600, 1800, 0};
+  uint32_t duration = (uint32_t) 1000 * pgm_read_word(&durTable[Sys.backlightTimeout]);
   
   uint8_t val = ((uint16_t) 255 * Sys.backlightLevel) / 100;
   uint32_t elapsed = 0;
-  if(buttonCode == 0)
-    elapsed = millis() - buttonReleaseTime;
-  if(Sys.backlightWakeup == BACKLIGHT_WAKEUP_ACTIVITY)
+
+  if(Sys.backlightWakeup == BACKLIGHT_WAKEUP_KEYS)
+  {
+    //Only allow the UI navigation keys to trigger the backlight on, suppressing the trim keys.
+    //If the backlight is on, treat all keys the same.
+    static bool inhibit = false;
+    if(buttonCode == KEY_SELECT || buttonCode == KEY_DOWN || buttonCode == KEY_UP)
+      inhibit = false;
+    else if(backlightIsOn && buttonCode == 0 && !inhibit)
+    {
+      if(millis() - buttonReleaseTime >= duration)
+        inhibit = true;
+    }
+
+    if(inhibit)
+      elapsed = duration;
+    else
+    {
+      if(buttonCode == 0)
+        elapsed = millis() - buttonReleaseTime;
+    }
+  }
+  else if(Sys.backlightWakeup == BACKLIGHT_WAKEUP_ACTIVITY)
     elapsed = millis() - inputsLastMovedTime;
-  
-  static const uint16_t durTable[] PROGMEM = {5, 15, 60, 120, 300, 600, 1800, 0};
-  uint32_t duration = (uint32_t) 1000 * pgm_read_word(&durTable[Sys.backlightTimeout]);
 
   if(elapsed < duration || Sys.backlightTimeout == BACKLIGHT_TIMEOUT_NEVER)
   {
