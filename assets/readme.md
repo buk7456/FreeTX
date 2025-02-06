@@ -9,4 +9,4 @@ In GraphicsGale under new file,
 
 The transmitter firmware also has a built-in screenshot capture feature. It can be accessed in the debug menu.
 
-For converting icons or sprites bitmaps to byte arrays, I used the tool [image2cpp](http://javl.github.io/image2cpp/)
+For converting icons or sprites bitmaps to byte arrays, I used the tool [image2cpp](http://javl.github.io/image2cpp/).
