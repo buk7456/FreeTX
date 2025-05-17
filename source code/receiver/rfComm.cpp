@@ -176,7 +176,10 @@ void doRfCommunication()
         hasNewRCData = true;
         rcPacketCount++;
         lastRCPacketMillis = millis();
+
+#ifdef PIN_LED
         digitalWrite(PIN_LED, HIGH);
+#endif
 
         //Decode the rc data
         uint16_t chTemp[NUM_RC_CHANNELS];
@@ -292,9 +295,12 @@ void doRfCommunication()
       break;
   }
 
+#ifdef PIN_LED
   //--- TURN OFF LED TO INDICATE NO INCOMING RC DATA
   if(millis() - lastRCPacketMillis > 100)
     digitalWrite(PIN_LED, LOW);
+#endif
+
 }
 
 //================================= HELPERS ========================================================
