@@ -2,9 +2,12 @@
 #define _CONFIG_H_
 
 // #define LEGACY_HARDWARE
+// #define RECEIVER_HARDWARE_VERSION_1
+#define RECEIVER_HARDWARE_VERSION_2
 
-//--- pins ---
-#ifdef LEGACY_HARDWARE
+//------ pins ---
+
+#if defined LEGACY_HARDWARE
   #define PIN_CH1    2
   #define PIN_CH2    5
   #define PIN_CH3    3
@@ -33,8 +36,12 @@
   #define PIN_CH10   A0
   #define PIN_LORA_SS     10
   #define PIN_LORA_RESET  9
-  #define PIN_EXTV_SENSE  A6
-  #define PIN_LED    A3
+  #if defined RECEIVER_HARDWARE_VERSION_1
+    #define PIN_EXTV_SENSE  A6
+    #define PIN_LED    A3
+  #elif defined RECEIVER_HARDWARE_VERSION_2
+    #define PIN_EXTV_SENSE  A3
+  #endif
 #endif
 
 //--- battery voltage
