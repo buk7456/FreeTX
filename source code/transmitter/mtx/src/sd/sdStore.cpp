@@ -12,8 +12,11 @@
 #include "sdStore.h"
 
 #if defined (DISPLAY_KS0108)
-#include "../lcd/GFX.h"
-#include "../lcd/LCDKS0108.h"
+  #include "../lcd/GFX.h"
+  #include "../lcd/LCDKS0108.h"
+#elif defined (DISPLAY_ST7920)
+  #include "../lcd/GFX.h"
+  #include "../lcd/LCDST7920.h"
 #endif
 
 //limit to 128kiB files
@@ -25,8 +28,6 @@ bool hasSDcard = false;
 
 const char* model_backup_directory = "MODELS/";
 // const char* model_backup_directory = "/";
-
-const char* screenshot_directory = "SCRNSHOT/";
 
 File modelDir;
 bool isModelDirectoryOpen = false; //keeps track of open status
@@ -43,11 +44,6 @@ void sdStoreInit()
   //create the backup directory
   if(!SD.exists(model_backup_directory))
     SD.mkdir(model_backup_directory);
-
-  //create the screenshots directory 
-  if(!SD.exists(screenshot_directory))
-    SD.mkdir(screenshot_directory);
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -275,7 +271,7 @@ bool sdSimilarModelExists(const char *name)
   strlcpy(fullNameStr, model_backup_directory, sizeof(fullNameStr));
   strlcat(fullNameStr, name, sizeof(fullNameStr));
   
-  //chech if exists
+  //check if exists
   if(SD.exists(fullNameStr))
     return true;
 
@@ -288,14 +284,17 @@ void sdShowSplashScreen()
 {
   if(!hasSDcard)
     return;
-
-  static const char* splash_full_name_str = "IMAGES/SPLASH";
+  
+  static const char splash_full_name_str[] PROGMEM = "IMAGES/SPLASH";
+  
+  char pathName[sizeof(splash_full_name_str)];
+  strlcpy_P(pathName, splash_full_name_str, sizeof(pathName));
   
   //abort if it doesnt exist
-  if(!SD.exists(splash_full_name_str))
+  if(!SD.exists(pathName))
     return;
   
-  File myFile = SD.open(splash_full_name_str);
+  File myFile = SD.open(pathName);
   if(myFile)
   {
     if(myFile.isDirectory())//not a file, abort
@@ -311,16 +310,12 @@ void sdShowSplashScreen()
       return;
     }
     
-    //--- read from file and directly write to the lcd ---
-
-    uint8_t page = 0;
-    uint8_t column = 0;
-
+    //read from file and write to LCD
+  #if defined (DISPLAY_KS0108)
+    uint8_t page = 0, column = 0;
     while(myFile.available())
     {
       uint8_t c = myFile.read();
-
-    #if defined (DISPLAY_KS0108)
       display.writePageColumn(page, column, c);
       column++;
       if(column > 127)
@@ -330,10 +325,28 @@ void sdShowSplashScreen()
         if(page > 7)
           break;
       }
-    #endif
+    }
+  #elif defined (DISPLAY_ST7920)
+    uint8_t x = 0, y = 0;
+    while(myFile.available())
+    {
+      uint8_t c = myFile.read();
+      for(uint8_t j = 0; j < 8; j++)
+      {
+        display.drawPixel(x, y + j, ~(c >> j) & 1);
+      }
+      x++;
+      if(x > 127)
+      {
+        x = 0;
+        y += 8;
+      }
+      if(y > 63)
+        break;
+    }
+    display.display();
+  #endif
 
-    } 
-    
     //close the file
     myFile.close();
 
@@ -364,10 +377,23 @@ bool sdWriteScreenshot()
     isModelDirectoryOpen = false;
   }
 
+  static const char screenshot_directory[] PROGMEM = "SCRNSHOT/";
+
+  //create the screenshots directory
+  static bool initialised = false;
+  if(!initialised)
+  {
+    initialised = true;
+    char directoryName[sizeof(screenshot_directory)];
+    strlcpy_P(directoryName, screenshot_directory, sizeof(directoryName));
+    if(!SD.exists(directoryName))
+      SD.mkdir(directoryName);
+  }
+
   //make a name for the file. Sequential numbering is used.
   char fullNameStr[30]; //includes the path. Example Folder/img001.bmp
   memset(fullNameStr, 0, sizeof(fullNameStr));
-  strlcpy(fullNameStr, screenshot_directory, sizeof(fullNameStr));
+  strlcpy_P(fullNameStr, screenshot_directory, sizeof(fullNameStr));
   strlcat_P(fullNameStr, PSTR("img"), sizeof(fullNameStr));
   uint8_t digits = 1;
   uint16_t num = Sys.screenshotSeqNo;
@@ -402,7 +428,7 @@ bool sdWriteScreenshot()
       myFile.write(pgm_read_byte(bmpHeader + i));
     }
 
-    //write the pixel data
+    //write the pixel data 
     for(int8_t y = 63; y >= 0; y--)
     {
       for(uint8_t _byte = 0; _byte < 16; _byte++)
