@@ -21,7 +21,8 @@
 #define UI_128X64
 // #define UI_84X48  //not implemented
 
-#define DISPLAY_KS0108  
+#define DISPLAY_KS0108
+// #define DISPLAY_ST7920
 // #define DISPLAY_PCD8544 //not implemented
 
 //===========================================================================
@@ -61,6 +62,9 @@
 #define PIN_KS_RS        14
 #define PIN_KS_CS1       4
 #define PIN_KS_CS2       39
+
+#define PIN_ST_EN        15
+#define PIN_ST_RS        14
 
 //--- Direct port manipulation
 
