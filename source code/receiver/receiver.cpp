@@ -39,8 +39,10 @@ void getGNSSTelemetry();
 void setup()
 { 
   //--- setup pins
+#ifdef PIN_LED
   pinMode(PIN_LED, OUTPUT);
   digitalWrite(PIN_LED, LOW);
+#endif
 
 #ifdef LEGACY_HARDWARE
   pinMode(PIN_PWR_LED, OUTPUT);

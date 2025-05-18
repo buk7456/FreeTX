@@ -15,9 +15,14 @@ void handleSafetyWarnUI();
 void handleMainUI();
 
 #if defined (DISPLAY_KS0108)
-#include "../lcd/GFX.h"
-#include "../lcd/LCDKS0108.h"
-extern LCDKS0108 display; //shared object
+  #include "../lcd/GFX.h"
+  #include "../lcd/LCDKS0108.h"
+  extern LCDKS0108 display; //shared object
+#elif defined (DISPLAY_ST7920)
+  #include "../lcd/GFX.h"
+  #include "../lcd/LCDST7920.h"
+  extern LCDST7920 display; //shared object
 #endif
+
 
 #endif

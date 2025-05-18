@@ -21,10 +21,16 @@
 #if defined (UI_128X64)
 
 #if defined (DISPLAY_KS0108)
-#include "../lcd/GFX.h"
-#include "../lcd/LCDKS0108.h"
-LCDKS0108 display = LCDKS0108(PIN_KS_RS, PIN_KS_EN, PIN_KS_CS1, PIN_KS_CS2);
+  #include "../lcd/GFX.h"
+  #include "../lcd/LCDKS0108.h"
+  LCDKS0108 display = LCDKS0108(PIN_KS_RS, PIN_KS_EN, PIN_KS_CS1, PIN_KS_CS2);
+#elif defined (DISPLAY_ST7920)
+  #include "../lcd/GFX.h"
+  #include "../lcd/LCDST7920.h"
+  LCDST7920 display = LCDST7920(PIN_ST_RS, PIN_ST_EN);
 #endif
+
+
 
 //------ Menu strings --------
 // Max 19 characters per string
@@ -2915,7 +2921,7 @@ void handleMainUI()
             break;
     
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem > 1 && itemID == listItemIDs[focusedItem - 2] && isEditMode);
+          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -3509,17 +3515,22 @@ void handleMainUI()
         static uint8_t thisPage = 1;
         static bool viewInitialised = false;
         static bool hasTooltip = false;
-        static uint8_t tooltipSrcIdx;
+        static uint8_t tooltipSrcIdx = SRC_CH1;
         if(!viewInitialised) //start in the page that has the channel we want to view
         {
           uint8_t _outputIdx = Model.Mixer[thisMixIdx].output;
           if(_outputIdx >= SRC_CH1 && _outputIdx < (SRC_CH1 + NUM_RC_CHANNELS))
+          {
             thisPage = ((_outputIdx - SRC_CH1) + 8) / 8;
+            tooltipSrcIdx = _outputIdx;
+          }
           else if(_outputIdx >= SRC_VIRTUAL_FIRST && _outputIdx <= SRC_VIRTUAL_LAST)
+          {
             thisPage = numPagesPrpCh + ((_outputIdx - SRC_VIRTUAL_FIRST) + 8) / 8;
+            tooltipSrcIdx = _outputIdx;
+          }
           viewInitialised = true;
           hasTooltip = false;
-          tooltipSrcIdx = _outputIdx;
         }
         
         //--- draw graphs---
@@ -3573,7 +3584,7 @@ void handleMainUI()
           
           //--- scroll
           isEditMode = true;
-          tooltipSrcIdx = incDec(tooltipSrcIdx, SRC_VIRTUAL_LAST, SRC_CH1, true, INCDEC_SLOW);
+          tooltipSrcIdx = incDec(tooltipSrcIdx, SRC_VIRTUAL_LAST, SRC_CH1, INCDEC_WRAP, INCDEC_SLOW);
           //set to the page that has our target
           if(tooltipSrcIdx >= SRC_CH1 && tooltipSrcIdx < (SRC_CH1 + NUM_RC_CHANNELS))
             thisPage = ((tooltipSrcIdx - SRC_CH1) + 8) / 8;
@@ -4422,7 +4433,15 @@ void handleMainUI()
 
     case SCREEN_LOGICAL_SWITCHES:
       {
-        display.setInterlace(false); 
+        //intelligently disable screen interlacing
+        static bool lastState;
+        bool state = checkSwitchCondition(CTRL_SW_LOGICAL_FIRST + thisLsIdx);
+        if(state != lastState)
+        {
+          lastState = state;
+          display.setInterlace(false);
+        }
+
         drawHeader(extrasMenu[EXTRAS_MENU_LOGICAL_SWITCHES]);
 
         logical_switch_t *ls = &Model.LogicalSwitch[thisLsIdx];
