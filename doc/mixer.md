@@ -342,7 +342,7 @@ Then in the mixer, assuming gear door servos on Ch7, gear retracts on Ch8, and u
 1. Virt1 Add  SwD   (Weight 100, SlowUp 10 s, SlowDown 10 s) //Create a source that slowly ramps
 2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)              //Apply curve1 for the door sequence
 3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)              //Apply curve2 for the gear extend sequence
-3. Ch8   RplW Virt1 (Weight 100, Custom Curve3, SwD_Up)      //Apply curve3 for the gear retract sequence
+4. Ch8   RplW Virt1 (Weight 100, Custom Curve3, SwD_Up)      //Apply curve3 for the gear retract sequence
 ```
 We can, if necessary, set Ch8 to 'Digital' mode in the receiver output configuration screen.
 
