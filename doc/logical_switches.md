@@ -79,15 +79,15 @@ Clear:  L2
 
 L2
 ---
-Functn:   a>x
-Value1:   SwH
-Value2:   0
-Delay:    0.5 s
+Functn: a>x
+Value1: SwH
+Value2: 0
+Delay:  0.5 s
 
 Timer1
 ------
-Switch:  L1
-Reset:   L2
+Switch: L1
+Reset:  L2
 
 ```
 
@@ -106,13 +106,13 @@ Value2: -90
 
 L2
 ---
-Functn:   AND
-Value1:   L1
-Value2:   SwA_down
+Functn: AND
+Value1: L1
+Value2: SwA_down
 
 Timer1
 ------
-Switch:  L2
+Switch: L2
 
 ```
 
@@ -142,13 +142,13 @@ Value2: 0
 
 L2
 ---
-Functn:   AND
-Value1:   L1
-Value2:   SwA_down
+Functn: AND
+Value1: L1
+Value2: SwA_down
 
 Timer1
 ------
-Switch:  L2
+Switch: L2
 
 ```
 
@@ -168,19 +168,19 @@ Period: 1.0 s
 
 L2
 ---
-Functn:   a>b
-Value1:   Y1
-Value2:   Virt1
+Functn: a>b
+Value1: Y1
+Value2: Virt1
 
 L3
 ---
-Functn:   AND
-Value1:   L2
-Value2:   SwA_down
+Functn: AND
+Value1: L2
+Value2: SwA_down
 
 Timer1
 ------
-Switch:  L3
+Switch: L3
 
 ```
 
@@ -201,10 +201,10 @@ Value2: 0
 
 L2
 ---
-Functn:   |delta|>x
-Value1:   L1
-Value2:   0
-Dirctn:   Both
+Functn: |delta|>x
+Value1: L1
+Value2: 0
+Dirctn: Both
 
 ```
 
