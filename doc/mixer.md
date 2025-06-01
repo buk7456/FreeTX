@@ -120,9 +120,9 @@ an adverse yaw effect hence the need for aileron differential.
 Left Elevator servo in Ch6, Right Elevator servo in Ch7. The mix is turned on/off with SwG.
 ```txt
 1. Ch6  Add  Ele (Weight -60)
-2. Ch6  Add  Ail (Weight -40, SwG_Down)
+2. Ch6  Add  Ail (Weight -40, Switch SwG_Down)
 3. Ch7  Add  Ele (Weight -60)
-4. Ch7  Add  Ail (Weight 40, SwG_Down)
+4. Ch7  Add  Ail (Weight 40, Switch SwG_Down)
 ```
 
 <a id="section_id_flaperons"></a>
@@ -161,9 +161,9 @@ Assuming the left flap servo in Ch5, right flap servo in Ch6.
 <br>Using the three position SwC to set the flap position in flap mode.
 ```txt
 1. Ch5   Add   SwC (Weight -50,  Offset -50)
-2. Ch5   RplW  Ail (Weight -100, Diff 20, SwD_Down)
+2. Ch5   RplW  Ail (Weight -100, Diff 20, Switch SwD_Down)
 3. Ch6   Add   SwC (Weight -50,  Offset -50)
-4. Ch6   RplW  Ail (Weight 100,  Diff 20, SwD_Down)
+4. Ch6   RplW  Ail (Weight 100,  Diff 20, Switch SwD_Down)
 ```
 
 <a id="section_id_differential_thrust"></a>
@@ -172,9 +172,9 @@ Left motor in Ch3, right motor in Ch7. We can use a switch e.g. SwE to turn the 
 while in the air. Also assume the Rud source is the X1 axis
 ```txt
 1. Ch3  Add  Thr (Weight 100)
-2. Ch3  Add  X1  (Weight 40, SwE_Down)
+2. Ch3  Add  X1  (Weight 40, Switch SwE_Down)
 3. Ch7  Add  Thr (Weight 100)
-4. Ch7  Add  X1  (Weight -40, SwE_Down)
+4. Ch7  Add  X1  (Weight -40, Switch SwE_Down)
 ``` 
 For safety, we also need to set Failsafe for both Ch3 and Ch7 in the 'Outputs' screen.  
 We can also add throttle cut by specifying an override switch and a value of -100.
@@ -203,8 +203,8 @@ Suppose we have a gasoline-powered model and want to adjust the idle setting of 
 Assuming the throttle servo is in Ch3,
 ```txt
 1. Ch3   Add     KnobA (Weight 20, Offset 20)
-2. Ch3   Mltply  Thrt (Weight -50, Offset 50)
-3. Ch3   Add     Thrt (Weight 100)
+2. Ch3   Mltply  Thrt  (Weight -50, Offset 50)
+3. Ch3   Add     Thrt  (Weight 100)
 ```
 
 <a id="section_id_adjust_max_throttle"></a>
@@ -212,8 +212,8 @@ Assuming the throttle servo is in Ch3,
 We can adjust the maximum throttle without affecting the low throttle setting. Assuming the motor is in Ch3,
 ```txt
 1. Ch3   Add     KnobA (Weight 20, Offset -20)
-2. Ch3   Mltply  Thrt (Weight 50, Offset 50)
-3. Ch3   Add     Thrt (Weight 100)
+2. Ch3   Mltply  Thrt  (Weight 50, Offset 50)
+3. Ch3   Add     Thrt  (Weight 100)
 ```
 
 <a id="section_id_simple_throttle_cut"></a>
@@ -222,7 +222,7 @@ Assuming Ch3 is the throttle channel, and assigning SwA for cut. When SwA is in 
 is locked to -100, otherwise the Throttle input is sent to Ch3.
 ```txt
 1. Ch3  Add   Thrt (Weight 100)
-2. Ch3  RplW  Max  (weight -100, SwA_Up)
+2. Ch3  RplW  Max  (Weight -100, Switch SwA_Up)
 ```
 Alternatively, a much safer throttle cut can be achieved in the Outputs screen by specifying the 
 override as SwA and value -100.
@@ -339,10 +339,10 @@ Point(x,y): PtA(-100,-100) PtB(50,-100) PtC(50,100) PtD(100,100)
 
 Then in the mixer, assuming gear door servos on Ch7, gear retracts on Ch8, and using SwD to operate, 
 ```txt
-1. Virt1 Add  SwD   (Weight 100, SlowUp 10 s, SlowDown 10 s) //Create a source that slowly ramps
-2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)              //Apply curve1 for the door sequence
-3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)              //Apply curve2 for the gear extend sequence
-4. Ch8   RplW Virt1 (Weight 100, Custom Curve3, SwD_Up)      //Apply curve3 for the gear retract sequence
+1. Virt1 Add  SwD   (Weight 100, SlowUp 10 s, SlowDown 10 s)   //Create a source that slowly ramps
+2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)                //Apply curve1 for the door sequence
+3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)                //Apply curve2 for the gear extend sequence
+4. Ch8   RplW Virt1 (Weight 100, Custom Curve3, Switch SwD_Up) //Apply curve3 for the gear retract sequence
 ```
 We can, if necessary, set Ch8 to 'Digital' mode in the receiver output configuration screen.
 
@@ -382,7 +382,7 @@ Value2: 0
 Then in the mixer, assuming our servo is on Ch7,
 ```txt
 1. Ch7   Add  Fgen1 (Weight 100)
-2. Ch7   Hold       (L1)
+2. Ch7   Hold       (Switch L1)
 3. Ch7   RplW Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s)
 ```
 Explanation: 
@@ -439,9 +439,9 @@ Value2: 0
 Then in the mixer, assuming our servo is on Ch7,
 ```txt
 1. Ch7   Add   Fgen1 (Weight 100)
-2. Ch7   Hold        (L1)
+2. Ch7   Hold        (Switch L1)
 3. Ch7   RplW  Max   (Weight 0, SwE_Up) 
-4. Ch7   RplW  Ch7   (Weight 100, SlowUp 5 s, SlowDown 5 s, L2)
+4. Ch7   RplW  Ch7   (Weight 100, SlowUp 5 s, SlowDown 5 s, Switch L2)
 5. Ch7   RplW  Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s)
 ```
 
