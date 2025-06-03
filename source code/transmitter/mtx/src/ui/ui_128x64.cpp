@@ -146,6 +146,7 @@ enum {
   DIALOG_COUNTER_TYPE,
   DIALOG_COPY_COUNTER,
   CONFIRMATION_CLEAR_ALL_COUNTERS,
+  SCREEN_COUNTER_OUTPUTS,
   //flight modes
   SCREEN_FLIGHT_MODES,
   //function generators
@@ -5592,9 +5593,11 @@ void handleMainUI()
           ITEM_COPY_COUNTER,
           ITEM_CLEAR_COUNTER,
           ITEM_CLEAR_ALL_COUNTERS,
+          ITEM_VIEW_OUTPUTS,
         };
         
         contextMenuInitialise();
+        contextMenuAddItem(PSTR("View outputs"), ITEM_VIEW_OUTPUTS);
         contextMenuAddItem(PSTR("Copy to"), ITEM_COPY_COUNTER);
         contextMenuAddItem(PSTR("Rename counter"), ITEM_RENAME_COUNTER);
         contextMenuAddItem(PSTR("Counter type"), ITEM_COUNTER_TYPE);
@@ -5625,6 +5628,8 @@ void handleMainUI()
           destCounterIdx = thisCounterIdx;
           changeToScreen(DIALOG_COPY_COUNTER);  
         }
+        if(contextMenuSelectedItemID == ITEM_VIEW_OUTPUTS)
+          changeToScreen(SCREEN_COUNTER_OUTPUTS);
 
         if(heldButton == KEY_SELECT) //exit
           changeToScreen(SCREEN_COUNTERS);
@@ -5684,6 +5689,56 @@ void handleMainUI()
         }
         else if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT) //exit
           changeToScreen(SCREEN_COUNTERS);
+      }
+      break;
+
+    case SCREEN_COUNTER_OUTPUTS:
+      {
+        drawHeader(PSTR("Counter outputs"));
+
+        //--- scrollable 
+        
+        uint8_t numPages = (NUM_COUNTERS + 4) / 5;
+        static uint8_t thisPage = 1;
+        
+        static bool viewInitialised = false;
+        if(!viewInitialised) 
+        {
+          thisPage = (thisCounterIdx + 5) / 5; //start in the page with the counter we want to view
+          viewInitialised = true;
+        }
+
+        isEditMode = true;
+        thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+        
+        uint8_t startIdx = (thisPage - 1) * 5;
+        for(uint8_t i = startIdx; i < startIdx + 5 && i < NUM_COUNTERS; i++)
+        {
+          uint8_t ypos = 10 + (i - startIdx) * 11;
+          //show marker
+          if(i == thisCounterIdx) 
+          {
+            display.setCursor(0, ypos);
+            display.write(0xB1);
+          }
+          //show name
+          display.setCursor(7, ypos);
+          display.print(F("Counter"));
+          display.print(i + 1);
+          display.print(F(":"));
+          //show value
+          display.setCursor(73, ypos);
+          display.print(counterOut[i]);
+        }
+        
+        //show scrollbar
+        drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
+
+        if(heldButton == KEY_SELECT) //exit
+        {
+          viewInitialised = false;
+          changeToScreen(SCREEN_COUNTERS);
+        }
       }
       break;
       
