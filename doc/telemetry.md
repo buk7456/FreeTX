@@ -1,7 +1,12 @@
 # Telemetry
 
+<p align="left">
+<img src="images/screenshots/telemetry.png"/>
+</p>
+
 ## General telemetry
-The receiver has built-in basic telemetry i.e. external voltage, RSSI, and packet rate. To measure other parameters, you will need to build custom sensors and extend the receiver firmware to support these.  
+The receiver has built-in basic telemetry i.e. external voltage, RSSI, and packet rate. 
+To measure other parameters, you will have to build custom sensors and extend the receiver firmware to support these.  
 Telemetry values are transmitted as 16-bit signed integers.  
 To quickly mute/unmute telemetry alarms, long press the Down key on the home screen.
 
@@ -13,7 +18,7 @@ To quickly mute/unmute telemetry alarms, long press the Down key on the home scr
 - Name: The sensor name.
 - Units: The units of measurement.
 - ID: This is the sensor ID, which must be unique. However, the same ID can be used for example to display a value in multiple ways.
-- Factor10: The raw value is multiplied by 10 to power this factor.
+- Factor10: The raw value is multiplied by 10 to power this factor. Useful when we want to scale the value.
 - Multiplier: The raw value is multiplied by this number. Useful when we want to scale the value.
 - Alerts: This parameter specifies how the alarm behaves.
 - Threshold: This is the value below or above which the telemetry alarm will be sounded. The telemetry value will also flash when in alarm state.
@@ -23,7 +28,7 @@ for simple stats. Note that max and min are sensitive to outliers hence the filt
 should be done before sending the telemetry to the transmitter.
 
 ## GNSS telemetry
-The system also supports GNSS telemetry. A premade template is used to add the GNSS sensor to the telemetry screen.  
+GNSS telemetry is also supported. A premade template is used to add the GNSS sensor to the telemetry screen.  
 The receiver directly connects to the GNSS/GPS module via serial (UART), and handles parsing of the NMEA sentences 
 as well as data conversion. GPS, GLONASS, BeiDou, Galileo are supported.  
 The system remembers the last known location in case of a lost model, even when the transmitter is powered off.
@@ -32,17 +37,17 @@ The system remembers the last known location in case of a lost model, even when 
 <img src="images/screenshots/telemetry_gnss.png"/>
 </p>
 
-The structure below is used to send the GNSS telemetry data to the transmitter.
+### Fields
+- Satellites: The number of satellites in use / in view. "Fix" is appended when we have a position fix.
+- Distance: The calculated distance between the model's current location and the home location (starting point). 
+If the displayed distance is inaccurate, simply reset the starting point from the context menu. 
+- Speed: The current speed over ground in metres per second. Defaults to 0 when there is no incoming telemetry.
+- Course: The current course over ground in degrees. Defaults to 0 when there is no incoming telemetry.
+- Altitude AGL: The altitude above ground level in metres. If the value is innacurate, reset it from the context menu.
+- Altitude MSL: The altitude relative to mean sea level in metres.
+- Latitude and Longitude: The location coordinates of the model. 
+Displays the last known location when there is no incoming telemetry.
+- Starting point: Displays the coordinates of the home location.
 
-```c
-typedef struct {
-  int32_t  latitude;     //in degrees, fixed point representation; 5 decimal places of precision 
-  int32_t  longitude;    //in degrees, fixed point representation; 5 decimal places of precision
-  int16_t  altitude;     //Mean Sea Level altitude in meters, fixed point representation; 0 decimal places of precision
-  uint16_t speed;        //speed over ground in m/s, fixed point representation; 1 decimal places of precision
-  uint16_t course;       //course over ground in degrees, fixed point representation; 1 decimal places of precision
-  uint8_t  positionFix;  //position fix indicator
-  uint8_t  satellitesInUse;  //number of satellites in use
-  uint8_t  satellitesInView; //number of satellites in view
-} gnss_telemetry_data_t;
-```
+Note:
+If different units of measurement are desired, use the provided GNSS sensor sub-templates (speed, distance, altitude) and change the multiplier and units.
