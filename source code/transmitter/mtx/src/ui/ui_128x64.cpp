@@ -30,8 +30,6 @@
   LCDST7920 display = LCDST7920(PIN_ST_RS, PIN_ST_EN);
 #endif
 
-
-
 //------ Menu strings --------
 // Max 19 characters per string
 
@@ -73,7 +71,8 @@ enum {
 //---------------------------- Main UI states ------------------------------------------------------
 
 enum {
-  //--- Home screen and related
+  //--- Home screen and related ---
+
   SCREEN_HOME,
   SCREEN_CHANNEL_MONITOR,
   CONTEXT_MENU_HOME_SCREEN,
@@ -83,10 +82,12 @@ enum {
   DIALOG_MOVE_WIDGET,
   
   //---- Main menu ----
+
   SCREEN_UNLOCK_MAIN_MENU,
   SCREEN_MAIN_MENU,
   
   //---- Model ----
+
   SCREEN_UNLOCK_MODEL_MANAGER,
   SCREEN_MODEL,
   CONTEXT_MENU_ACTIVE_MODEL,
@@ -104,9 +105,11 @@ enum {
   CONFIRMATION_CREATE_MODEL,
   
   //---- Inputs ----
+
   SCREEN_INPUTS,
   
   //---- Mixer ----
+
   SCREEN_MIXER,
   DIALOG_MIX_FLIGHT_MODE,
   CONTEXT_MENU_MIXER,
@@ -120,12 +123,15 @@ enum {
   SCREEN_MIXER_OVERVIEW,
   
   //---- Outputs ----
+
   SCREEN_OUTPUTS,
   CONTEXT_MENU_OUTPUTS,
   DIALOG_RENAME_CHANNEL,
   
   //---- Extras ---
+
   SCREEN_EXTRAS_MENU,
+
   //custom curves
   SCREEN_CUSTOM_CURVES,
   CONTEXT_MENU_CUSTOM_CURVE,
@@ -133,12 +139,14 @@ enum {
   DIALOG_COPY_CUSTOM_CURVE,
   DIALOG_INSERT_CURVE_POINT,
   DIALOG_DELETE_CURVE_POINT,
+
   //logical switches
   SCREEN_LOGICAL_SWITCHES,
   CONTEXT_MENU_LOGICAL_SWITCHES,
   DIALOG_COPY_LOGICAL_SWITCH,
   DIALOG_MOVE_LOGICAL_SWITCH,
   SCREEN_LOGICAL_SWITCH_OUTPUTS,
+
   //counters
   SCREEN_COUNTERS,
   CONTEXT_MENU_COUNTERS,
@@ -147,27 +155,34 @@ enum {
   DIALOG_COPY_COUNTER,
   CONFIRMATION_CLEAR_ALL_COUNTERS,
   SCREEN_COUNTER_OUTPUTS,
+
   //flight modes
   SCREEN_FLIGHT_MODES,
+
   //function generators
   SCREEN_FUNCTION_GENERATORS,
   CONTEXT_MENU_FUNCGEN,
   DIALOG_COPY_FUNCGEN,
   SCREEN_FUNCGEN_OUTPUTS,
+
   //trim setup
   SCREEN_TRIM_SETUP,
+
   //safety checks
   SCREEN_SAFETY_CHECKS,
+
   //timers
   SCREEN_TIMERS,
   DIALOG_TIMER_INITIAL_TIME,
   CONTEXT_MENU_TIMERS,
+
   //notifications
   SCREEN_NOTIFICATION_SETUP,
   CONTEXT_MENU_NOTIFICATIONS,
   DIALOG_COPY_NOTIFICATION,
 
   //---- Telemetry ----
+
   //general telemetry
   SCREEN_TELEMETRY,
   CONTEXT_MENU_ACTIVE_SENSOR,
@@ -177,10 +192,12 @@ enum {
   SCREEN_SENSOR_STATISTICS,
   SCREEN_EDIT_SENSOR,
   CONFIRMATION_DELETE_SENSOR,
+
   //gnss telemetry
   SCREEN_TELEMETRY_GNSS,
   
   //---- System settings ----
+
   SCREEN_SYSTEM_MENU,
   SCREEN_RF,
   SCREEN_SOUND,
@@ -205,11 +222,13 @@ enum {
   SCREEN_EASTER_EGG,
   
   //---- Receiver ----
+
   SCREEN_RECEIVER,
   SCREEN_RECEIVER_CONFIG,
   SCREEN_RECEIVER_BINDING,
   
   //---- Generic text viewer ----
+
   SCREEN_TEXT_VIEWER,
 };
 
@@ -1755,8 +1774,8 @@ void handleMainUI()
           contextMenuAddItem(PSTR("New model"), ITEM_NEW_MODEL);
         if(sdHasCard())
         {
-          contextMenuAddItem(PSTR("Backup to SD"), ITEM_BACKUP_MODEL);
-          contextMenuAddItem(PSTR("Restore from SD"), ITEM_RESTORE_MODEL);
+          contextMenuAddItem(PSTR("Backup to SD card"), ITEM_BACKUP_MODEL);
+          contextMenuAddItem(PSTR("Restore from SD card"), ITEM_RESTORE_MODEL);
         }
         contextMenuDraw();
         
@@ -1842,7 +1861,7 @@ void handleMainUI()
         contextMenuAddItem(PSTR("Load model"), ITEM_LOAD_MODEL);
         contextMenuAddItem(PSTR("Delete model"), ITEM_DELETE_MODEL);
         if(sdHasCard())
-          contextMenuAddItem(PSTR("Backup to SD"), ITEM_BACKUP_MODEL);
+          contextMenuAddItem(PSTR("Backup to SD card"), ITEM_BACKUP_MODEL);
         contextMenuDraw();
         
         if(contextMenuSelectedItemID == ITEM_LOAD_MODEL) 
@@ -1886,7 +1905,7 @@ void handleMainUI()
         contextMenuInitialise();
         contextMenuAddItem(PSTR("New model"), ITEM_NEW_MODEL);
         if(sdHasCard())
-          contextMenuAddItem(PSTR("Restore from SD"), ITEM_RESTORE_MODEL);
+          contextMenuAddItem(PSTR("Restore from SD card"), ITEM_RESTORE_MODEL);
         contextMenuDraw();
         
         if(contextMenuSelectedItemID == ITEM_NEW_MODEL)
@@ -5603,7 +5622,7 @@ void handleMainUI()
         contextMenuAddItem(PSTR("Counter type"), ITEM_COUNTER_TYPE);
         contextMenuAddItem(PSTR("Reset settings"), ITEM_RESET_SETTINGS);
         contextMenuAddItem(PSTR("Clear counter"), ITEM_CLEAR_COUNTER);
-        contextMenuAddItem(PSTR("Clear all"), ITEM_CLEAR_ALL_COUNTERS);
+        contextMenuAddItem(PSTR("Clear all counters"), ITEM_CLEAR_ALL_COUNTERS);
         contextMenuDraw();
         
         if(contextMenuSelectedItemID == ITEM_RESET_SETTINGS)
@@ -6632,14 +6651,14 @@ void handleMainUI()
           if(Model.Telemetry[thisTelemIdx].identifier == SENSOR_ID_GNSS_AGL_ALTITUDE)
             contextMenuAddItem(PSTR("Reset altitude AGL"), ITEM_RESET_AGL_ALTITUDE);
           if(Model.Telemetry[thisTelemIdx].identifier == SENSOR_ID_GNSS_DISTANCE)
-            contextMenuAddItem(PSTR("Reset start point"), ITEM_RESET_STARTING_POINT);
+            contextMenuAddItem(PSTR("Reset starting point"), ITEM_RESET_STARTING_POINT);
         }
         else if(Model.Telemetry[thisTelemIdx].type == TELEMETRY_TYPE_GNSS)
         {
           contextMenuAddItem(PSTR("View GNSS data"), ITEM_VIEW_GNSS_DATA);
           contextMenuAddItem(PSTR("Reset altitude AGL"), ITEM_RESET_AGL_ALTITUDE);
-          contextMenuAddItem(PSTR("Reset start point"), ITEM_RESET_STARTING_POINT);
-          contextMenuAddItem(PSTR("Reset last loctn"), ITEM_RESET_LAST_KNOWN_LOCATION);
+          contextMenuAddItem(PSTR("Reset starting point"), ITEM_RESET_STARTING_POINT);
+          contextMenuAddItem(PSTR("Reset last known location"), ITEM_RESET_LAST_KNOWN_LOCATION);
           //add delete option if all the child items have been deleted
           bool hasChildren = false;
           for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
@@ -7216,7 +7235,7 @@ void handleMainUI()
 
             case ITEM_TITLE_HOME_LOCATION:
               {
-                display.print(F("Start point"));
+                display.print(F("Starting point"));
               }
               break;
             
@@ -11405,7 +11424,17 @@ void contextMenuDraw()
   uint8_t y0 = ((display.height() - (numVisible * 10)) / 2) + 1;  //10 is line height
   
   //draw bounding box
-  drawBoundingBox(5, y0 - 4, 117, numVisible * 10 + 5, BLACK);  
+  drawBoundingBox(3, y0 - 4, 122, numVisible * 10 + 5, BLACK);  
+  
+  //horizontal scrolling for lengthy text
+  static uint8_t textStartPos = 0;
+  static uint32_t loopNumOffset;
+  if(buttonCode == KEY_UP || buttonCode == KEY_DOWN || heldButton == KEY_SELECT)
+  {
+    //reset start position of the lengthy text
+    textStartPos = 0;
+    loopNumOffset = thisLoopNum;
+  }
   
   //fill list
   for(uint8_t line = 0; line < numVisible; line++)
@@ -11413,25 +11442,73 @@ void contextMenuDraw()
     uint8_t ypos = y0 + line * 10;
     uint8_t item = contextMenuTopItem + line;
     strlcpy_P(textBuff, _menuItems[item-1], sizeof(textBuff));
+    
+    bool isFocused = false;
     if(item == contextMenuFocusedItem)
     {
-      display.fillRoundRect(7, ypos - 2, _menuItemCount <= maxVisible ? 113 : 109, 11, Sys.useRoundRect ? 4 : 0, BLACK);
+      isFocused = true;
+      display.fillRoundRect(5, ypos - 2, _menuItemCount <= maxVisible ? 118 : 114, 11, Sys.useRoundRect ? 4 : 0, BLACK);
       display.setTextColor(WHITE);
     }
-    display.setCursor(11, ypos);
-    display.print(textBuff);
+    
+    display.setCursor(9, ypos);
+    if(strlen(textBuff) <= 18)
+    {
+      display.print(textBuff);
+    }
+    else //long text, horizontal scroll it
+    {
+      if(isFocused)
+      {
+        for(uint8_t i = textStartPos; i < 18 + textStartPos; i++)
+        {
+          char c = textBuff[i];
+          if(c == '\0')
+            break;
+          display.print(c);
+        }
+        uint16_t scrollDelay = (textStartPos == 0) ? 750 : 200;
+        if((thisLoopNum - loopNumOffset + 1) % divRoundClosest(scrollDelay, fixedLoopTime) == 0)
+        {
+          textStartPos++;
+          if(textStartPos >= strlen(textBuff))
+            textStartPos = 0;
+          loopNumOffset = thisLoopNum; //reset the offset
+        }
+      }
+      else
+      {
+        for(uint8_t i = 0; i < 17; i++)
+        {
+          char c = textBuff[i];
+          display.print(c);
+        }
+        //show an ellipsis character
+        uint8_t x = display.getCursorX();
+        uint8_t y = ypos + 6;
+        display.drawPixel(x, y, BLACK);
+        display.drawPixel(x + 2, y, BLACK);
+        display.drawPixel(x + 4, y, BLACK);
+      }
+    }
+    
     display.setTextColor(BLACK);
   }
   
   //scroll bar
   uint8_t  y = Sys.useRoundRect ? y0 - 1 : y0 - 2;
   uint16_t h = Sys.useRoundRect ? numVisible * 10 - 1 : numVisible * 10 + 1;
-  drawScrollBar(118, y, _menuItemCount, contextMenuTopItem, numVisible, h);
+  drawScrollBar(121, y, _menuItemCount, contextMenuTopItem, numVisible, h);
   
-  //get the id of the item selected
+  //get the id of the selected item
   contextMenuSelectedItemID = 0xff;
   if(clickedButton == KEY_SELECT)
+  {
     contextMenuSelectedItemID = _menuItemIDs[contextMenuFocusedItem - 1];
+    //reset some variables
+    textStartPos = 0;
+    loopNumOffset = thisLoopNum;
+  }
 }
 
 #endif //UI_128X64
