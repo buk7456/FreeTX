@@ -121,7 +121,7 @@ MESSAGE_TYPE_TELEMETRY_GENERAL:
 MESSAGE_TYPE_TELEMETRY_GNSS:
 
    The data is a structure containing the GNSS telemetry information.
-   See the "telemetry.md" file for more details.
+   See the "gnss_telemetry_data_structure.txt" file for more details.
 
 
 CRC
