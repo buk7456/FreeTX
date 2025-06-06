@@ -1,0 +1,13 @@
+
+// The structure below is used to send the GNSS telemetry data to the transmitter.
+
+typedef struct {
+  int32_t  latitude;     //in degrees, fixed point representation; 5 decimal places of precision 
+  int32_t  longitude;    //in degrees, fixed point representation; 5 decimal places of precision
+  int16_t  altitude;     //Mean Sea Level altitude in meters, fixed point representation; 0 decimal places of precision
+  uint16_t speed;        //speed over ground in m/s, fixed point representation; 1 decimal places of precision
+  uint16_t course;       //course over ground in degrees, fixed point representation; 1 decimal places of precision
+  uint8_t  positionFix;  //position fix indicator
+  uint8_t  satellitesInUse;  //number of satellites in use
+  uint8_t  satellitesInView; //number of satellites in view
+} gnss_telemetry_data_t;
