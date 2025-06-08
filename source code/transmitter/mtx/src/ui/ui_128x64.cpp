@@ -11427,13 +11427,14 @@ void contextMenuDraw()
   drawBoundingBox(3, y0 - 4, 122, numVisible * 10 + 5, BLACK);  
   
   //horizontal scrolling for lengthy text
-  static uint8_t textStartPos = 0;
+  static uint8_t counter = 0;
   static uint32_t loopNumOffset;
+  static bool scrollStarted = false;
   if(buttonCode == KEY_UP || buttonCode == KEY_DOWN || heldButton == KEY_SELECT)
   {
-    //reset start position of the lengthy text
-    textStartPos = 0;
+    counter = 0;
     loopNumOffset = thisLoopNum;
+    scrollStarted = false;
   }
   
   //fill list
@@ -11460,20 +11461,22 @@ void contextMenuDraw()
     {
       if(isFocused)
       {
-        for(uint8_t i = textStartPos; i < 18 + textStartPos; i++)
+        uint8_t lenStr = strlen(textBuff);
+        uint8_t lenTotal = lenStr + 6; //6 extra spaces inserted in-between tail and head
+        for(uint8_t i = 0; i < 18; i++)
         {
-          char c = textBuff[i];
-          if(c == '\0')
-            break;
+          uint8_t idx = (counter + i) % lenTotal;
+          char c = (idx < lenStr) ? textBuff[idx] : 0x20;
           display.print(c);
         }
-        uint16_t scrollDelay = (textStartPos == 0) ? 750 : 200;
+        uint16_t scrollDelay = scrollStarted ? 200 : 600;
         if((thisLoopNum - loopNumOffset + 1) % divRoundClosest(scrollDelay, fixedLoopTime) == 0)
         {
-          textStartPos++;
-          if(textStartPos >= strlen(textBuff))
-            textStartPos = 0;
+          counter++;
+          if(counter >= lenTotal)
+            counter = 0;
           loopNumOffset = thisLoopNum; //reset the offset
+          scrollStarted = true;
         }
       }
       else
@@ -11506,8 +11509,9 @@ void contextMenuDraw()
   {
     contextMenuSelectedItemID = _menuItemIDs[contextMenuFocusedItem - 1];
     //reset some variables
-    textStartPos = 0;
+    counter = 0;
     loopNumOffset = thisLoopNum;
+    scrollStarted = false;
   }
 }
 
