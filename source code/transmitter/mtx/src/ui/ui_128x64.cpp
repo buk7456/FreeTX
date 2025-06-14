@@ -786,7 +786,7 @@ void handleMainUI()
         //------------ Trims --------------------
         static uint32_t endTime; 
         if(buttonCode >= KEY_TRIM_FIRST && buttonCode <= KEY_TRIM_LAST)
-          endTime = millis() + 3000UL;
+          endTime = millis() + 3000;
         if(!Sys.autohideTrims ||(Sys.autohideTrims && millis() < endTime) || isOnscreenTrimMode)
           drawTrimSliders();
 
@@ -1069,7 +1069,7 @@ void handleMainUI()
             changeToScreen(CONTEXT_MENU_HOME_SCREEN);
           
           //mute audible telemetry alarms
-          if(heldButton == KEY_DOWN && millis() - buttonStartTime > 1000UL)
+          if(heldButton == KEY_DOWN && millis() - buttonStartTime > 1000)
           {
             killButtonEvents();
             telemetryMuteAlarms = !telemetryMuteAlarms;
@@ -1179,7 +1179,7 @@ void handleMainUI()
           }
         }
         if(!mainMenuLocked)        
-          contextMenuAddItem(PSTR("Setup widgets"), ITEM_SETUP_WIDGETS);
+          contextMenuAddItem(PSTR("Set up widgets"), ITEM_SETUP_WIDGETS);
         contextMenuDraw();
         
         if(contextMenuSelectedItemID >= ITEM_START_STOP_TIMER_FIRST && contextMenuSelectedItemID <= ITEM_START_STOP_TIMER_LAST)
@@ -1774,7 +1774,7 @@ void handleMainUI()
           contextMenuAddItem(PSTR("New model"), ITEM_NEW_MODEL);
         if(sdHasCard())
         {
-          contextMenuAddItem(PSTR("Backup to SD card"), ITEM_BACKUP_MODEL);
+          contextMenuAddItem(PSTR("Back up to SD card"), ITEM_BACKUP_MODEL);
           contextMenuAddItem(PSTR("Restore from SD card"), ITEM_RESTORE_MODEL);
         }
         contextMenuDraw();
@@ -1861,7 +1861,7 @@ void handleMainUI()
         contextMenuAddItem(PSTR("Load model"), ITEM_LOAD_MODEL);
         contextMenuAddItem(PSTR("Delete model"), ITEM_DELETE_MODEL);
         if(sdHasCard())
-          contextMenuAddItem(PSTR("Backup to SD card"), ITEM_BACKUP_MODEL);
+          contextMenuAddItem(PSTR("Back up to SD card"), ITEM_BACKUP_MODEL);
         contextMenuDraw();
         
         if(contextMenuSelectedItemID == ITEM_LOAD_MODEL) 
@@ -2060,7 +2060,7 @@ void handleMainUI()
         
         if(mdlCount == 0) //no backups exist on the sd card
         {
-          makeToast(PSTR("No models on SD"), 2000, 0);
+          makeToast(PSTR("No models on SD card"), 2000, 0);
           initialised = false;
           changeToScreen(SCREEN_MODEL);
           break;
@@ -2254,7 +2254,7 @@ void handleMainUI()
           
           //back up to the sd card
           if(!sdBackupModel(nameStr))
-            makeToast(PSTR("Backup failed"), 2000, 0);
+            makeToast(PSTR("Back up failed"), 2000, 0);
           
           if(maxNumOfModels > 1)
           {
@@ -3333,7 +3333,7 @@ void handleMainUI()
           if(freeSlot == 0xFF || (occupiedCount == 0 && Model.Mixer[thisMixIdx].output == SRC_NONE 
                                   && Model.Mixer[thisMixIdx].input == SRC_NONE))
           {
-            makeToast(PSTR("Insert failed"), 2000, 0);
+            makeToast(PSTR("Insertion failed"), 2000, 0);
           }
           else
           {
@@ -3409,8 +3409,8 @@ void handleMainUI()
           if(Model.type == MODEL_TYPE_AIRPLANE)
           {
             contextMenuAddItem(PSTR("Elevon"), ITEM_ELEVON);
-            contextMenuAddItem(PSTR("Vtail"), ITEM_VTAIL);
-            contextMenuAddItem(PSTR("Diff thrust"), ITEM_DIFF_THRUST);
+            contextMenuAddItem(PSTR("V-tail"), ITEM_VTAIL);
+            contextMenuAddItem(PSTR("Differential thrust"), ITEM_DIFF_THRUST);
           }
           contextMenuDraw();
           
@@ -5233,7 +5233,7 @@ void handleMainUI()
                   if(fgen->phaseMode == FUNCGEN_PHASEMODE_AUTO)
                   {
                     syncWaveform(thisFgenIdx);
-                    makeToast(PSTR("Synced"), 2000, 0);
+                    makeToast(PSTR("Synchronized"), 2000, 0);
                     isEditMode = false;
                   }
                   else if(fgen->phaseMode == FUNCGEN_PHASEMODE_FIXED)
@@ -5928,6 +5928,15 @@ void handleMainUI()
           killButtonEvents();
         }
 
+        //clear values
+        if(idxQQ == 0 && heldButton == KEY_SELECT && millis() - buttonStartTime >= 1000)
+        {
+          killButtonEvents();
+          valQQ[0] = 0;
+          valQQ[1] = 0;
+          valQQ[2] = 0;
+        }
+
         //done, exit
         if(idxQQ == sizeof(valQQ)/sizeof(valQQ[0]))
         {
@@ -6589,9 +6598,9 @@ void handleMainUI()
         };
         
         contextMenuInitialise();
-        contextMenuAddItem(PSTR("ExtVolts 2S"), ITEM_EXTVOLTS_2S);
-        contextMenuAddItem(PSTR("ExtVolts 3S"), ITEM_EXTVOLTS_3S);
-        contextMenuAddItem(PSTR("ExtVolts 4S"), ITEM_EXTVOLTS_4S);
+        contextMenuAddItem(PSTR("External volts 2S"), ITEM_EXTVOLTS_2S);
+        contextMenuAddItem(PSTR("External volts 3S"), ITEM_EXTVOLTS_3S);
+        contextMenuAddItem(PSTR("External volts 4S"), ITEM_EXTVOLTS_4S);
         contextMenuAddItem(PSTR("Link quality"), ITEM_LINK_QUALITY);
         contextMenuAddItem(PSTR("RSSI"), ITEM_RSSI);
         bool isGNSSAlreadyAdded = false;
@@ -6840,7 +6849,7 @@ void handleMainUI()
                   display.print(F("No data"));
                 else
                 {
-                  uint32_t elapsedSeconds = (millis() - telemetryLastReceivedTime[page])/1000;
+                  uint32_t elapsedSeconds = (millis() - telemetryLastReceivedTime[page]) / 1000;
                   if(elapsedSeconds >= 3600)
                   {
                     uint8_t hours = elapsedSeconds / 3600;
@@ -11201,7 +11210,7 @@ void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEm
   {
     charPos = 0;
     if(isEmptyStr(buff, lenBuff) && !allowEmpty)
-      makeToast(PSTR("Can't be empty"), 2000, 0);
+      makeToast(PSTR("Cannot be empty"), 2000, 0);
     else
     {
       isEditTextDialog = false;
