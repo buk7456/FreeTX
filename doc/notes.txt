@@ -1,0 +1,21 @@
+----------------------------------------------------------------------------------------------------
+  Notes
+----------------------------------------------------------------------------------------------------
+
+1. Curve features f>0 f<0 |f| are dropped. These can be achieved with logical switches as they 
+   simply output -max or max. No need to duplicate features.
+
+2. Telemetry readings for minimum and maximum values can be sensitive to outliers. Filtering is 
+   not done at the transmitter side; rather, it is left to the sensor to handle filtering 
+   and smoothing of readings to ensure they are not jittery prior to transmission.
+
+----------------------------------------------------------------------------------------------------
+  Issues
+----------------------------------------------------------------------------------------------------
+
+OPEN ISSUES
+-----------
+- If a mixer control switch (that turns the mix on or off) is flipped rapidly before the delay has finished, 
+  the delay feature doesn't work as expected, the source leaks through. This issue has existed since alpha versions.
+  Seems this is the correct behaviour because delay is only meant to delay the input, not to delay turning on or off the mix.
+  

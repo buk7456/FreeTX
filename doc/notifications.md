@@ -16,3 +16,7 @@ System events like low transmitter battery, inactivity, etc. are natively handle
 ## Usage examples
 
 - [Detecting receiver connection or disconnection ](./logical_switches.md#section_id_detect_disconnection_of_receiver) 
+
+---
+
+Back to [user guide](user_guide.md).

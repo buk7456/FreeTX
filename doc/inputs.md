@@ -16,3 +16,7 @@ The image below shows a typical layout of the transmitter.
 <p align="left">
 <img src="images/controls_description.png" width="600"/>
 </p>
+
+---
+
+Back to [user guide](user_guide.md).

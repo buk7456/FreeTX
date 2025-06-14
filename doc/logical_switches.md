@@ -352,3 +352,7 @@ Text:   RX disconnect
 ```
 
 This example can also be adapted to detect when telemetry from a sensor is lost or recovered.
+
+---
+
+Back to [user guide](user_guide.md).

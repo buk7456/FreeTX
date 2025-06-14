@@ -10,3 +10,7 @@ Flight modes allow you to easily reconfigure settings such as mixes and trim val
 - Name: A name/label for this flight mode. 
 - Switch: The control switch that activates this flight mode.
 - Fade-in: The transition time to effect the trim setting for this flight mode.
+
+---
+
+Back to [user guide](user_guide.md).

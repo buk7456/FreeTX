@@ -17,3 +17,6 @@ Below are some examples demonstrating the use of custom curves.
 - [Landing gear sequencer - advanced](./mixer.md#section_id_landing_gear_sequencer_v2)  
 - [Oscillator from scratch](./mixer.md#section_id_oscillator_from_scratch)  
 
+---
+
+Back to [user guide](user_guide.md).

@@ -11,3 +11,7 @@ A warning will be shown if the set conditions are not met.
 <p align="left">
 <img src="images/screenshots/warning.png"/>
 </p>
+
+---
+
+Back to [user guide](user_guide.md).

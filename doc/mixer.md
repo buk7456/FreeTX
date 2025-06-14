@@ -534,3 +534,7 @@ Differential is applied to the downward going aileron. When the Ail stick is mov
 Similarly when the Ail stick is moved left, we apply differential to the right aileron.  
 We detect the direction of the Ail stick via the logical switch L1 and use it to selectively apply the differential effect via a multiply mix.  
 For this case, we also decouple the trim and add it afterward, to prevent it being affected by the differential.
+
+---
+
+Back to [user guide](user_guide.md).

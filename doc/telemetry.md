@@ -51,3 +51,7 @@ Displays the last known location when there is no incoming telemetry.
 
 Note:
 If different units of measurement are desired, use the provided GNSS sensor sub-templates (speed, distance, altitude) and change the multiplier and units.
+
+---
+
+Back to [user guide](user_guide.md).

@@ -19,3 +19,7 @@ In count down mode, an audible alarm is played when the timer reaches zero. The 
 - [Stopwatch operated by a single momentary switch](./logical_switches.md#section_id_stopwatch_with_momentary_switch)  
 - [Throttle timer - simple](./logical_switches.md#section_id_throttle_timer_simple)  
 - [Throttle timer - advanced](./logical_switches.md#section_id_throttle_timer_advanced)  
+
+---
+
+Back to [user guide](user_guide.md).

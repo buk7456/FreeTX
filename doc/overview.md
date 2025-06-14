@@ -31,3 +31,7 @@ The main features are:-
 - 50 Hz update rate for all RC channels
 - Frequency Hopping Spread Spectrum
 - Telemetry support
+
+---
+
+Back to [user guide](user_guide.md).

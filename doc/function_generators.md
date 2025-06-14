@@ -17,3 +17,6 @@ Below are some examples making use of function generators.
 - [Random servo motion generator](./mixer.md#section_id_random_servo_motion_generator)  
 - [Random servo motion generator - advanced](./mixer.md#section_id_random_servo_motion_advanced)
 
+---
+
+Back to [user guide](user_guide.md).

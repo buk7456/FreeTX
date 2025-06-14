@@ -30,3 +30,7 @@ Note:
 ignored, and 50 to 100 corresponds to HIGH.
 5. When reusing a receiver between models, always check and set the appropriate signal format before connecting 
 any actuators to the receiver.
+
+---
+
+Back to [user guide](user_guide.md).

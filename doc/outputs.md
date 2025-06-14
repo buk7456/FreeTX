@@ -20,3 +20,7 @@ with the specified value when the activation switch is on.
 Supported modes are Hold, No pulse, or custom value.
 - Endpoints: Sets the overall travel or endpoints of the servo arm movement. Useful when we want to avoid any potential binding of a linkage or surface.
 - Curve: Specifies the custom curve to use for this output. Useful when we want to correct for linkage geometry, mechanical differences, etc.
+
+---
+
+Back to [user guide](user_guide.md).

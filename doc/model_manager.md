@@ -16,3 +16,7 @@ which makes it cumbersome to switch between different models, as we would always
 2. Before updating the firmware in the transmitter, always back up your models to the SD card to avoid any potential data loss or corruption.
 3. The "Copy from" feature only works between models of the same type.
 4. Loading or selecting a new model disables RF output for safety reasons; therefore, RF output must be manually re-enabled afterward.
+
+---
+
+Back to [user guide](user_guide.md).

@@ -10,3 +10,7 @@ Available states are as follows.
 - Off:    Trim is disabled globally for this axis, for example when we do not want trim on the throttle.
 
 The Step setting determines how fast and how fine the trims move. Available options are Coarse, Medium, and Fine. 
+
+---
+
+Back to [user guide](user_guide.md).

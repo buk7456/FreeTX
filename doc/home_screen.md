@@ -18,3 +18,6 @@ Key actions on the home screen are as follows:
     - Click: Opens the main menu.
     - Hold: Navigate back. This is also the default behaviour in all screens.
 
+---
+
+Back to [user guide](user_guide.md).

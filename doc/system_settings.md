@@ -14,3 +14,7 @@ Entries are thoughtfully organized into categories for easy navigation and quick
 <p align="left">
 <img src="images/screenshots/system_settings.png"/>
 </p>
+
+---
+
+Back to [user guide](user_guide.md).

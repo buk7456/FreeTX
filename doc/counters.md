@@ -47,3 +47,7 @@ Then in the Mixer,
 
 Note: The mixer automatically maps the counter's value in proportion to the counter's modulus.  
 For example if the modulus is 4, then mapping is {(0,-100), (1,-33), (2,33), (3,100)}.
+
+---
+
+Back to [user guide](user_guide.md).
