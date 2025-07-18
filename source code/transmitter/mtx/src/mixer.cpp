@@ -785,7 +785,7 @@ void evaluateLogicalSwitches(uint32_t _currTime)
           }
           else if(ls->val1 == SRC_TX_BATTERY_VOLTAGE)
           {
-            _val1 = battVoltsNow;
+            _val1 = batteryVoltsNow;
             _val2 = ls->val2;
           }
           
@@ -1407,7 +1407,7 @@ int16_t adjustTrim(uint8_t idx, int16_t val, uint8_t incButton, uint8_t decButto
         audioTrimVal = val;
         audioToPlay = AUDIO_TRIM_MOVED;
         if(val == 0)
-          audioToPlay = AUDIO_TRIM_CENTER;
+          audioToPlay = AUDIO_TRIM_CENTERED;
       }
     }
   }
@@ -1432,7 +1432,7 @@ int16_t adjustTrim(uint8_t idx, int16_t val, uint8_t incButton, uint8_t decButto
         audioTrimVal = val;
         audioToPlay = AUDIO_TRIM_MOVED;
         if(val == 0)
-          audioToPlay = AUDIO_TRIM_CENTER;
+          audioToPlay = AUDIO_TRIM_CENTERED;
       }
     }
   }
