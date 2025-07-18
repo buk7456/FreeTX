@@ -242,7 +242,7 @@ uint8_t lastScreen = SCREEN_HOME;
 uint8_t focusedItem = 1; 
 
 bool isEditTextDialog = false;
-bool isDisplayingBattWarn = false;
+bool isDisplayingBatteryWarning = false;
 
 //Cache the graph y coordinates to avoid unnecessary recomputation.
 int8_t graphYCoord[51]; //51 points total to plot. 
@@ -314,7 +314,7 @@ uint8_t trimIdx = 0;
 
 //---------------------------- Function declarations -----------------------------------------------
 
-void handleBatteryWarnUI();
+void handleBatteryWarningUI();
 
 void changeToScreen(uint8_t scrn);
 void changeFocusOnUpDown(uint8_t numItems);
@@ -434,52 +434,52 @@ void showDataImportErrorMessage(const char* str, uint16_t lineNumber)
 
 //============================ Battery warning =====================================================
 
-void handleBatteryWarnUI()
+void handleBatteryWarningUI()
 {
   if(!batteryGaugeCalibrated)
     return;
   
-  static uint32_t battWarnMillis = millis();
-  static bool battWarnDismissed = false;
+  static uint32_t batteryWarningMillis = millis();
+  static bool batteryWarningDismissed = false;
   
-  if(battState == BATTLOW)
+  if(batteryState == BATTERY_LOW)
   {
-    if(!battWarnDismissed)
+    if(!batteryWarningDismissed)
     {
       //show warning
       display.clearDisplay();
-      drawAnimatedSprite(50, 14, animation_low_batt, 27, 11, BLACK, 7, 300, battWarnMillis);
+      drawAnimatedSprite(50, 14, animation_low_battery, 27, 11, BLACK, 7, 300, batteryWarningMillis);
       printFullScreenMessage(PSTR("\nBattery low"));
       display.display();
       
-      isDisplayingBattWarn = true;
+      isDisplayingBatteryWarning = true;
       
       //play warning tone
-      audioToPlay = AUDIO_BATTERY_WARN;
+      audioToPlay = AUDIO_BATTERY_WARNING;
       playTones();
       
       //self dismiss warning or on a button press
-      if((pressedButton > 0 || millis() - battWarnMillis > 2000))
+      if((pressedButton > 0 || millis() - batteryWarningMillis > 2000))
       {
-        battWarnDismissed = true;
-        battWarnMillis = millis();
-        isDisplayingBattWarn = false;
+        batteryWarningDismissed = true;
+        batteryWarningMillis = millis();
+        isDisplayingBatteryWarning = false;
         //only kill button events if a button was pressed
         if(pressedButton > 0)
           killButtonEvents();
       }
     }
     //remind low battery every 10 minutes
-    if(battWarnDismissed && (millis() - battWarnMillis > 600000UL)) 
+    if(batteryWarningDismissed && (millis() - batteryWarningMillis > 600000UL)) 
     {
-      battWarnDismissed = false;
-      battWarnMillis = millis();
+      batteryWarningDismissed = false;
+      batteryWarningMillis = millis();
     }
   }
   else
   {
-    isDisplayingBattWarn = false;
-    battWarnMillis = millis();
+    isDisplayingBatteryWarning = false;
+    batteryWarningMillis = millis();
   }
 }
 
@@ -501,8 +501,8 @@ void handleSafetyWarnUI()  //blocking function
     handlePowerOff();
     
     checkBattery();
-    handleBatteryWarnUI();
-    if(isDisplayingBattWarn)
+    handleBatteryWarningUI();
+    if(isDisplayingBatteryWarning)
       continue;
     
     inactivityAlarmHandler();
@@ -595,7 +595,7 @@ void handleSafetyWarnUI()  //blocking function
       if(!audioTriggered)
       {
         audioTriggered = true;
-        audioToPlay = AUDIO_SAFETY_WARN;
+        audioToPlay = AUDIO_SAFETY_WARNING;
       }
     }
     
@@ -673,8 +673,8 @@ void handleMainUI()
   telemetryAlarmHandler();
   
   //-------------- Battery warning ----------------------
-  handleBatteryWarnUI();
-  if(isDisplayingBattWarn)
+  handleBatteryWarningUI();
+  if(isDisplayingBatteryWarning)
     return;
   
   //-------------- Enable interlace mode by default -----
@@ -727,20 +727,20 @@ void handleMainUI()
           //print right aligned. 
           //Using a hack to measure the width of text first before actually printing.
           display.setCursor(0, 64);
-          printVoltage(battVoltsNow);
+          printVoltage(batteryVoltsNow);
           icon_xpos = 127 - display.getCursorX();
           display.setCursor(icon_xpos, 0);
-          printVoltage(battVoltsNow);
+          printVoltage(batteryVoltsNow);
         }
         else
         {
           icon_xpos = 113;
           display.drawRect(icon_xpos, 0, 14, 7, BLACK);
           display.drawVLine(icon_xpos + 14, 2, 3, BLACK);
-          if(battState == BATTHEALTY)
+          if(batteryState == BATTERY_HEALTHY)
           {
             static int8_t lastNumOfBars = 20;
-            int8_t numOfBars = 2 + ((int32_t)(battVoltsNow - Sys.battVoltsMin) * 20) / (Sys.battVoltsMax - Sys.battVoltsMin);
+            int8_t numOfBars = 2 + ((int32_t)(batteryVoltsNow - Sys.batteryVoltsMin) * 20) / (Sys.batteryVoltsMax - Sys.batteryVoltsMin);
             if(numOfBars > 20) 
               numOfBars = 20;
             if(numOfBars > lastNumOfBars && numOfBars - lastNumOfBars < 2) //prevent jitter at boundaries
@@ -8540,21 +8540,21 @@ void handleMainUI()
         display.setCursor(0, 9);
         display.print(F("Gauge min:"));
         display.setCursor(72, 9);
-        printVoltage(Sys.battVoltsMin);
+        printVoltage(Sys.batteryVoltsMin);
 
         display.setCursor(0, 18);
         display.print(F("Gauge max:"));
         display.setCursor(72, 18);
-        printVoltage(Sys.battVoltsMax);
+        printVoltage(Sys.batteryVoltsMax);
         
         display.setCursor(0, 27);
         display.print(F("Multplr:"));
         display.setCursor(72, 27);
-        display.print(Sys.battVfactor);
+        display.print(Sys.batteryCalibrationFactor);
         
         display.setCursor(0, hasNextButton ? 45 : 56);
         display.print(F("("));
-        printVoltage(battVoltsNow);
+        printVoltage(batteryVoltsNow);
         display.print(F(")"));
         
         if(hasNextButton)
@@ -8576,27 +8576,27 @@ void handleMainUI()
         if(focusedItem == 1)
         {
           //scale down by 1/10 since we display only 2 decimals
-          int16_t val = Sys.battVoltsMin / 10;
+          int16_t val = Sys.batteryVoltsMin / 10;
           int16_t min = 300;
-          int16_t max = (Sys.battVoltsMax - 100) / 10;
+          int16_t max = (Sys.batteryVoltsMax - 100) / 10;
           //inc dec
           val = incDec(val, min, max, INCDEC_NOWRAP, INCDEC_NORMAL);
           //scale back
-          Sys.battVoltsMin = val * 10;
+          Sys.batteryVoltsMin = val * 10;
         }
         else if(focusedItem == 2)
         {
           //scale down by 1/10 since we display only 2 decimals
-          int16_t val = Sys.battVoltsMax / 10;
-          int16_t min = (Sys.battVoltsMin + 100) / 10;
+          int16_t val = Sys.batteryVoltsMax / 10;
+          int16_t min = (Sys.batteryVoltsMin + 100) / 10;
           int16_t max = 1500;
           //inc dec
           val = incDec(val, min, max, INCDEC_NOWRAP, INCDEC_NORMAL);
           //scale back
-          Sys.battVoltsMax = val * 10;
+          Sys.batteryVoltsMax = val * 10;
         }
         else if(focusedItem == 3)
-          Sys.battVfactor = incDec(Sys.battVfactor, 0, 2000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
+          Sys.batteryCalibrationFactor = incDec(Sys.batteryCalibrationFactor, 0, 2000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
 
         //exit
         if((heldButton == KEY_SELECT && !hasNextButton) || (focusedItem == 4 && clickedButton == KEY_SELECT))
@@ -9235,8 +9235,8 @@ void handleMainUI()
             determineButtonEvent();
             handlePowerOff();
             checkBattery();
-            handleBatteryWarnUI();
-            if(isDisplayingBattWarn)
+            handleBatteryWarningUI();
+            if(isDisplayingBatteryWarning)
               continue;
             inactivityAlarmHandler();
             playTones();
