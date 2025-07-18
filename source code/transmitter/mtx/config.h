@@ -46,7 +46,7 @@
 #define PIN_KNOB_A       A4
 #define PIN_KNOB_B       A5
 
-#define PIN_BATTVOLTS    A6
+#define PIN_BATTERY_VOLTS    A6
 
 #define PIN_LCD_BACKLIGHT   2
 #define PIN_BUZZER          3
