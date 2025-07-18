@@ -120,8 +120,8 @@ uint8_t  pressedButton = 0;
 uint8_t  clickedButton = 0; 
 uint8_t  heldButton = 0;
 
-int16_t  battVoltsNow; 
-uint8_t  battState = BATTHEALTY;
+int16_t  batteryVoltsNow; 
+uint8_t  batteryState = BATTERY_HEALTHY;
 
 uint8_t  audioToPlay = AUDIO_NONE;
 
@@ -210,9 +210,9 @@ void resetSystemParams()
 
   Sys.defaultStickMode = STICK_MODE_RTAE;
 
-  Sys.battVoltsMin = 7200; 
-  Sys.battVoltsMax = 8000; 
-  Sys.battVfactor  = 1000; 
+  Sys.batteryVoltsMin = 7200; 
+  Sys.batteryVoltsMax = 8000; 
+  Sys.batteryCalibrationFactor  = 1000; 
   
   for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++) 
   {
