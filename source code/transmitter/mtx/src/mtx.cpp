@@ -101,7 +101,7 @@ void setup()
     analogWrite(PIN_LCD_BACKLIGHT, ((uint16_t) 255 * Sys.backlightLevel) / 100);
   
   //Initialise battery reading
-  battVoltsNow = Sys.battVoltsMax; 
+  batteryVoltsNow = Sys.batteryVoltsMax; 
   for(uint8_t i = 0; i < 100; i++)
   {
     checkBattery();
@@ -141,7 +141,7 @@ void setup()
   restoreCounterRegisters();
   
   //Other initialisations
-  randomSeed(battVoltsNow);
+  randomSeed(batteryVoltsNow);
   reinitialiseMixerCalculations();
   loopStartTime = micros();
 
@@ -215,12 +215,12 @@ void checkBattery()
   //As the implementation here uses integer math and the technique is recursive, 
   //there is loss of precision but this doesn't matter much here.
   const int16_t smoothFactor = 5; //>0,<100
-  int32_t sample = ((int32_t)analogRead(PIN_BATTVOLTS) * Sys.battVfactor) / 100;
-  battVoltsNow = ((sample * smoothFactor) + ((100 - smoothFactor) * (int32_t)battVoltsNow)) / 100;
-  if(battVoltsNow <= Sys.battVoltsMin)
-    battState = BATTLOW;
-  else if(battVoltsNow > (Sys.battVoltsMin + 100)) //100mV hysteris
-    battState = BATTHEALTY; 
+  int32_t sample = ((int32_t)analogRead(PIN_BATTERY_VOLTS) * Sys.batteryCalibrationFactor) / 100;
+  batteryVoltsNow = ((sample * smoothFactor) + ((100 - smoothFactor) * (int32_t)batteryVoltsNow)) / 100;
+  if(batteryVoltsNow <= Sys.batteryVoltsMin)
+    batteryState = BATTERY_LOW;
+  else if(batteryVoltsNow > (Sys.batteryVoltsMin + 100)) //100mV hysteris
+    batteryState = BATTERY_HEALTHY; 
 }
 
 //==================================================================================================
