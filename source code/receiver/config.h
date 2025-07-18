@@ -20,7 +20,7 @@
   #define PIN_CH10   A0
   #define PIN_LORA_SS     10
   #define PIN_LORA_RESET  8
-  #define PIN_EXTV_SENSE  A6
+  #define PIN_EXT_V_SENSE  A6
   #define PIN_LED    6
   #define PIN_PWR_LED 7
 #else
@@ -37,15 +37,15 @@
   #define PIN_LORA_SS     10
   #define PIN_LORA_RESET  9
   #if defined RECEIVER_HARDWARE_VERSION_1
-    #define PIN_EXTV_SENSE  A6
+    #define PIN_EXT_V_SENSE  A6
     #define PIN_LED    A3
   #elif defined RECEIVER_HARDWARE_VERSION_2
-    #define PIN_EXTV_SENSE  A3
+    #define PIN_EXT_V_SENSE  A3
   #endif
 #endif
 
-//--- battery voltage
-const int16_t battVfactor = 1041;  //scaling factor
+//--- external voltage
+const int16_t externalVfactor = 1041;  //calibration factor
 
 //--- radio frequency, select only one
 #define ISM_433MHZ
