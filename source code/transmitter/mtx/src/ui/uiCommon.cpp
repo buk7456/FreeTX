@@ -695,7 +695,7 @@ void telemetryAlarmHandler()
   
   //sound the alarm, repeat every 5 seconds
   if(hasWarning && ((thisLoopNum - lastLoopNum) % (5000 / fixedLoopTime) == 0) && !telemetryMuteAlarms)
-    audioToPlay = AUDIO_TELEM_WARN;
+    audioToPlay = AUDIO_TELEM_WARNING;
 }
 
 //--------------------------------------------------------------------------------------------------

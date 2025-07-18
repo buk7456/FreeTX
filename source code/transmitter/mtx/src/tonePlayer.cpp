@@ -57,13 +57,13 @@
 
 //--- Sounds ---
 
-// txbattlow:d=4,o=5,b=290:4p,4c6,32p,4a#,32p,4g.
-const uint16_t battLowSound[] PROGMEM  = {
+// batteryLow:d=4,o=5,b=290:4p,4c6,32p,4a#,32p,4g.
+const uint16_t batteryLowSound[] PROGMEM  = {
   290,NOTE_C6,4,NOTE_REST,32,NOTE_AS5,4,NOTE_REST,32,NOTE_G5,4
 }; 
 
-// warn:d=4,o=4,b=120:16p,8e5
-const uint16_t warnSound[] PROGMEM = {
+// warning:d=4,o=4,b=120:16p,8e5
+const uint16_t warningSound[] PROGMEM = {
   120,NOTE_REST,16,NOTE_E5,8
 };
 
@@ -82,8 +82,8 @@ const uint16_t inactivitySound[] PROGMEM = {
   90,NOTE_REST,8,NOTE_C5,32,NOTE_G4,32,NOTE_C5,32
 }; 
 
-// telemWarn:d=4,o=5,b=120:8p,4a#4
-const uint16_t telemWarnSound[] PROGMEM = {
+// telemWarning:d=4,o=5,b=120:8p,4a#4
+const uint16_t telemWarningSound[] PROGMEM = {
   120,NOTE_REST,8,NOTE_AS4,4
 }; 
 
@@ -97,22 +97,22 @@ const uint16_t bindSound[] PROGMEM = {
   75,NOTE_DS5,32,NOTE_G5,32,NOTE_AS5,32,NOTE_D6,16
 }; 
 
-// trimMove:d=4,o=4,b=250:16a#7
+// trimMoved:d=4,o=4,b=250:16a#7
 const uint16_t trimMovedSound[] PROGMEM = {
   250,NOTE_AS7,16
 }; 
 
-// trimCenter:d=4,o=4,b=250:8a#7
-const uint16_t trimCenterSound[] PROGMEM = {
+// trimCentered:d=4,o=4,b=250:8a#7
+const uint16_t trimCenteredSound[] PROGMEM = {
   250,NOTE_AS7,8
 }; 
 
-//trimEnter:d=4,o=5,b=120:32d#5,32g5,32a5
+//trimEntered:d=4,o=5,b=120:32d#5,32g5,32a5
 const uint16_t trimEnteredSound[] PROGMEM = {
   120, NOTE_DS5, 32, NOTE_G5, 32, NOTE_A5, 32
 };
 
-//trimExit:d=4,o=5,b=120:32a5,32g5,32d#5
+//trimExited:d=4,o=5,b=120:32a5,32g5,32d#5
 const uint16_t trimExitedSound[] PROGMEM = {
   120, NOTE_A5, 32, NOTE_G5, 32, NOTE_DS5, 32
 };
@@ -137,7 +137,7 @@ const uint16_t trimY2Sound[] PROGMEM = {
   160, NOTE_D6, 16
 };
 
-// screencapture:d=4,o=5,b=125:32p,32c#4,32d4
+// screenCapture:d=4,o=5,b=125:32p,32c#4,32d4
 const uint16_t screenshotSound[] PROGMEM = {
   125, NOTE_REST, 32, NOTE_CS4, 32, NOTE_D4, 32
 };
@@ -272,12 +272,12 @@ void playTones()
     
     switch(audioToPlay)
     {
-      case AUDIO_SAFETY_WARN:
-        beginTone(warnSound, sizeof(warnSound)/sizeof(warnSound[0]));
+      case AUDIO_SAFETY_WARNING:
+        beginTone(warningSound, sizeof(warningSound)/sizeof(warningSound[0]));
         break;
         
-      case AUDIO_BATTERY_WARN:
-        beginTone(battLowSound, sizeof(battLowSound)/sizeof(battLowSound[0])); 
+      case AUDIO_BATTERY_WARNING:
+        beginTone(batteryLowSound, sizeof(batteryLowSound)/sizeof(batteryLowSound[0])); 
         break;
         
       case AUDIO_TIMER_ELAPSED:
@@ -286,7 +286,7 @@ void playTones()
       
       case AUDIO_KEY_PRESSED:
       case AUDIO_SWITCH_MOVED:
-      case AUDIO_KNOB_CENTER:
+      case AUDIO_KNOB_CENTERED:
         beginTone(shortBeepSound, sizeof(shortBeepSound)/sizeof(shortBeepSound[0])); 
         break;
         
@@ -294,8 +294,8 @@ void playTones()
         beginTone(inactivitySound, sizeof(inactivitySound)/sizeof(inactivitySound[0]));
         break;
         
-      case AUDIO_TELEM_WARN: 
-        beginTone(telemWarnSound, sizeof(telemWarnSound)/sizeof(telemWarnSound[0]));
+      case AUDIO_TELEM_WARNING: 
+        beginTone(telemWarningSound, sizeof(telemWarningSound)/sizeof(telemWarningSound[0]));
         break;
         
       case AUDIO_TELEM_MUTE_CHANGED: 
@@ -311,14 +311,14 @@ void playTones()
         break;
         
       case AUDIO_TRIM_MOVED:
-      case AUDIO_TRIM_CENTER:
+      case AUDIO_TRIM_CENTERED:
         {
           if(Sys.trimToneFreqMode == TRIM_TONE_FREQ_FIXED)
           {
             if(audioToPlay == AUDIO_TRIM_MOVED)
               beginTone(trimMovedSound, sizeof(trimMovedSound)/sizeof(trimMovedSound[0]));
-            if(audioToPlay == AUDIO_TRIM_CENTER)
-              beginTone(trimCenterSound, sizeof(trimCenterSound)/sizeof(trimCenterSound[0]));
+            if(audioToPlay == AUDIO_TRIM_CENTERED)
+              beginTone(trimCenteredSound, sizeof(trimCenteredSound)/sizeof(trimCenteredSound[0]));
           }
           else if(Sys.trimToneFreqMode == TRIM_TONE_FREQ_VARIABLE)
             beginToneTrimMoved();
