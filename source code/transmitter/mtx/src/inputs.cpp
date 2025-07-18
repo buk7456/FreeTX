@@ -289,7 +289,7 @@ void readSticks()
     {
       knobRegion[i] = CENTER;
       if(Sys.soundKnobCenter)
-        audioToPlay = AUDIO_KNOB_CENTER;
+        audioToPlay = AUDIO_KNOB_CENTERED;
     }
     else if(knobIn[i] > 25) 
       knobRegion[i] = POS_SIDE;
