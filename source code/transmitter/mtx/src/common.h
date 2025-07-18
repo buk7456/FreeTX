@@ -128,12 +128,12 @@ extern uint8_t  heldButton;    //triggered when button is held down long enough
 
 //----------------- Transmitter Battery -------------------
 
-extern int16_t  battVoltsNow; //millivolts
-extern uint8_t  battState;
+extern int16_t  batteryVoltsNow; //millivolts
+extern uint8_t  batteryState;
 
-enum batt_state_e {
-  BATTLOW, 
-  BATTHEALTY
+enum battery_state_e {
+  BATTERY_LOW, 
+  BATTERY_HEALTHY
 };
 
 //----------------- Audio ---------------------------------
@@ -142,20 +142,20 @@ enum batt_state_e {
 
 enum audio_tone_e {  
   AUDIO_NONE, 
-  AUDIO_BATTERY_WARN, 
-  AUDIO_SAFETY_WARN, 
-  AUDIO_TELEM_WARN,
+  AUDIO_BATTERY_WARNING, 
+  AUDIO_SAFETY_WARNING, 
+  AUDIO_TELEM_WARNING,
   AUDIO_TELEM_MUTE_CHANGED,
   AUDIO_INACTIVITY, 
   AUDIO_TIMER_ELAPSED,
   AUDIO_BIND_SUCCESS,
   AUDIO_SCREENSHOT_CAPTURED,
   AUDIO_SWITCH_MOVED,
-  AUDIO_KNOB_CENTER,
+  AUDIO_KNOB_CENTERED,
   AUDIO_KEY_PRESSED,
 
   AUDIO_TRIM_MOVED,
-  AUDIO_TRIM_CENTER,
+  AUDIO_TRIM_CENTERED,
   AUDIO_TRIM_MODE_ENTERED,
   AUDIO_TRIM_MODE_EXITED,
   AUDIO_TRIM_MODE_X1,
@@ -336,9 +336,9 @@ typedef struct {
   uint8_t  swType[NUM_PHYSICAL_SWITCHES];
   
   //--- battery
-  int16_t  battVoltsMin; //millivolts
-  int16_t  battVoltsMax; //millivolts
-  int16_t  battVfactor;  //ADC scaling factor
+  int16_t  batteryVoltsMin; //millivolts
+  int16_t  batteryVoltsMax; //millivolts
+  int16_t  batteryCalibrationFactor;  //ADC scaling factor
   
   //--- security
   bool     lockStartup;
