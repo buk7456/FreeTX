@@ -160,10 +160,10 @@ Assuming the left flap servo in Ch5, right flap servo in Ch6.
 <br>Using a two position switch e.g. SwD to switch between flap mode and aileron mode. 
 <br>Using the three position SwC to set the flap position in flap mode.
 ```txt
-1. Ch5   Add   SwC (Weight -50,  Offset -50)
-2. Ch5   RplW  Ail (Weight -100, Diff 20, Switch SwD_Down)
-3. Ch6   Add   SwC (Weight -50,  Offset -50)
-4. Ch6   RplW  Ail (Weight 100,  Diff 20, Switch SwD_Down)
+1. Ch5   Add    SwC (Weight -50,  Offset -50)
+2. Ch5   RplcW  Ail (Weight -100, Diff 20, Switch SwD_Down)
+3. Ch6   Add    SwC (Weight -50,  Offset -50)
+4. Ch6   RplcW  Ail (Weight 100,  Diff 20, Switch SwD_Down)
 ```
 
 <a id="section_id_differential_thrust"></a>
@@ -221,8 +221,8 @@ We can adjust the maximum throttle without affecting the low throttle setting. A
 Assuming Ch3 is the throttle channel, and assigning SwA for cut. When SwA is in the up position, Ch3 
 is locked to -100, otherwise the Throttle input is sent to Ch3.
 ```txt
-1. Ch3  Add   Thrt (Weight 100)
-2. Ch3  RplW  Max  (Weight -100, Switch SwA_Up)
+1. Ch3  Add    Thrt (Weight 100)
+2. Ch3  RplcW  Max  (Weight -100, Switch SwA_Up)
 ```
 Alternatively, a much safer throttle cut can be achieved in the Outputs screen by specifying the 
 override as SwA and value -100.
@@ -251,8 +251,8 @@ Value2: L2
 ``` 
 Then in the mixer
 ```txt
-1. Ch3  Add   Thrt (Weight 100)
-2. Ch3  RplW  Max  (Weight -100, Switch L1)
+1. Ch3  Add    Thrt (Weight 100)
+2. Ch3  RplcW  Max  (Weight -100, Switch L1)
 ```
 Alternatively, a much safer throttle cut can be achieved in the Outputs screen by specifying the 
 override as L1 and value -100.
@@ -339,10 +339,10 @@ Point(x,y): PtA(-100,-100) PtB(50,-100) PtC(50,100) PtD(100,100)
 
 Then in the mixer, assuming gear door servos on Ch7, gear retracts on Ch8, and using SwD to operate, 
 ```txt
-1. Virt1 Add  SwD   (Weight 100, SlowUp 10 s, SlowDown 10 s)   //Create a source that slowly ramps
-2. Ch7   Add  Virt1 (Weight 100, Custom Curve1)                //Apply curve1 for the door sequence
-3. Ch8   Add  Virt1 (Weight 100, Custom Curve2)                //Apply curve2 for the gear extend sequence
-4. Ch8   RplW Virt1 (Weight 100, Custom Curve3, Switch SwD_Up) //Apply curve3 for the gear retract sequence
+1. Virt1 Add   SwD   (Weight 100, SlowUp 10 s, SlowDown 10 s)   //Create a source that slowly ramps
+2. Ch7   Add   Virt1 (Weight 100, Custom Curve1)                //Apply curve1 for the door sequence
+3. Ch8   Add   Virt1 (Weight 100, Custom Curve2)                //Apply curve2 for the gear extend sequence
+4. Ch8   RplcW Virt1 (Weight 100, Custom Curve3, Switch SwD_Up) //Apply curve3 for the gear retract sequence
 ```
 We can, if necessary, set Ch8 to 'Digital' mode in the receiver output configuration screen.
 
@@ -381,9 +381,9 @@ Value2: 0
 ``` 
 Then in the mixer, assuming our servo is on Ch7,
 ```txt
-1. Ch7   Add  Fgen1 (Weight 100)
-2. Ch7   Hold       (Switch L1)
-3. Ch7   RplW Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s)
+1. Ch7   Add   Fgen1 (Weight 100)
+2. Ch7   Hold        (Switch L1)
+3. Ch7   RplcW Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s)
 ```
 Explanation: 
 <br>Fgen1 generates a random position periodically, Fgen2 via Logical switch L1 is 
@@ -438,11 +438,11 @@ Value2: 0
 
 Then in the mixer, assuming our servo is on Ch7,
 ```txt
-1. Ch7   Add   Fgen1 (Weight 100)
-2. Ch7   Hold        (Switch L1)
-3. Ch7   RplW  Max   (Weight 0, SwE_Up) 
-4. Ch7   RplW  Ch7   (Weight 100, SlowUp 5 s, SlowDown 5 s, Switch L2)
-5. Ch7   RplW  Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s)
+1. Ch7   Add    Fgen1 (Weight 100)
+2. Ch7   Hold         (Switch L1)
+3. Ch7   RplcW  Max   (Weight 0, SwE_Up) 
+4. Ch7   RplcW  Ch7   (Weight 100, SlowUp 5 s, SlowDown 5 s, Switch L2)
+5. Ch7   RplcW  Ch7   (Weight 100, SlowUp 2 s, SlowDown 2 s)
 ```
 
 <a id="section_id_oscillator_from_scratch"></a>
