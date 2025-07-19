@@ -271,10 +271,10 @@ Value2: L1
 Then in the Mixer,
 
 ```txt
-1. Ch1  RplW  Max  (Weight -100,  Switch L3)
-2. Ch1  RplW  Max  (weight -33,   Switch L4)
-3. Ch1  RplW  Max  (weight  33,   Switch L5)
-4. Ch1  RplW  Max  (weight  100,  Switch L6)
+1. Ch1  RplcW  Max  (Weight -100,  Switch L3)
+2. Ch1  RplcW  Max  (weight -33,   Switch L4)
+3. Ch1  RplcW  Max  (weight  33,   Switch L5)
+4. Ch1  RplcW  Max  (weight  100,  Switch L6)
 
 ```
 #### Method 2:
@@ -316,10 +316,10 @@ Value2: 3
 Then in the Mixer,
 
 ```txt
-1. Ch1  RplW  Max  (Weight -100,  Switch L3)
-2. Ch1  RplW  Max  (weight -33,   Switch L4)
-3. Ch1  RplW  Max  (weight  33,   Switch L5)
-4. Ch1  RplW  Max  (weight  100,  Switch L6)
+1. Ch1  RplcW  Max  (Weight -100,  Switch L3)
+2. Ch1  RplcW  Max  (weight -33,   Switch L4)
+3. Ch1  RplcW  Max  (weight  33,   Switch L5)
+4. Ch1  RplcW  Max  (weight  100,  Switch L6)
 ```
 
 #### Method 3:
