@@ -415,23 +415,6 @@ void showProgressMessage(const char* str, uint8_t percent)
   display.display();
 }
 
-void showDataImportErrorMessage(const char* str, uint16_t lineNumber)
-{
-  display.clearDisplay();
-  printFullScreenMessage(str);
-  memset(textBuff, 0, sizeof(textBuff));
-  char tmp[12];
-  strlcpy_P(textBuff, PSTR("(Line "), sizeof(textBuff));
-  utoa(lineNumber, tmp, 10);
-  strlcat(textBuff, tmp, sizeof(textBuff));
-  strlcat_P(textBuff, PSTR(")"), sizeof(textBuff));
-  uint8_t textWidthPix = strlen(textBuff) * 6;
-  display.setCursor((display.width() - textWidthPix) / 2, display.getCursorY() + 9);
-  display.print(textBuff);
-  display.setInterlace(false);
-  display.display();
-}
-
 //============================ Battery warning =====================================================
 
 void handleBatteryWarningUI()
@@ -485,7 +468,7 @@ void handleBatteryWarningUI()
 
 //============================ Safety warning ======================================================
 
-void handleSafetyWarnUI()  //blocking function
+void handleSafetyWarningUI()  //blocking function
 {
   if(isRequestingSwitchesSetup || isRequestingStickCalibration || isRequestingKnobCalibration)
     return;
@@ -1874,7 +1857,7 @@ void handleMainUI()
           eeReadModelData(thisModelIdx);
           Sys.activeModelIdx = thisModelIdx; 
           //Safety checks
-          handleSafetyWarnUI();
+          handleSafetyWarningUI();
           //reinitialise other stuff
           resetTimerRegisters();
           resetCounterRegisters();
@@ -2102,25 +2085,81 @@ void handleMainUI()
       {
         if(thisModelIdx == Sys.activeModelIdx)
           printFullScreenMessage(PSTR("Model data will be\noverwritten.\nContinue?\n\nYes [Up] \nNo [Down]"));
+        
         if(clickedButton == KEY_UP || thisModelIdx != Sys.activeModelIdx)
         {
           showWaitMessage();
           stopTones();
+          
           //save active model first but only if we aren't restoring to active slot
           //otherwise there is no point in saving first
           if(maxNumOfModels > 1 && thisModelIdx != Sys.activeModelIdx)
             eeSaveModelData(Sys.activeModelIdx);
+          
           //restore the model
           if(sdRestoreModel(textBuff))
           {
             //save it to eeprom
             if(maxNumOfModels > 1)
               eeSaveModelData(thisModelIdx);
+            
+            //read back the active model from eeprom if we are not restoring into the active slot
+            if(maxNumOfModels > 1 && thisModelIdx != Sys.activeModelIdx)
+              eeReadModelData(Sys.activeModelIdx);
+            
+            //show message if errors where encountered in the imported data
+            if(dbgTotalErrorLines > 0)
+            {
+              display.clearDisplay();
+              
+              //print the items center aligned
+              
+              strlcpy_P(textBuff, PSTR("Some data skipped"), sizeof(textBuff));
+              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 11);
+              display.print(textBuff);
+              
+              char temp[6];
+              utoa(dbgTotalErrorLines, temp, 10);
+              strlcpy(textBuff, temp, sizeof(textBuff));
+              strlcat_P(textBuff, PSTR(" errors,"), sizeof(textBuff));
+              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 29);
+              display.print(textBuff);
+              
+              strlcpy_P(textBuff, PSTR("first error at"), sizeof(textBuff));
+              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 37);
+              display.print(textBuff);
+              
+              strlcpy_P(textBuff, PSTR("line "), sizeof(textBuff));
+              utoa(dbgFirstErrorLineNumber, temp, 10);
+              strlcat(textBuff, temp, sizeof(textBuff));
+              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 46);
+              display.print(textBuff);
+              
+              display.setInterlace(false);
+              display.display();
+              
+              //briefly block, then self dismiss the warning
+              uint32_t startTime = millis();
+              while(1)
+              {
+                readSwitchesAndButtons();
+                determineButtonEvent();
+                playTones();
+                handlePowerOff();
+                if(millis() - startTime > 5000 || clickedButton == KEY_SELECT)
+                {
+                  killButtonEvents();
+                  break;
+                }
+                delay(10);
+              }
+            }
+            
             //if we have restored into the active model slot, reinitialise some items
             if(thisModelIdx == Sys.activeModelIdx)
             {
               //safety checks
-              handleSafetyWarnUI();
+              handleSafetyWarningUI();
               //reinitialise other stuff
               resetTimerRegisters();
               resetCounterRegisters();
@@ -2130,12 +2169,7 @@ void handleMainUI()
               restoreCounterRegisters();
               resetPages();
             }
-            else
-            {
-              //read back the active model from eeprom
-              if(maxNumOfModels > 1)
-                eeReadModelData(Sys.activeModelIdx);
-            }
+
             //exit
             changeToScreen(SCREEN_MODEL);
           }
