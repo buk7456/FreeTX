@@ -130,7 +130,7 @@ void setup()
     sdShowSplashScreen();
     
   //Warnings
-  handleSafetyWarnUI(); //blocking
+  handleSafetyWarningUI(); //blocking
   
   //Initialise timers
   resetTimerRegisters();
