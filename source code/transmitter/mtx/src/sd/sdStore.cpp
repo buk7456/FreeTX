@@ -152,6 +152,7 @@ bool sdRestoreModel(const char *name)
       delay(2000);
       resetModelName();
       resetModelParams();
+      return false;
     }
     
     return true;
