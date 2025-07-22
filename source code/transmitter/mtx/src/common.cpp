@@ -245,7 +245,7 @@ void resetSystemParams()
   Sys.showMenuIcons = true;
   Sys.rememberMenuPosition = false;
   Sys.useRoundRect = true;
-  Sys.useDenserMenus = false;
+  Sys.useDenserMenus = true;
   Sys.animationsEnabled = true;
   Sys.autohideTrims = false;
   Sys.showSplashScreen = true;
@@ -256,8 +256,8 @@ void resetSystemParams()
   Sys.autoSelectMovedControl = true;
   Sys.mixerTemplatesEnabled = true;
   Sys.defaultChannelOrder = 0;
-  Sys.onscreenTrimEnabled = true;
   Sys.inactivityMinutes = 10;
+  Sys.showCurvePreviewInMixer = false;
   
   Sys.DBG_showLoopTime = false;
   Sys.DBG_simulateTelemetry = false;
