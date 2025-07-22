@@ -52,20 +52,19 @@ enum {
 };
 
 char const systemMenu[][20] PROGMEM = { 
-  "RF setup", "Sound", "Backlight", "Appearance", "Advanced", "About"
+  "RF setup", "Sound", "Backlight", "Appearance", "Miscellaneous", "Advanced", "About"
 };
 enum {
-  SYSTEM_MENU_RF, SYSTEM_MENU_SOUND, SYSTEM_MENU_BACKLIGHT, SYSTEM_MENU_APPEARANCE, SYSTEM_MENU_ADVANCED,
-  SYSTEM_MENU_ABOUT,
+  SYSTEM_MENU_RF, SYSTEM_MENU_SOUND, SYSTEM_MENU_BACKLIGHT, SYSTEM_MENU_APPEARANCE, 
+  SYSTEM_MENU_MISCELLANEOUS, SYSTEM_MENU_ADVANCED, SYSTEM_MENU_ABOUT,
 };
 
 char const advancedMenu[][20] PROGMEM = { 
-  "Sticks", "Knobs", "Switches", "Battery", "Security", "Miscellaneous", "Debug"
+  "Sticks", "Knobs", "Switches", "Battery", "Security", "Debug"
 };
 enum {
   ADVANCED_MENU_STICKS, ADVANCED_MENU_KNOBS, ADVANCED_MENU_SWITCHES, 
-  ADVANCED_MENU_BATTERY, ADVANCED_MENU_SECURITY,
-  ADVANCED_MENU_MISCELLANEOUS, ADVANCED_MENU_DEBUG
+  ADVANCED_MENU_BATTERY, ADVANCED_MENU_SECURITY, ADVANCED_MENU_DEBUG
 };
 
 //---------------------------- Main UI states ------------------------------------------------------
@@ -203,6 +202,7 @@ enum {
   SCREEN_SOUND,
   SCREEN_BACKLIGHT,
   SCREEN_APPEARANCE,
+  SCREEN_MISCELLANEOUS,
   SCREEN_UNLOCK_ADVANCED_MENU,
   SCREEN_ADVANCED_MENU,
   SCREEN_STICKS,
@@ -210,7 +210,6 @@ enum {
   SCREEN_SWITCHES,
   SCREEN_BATTERY,
   SCREEN_SECURITY,
-  SCREEN_MISCELLANEOUS,
   SCREEN_DEBUG,
   SCREEN_DEBUG_STATISTICS,
   SCREEN_INTERNAL_EEPROM_DUMP,
@@ -335,6 +334,7 @@ void drawHorizontalBarChartZeroCentered(uint8_t x, uint8_t y, uint8_t w, uint8_t
 void drawTrimSliders();
 void drawDialogCopyMove(const char* str, uint8_t srcIdx, uint8_t destIdx, bool isCopy);
 void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src);
+void drawMixerCurvePreview(mixer_params_t* mxr);
 void drawToast();
 void drawTooltip(uint8_t x, uint8_t y, char* str);
 void drawTelemetryValue(uint8_t xpos, uint8_t ypos, uint8_t idx, int16_t rawVal, bool blink);
@@ -1029,12 +1029,9 @@ void handleMainUI()
         {
           if(heldButton == KEY_UP)
           {
-            if(Sys.onscreenTrimEnabled)
-            {
-              isOnscreenTrimMode = true;
-              killButtonEvents();
-              audioToPlay = AUDIO_TRIM_MODE_ENTERED;
-            }
+            isOnscreenTrimMode = true;
+            killButtonEvents();
+            audioToPlay = AUDIO_TRIM_MODE_ENTERED;
           }
 
           if(clickedButton == KEY_SELECT)
@@ -2975,7 +2972,8 @@ void handleMainUI()
             break;
     
           uint8_t itemID = listItemIDs[topItem - 1 + line];
-          bool edit = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2] && isEditMode);
+          bool isFocused = (focusedItem > 1 && focusedItem != numFocusable && itemID == listItemIDs[focusedItem - 2]);
+          bool edit = (isFocused && isEditMode);
           
           display.setCursor(0, ypos);
           switch(itemID)
@@ -3195,6 +3193,11 @@ void handleMainUI()
         //Draw scroll bar
         drawScrollBar(127, 19, listItemCount, topItem, 5, 5 * 9);
         
+        //Draw mixer curve preview
+        focusedMixIdx = thisMixIdx;
+        if(Sys.showCurvePreviewInMixer && mxr->operation != MIX_HOLD)
+          drawMixerCurvePreview(mxr);
+        
         //Show context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
         display.drawBitmap(120, 0, focusedItem == numFocusable ? icon_context_menu_focused : icon_context_menu, 8, 7, BLACK);
@@ -3216,7 +3219,10 @@ void handleMainUI()
             mxr->output = tempMixerOutput;
             tempInitialised = false;
             //change to another mix
+            uint8_t prevMixIdx = thisMixIdx;
             thisMixIdx = incDec(thisMixIdx, 0, NUM_MIX_SLOTS - 1, INCDEC_WRAP, INCDEC_SLOW);
+            if(thisMixIdx != prevMixIdx)
+              graphYCoordinatesInvalid = true;
           }
         }
         
@@ -7406,6 +7412,7 @@ void handleMainUI()
         menuAddItem(systemMenu[SYSTEM_MENU_SOUND], SYSTEM_MENU_SOUND, NULL);
         menuAddItem(systemMenu[SYSTEM_MENU_BACKLIGHT], SYSTEM_MENU_BACKLIGHT, NULL);
         menuAddItem(systemMenu[SYSTEM_MENU_APPEARANCE], SYSTEM_MENU_APPEARANCE, NULL);
+        menuAddItem(systemMenu[SYSTEM_MENU_MISCELLANEOUS], SYSTEM_MENU_MISCELLANEOUS, NULL);
         menuAddItem(systemMenu[SYSTEM_MENU_ADVANCED], SYSTEM_MENU_ADVANCED, NULL);
         menuAddItem(systemMenu[SYSTEM_MENU_ABOUT], SYSTEM_MENU_ABOUT, NULL);
         menuDraw(&topItem, &highlightedItem);
@@ -7414,6 +7421,7 @@ void handleMainUI()
         else if(menuSelectedItemID == SYSTEM_MENU_SOUND) changeToScreen(SCREEN_SOUND);
         else if(menuSelectedItemID == SYSTEM_MENU_BACKLIGHT) changeToScreen(SCREEN_BACKLIGHT);
         else if(menuSelectedItemID == SYSTEM_MENU_APPEARANCE) changeToScreen(SCREEN_APPEARANCE);
+        else if(menuSelectedItemID == SYSTEM_MENU_MISCELLANEOUS) changeToScreen(SCREEN_MISCELLANEOUS);
         else if(menuSelectedItemID == SYSTEM_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
         else if(menuSelectedItemID == SYSTEM_MENU_ADVANCED)
         {
@@ -7820,6 +7828,70 @@ void handleMainUI()
         }
       }
       break;
+
+    case SCREEN_MISCELLANEOUS:
+      {
+        drawHeader(systemMenu[SYSTEM_MENU_MISCELLANEOUS]);
+        
+        display.setCursor(0, 9);
+        display.print(F("Autoslct input:"));
+        drawCheckbox(102, 9, Sys.autoSelectMovedControl);
+        
+        display.setCursor(0, 18);
+        display.print(F("Curve preview:"));
+        drawCheckbox(102, 18, Sys.showCurvePreviewInMixer);
+        
+        display.setCursor(0, 27);
+        display.print(F("Mixer templts:"));
+        drawCheckbox(102, 27, Sys.mixerTemplatesEnabled);
+        
+        display.setCursor(0, 36);
+        display.print(F("Dflt Ch order:"));
+        display.setCursor(102, 36);
+        if(Sys.mixerTemplatesEnabled)
+        {
+          //make the string for the channel order
+          char tmpStr[5];
+          tmpStr[getChannelIdx('A')] = 'A';
+          tmpStr[getChannelIdx('E')] = 'E';
+          tmpStr[getChannelIdx('T')] = 'T';
+          tmpStr[getChannelIdx('R')] = 'R';
+          tmpStr[4] = '\0';
+          display.print(tmpStr);
+        }
+        else
+          display.print(F("N/A"));
+
+        display.setCursor(0, 45);
+        display.print(F("Inactvty mins:"));
+        display.setCursor(102, 45);
+        display.print(Sys.inactivityMinutes);
+
+        changeFocusOnUpDown(5);
+        toggleEditModeOnSelectClicked();
+        drawCursor(94, focusedItem * 9);
+        
+        if(focusedItem == 1)
+          Sys.autoSelectMovedControl = incDec(Sys.autoSelectMovedControl, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+        else if(focusedItem == 2)
+          Sys.showCurvePreviewInMixer = incDec(Sys.showCurvePreviewInMixer, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+        else if(focusedItem == 3)
+          Sys.mixerTemplatesEnabled = incDec(Sys.mixerTemplatesEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+        else if(focusedItem == 4 && Sys.mixerTemplatesEnabled) 
+        { 
+          //there are 4P4 = 4! = 24 possible arrangements. So our range is 0 to 23.  
+          Sys.defaultChannelOrder = incDec(Sys.defaultChannelOrder, 0, 23, INCDEC_WRAP, INCDEC_SLOW);
+        }
+        else if(focusedItem == 5)
+          Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 1, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
+
+        //exit
+        if(heldButton == KEY_SELECT)
+        {
+          changeToScreen(SCREEN_SYSTEM_MENU);
+        }
+      }
+      break;
       
     case SCREEN_UNLOCK_ADVANCED_MENU:
       {
@@ -7839,7 +7911,6 @@ void handleMainUI()
         menuAddItem(advancedMenu[ADVANCED_MENU_SWITCHES], ADVANCED_MENU_SWITCHES, NULL);
         menuAddItem(advancedMenu[ADVANCED_MENU_BATTERY], ADVANCED_MENU_BATTERY, NULL);
         menuAddItem(advancedMenu[ADVANCED_MENU_SECURITY], ADVANCED_MENU_SECURITY, NULL);
-        menuAddItem(advancedMenu[ADVANCED_MENU_MISCELLANEOUS], ADVANCED_MENU_MISCELLANEOUS, NULL);
         menuAddItem(advancedMenu[ADVANCED_MENU_DEBUG], ADVANCED_MENU_DEBUG, NULL);
         menuDraw(&topItem, &highlightedItem);
 
@@ -7848,7 +7919,6 @@ void handleMainUI()
         else if(menuSelectedItemID == ADVANCED_MENU_SWITCHES) changeToScreen(SCREEN_SWITCHES); 
         else if(menuSelectedItemID == ADVANCED_MENU_BATTERY) changeToScreen(SCREEN_BATTERY);
         else if(menuSelectedItemID == ADVANCED_MENU_SECURITY) changeToScreen(SCREEN_SECURITY);
-        else if(menuSelectedItemID == ADVANCED_MENU_MISCELLANEOUS) changeToScreen(SCREEN_MISCELLANEOUS);
         else if(menuSelectedItemID == ADVANCED_MENU_DEBUG) changeToScreen(SCREEN_DEBUG);
 
         //exit
@@ -8689,70 +8759,6 @@ void handleMainUI()
         }
         else if(focusedItem == 4 && isEditMode)
           isEditTextDialog = true;
-
-        //exit
-        if(heldButton == KEY_SELECT)
-        {
-          changeToScreen(SCREEN_ADVANCED_MENU);
-        }
-      }
-      break;
-      
-    case SCREEN_MISCELLANEOUS:
-      {
-        drawHeader(advancedMenu[ADVANCED_MENU_MISCELLANEOUS]);
-        
-        display.setCursor(0, 9);
-        display.print(F("Autoslct input:"));
-        drawCheckbox(102, 9, Sys.autoSelectMovedControl);
-
-        display.setCursor(0, 18);
-        display.print(F("On-screen trim:"));
-        drawCheckbox(102, 18, Sys.onscreenTrimEnabled);
-        
-        display.setCursor(0, 27);
-        display.print(F("Mixer templts:"));
-        drawCheckbox(102, 27, Sys.mixerTemplatesEnabled);
-        
-        display.setCursor(0, 36);
-        display.print(F("Dflt Ch order:"));
-        display.setCursor(102, 36);
-        if(Sys.mixerTemplatesEnabled)
-        {
-          //make the string for the channel order
-          char tmpStr[5];
-          tmpStr[getChannelIdx('A')] = 'A';
-          tmpStr[getChannelIdx('E')] = 'E';
-          tmpStr[getChannelIdx('T')] = 'T';
-          tmpStr[getChannelIdx('R')] = 'R';
-          tmpStr[4] = '\0';
-          display.print(tmpStr);
-        }
-        else
-          display.print(F("N/A"));
-
-        display.setCursor(0, 45);
-        display.print(F("Inactvty mins:"));
-        display.setCursor(102, 45);
-        display.print(Sys.inactivityMinutes);
-
-        changeFocusOnUpDown(5);
-        toggleEditModeOnSelectClicked();
-        drawCursor(94, focusedItem * 9);
-        
-        if(focusedItem == 1)
-          Sys.autoSelectMovedControl = incDec(Sys.autoSelectMovedControl, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 2)
-          Sys.onscreenTrimEnabled = incDec(Sys.onscreenTrimEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 3)
-          Sys.mixerTemplatesEnabled = incDec(Sys.mixerTemplatesEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 4 && Sys.mixerTemplatesEnabled) 
-        { 
-          //there are 4P4 = 4! = 24 possible arrangements. So our range is 0 to 23.  
-          Sys.defaultChannelOrder = incDec(Sys.defaultChannelOrder, 0, 23, INCDEC_WRAP, INCDEC_SLOW);
-        }
-        else if(focusedItem == 5)
-          Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 1, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
 
         //exit
         if(heldButton == KEY_SELECT)
@@ -10665,7 +10671,7 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
   if(numItems > numVisible)
   {
     uint8_t barHeight = divRoundClosest((int32_t)viewportHeight * numVisible, numItems);
-    //limit barHeight to 6px minimum
+    //limit barHeight to 6 px minimum
     uint16_t _viewportHeight = viewportHeight;
     if(barHeight < 6)
     {      
@@ -11024,6 +11030,130 @@ void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src)
       display.drawRect(98 + crv->xVal[pt]/4, 34 - crv->yVal[pt]/4, 5, 5, BLACK);
     }
   }
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void drawMixerCurvePreview(mixer_params_t* mxr)
+{
+  display.fillRect(96, 37, 27, 27, WHITE);
+  display.drawRect(97, 38, 25, 25, BLACK);
+  display.drawVLine(109, 40, 21, BLACK);
+  display.drawHLine(99, 50, 21, BLACK);
+  
+  //only recalculate points if invalid to avoid unnecessary computations
+  static int16_t lastChecksum = 0;
+  int16_t checksum = 0;
+  checksum += mxr->weight;
+  checksum += mxr->offset;
+  checksum += mxr->curveType;
+  checksum += mxr->curveVal;
+  if(checksum != lastChecksum)
+  {
+    lastChecksum = checksum;
+    graphYCoordinatesInvalid = true;
+  }
+
+  const int8_t xStart = -10;
+  const int8_t xEnd = 10;
+
+  if(graphYCoordinatesInvalid)
+  {
+    graphYCoordinatesInvalid = false;
+
+    int16_t _xx[MAX_NUM_POINTS_CUSTOM_CURVE];
+    int16_t _yy[MAX_NUM_POINTS_CUSTOM_CURVE];
+    if(mxr->curveType == MIX_CURVE_TYPE_CUSTOM)
+    { 
+      uint8_t _crvIdx = mxr->curveVal;
+      uint8_t _numPts = Model.CustomCurve[_crvIdx].numPoints;
+      for(uint8_t pt = 0; pt < _numPts; pt++)
+      {
+        _xx[pt] = 5 * Model.CustomCurve[_crvIdx].xVal[pt];
+        _yy[pt] = 5 * Model.CustomCurve[_crvIdx].yVal[pt];
+      }
+    }
+    
+    for(int8_t xCoord = xStart; xCoord <= xEnd; xCoord++)
+    {
+      int16_t operand = (int16_t) xCoord * 50;
+      //--- curves
+      if(mxr->curveType == MIX_CURVE_TYPE_EXPO)
+        operand = calcExpo(operand, mxr->curveVal);
+      else if(mxr->curveType == MIX_CURVE_TYPE_CUSTOM)
+    {
+      uint8_t _crvIdx = mxr->curveVal;
+      uint8_t _numPts = Model.CustomCurve[_crvIdx].numPoints;
+      if(Model.CustomCurve[_crvIdx].smooth)
+        operand = cubicHermiteInterpolate(_xx, _yy, _numPts, operand);
+      else
+        operand = linearInterpolate(_xx, _yy, _numPts, operand);
+    }
+      else if(mxr->curveType == MIX_CURVE_TYPE_FUNCTION)
+    {
+      uint8_t _func = mxr->curveVal;
+      switch(_func)
+      {
+        case MIX_CURVE_FUNC_X_GREATER_THAN_ZERO: 
+          if(operand < 0) operand = 0; 
+          break;
+        case MIX_CURVE_FUNC_X_LESS_THAN_ZERO: 
+          if(operand > 0) operand = 0; 
+          break;
+        case MIX_CURVE_FUNC_ABS_X: 
+          if(operand < 0) operand = -operand; 
+          break;
+      }
+    }
+      //--- weight, offset
+      operand = weightAndOffset(operand, mxr->weight, mxr->offset);
+      
+      //--- differential
+      if(mxr->curveType == MIX_CURVE_TYPE_DIFF && mxr->curveVal != 0)
+        operand = calcDifferential(operand, mxr->curveVal);
+     
+      //--- write to array
+      int8_t yCoord = operand / 50;
+      yCoord = constrain(yCoord, -10, 10);
+      uint8_t i = xCoord - xStart;
+      graphYCoord[i] = yCoord;
+    }
+  }
+
+  //--- Plot
+  if(mxr->curveType == MIX_CURVE_TYPE_CUSTOM)
+  {
+    for(int8_t xCoord = xStart; xCoord <= xEnd; xCoord++)
+    {
+      uint8_t i = xCoord - xStart;
+      display.drawPixel(99 + i, 50 - graphYCoord[i], BLACK);
+    }
+  }
+  else
+  {
+    for(int8_t xCoord = xStart; xCoord <= xEnd; xCoord++)
+    {
+      uint8_t i = xCoord - xStart;
+      //If the difference between successive y coordinates is more than 1 pixel then draw a line 
+      //between the two points to make the graph visually continuous (not broken)
+      if(xCoord > xStart && (abs(graphYCoord[i] - graphYCoord[i-1]) > 1))
+        display.drawLine(98 + i, 50 - graphYCoord[i-1], 99 + i, 50 - graphYCoord[i], BLACK); 
+      else
+        display.drawPixel(99 + i, 50 - graphYCoord[i], BLACK);
+    }
+  }
+
+  //add input and output markers
+  if(mxr->input != SRC_NONE && mxr->output != SRC_NONE)
+  {
+    // display.drawBitmap(108 + divRoundClosest(focusedMixInputVal, 50), 35, down_arrow_tiny, 3, 2, BLACK);
+    // display.drawBitmap(123, 49 - divRoundClosest(focusedMixOutputVal, 50), left_arrow_tiny, 2, 3, BLACK);
+    // drawDottedVLine(109 + divRoundClosest(focusedMixInputVal, 50), 37, 27, BLACK, WHITE);
+    // drawDottedHLine(96, 50 - divRoundClosest(focusedMixOutputVal, 50), 27, BLACK, WHITE);
+    drawDottedVLine(109 + divRoundClosest(focusedMixInputVal, 50), 37, 27, WHITE, BLACK);
+    drawDottedHLine(96, 50 - divRoundClosest(focusedMixOutputVal, 50), 27, WHITE, BLACK);
+  }
+
 }
 
 //--------------------------------------------------------------------------------------------------
