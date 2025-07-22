@@ -4,16 +4,18 @@
 #include "mathHelpers.h"
 #include "mixer.h"
 
-int16_t calcExpo(int16_t input, int16_t expo);
-int16_t calcDifferential(int16_t input, int16_t diff);
 int32_t applySlow(int32_t currVal, int32_t targetVal, int32_t range, int32_t multiplier, uint32_t riseTime, uint32_t fallTime);
-int16_t weightAndOffset(int16_t input, int16_t weight, int16_t offset);
 int16_t generateWaveform(uint8_t idx, int32_t _currTime);
 void evaluateLogicalSwitches(uint32_t _currTime);
 void evaluateCounters();
 
 //mix sources array
 int16_t mixSources[MIX_SOURCES_COUNT]; 
+
+//used for graphing inside the mixer screen
+int16_t focusedMixInputVal = 0;
+int16_t focusedMixOutputVal = 0;
+uint8_t focusedMixIdx = 0;
 
 //variables to help with 'delay', 'slow' and 'hold' mixer features
 static union {
@@ -255,6 +257,9 @@ void computeChannelOutputs()
   //Mix sources virtual channels
   for(uint8_t i = 0; i < NUM_VIRTUAL_CHANNELS; i++)
     mixSources[SRC_VIRTUAL_FIRST + i] = 0;
+
+  focusedMixInputVal = 0;
+  focusedMixOutputVal = 0;
   
   ///----------------- MIXER LOOP ------------------------
   
@@ -301,7 +306,7 @@ void computeChannelOutputs()
       uint8_t counterIdx = mxr->input - SRC_COUNTER_FIRST;
       operand = -500 + ((int32_t)counterOut[counterIdx] * 1000 / (Model.Counter[counterIdx].modulus - 1));
     }
-    
+
     //--- DELAY
     //Reset delay variables if the input or model has been changed
     if((mxr->input != dlyPrevInput[mixIdx]) || isReinitialiseMixer) 
@@ -364,6 +369,9 @@ void computeChannelOutputs()
     //even when the mixer condition is not met to avoid glitches due to stale values.
     if(!checkSwitchCondition(mxr->swtch) || !((mxr->flightMode >> activeFmdIdx) & 0x01))
       continue;
+
+    if(focusedMixIdx == mixIdx)
+      focusedMixInputVal = operand;
     
     //--- CURVES
     if(mxr->curveType == MIX_CURVE_TYPE_EXPO)
@@ -407,6 +415,13 @@ void computeChannelOutputs()
     //--- DIFFERENTIAL
     if(mxr->curveType == MIX_CURVE_TYPE_DIFF && mxr->curveVal != 0)
       operand = calcDifferential(operand, mxr->curveVal);
+
+    //Export for graphing purposes
+    if(focusedMixIdx == mixIdx)
+    {
+      focusedMixOutputVal = operand;
+      focusedMixOutputVal = constrain(focusedMixOutputVal, -500, 500);
+    }
     
     //--- TRIM
     //Apply weighted trim after differential to prevent the output being erratic when differential or
