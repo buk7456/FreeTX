@@ -8,11 +8,51 @@ Entries are thoughtfully organized into categories for easy navigation and quick
 </p>
 
 <p align="left">
+<img src="images/screenshots/system_rf.png"/>
+</p>
+
+<p align="left">
+<img src="images/screenshots/system_sound.png"/>
+</p>
+
+<p align="left">
+<img src="images/screenshots/system_backlight.png"/>
+</p>
+
+<p align="left">
+<img src="images/screenshots/system_appearance.png"/>
+</p>
+
+<p align="left">
+<img src="images/screenshots/system_miscellaneous.png"/>
+</p>
+
+<p align="left">
 <img src="images/screenshots/system_advanced_menu.png"/>
 </p>
 
 <p align="left">
-<img src="images/screenshots/system_settings.png"/>
+<img src="images/screenshots/system_sticks.png"/>
+</p>
+
+<p align="left">
+<img src="images/screenshots/system_knobs.png"/>
+</p>
+
+<p align="left">
+<img src="images/screenshots/system_switches.png"/>
+</p>
+
+<p align="left">
+<img src="images/screenshots/system_battery.png"/>
+</p>
+
+<p align="left">
+<img src="images/screenshots/system_security.png"/>
+</p>
+
+<p align="left">
+<img src="images/screenshots/system_debug.png"/>
 </p>
 
 ---
