@@ -11148,8 +11148,6 @@ void drawMixerCurvePreview(mixer_params_t* mxr)
   {
     // display.drawBitmap(108 + divRoundClosest(focusedMixInputVal, 50), 35, down_arrow_tiny, 3, 2, BLACK);
     // display.drawBitmap(123, 49 - divRoundClosest(focusedMixOutputVal, 50), left_arrow_tiny, 2, 3, BLACK);
-    // drawDottedVLine(109 + divRoundClosest(focusedMixInputVal, 50), 37, 27, BLACK, WHITE);
-    // drawDottedHLine(96, 50 - divRoundClosest(focusedMixOutputVal, 50), 27, BLACK, WHITE);
     drawDottedVLine(109 + divRoundClosest(focusedMixInputVal, 50), 37, 27, WHITE, BLACK);
     drawDottedHLine(96, 50 - divRoundClosest(focusedMixOutputVal, 50), 27, WHITE, BLACK);
   }
