@@ -7,12 +7,11 @@ void showMessage(const char* str);
 void showProgressMessage(const char* str, uint8_t percent);
 void showWaitMessage();
 void showMuteMessage();
-void showDataImportErrorMessage(const char* str, uint16_t lineNumber);
 
 void startInitialSetup();
 
-void handleSafetyWarnUI();
 void handleMainUI();
+void handleSafetyWarningUI();
 
 #if defined (DISPLAY_KS0108)
   #include "../lcd/GFX.h"

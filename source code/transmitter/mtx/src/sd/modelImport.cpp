@@ -9,16 +9,17 @@
 
 bool isEndOfFile = false;
 
-bool hasEncounteredInvalidParam = false; //for basic error detection only
+//for basic error detection only
+bool hasEncounteredInvalidParam = false;
+uint16_t dbgLineNumber = 0;
+uint16_t dbgFirstErrorLineNumber = 0;
+uint16_t dbgTotalErrorLines = 0;
 
 //Buffers used by the parser to hold the keys and value. 
 //Three buffers are used for the keys as we have upto three indention levels. ie level 0,1,2
 
 char keyBuff[3][MAX_STR_SIZE];
 char valueBuff[MAX_STR_SIZE];
-
-uint16_t dbgLineNumber = 0;
-uint16_t dbgFirstErrorLineNumber = 0;
 
 uint8_t thisIdx; //used inside the extractor functions
 
@@ -931,6 +932,7 @@ void importModelData(File& file)
   idNotFoundInIdStr = false;
   dbgLineNumber = 0;
   dbgFirstErrorLineNumber = 0;
+  dbgTotalErrorLines = 0;
   memset(keyBuff[0], 0, sizeof(keyBuff[0]));
   memset(keyBuff[1], 0, sizeof(keyBuff[0]));
   memset(keyBuff[2], 0, sizeof(keyBuff[0]));
@@ -988,14 +990,15 @@ void importModelData(File& file)
     else 
       hasEncounteredInvalidParam = true;
     
-    if((hasEncounteredInvalidParam || idNotFoundInIdStr) && dbgFirstErrorLineNumber == 0)
-      dbgFirstErrorLineNumber = dbgLineNumber;
+    if((hasEncounteredInvalidParam || idNotFoundInIdStr))
+    {
+      dbgTotalErrorLines++;
+      if(dbgFirstErrorLineNumber == 0)
+        dbgFirstErrorLineNumber = dbgLineNumber;
+      //reset flags
+      hasEncounteredInvalidParam = false;
+      idNotFoundInIdStr = false;
+    }
   }
-  
-  //show message if errors were encountered
-  if(dbgFirstErrorLineNumber != 0)
-  {
-    showDataImportErrorMessage(PSTR("Some data skipped"), dbgFirstErrorLineNumber);
-    delay(2000);
-  }
+
 }

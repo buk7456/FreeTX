@@ -383,8 +383,8 @@ typedef struct {
   bool     autoSelectMovedControl;
   bool     mixerTemplatesEnabled;
   uint8_t  defaultChannelOrder;
-  bool     onscreenTrimEnabled;
   uint8_t  inactivityMinutes;
+  bool     showCurvePreviewInMixer;
   
   //--- debug
   bool     DBG_showLoopTime;

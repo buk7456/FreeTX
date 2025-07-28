@@ -11,4 +11,7 @@ bool sdGetModelName(char *buff, uint16_t idx, uint8_t lenBuff);
 void sdShowSplashScreen();
 bool sdWriteScreenshot();
 
+extern uint16_t dbgFirstErrorLineNumber;
+extern uint16_t dbgTotalErrorLines;
+
 #endif
