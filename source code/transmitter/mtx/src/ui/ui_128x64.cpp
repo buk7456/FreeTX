@@ -334,7 +334,7 @@ void drawHorizontalBarChartZeroCentered(uint8_t x, uint8_t y, uint8_t w, uint8_t
 void drawTrimSliders();
 void drawDialogCopyMove(const char* str, uint8_t srcIdx, uint8_t destIdx, bool isCopy);
 void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src);
-void drawMixerCurvePreview(mixer_params_t* mxr);
+void drawMixerCurvePreview(mixer_params_t* mxr, bool showCrossHairs);
 void drawToast();
 void drawTooltip(uint8_t x, uint8_t y, char* str);
 void drawTelemetryValue(uint8_t xpos, uint8_t ypos, uint8_t idx, int16_t rawVal, bool blink);
@@ -2944,6 +2944,8 @@ void handleMainUI()
           topItem = 1;
           viewInitialised = true;
         }
+
+        bool hasCrossHairs = true;
         
         //handle navigatation
         focusedItem = lastFocusedItem;
@@ -2966,7 +2968,7 @@ void handleMainUI()
         {
           uint8_t ypos = 20 + line*9;
           if(focusedItem - 1 == topItem + line)
-            drawCursor(52, ypos);
+            drawCursor(48, ypos);
           
           if((topItem - 1 + line) >= listItemCount)
             break;
@@ -2981,7 +2983,7 @@ void handleMainUI()
             case ITEM_MIX_OUTPUT:
               {
                 display.print(F("Output:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 getSrcName(textBuff, tempMixerOutput, sizeof(textBuff));
                 display.print(textBuff);
                 if(tempMixerOutput >= SRC_CH1 && tempMixerOutput < SRC_CH1 + NUM_RC_CHANNELS)
@@ -3002,7 +3004,7 @@ void handleMainUI()
             case ITEM_MIX_SWITCH:
               {
                 display.print(F("Switch:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 getControlSwitchName(textBuff, mxr->swtch, sizeof(textBuff));
                 display.print(textBuff);
                 if(edit)
@@ -3013,7 +3015,7 @@ void handleMainUI()
             case ITEM_MIX_OPERATION:
               {
                 display.print(F("Opertn:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 display.print(findStringInIdStr(enum_MixerOperation, mxr->operation));
                 if(edit)
                   mxr->operation = incDec(mxr->operation, 0, MIX_OPERATOR_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
@@ -3023,7 +3025,7 @@ void handleMainUI()
             case ITEM_MIX_INPUT:
               {
                 display.print(F("Input:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 getSrcName(textBuff, mxr->input, sizeof(textBuff));
                 display.print(textBuff);
                 if(edit)
@@ -3034,6 +3036,9 @@ void handleMainUI()
                     mxr->input = movedSrc;
                   //inc dec
                   mxr->input = incDecSource(mxr->input, INCDEC_FLAG_MIX_SRC | INCDEC_FLAG_COUNTER_AS_SRC);
+                  //hide cross hairs on the graph to minimise distraction when editing the input
+                  if(buttonCode == KEY_UP || buttonCode == KEY_DOWN)
+                    hasCrossHairs = false;
                 }
               }
               break;
@@ -3041,7 +3046,7 @@ void handleMainUI()
             case ITEM_MIX_WEIGHT:
               {
                 display.print(F("Weight:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 display.print(mxr->weight);
                 if(edit)
                   mxr->weight = incDec(mxr->weight, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
@@ -3051,7 +3056,7 @@ void handleMainUI()
             case ITEM_MIX_OFFSET:
               {
                 display.print(F("Offset:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 display.print(mxr->offset);
                 if(edit)
                   mxr->offset = incDec(mxr->offset, -100, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
@@ -3061,7 +3066,7 @@ void handleMainUI()
             case ITEM_MIX_CURVE_TYPE:
               {
                 display.print(F("Curve:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 display.print(findStringInIdStr(enum_MixerCurveType, mxr->curveType));
                 if(edit)
                 {
@@ -3076,7 +3081,7 @@ void handleMainUI()
             case ITEM_MIX_CURVE_VAL:
               {
                 display.print(F("Crv val:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 if(mxr->curveType == MIX_CURVE_TYPE_DIFF || mxr->curveType == MIX_CURVE_TYPE_EXPO)
                   display.print(mxr->curveVal);
                 else if(mxr->curveType == MIX_CURVE_TYPE_FUNCTION)
@@ -3106,7 +3111,7 @@ void handleMainUI()
             case ITEM_MIX_TRIM_ENABLED:
               {
                 display.print(F("Trim:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 uint8_t input = mxr->input;
                 if(input == SRC_RUD) input = Model.rudSrcRaw;
                 if(input == SRC_THR) input = Model.thrSrcRaw;
@@ -3114,7 +3119,7 @@ void handleMainUI()
                 if(input == SRC_ELE) input = Model.eleSrcRaw;
                 if(input ==  SRC_X1_AXIS || input == SRC_Y1_AXIS || input == SRC_X2_AXIS || input == SRC_Y2_AXIS)
                 {
-                  drawCheckbox(60, ypos, mxr->trimEnabled);
+                  drawCheckbox(56, ypos, mxr->trimEnabled);
                   if(edit)
                     mxr->trimEnabled = incDec(mxr->trimEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
                 }
@@ -3126,7 +3131,7 @@ void handleMainUI()
             case ITEM_MIX_FLIGHT_MODE:
               {
                 display.print(F("F-mode:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 if(mxr->flightMode == 0xff)
                   display.print(F("All"));
                 else
@@ -3151,7 +3156,7 @@ void handleMainUI()
             case ITEM_MIX_DELAY_UP:
               {
                 display.print(F("Dly up:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 printSeconds(mxr->delayUp);
                 if(edit)
                   mxr->delayUp = incDec(mxr->delayUp, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
@@ -3161,7 +3166,7 @@ void handleMainUI()
             case ITEM_MIX_DELAY_DOWN:
               {
                 display.print(F("Dly dn:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 printSeconds(mxr->delayDown);
                 if(edit)
                   mxr->delayDown = incDec(mxr->delayDown, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
@@ -3171,7 +3176,7 @@ void handleMainUI()
             case ITEM_MIX_SLOW_UP:
               {
                 display.print(F("Slow up:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 printSeconds(mxr->slowUp);
                 if(edit)
                   mxr->slowUp = incDec(mxr->slowUp, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
@@ -3181,7 +3186,7 @@ void handleMainUI()
             case ITEM_MIX_SLOW_DOWN:
               {
                 display.print(F("Slow dn:"));
-                display.setCursor(60, ypos);
+                display.setCursor(56, ypos);
                 printSeconds(mxr->slowDown);
                 if(edit)
                   mxr->slowDown = incDec(mxr->slowDown, 0, 600, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
@@ -3196,7 +3201,7 @@ void handleMainUI()
         //Draw mixer curve preview
         focusedMixIdx = thisMixIdx;
         if(Sys.showCurvePreviewInMixer && mxr->operation != MIX_HOLD)
-          drawMixerCurvePreview(mxr);
+          drawMixerCurvePreview(mxr, hasCrossHairs);
         
         //Show context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -11034,12 +11039,12 @@ void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src)
 
 //--------------------------------------------------------------------------------------------------
 
-void drawMixerCurvePreview(mixer_params_t* mxr)
+void drawMixerCurvePreview(mixer_params_t* mxr, bool showCrossHairs)
 {
-  display.fillRect(96, 37, 27, 27, WHITE);
-  display.drawRect(97, 38, 25, 25, BLACK);
-  display.drawVLine(109, 40, 21, BLACK);
-  display.drawHLine(99, 50, 21, BLACK);
+  // display.fillRect(101, 37, 27, 27, WHITE);
+  // display.drawRect(102, 38, 25, 25, BLACK);
+  display.drawVLine(114, 40, 21, BLACK);
+  display.drawHLine(104, 50, 21, BLACK);
   
   //only recalculate points if invalid to avoid unnecessary computations
   static int16_t lastChecksum = 0;
@@ -11126,7 +11131,7 @@ void drawMixerCurvePreview(mixer_params_t* mxr)
     for(int8_t xCoord = xStart; xCoord <= xEnd; xCoord++)
     {
       uint8_t i = xCoord - xStart;
-      display.drawPixel(99 + i, 50 - graphYCoord[i], BLACK);
+      display.drawPixel(104 + i, 50 - graphYCoord[i], BLACK);
     }
   }
   else
@@ -11137,19 +11142,17 @@ void drawMixerCurvePreview(mixer_params_t* mxr)
       //If the difference between successive y coordinates is more than 1 pixel then draw a line 
       //between the two points to make the graph visually continuous (not broken)
       if(xCoord > xStart && (abs(graphYCoord[i] - graphYCoord[i-1]) > 1))
-        display.drawLine(98 + i, 50 - graphYCoord[i-1], 99 + i, 50 - graphYCoord[i], BLACK); 
+        display.drawLine(103 + i, 50 - graphYCoord[i-1], 104 + i, 50 - graphYCoord[i], BLACK); 
       else
-        display.drawPixel(99 + i, 50 - graphYCoord[i], BLACK);
+        display.drawPixel(104 + i, 50 - graphYCoord[i], BLACK);
     }
   }
 
   //add input and output markers
-  if(mxr->input != SRC_NONE && mxr->output != SRC_NONE)
+  if(showCrossHairs && mxr->input != SRC_NONE && mxr->output != SRC_NONE)
   {
-    // display.drawBitmap(108 + divRoundClosest(focusedMixInputVal, 50), 35, down_arrow_tiny, 3, 2, BLACK);
-    // display.drawBitmap(123, 49 - divRoundClosest(focusedMixOutputVal, 50), left_arrow_tiny, 2, 3, BLACK);
-    drawDottedVLine(109 + divRoundClosest(focusedMixInputVal, 50), 37, 27, WHITE, BLACK);
-    drawDottedHLine(96, 50 - divRoundClosest(focusedMixOutputVal, 50), 27, WHITE, BLACK);
+    drawDottedVLine(114 + divRoundClosest(focusedMixInputVal, 50), 40, 21, BLACK, WHITE);
+    drawDottedHLine(104, 50 - divRoundClosest(focusedMixOutputVal, 50), 21, BLACK, WHITE);
   }
 
 }
