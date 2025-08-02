@@ -651,10 +651,10 @@ void getControlSwitchName(char* buff, uint8_t idx, uint8_t lenBuff)
   {
     uint8_t i = idx - CTRL_SW_FMD_FIRST;
     if(i < NUM_FLIGHT_MODES)
-      strlcpy_P(buff, PSTR("FMD"), lenBuff);
+      strlcpy_P(buff, PSTR("Fmd"), lenBuff);
     else
     {
-      strlcpy_P(buff, PSTR("!FMD"), lenBuff);
+      strlcpy_P(buff, PSTR("!Fmd"), lenBuff);
       i -= NUM_FLIGHT_MODES;
     }
     itoa(i + 1, suffix, 10);
