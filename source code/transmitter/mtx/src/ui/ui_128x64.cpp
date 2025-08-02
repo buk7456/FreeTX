@@ -793,13 +793,7 @@ void handleMainUI()
         if(hasDefinedFlightModes)
         {
           if(isEmptyStr(Model.FlightMode[activeFmdIdx].name, sizeof(Model.FlightMode[0].name)))
-          {
-            strlcpy_P(textBuff, PSTR("Fmd"), sizeof(textBuff));
-            char suffix[5];
-            memset(suffix, 0, sizeof(suffix));
-            itoa(activeFmdIdx + 1, suffix, 10);
-            strlcat(textBuff, suffix, sizeof(textBuff));
-          }
+            getControlSwitchName(textBuff, CTRL_SW_FMD_FIRST + activeFmdIdx, sizeof(textBuff));
           else
             strlcpy(textBuff, Model.FlightMode[activeFmdIdx].name, sizeof(textBuff));
           //print right aligned
@@ -909,8 +903,8 @@ void handleMainUI()
               display.print(Model.Channel[widget->src].name);
             else
             {
-              display.print(F("Ch"));
-              display.print(widget->src + 1);
+              getSrcName(textBuff, SRC_CH1 + widget->src, sizeof(textBuff));
+              display.print(textBuff);
               display.print(F(" out"));
             }
             display.print(F(":"));
@@ -942,8 +936,8 @@ void handleMainUI()
               display.print(Model.Counter[widget->src].name);
             else
             {
-              display.print(F("Counter"));
-              display.print(widget->src + 1);
+              getSrcName(textBuff, SRC_COUNTER_FIRST + widget->src, sizeof(textBuff));
+              display.print(textBuff);
             }
             display.print(F(":"));
             display.setCursor(67, ypos);
@@ -1338,8 +1332,8 @@ void handleMainUI()
                 }
                 else if(widget->type == WIDGET_TYPE_OUTPUTS)
                 {
-                  display.print(F("Ch"));
-                  display.print(widget->src + 1);
+                  getSrcName(textBuff, SRC_CH1 + widget->src, sizeof(textBuff));
+                  display.print(textBuff);
                   if(!isEmptyStr(Model.Channel[widget->src].name, sizeof(Model.Channel[0].name)))
                   {
                     display.print(F(" "));
@@ -1368,16 +1362,16 @@ void handleMainUI()
                     display.print(Model.Counter[widget->src].name);
                   else
                   {
-                    display.print(F("Counter"));
-                    display.print(widget->src + 1);
+                    getSrcName(textBuff, SRC_COUNTER_FIRST + widget->src, sizeof(textBuff));
+                    display.print(textBuff);
                   }
                   if(edit)
                     widget->src = incDec(widget->src, 0, NUM_COUNTERS - 1, INCDEC_WRAP, INCDEC_SLOW);
                 }
                 else if(widget->type == WIDGET_TYPE_TIMERS)
                 {
-                  display.print(F("Timer"));
-                  display.print(widget->src + 1);
+                  getSrcName(textBuff, SRC_TIMER_FIRST + widget->src, sizeof(textBuff));
+                  display.print(textBuff);
                   if(!isEmptyStr(Model.Timer[widget->src].name, sizeof(Model.Timer[0].name)))
                   {
                     display.print(F(" "));
@@ -3282,8 +3276,8 @@ void handleMainUI()
           uint8_t idx = item - 1;
           drawCheckbox(25, ypos, Model.Mixer[thisMixIdx].flightMode & (1 << idx));
           display.setCursor(35, ypos);
-          display.print(F("Fmd"));
-          display.print(idx + 1);
+          getControlSwitchName(textBuff, CTRL_SW_FMD_FIRST + idx, sizeof(textBuff));
+          display.print(textBuff);
           display.print(F(" "));
           display.print(Model.FlightMode[idx].name);
         }
@@ -3804,8 +3798,8 @@ void handleMainUI()
         drawHeader(mainMenu[MAIN_MENU_OUTPUTS]);
         
         display.setCursor(8, 9);
-        display.print(F("Ch"));
-        display.print(thisChIdx + 1);
+        getSrcName(textBuff, SRC_CH1 + thisChIdx, sizeof(textBuff));
+        display.print(textBuff);
         if(!isEmptyStr(ch->name, sizeof(ch->name)))
         {
           display.setCursor(display.getCursorX() + 6, 9);
@@ -4947,7 +4941,8 @@ void handleMainUI()
         display.setInterlace(false); 
         drawHeader(PSTR("Logical sw outputs"));
         
-        //scrollable 
+        //--- scrollable 
+        
         uint8_t numPages = (NUM_LOGICAL_SWITCHES + 9) / 10;
         static uint8_t thisPage = 1;
         
@@ -4965,38 +4960,39 @@ void handleMainUI()
         uint8_t startIdx = (thisPage - 1) * 10;
         for(uint8_t i = startIdx; i < startIdx + 10 && i < NUM_LOGICAL_SWITCHES; i++)
         {
+          uint8_t xpos, ypos;
           if((i - startIdx) < 5)
           {
-            if(i == thisLsIdx)
-            {
-              display.setCursor(0, 10 + (i - startIdx) * 11);
-              display.write(0xB1);
-            }
-            display.setCursor(6, 10 + (i - startIdx) * 11);
+            xpos = 6;
+            ypos = 10 + (i - startIdx) * 11;
           }
           else
           { 
-            if(i == thisLsIdx)
-            {
-              display.setCursor(65, 10 + (i - (startIdx + 5)) * 11);
-              display.write(0xB1);
-            }        
-            display.setCursor(71, 10 + (i - (startIdx + 5)) * 11);
+            xpos = 71;
+            ypos = 10 + (i - (startIdx + 5)) * 11;
           }
-          display.print(F("L"));          
-          display.print(1 + i);  
+          //show marker
+          if(i == thisLsIdx)
+          {
+            display.setCursor(xpos - 6, ypos);
+            display.write(0xB1);
+          }
+          //show name
+          display.setCursor(xpos, ypos);
+          getSrcName(textBuff, SRC_SW_LOGICAL_FIRST + i, sizeof(textBuff));
+          display.print(textBuff);
           display.print(F(":"));
-          if(i < 9)
-            display.print(F(" "));
-
+          //draw the switch state icon
           if(checkSwitchCondition(CTRL_SW_LOGICAL_FIRST + i))
-            display.drawBitmap(display.getCursorX(), display.getCursorY(), icon_switch_is_on, 13, 8, BLACK);
+            display.drawBitmap(xpos + 24, ypos, icon_switch_is_on, 13, 8, BLACK);
           else
-            display.drawBitmap(display.getCursorX(), display.getCursorY(), icon_switch_is_off, 13, 8, BLACK);
+            display.drawBitmap(xpos + 24, ypos, icon_switch_is_off, 13, 8, BLACK);
         }
+
         //show scrollbar
         drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
 
+        //exit
         if(heldButton == KEY_SELECT)
         {
           viewInitialised = false;
@@ -5421,8 +5417,8 @@ void handleMainUI()
         counter_params_t *counter = &Model.Counter[thisCounterIdx];
         
         display.setCursor(8, 9);
-        display.print(F("Counter"));
-        display.print(thisCounterIdx + 1);
+        getSrcName(textBuff, SRC_COUNTER_FIRST + thisCounterIdx, sizeof(textBuff));
+        display.print(textBuff);
         if(!isEmptyStr(counter->name, sizeof(counter->name)))
         {
           display.setCursor(display.getCursorX() + 6, 9);
@@ -5827,8 +5823,8 @@ void handleMainUI()
         }
 
         display.setCursor(8, 9);
-        display.print(F("Timer"));
-        display.print(thisTimerIdx + 1);
+        getSrcName(textBuff, SRC_TIMER_FIRST + thisTimerIdx, sizeof(textBuff));
+        display.print(textBuff);
         display.drawHLine(8, 17, display.getCursorX() - 8, BLACK);
 
         display.setCursor(0, 20);
@@ -6449,8 +6445,9 @@ void handleMainUI()
         
         //-- draw --
         display.setCursor(8, 9);
-        display.print(F("Fmd"));
-        display.print(thisFmdIdx + 1);
+        
+        getControlSwitchName(textBuff, CTRL_SW_FMD_FIRST + thisFmdIdx, sizeof(textBuff));
+        display.print(textBuff);
         display.drawHLine(8, 17, display.getCursorX() - 9, BLACK);
         
         display.setCursor(0, 20);
@@ -8594,8 +8591,8 @@ void handleMainUI()
             drawCursor(28, ypos);
           display.setCursor(0, ypos);
           uint8_t idx = line + topItem - 1;
-          display.print(F("Sw"));
-          display.write(65 + idx);
+          getSrcName(textBuff, SRC_SW_PHYSICAL_FIRST + idx, sizeof(textBuff));
+          display.print(textBuff);
           display.print(F(":"));
           display.setCursor(36, ypos);
           display.print(findStringInIdStr(enum_SwitchType, Sys.swType[idx]));
