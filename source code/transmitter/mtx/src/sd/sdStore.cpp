@@ -19,7 +19,7 @@
   #include "../lcd/LCDST7920.h"
 #endif
 
-//limit to 128kiB files
+//limit to 128 kiB files
 #define FILE_SIZE_LIMIT_BYTES 131072
 
 bool hasSDcard = false;
