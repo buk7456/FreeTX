@@ -366,8 +366,8 @@ void calibrateSticks(uint8_t stage)
     
     case CALIBRATE_DEADBAND:
     {
-      //Add slight deadband(about 1.5%) to stabilise readings at ends
-      //For a range of 0 to 5V, min max are 0.07V and 4.92V
+      //Add slight deadband (about 1.5%) to stabilise readings at ends
+      //For a range of 0 to 5 V, min max are 0.07 V and 4.92 V
       int16_t deadBand; 
       for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
       {
@@ -417,8 +417,8 @@ void calibrateKnobs(uint8_t stage)
     
     case CALIBRATE_DEADBAND:
     {
-      //Add slight deadband(about 1.5%) to stabilise readings at ends
-      //For a range of 0 to 5V, min max are 0.07V and 4.92V
+      //Add slight deadband (about 1.5%) to stabilise readings at ends
+      //For a range of 0 to 5 V, min max are 0.07 V and 4.92 V
       int16_t deadBand; 
       for(uint8_t i = 0; i < NUM_KNOBS; i++)
       {
