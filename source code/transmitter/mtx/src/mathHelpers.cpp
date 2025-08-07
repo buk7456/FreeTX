@@ -17,7 +17,7 @@ int32_t divRoundClosest(int32_t n, int32_t d)
 //--------------------------------------------------------------------------------------------------
 
 //Implementation of linear Interpolation using integers
-//The xValues must be ordered in ascending
+//The x values must be ordered in ascending
 //Formula used is y = y0 + ((x - x0)*(y1 - y0))/(x1 - x0);
 //For infinite slope we simply return the immediate left y value if x is in the first half
 //or the immediate right y value if x is in the second half
@@ -63,7 +63,7 @@ int16_t linearInterpolate(int16_t xValues[], int16_t yValues[], uint8_t numValue
 //--------------------------------------------------------------------------------------------------
 
 // Implementation of hermite cubic spline interpolation.
-// The xValues must be ordered in ascending.
+// The x values must be ordered in ascending.
 // See the following wikipedia articles for the functions used.
 // https://en.wikipedia.org/wiki/Cubic_Hermite_spline
 // https://en.wikipedia.org/wiki/Monotone_cubic_interpolation
