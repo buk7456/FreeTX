@@ -115,7 +115,7 @@ void setup()
   uint32_t tt = millis();
   
   //Initialise sd card storage
-  //moved here as it implicitly blocks for about 2seconds when there is no sd card
+  //moved here as it implicitly blocks for about 2 seconds when there is no sd card
   sdStoreInit();
   
   if(Sys.showWelcomeMessage)
@@ -167,10 +167,10 @@ void loop()
   handleMainUI();
   
   ///--- LAZY SAVE MODEL DATA TO EEPROM
-  //Limit calling to about 10x per second to prolong the eeprom life.
-  //Saving say 2400bytes takes approximately 240seconds (4minutes) before starting over.
-  //Without the limit, the same would take approximately 48seconds, so if we let the system run
-  //for 6hours, we would be making 450 writes to a certain eeprom cell, compared to 90 when limited.
+  //Limit calling to about 10 times per second to prolong the EEPROM life.
+  //Saving say 2400 bytes takes approximately 240 seconds (4 minutes) before starting over.
+  //Without the limit, the same would take approximately 48 seconds, so if we let the system run
+  //for 6 hours, we would be making 450 writes to a certain eeprom cell, compared to 90 when limited.
   if(thisLoopNum % (100 / fixedLoopTime) == 0)
     eeLazyWriteModelData(Sys.activeModelIdx);
 
@@ -219,7 +219,7 @@ void checkBattery()
   batteryVoltsNow = ((sample * smoothFactor) + ((100 - smoothFactor) * (int32_t)batteryVoltsNow)) / 100;
   if(batteryVoltsNow <= Sys.batteryVoltsMin)
     batteryState = BATTERY_LOW;
-  else if(batteryVoltsNow > (Sys.batteryVoltsMin + 100)) //100mV hysteris
+  else if(batteryVoltsNow > (Sys.batteryVoltsMin + 100)) //100 mV hysteris
     batteryState = BATTERY_HEALTHY; 
 }
 
