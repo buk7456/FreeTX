@@ -12,24 +12,24 @@
 //--------------- Freq allocation --------------------
 /* 
   LPD433 Band ITU region 1
-  The frequencies in this UHF band lie between 433.05Mhz and 434.790Mhz with 25kHz separation for a
-  total of 69 freq channels. Channel_1 is 433.075 Mhz and Channel_69 is 434.775Mhz. 
+  The frequencies in this UHF band lie between 433.05 MHz and 434.790 MHz with 25 kHz separation for a
+  total of 69 frequency channels. Channel_1 is 433.075 MHz and Channel_69 is 434.775 MHz. 
   All our communications have to occur on any of these 69 channels. 
   
-  915MHZ Band ITU region 2
-  The frequencies in this UHF band lie between 902Mhz and 928Mhz
+  915 MHZ Band ITU region 2
+  The frequencies in this UHF band lie between 902 MHz and 928 MHz.
 */
 
 #if defined (ISM_433MHZ)
-  // separation here is 525kHz (500kHz total lora bw +  25kHz guard band.
+  // Separation here is 525 kHz (500 kHz total lora bw +  25 kHz guard band).
   #define NUM_FREQ 4
   uint32_t freqList[NUM_FREQ] = {
     433150000, 433675000, 434200000, 434725000
   };
   
 #elif defined (ISM_915MHZ)
-  // separation here is 550kHz (500kHz total Lora bw + 50kHz guard band
-  // frequencies here are in range 915MHz to 925MHz to avoid clashing with the GSM900 frequencies
+  // Separation here is 550 kHz (500 kHz total Lora bw + 50 kHz guard band).
+  // Frequencies here are in range 915 MHz to 925 MHz to avoid clashing with the GSM900 frequencies.
   #define NUM_FREQ 15
   uint32_t freqList[NUM_FREQ] = {
     916100000, 916650000, 917200000, 917750000, 918300000,
@@ -97,7 +97,7 @@ void initialiseRfModule()
     delay(20);
     //start in low power level
     LoRa.sleep();
-    LoRa.setTxPower(3); //3dBm
+    LoRa.setTxPower(3); //3 dBm
     LoRa.idle();
     
     radioInitialised = true;
@@ -139,7 +139,7 @@ void doRfCommunication()
     //set RF power level
     if(!LoRa.isTransmitting())
     {
-      static uint8_t power_dBm[3] = {3, 10, 17}; //2mW, 10mW, 50mW
+      static uint8_t power_dBm[3] = {3, 10, 17}; //2 mW, 10 mW, 50 mW
       setRfPower(power_dBm[rfPower]);
     }
 
@@ -264,7 +264,7 @@ void bind()
     }
     
     //--- set to lowest power level
-    setRfPower(2); // 2dBm
+    setRfPower(2); // 2 dBm
 
     //--- set to bind frequency
     LoRa.sleep();
