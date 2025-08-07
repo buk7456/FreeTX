@@ -49,7 +49,7 @@ void setup()
   digitalWrite(PIN_PWR_LED, HIGH);
 #endif
   
-  //--- use analog reference internal 1.1V
+  //--- use analog reference internal 1.1 V
   analogReference(INTERNAL);
 
   //--- Serial
