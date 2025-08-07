@@ -10470,7 +10470,7 @@ void printTimerValue(uint8_t idx)
     if(timerElapsedTime[idx] < initMillis)
     {
       uint32_t ttqq = initMillis - timerElapsedTime[idx];
-      printHHMMSS(ttqq + 999); //add 999ms so the displayed time doesnt 
+      printHHMMSS(ttqq + 999); //add 999 ms so the displayed time doesn't 
       //change immediately upon running the timer
     }
     else

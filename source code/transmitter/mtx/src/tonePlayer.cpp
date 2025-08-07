@@ -266,7 +266,7 @@ void playTones()
     audioToPlay = AUDIO_NONE;
 
   static uint8_t lastAudioToPlay = AUDIO_NONE;
-  if(audioToPlay != lastAudioToPlay) //init playback with the specified audio
+  if(audioToPlay != lastAudioToPlay) //initialise playback with the specified audio
   {
     lastAudioToPlay = audioToPlay;
     

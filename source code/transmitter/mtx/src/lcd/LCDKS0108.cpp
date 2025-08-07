@@ -392,7 +392,7 @@ void LCDKS0108::display()
 
     
     //Unrolled loop version
-    //this saves about 0.6ms in progressive scan mode
+    //this saves about 0.6 ms in progressive scan mode
     //at the expense of a few bytes more flash memory usage
     for(uint8_t column = 0; column < 128; column += 8)
     {

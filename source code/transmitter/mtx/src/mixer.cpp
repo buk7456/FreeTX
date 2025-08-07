@@ -155,11 +155,11 @@ void computeChannelOutputs()
 
   ///----------- MIX SOURCES ARRAY INITIALIZATIONS --------
 
-  //Mix source raw sticks
+  //Mix source Raw sticks
   for(uint8_t i = 0; i < NUM_STICK_AXES; i++)
     mixSources[SRC_STICK_AXIS_FIRST + i] = stickAxisIn[i];
   
-  //Mix source stick trims
+  //Mix source Stick trims
 
   if(Model.X1Trim.trimState == TRIM_FLIGHT_MODE)
     mixSources[SRC_X1_TRIM] = ((int32_t) fmdTrimVal[0] * 5) / 10 ;
@@ -189,11 +189,11 @@ void computeChannelOutputs()
   else if(Model.Y2Trim.trimState == TRIM_DISABLED)
     mixSources[SRC_Y2_TRIM] = 0;
 
-  //Mix source knobs
+  //Mix source Knobs
   for(uint8_t i = 0; i < NUM_KNOBS; i++)
     mixSources[SRC_KNOB_FIRST + i] = knobIn[i];
   
-  //Mix source 100Perc
+  //Mix source 100 Percent i.e. Max
   mixSources[SRC_100PERC] = 500;
   
   //Mix source Rud, Ail, Ele
@@ -214,7 +214,7 @@ void computeChannelOutputs()
   else 
     mixSources[SRC_ELE] = calcRateExpo(mixSources[Model.eleSrcRaw], Model.EleDualRate.rate2, Model.EleDualRate.expo2);
   
-  //Mix source throttle curve
+  //Mix source Throttle curve
   int16_t _xxQQ[MAX_NUM_POINTS_CUSTOM_CURVE];
   int16_t _yyQQ[MAX_NUM_POINTS_CUSTOM_CURVE];
   for(uint8_t pt = 0; pt < Model.ThrottleCurve.numPoints; pt++)
@@ -227,7 +227,7 @@ void computeChannelOutputs()
   else
     mixSources[SRC_THR] = linearInterpolate(_xxQQ, _yyQQ, Model.ThrottleCurve.numPoints, mixSources[Model.thrSrcRaw]);
 
-  //Mix source switches
+  //Mix source Switches
   for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
   {
     if(Sys.swType[i] == SW_2POS || Sys.swType[i] == SW_2POS_MOMENTARY)
@@ -238,23 +238,23 @@ void computeChannelOutputs()
       mixSources[SRC_SW_PHYSICAL_FIRST + i] = 0;
   }
   
-  //Mix sources function generators
+  //Mix sources Function generators
   for(uint8_t i = 0; i < NUM_FUNCGEN; i++)
     mixSources[SRC_FUNCGEN_FIRST + i] = generateWaveform(i, currMillis);
 
   //Evaluate counters
   evaluateCounters();
 
-  //Mix sources logical switches
+  //Mix sources Logical switches
   evaluateLogicalSwitches(currMillis);
   for(uint8_t i = 0; i < NUM_LOGICAL_SWITCHES; i++)
     mixSources[SRC_SW_LOGICAL_FIRST + i] = logicalSwitchState[i] ? 500 : -500;
   
-  //Mix sources channels
+  //Mix sources Channels
   for(uint8_t i = 0; i < NUM_RC_CHANNELS; i++)
     mixSources[SRC_CH1 + i] = 0;
   
-  //Mix sources virtual channels
+  //Mix sources Virtual channels
   for(uint8_t i = 0; i < NUM_VIRTUAL_CHANNELS; i++)
     mixSources[SRC_VIRTUAL_FIRST + i] = 0;
 
@@ -756,7 +756,7 @@ void evaluateLogicalSwitches(uint32_t _currTime)
       case LS_FUNC_ABS_DELTA_GREATER_THAN_X:
         {
           int32_t _val1 = 0, _val2 = 0;
-          if(ls->val1 < MIX_SOURCES_COUNT) //mixsources
+          if(ls->val1 < MIX_SOURCES_COUNT) //mix sources
           {
             _val1 = mixSources[ls->val1];
             _val2 = 5 * ls->val2;
@@ -1194,7 +1194,7 @@ int16_t calcExpo(int16_t input, int16_t expo)
   y = e^(k*ln(x)) which simplifies to y = x^k
   However this is quite hard to compute on a simple microcontroller, therefore we use a cubic equation 
   that gives comparable results for the range we are interested in. 
-  y = k*x^3 + (1-k)*x   where k is 'expo factor. k range -1 to 1, x range -1 to 1
+  y = k*x^3 + (1-k)*x   where k is 'expo' factor. k range -1 to 1, x range -1 to 1
   
   For our implementation, we only use the range 0 < k < 1 and simply mirror the result if k is negative.
   We also work with only positive input in the calculation and simply negate the result for negative input.

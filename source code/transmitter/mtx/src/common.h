@@ -492,7 +492,7 @@ typedef struct {
   int16_t  multiplier;     //1 to 1000, scales to 0.01 to 10.00
   int8_t   factor10;       //-3 to 3. Means x10^
   int16_t  offset;         //-30000 to 30000
-  uint8_t  alarmCondition; //None, >Thresh, <Thresh
+  uint8_t  alarmCondition; //None, >Threshold, <Threshold
   int16_t  alarmThreshold; //-30000 to 30000
   bool     showOnHome; 
   bool     recordMaximum;
