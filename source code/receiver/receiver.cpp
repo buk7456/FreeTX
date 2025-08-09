@@ -240,7 +240,7 @@ void writeOutputs()
 
 uint8_t getMaxSignalType(int16_t pin)
 {
-  uint8_t rslt = SIGNAL_TYPE_SERVOPWM; //assumed //### TODO Check within servo objects
+  uint8_t rslt = SIGNAL_TYPE_SERVOPWM; //assumed //TODO: Check within servo objects
   
   int16_t pwmPins[] = {5, 6, 3, 11}; //on arduino uno. Pins 9 and 10 omitted due to servo lib
   //search through array
@@ -260,7 +260,7 @@ uint8_t getMaxSignalType(int16_t pin)
 void getExternalVoltage()
 {
   /* 
-  Apply smoothing to measurement using exponential recursive smoothing
+  Apply smoothing to measurement using exponential recursive smoothing.
   It works by subtracting out the mean each time, and adding in a new point. 
   _NUM_SAMPLES parameter defines number of samples to average over. Higher value results in slower
   response.
