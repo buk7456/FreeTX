@@ -421,7 +421,7 @@ void bind()
 
 //--------------------------------------------------------------------------------------------------
 
-void sendTelemetry() //### TODO implement custom telemetry, establish standard IDs
+void sendTelemetry() //TODO: implement custom telemetry, establish standard IDs
 {
   if(!Sys.isMainReceiver)
   {
@@ -446,7 +446,7 @@ void sendTelemetry() //### TODO implement custom telemetry, establish standard I
 
     switch(telemetryType)
     {
-      case TELEMETRY_TYPE_GENERAL: //todo improve this section to avoid possible buffer overflows
+      case TELEMETRY_TYPE_GENERAL: //TODO: improve this section to avoid possible buffer overflows
         {
           //calculate RC packets per second
           static uint32_t prevRCPacketCount = 0; 
