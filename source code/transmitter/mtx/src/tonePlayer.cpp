@@ -201,8 +201,8 @@ void beginToneTrimMoved()
   //init values
   endTimeOfNote = 0;
   bpm = 250;
-  postn = 1; //todo cleanup, this is a hack
-  size = 2;  //todo cleanup, this is a hack
+  postn = 1; //TODO: clean up, this is a hack
+  size = 2;  //TODO: clean up, this is a hack
   isPlaying = true;
   isTrimBeepSound = true;
 }
