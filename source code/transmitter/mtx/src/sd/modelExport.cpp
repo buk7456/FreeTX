@@ -583,24 +583,18 @@ void exportModelData(File& file)
     }
     else if(widget->type == WIDGET_TYPE_TIMERS)
     {
-      writeKey_helper(file, 1, key_Src);
-      file.print(F("Timer"));
-      file.print(widget->src + 1);
-      file.println();
+      getSrcName_Clean(tempBuff, SRC_TIMER_FIRST + widget->src, sizeof(tempBuff));
+      writeKeyValue_Char(file, 1, key_Src, tempBuff);
     }
     else if(widget->type == WIDGET_TYPE_COUNTERS)
     {
-      writeKey_helper(file, 1, key_Src);
-      file.print(F("Counter"));
-      file.print(widget->src + 1);
-      file.println();
+      getSrcName_Clean(tempBuff, SRC_COUNTER_FIRST + widget->src, sizeof(tempBuff));
+      writeKeyValue_Char(file, 1, key_Src, tempBuff);
     }
     else if(widget->type == WIDGET_TYPE_OUTPUTS)
     {
-      writeKey_helper(file, 1, key_Src);
-      file.print(F("Ch"));
-      file.print(widget->src + 1);
-      file.println();
+      getSrcName_Clean(tempBuff, SRC_CH1 + widget->src, sizeof(tempBuff));
+      writeKeyValue_Char(file, 1, key_Src, tempBuff);
       writeKeyValue_Char(file, 1, key_Disp, findStringInIdStr(enum_WidgetDisplay, widget->disp));
       writeKeyValue_S32(file, 1, key_GaugeMin, widget->gaugeMin);
       writeKeyValue_S32(file, 1, key_GaugeMax, widget->gaugeMax);
