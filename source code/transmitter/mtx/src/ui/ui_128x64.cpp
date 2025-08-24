@@ -11308,10 +11308,10 @@ void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEm
     display.fillRect(xpos + 6 * charPos, 36, 5, 1, BLACK);
   
   //---- map characters ---
-  // Z to A  (90 ... 65)   -->  0 ... 25
-  // space   (32)          -->  26
-  // a to z  (97 ... 122)  -->  27 ... 52
-  // Numbers (48 ... 57)   -->  53 ... 62
+  // 9 to 0  (57 ... 48)   -->  0 ... 9
+  // Z to A  (90 ... 65)   -->  10 ... 35
+  // space   (32)          -->  36
+  // a to z  (97 ... 122)  -->  37 ... 62
   // - . /   (45 ... 47)   -->  63 ... 65
   // % symbol  (37)        -->  66
   // Degree symbol (248)   -->  67
@@ -11319,32 +11319,32 @@ void editTextDialog(const char* title, char* buff, uint8_t lenBuff, bool allowEm
   // Square symbol (253)   -->  69
   // Greek letter mu (230) -->  70
 
-  if(thisChar == 32) thisChar = 26;
+  if(thisChar == 32) thisChar = 36;
   else if(thisChar == 37)  thisChar = 66;
-  else if(thisChar <= 47)  thisChar += 18;
-  else if(thisChar <= 57)  thisChar += 5;
-  else if(thisChar <= 90)  thisChar = 90 - thisChar ;
   else if(thisChar == 94)  thisChar = 68;
-  else if(thisChar <= 122) thisChar -= 70;
   else if(thisChar == 230) thisChar = 70;
   else if(thisChar == 248) thisChar = 67;
   else if(thisChar == 253) thisChar = 69;
+  else if(thisChar <= 47)  thisChar += 18;
+  else if(thisChar <= 57)  thisChar = 57 - thisChar;
+  else if(thisChar <= 90)  thisChar = 100 - thisChar;
+  else if(thisChar <= 122) thisChar -= 60;
   
   //adjust
   isEditMode = true;
   thisChar = incDec(thisChar, 70, 0, INCDEC_NOWRAP, INCDEC_SLOW);
 
   //map back
-  if(thisChar <= 25) thisChar = 90 - thisChar;
-  else if(thisChar == 26) thisChar = 32; 
-  else if(thisChar <= 52) thisChar += 70;
-  else if(thisChar <= 62) thisChar -= 5;
-  else if(thisChar <= 65) thisChar -= 18;
+  if(thisChar == 36) thisChar = 32; 
   else if(thisChar == 66) thisChar = 37;
   else if(thisChar == 67) thisChar = 248;
   else if(thisChar == 68) thisChar = 94;
   else if(thisChar == 69) thisChar = 253;
   else if(thisChar == 70) thisChar = 230;
+  else if(thisChar <= 9)  thisChar = 57 - thisChar;
+  else if(thisChar <= 35) thisChar = 100 - thisChar;
+  else if(thisChar <= 62) thisChar = 60 + thisChar;
+  else if(thisChar <= 65) thisChar = thisChar - 18;
 
   //write
   *(buff + charPos) = thisChar;
