@@ -422,7 +422,7 @@ bool sdWriteScreenshot()
   if(myFile)
   {
 
-  #if defined(UI_128X64)
+  #if defined (UI_128X64)
     //write the header
     for(uint8_t i = 0; i < sizeof(bmpHeader); i++)
     {
