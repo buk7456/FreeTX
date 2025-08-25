@@ -11038,8 +11038,6 @@ void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src)
 
 void drawMixerCurvePreview(mixer_params_t* mxr, bool showCrossHairs)
 {
-  // display.fillRect(101, 37, 27, 27, WHITE);
-  // display.drawRect(102, 38, 25, 25, BLACK);
   display.drawVLine(114, 40, 21, BLACK);
   display.drawHLine(104, 50, 21, BLACK);
   
@@ -11148,8 +11146,20 @@ void drawMixerCurvePreview(mixer_params_t* mxr, bool showCrossHairs)
   //add input and output markers
   if(showCrossHairs && mxr->input != SRC_NONE && mxr->output != SRC_NONE)
   {
-    drawDottedVLine(114 + divRoundClosest(focusedMixInputVal, 50), 40, 21, BLACK, WHITE);
+    uint8_t x = 114 + divRoundClosest(focusedMixInputVal, 50);
+    drawDottedVLine(x, 40, 21, BLACK, WHITE);
     drawDottedHLine(104, 50 - divRoundClosest(focusedMixOutputVal, 50), 21, BLACK, WHITE);
+    
+#if defined (DISPLAY_KS0108)
+    //selectively turn off interlacing to prevent artifacts
+    static uint8_t lastX;
+    if(lastX != x)
+    {
+      lastX = x;
+      display.setInterlace(false);
+    }
+#endif
+
   }
 
 }
