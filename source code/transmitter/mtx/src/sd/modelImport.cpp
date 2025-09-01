@@ -196,7 +196,7 @@ uint8_t getControlSwitchID(const char* str)
 int32_t getFixedPointVal10(const char* str)
 {
   //Converts decimal string to fixed point representation with factor of 10
-  //For example 12.3 to becomes 123,  -12.3 becomes -123
+  //For example 12.3 becomes 123,  -12.3 becomes -123
   //If no decimal point exists, the value is still multiplied by 10
 
   char tempBuff[MAX_STR_SIZE];
