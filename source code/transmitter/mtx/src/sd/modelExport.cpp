@@ -70,7 +70,7 @@ void writeKeyValue_TimeSeconds(File& file, uint8_t level, const char* keyStr_P, 
   file.print(deciseconds / 10);
   file.print(F("."));
   file.print(deciseconds % 10);
-  file.print(F("s"));
+  file.print(F(" s"));
   file.println();
 }
 
