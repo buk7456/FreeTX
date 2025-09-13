@@ -1554,25 +1554,36 @@ int16_t generateWaveform(uint8_t idx, int32_t _currTime)
   {
     case FUNCGEN_WAVEFORM_SINE:
       {
-        // Table for generating stepped sine waveform
-        static const int8_t sineTable[64] PROGMEM = {
-          0, 10, 20, 29, 38, 47, 56, 63, 71, 77, 83, 88, 92, 96, 98, 100, 
-          100, 100, 98, 96, 92, 88, 83, 77, 71, 63, 56, 47, 38, 29, 20, 10, 
-          0, -10, -20, -29, -38, -47, -56, -63, -71, -77, -83, -88, -92, -96, -98, -100, 
-          -100, -100, -98, -96, -92, -88, -83, -77, -71, -63, -56, -47, -38, -29, -20, -10
+        static const int16_t sineTable[256] PROGMEM = {
+          0, 12, 25, 37, 49, 61, 73, 85, 98, 110, 121, 133, 145, 157, 168, 180,
+          191, 203, 214, 225, 236, 246, 257, 267, 278, 288, 298, 308, 317, 327, 336, 345,
+          354, 362, 370, 379, 387, 394, 402, 409, 416, 422, 429, 435, 441, 447, 452, 457,
+          462, 466, 471, 475, 478, 482, 485, 488, 490, 493, 495, 496, 498, 499, 499, 500,
+          500, 500, 499, 499, 498, 496, 495, 493, 490, 488, 485, 482, 478, 475, 471, 466,
+          462, 457, 452, 447, 441, 435, 429, 422, 416, 409, 402, 394, 387, 379, 370, 362,
+          354, 345, 336, 327, 317, 308, 298, 288, 278, 267, 257, 246, 236, 225, 214, 203,
+          191, 180, 168, 157, 145, 133, 121, 110, 98, 85, 73, 61, 49, 37, 25, 12,
+          0, -12, -25, -37, -49, -61, -73, -85, -98, -110, -121, -133, -145, -157, -168, -180,
+          -191, -203, -214, -225, -236, -246, -257, -267, -278, -288, -298, -308, -317, -327, -336, -345,
+          -354, -362, -370, -379, -387, -394, -402, -409, -416, -422, -429, -435, -441, -447, -452, -457,
+          -462, -466, -471, -475, -478, -482, -485, -488, -490, -493, -495, -496, -498, -499, -499, -500,
+          -500, -500, -499, -499, -498, -496, -495, -493, -490, -488, -485, -482, -478, -475, -471, -466,
+          -462, -457, -452, -447, -441, -435, -429, -422, -416, -409, -402, -394, -387, -379, -370, -362,
+          -354, -345, -336, -327, -317, -308, -298, -288, -278, -267, -257, -246, -236, -225, -214, -203,
+          -191, -180, -168, -157, -145, -133, -121, -110, -98, -85, -73, -61, -49, -37, -25, -12
         };
-        
+
         //--fixed point arithmetic with a fractional part
         // the fractional part is used for linear interpolation
         const int16_t multiplier = 32;
-        int16_t index = (timeInstance * (sizeof(sineTable)/sizeof(sineTable[0])) * multiplier)/period; 
-        uint8_t indexLUT = index / multiplier;
-        int16_t valL = (int16_t)5 * (int8_t)pgm_read_byte(&sineTable[indexLUT]);
-        indexLUT++; 
+        int16_t index = (timeInstance * (sizeof(sineTable)/sizeof(sineTable[0])) * multiplier) / period; 
+        uint16_t indexLUT = index / multiplier;
+        int16_t valL = (int16_t)pgm_read_word(&sineTable[indexLUT]);
+        indexLUT++;
         if(indexLUT >= (sizeof(sineTable)/sizeof(sineTable[0]))) 
           indexLUT = 0;
-        int16_t valR = (int16_t)5 * (int8_t)pgm_read_byte(&sineTable[indexLUT]);
-        result = valL + (((valR - valL)*(index % multiplier))/multiplier);
+        int16_t valR = (int16_t)pgm_read_word(&sineTable[indexLUT]);
+        result = valL + (((valR - valL)*(index % multiplier)) / multiplier);
       }
       break;
     
