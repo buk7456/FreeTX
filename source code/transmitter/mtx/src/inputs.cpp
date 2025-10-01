@@ -76,7 +76,7 @@ void readSwitchesAndButtons()
     }
   }
 
-  //--Read trims and ui buttons--
+  //--Read trims and UI buttons--
   //Only one button can be pressed at a time
   
   buttonCode = 0;

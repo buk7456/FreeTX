@@ -263,7 +263,7 @@ enum sensor_ID_e {
 /* in milliseconds. Should be greater than the time taken by radio module to transmit the 
 entire packet or else the window is missed resulting in much less throughput. 
 It should also be close to the average worst case time to do the main loop i.e. when all features 
-are active (mixers, logical switches, ui, etc).
+are active (mixers, logical switches, UI, etc).
 The main loop time can be displayed by enabling the option in the debug menu.
 */
 

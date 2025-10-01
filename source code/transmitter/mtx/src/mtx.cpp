@@ -219,7 +219,7 @@ void checkBattery()
   batteryVoltsNow = ((sample * smoothFactor) + ((100 - smoothFactor) * (int32_t)batteryVoltsNow)) / 100;
   if(batteryVoltsNow <= Sys.batteryVoltsMin)
     batteryState = BATTERY_LOW;
-  else if(batteryVoltsNow > (Sys.batteryVoltsMin + 100)) //100 mV hysteris
+  else if(batteryVoltsNow > (Sys.batteryVoltsMin + 100)) //100 mV hysteresis
     batteryState = BATTERY_HEALTHY; 
 }
 
