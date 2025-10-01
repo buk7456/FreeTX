@@ -665,7 +665,7 @@ void handleMainUI()
   //to prevent interlace artifacts
   display.setInterlace(true); 
 
-  //-------------- Main ui state machine ----------------
+  //-------------- Main UI state machine ----------------
   switch (theScreen)
   {
     ////////////////////////////////// HOME ////////////////////////////////////////////////////////
@@ -9514,7 +9514,7 @@ void handleMainUI()
                   game->pipeY = random(PIPE_GAP, 51);
               }
               
-              //Calc background position
+              //Calculate background position
               //the background is parallax scrolled
               if(game->maxScrollVelocityReached)
                 game->bgX += game->bgScrollVelocity;

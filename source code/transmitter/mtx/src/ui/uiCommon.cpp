@@ -617,7 +617,7 @@ void calcNewCurvePts(custom_curve_t *crv, uint8_t numOldPts)
   for(uint8_t pt = 0; pt < crv->numPoints; pt++)
   {
     int16_t xNew = 5 * (-100 + ((200 * pt)/(crv->numPoints - 1)));
-    //calc new y value by interpolating using old data
+    //calculate new y value by interpolating using old data
     int16_t yNew;
     if(crv->smooth)
       yNew = cubicHermiteInterpolate(xValOld, yValOld, numOldPts, xNew);
