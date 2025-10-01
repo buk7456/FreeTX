@@ -1,5 +1,5 @@
 /* 
-  Data arranged in eeprom as follows
+  Data arranged in EEPROM as follows
   
   ======== INTERNAL EEPROM ===========
   Parameter            Offset
@@ -75,7 +75,7 @@ void eeStoreInit()
     }
   }
   
-  //External eeprom
+  //External EEPROM
   Wire.begin();
   Wire.setClock(400000);
   delay(10); 
@@ -91,14 +91,14 @@ void eeStoreInit()
   
   maxNumOfModels = maxModelsInternal + maxModelsExternal;
   
-  //--- Check if formatting neccessary ---
+  //--- Check if formatting necessary ---
   checkAndFormatEEPROM();
   
   //--- Find active model, if none exists, create a model in slot1 ---
   
   eeReadSysConfig();
   
-  //Start by searching external eeprom
+  //Start by searching external EEPROM
   if(hasExternalEE && !isInternalEE(Sys.activeModelIdx) && eeModelIsFree(Sys.activeModelIdx))
   {
     //search from start
@@ -115,14 +115,14 @@ void eeStoreInit()
       modelIdx++;
       if(modelIdx == maxNumOfModels) 
       {
-        //no existing model found, trigger searching in internal eeprom
+        //no existing model found, trigger searching in internal EEPROM
         Sys.activeModelIdx = 0;
         break;
       }
     }
   }
   
-  //search internal eeprom
+  //search internal EEPROM
   if((isInternalEE(Sys.activeModelIdx) && eeModelIsFree(Sys.activeModelIdx)) 
     || (!hasExternalEE && !isInternalEE(Sys.activeModelIdx)))
   {
@@ -170,9 +170,9 @@ void checkAndFormatEEPROM()
   bool clearEESysData   = false;
   bool clearEEModelData = false;
   
-  ///--------------- Internal eeprom --------------
+  ///--------------- Internal EEPROM --------------
   
-  //Check signature. If its not matching, then assume it's a fresh mcu and format the eeprom
+  //Check signature. If it is not matching, then assume it's a fresh MCU and format the EEPROM
   EEPROM.get(ADDRESS_INT_EE_FILE_SIGNATURE, fileSignature);
   if(fileSignature != FILE_SIGNATURE) //force format
   {
@@ -256,14 +256,14 @@ void checkAndFormatEEPROM()
     showMessage(PSTR("Preparing storage"));
     delay(2000);
     //clear
-    //much faster way, though doesnt actually clear everything out
+    //much faster way, though doesn't actually clear everything out
     for(uint8_t modelIdx = 0; modelIdx < maxModelsInternal; modelIdx++)
       eeDeleteModel(modelIdx);
     //write flag
     EEPROM.write(ADDRESS_INT_EE_INIT_FLAG_MODEL, eeInitFlagModel);
   }
   
-  ///------------------ External eeprom -------------------
+  ///------------------ External EEPROM -------------------
   
   do{
     delay(30);
@@ -275,7 +275,7 @@ void checkAndFormatEEPROM()
   
   if(hasExternalEE)
   {
-    //Check signature. If its not matching, then assume it's a fresh eeprom
+    //Check signature. If it is not matching, then assume it's a fresh EEPROM
     myMem.get(ADDRESS_EXT_EE_FILE_SIGNATURE, fileSignature);
     if(fileSignature != FILE_SIGNATURE) //force format
     {
@@ -316,7 +316,7 @@ void checkAndFormatEEPROM()
       showMessage(PSTR("Preparing storage"));
       delay(2000);
       //clear
-      //much faster way, though doesnt actually clear everything out
+      //much faster way, though doesn't actually clear everything out
       for(uint8_t modelIdx = maxModelsInternal; modelIdx < maxNumOfModels; modelIdx++)
         eeDeleteModel(modelIdx);
       //write flag
@@ -365,8 +365,8 @@ void eeSaveSysConfig()
 
 void eeLazyWriteSysConfig()
 {
-  //This function writes system config data one byte at a time so as to improve system perfomance,
-  //and to reduce wear and tear to the eeprom
+  //This function writes system config data one byte at a time so as to improve system performance,
+  //and to reduce wear and tear to the EEPROM
   
   static uint32_t address = ADDRESS_INT_EE_SYS_DATA_START;
   const uint32_t finalAddress = ADDRESS_INT_EE_SYS_DATA_START + sizeof(Sys) - 1;
@@ -413,7 +413,7 @@ void eeSaveModelData(uint8_t modelIdx)
 
 void eeLazyWriteModelData(uint8_t modelIdx)
 {
-  //This function writes model data one byte at a time so as to improve system perfomance
+  //This function writes model data one byte at a time so as to improve system performance
   static bool lazyWriteInitialised = false;
   static uint8_t lastModelIdx = 0xff;
   
@@ -522,7 +522,7 @@ void eeCreateModel(uint8_t modelIdx)
   //set defaults
   resetModelName();
   resetModelParams();
-  //save to eeprom
+  //save to EEPROM
   eeSaveModelData(modelIdx);
 }
 
@@ -610,7 +610,7 @@ void eeFactoryReset()
 {
   eeStoreIsReady = false;
 
-  //wipe internal eeprom
+  //wipe internal EEPROM
   uint32_t totalBytes = EEPROM.length();
   for(uint32_t i = 0; i < totalBytes; i++)
   {
@@ -622,7 +622,7 @@ void eeFactoryReset()
     }
   }
   
-  //wipe external eeprom
+  //wipe external EEPROM
   if(hasExternalEE)
   {
     totalBytes = myMem.length();

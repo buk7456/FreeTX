@@ -1,6 +1,6 @@
 /***************************************************************************************************
-  Firmware for the rc receiver.
-  Target mcu: Atmega328p
+  Firmware for the RC receiver.
+  Target MCU: Atmega328p
   Compiles on Arduino 1.8.x or later
   Use compiler optimization option -O3 if possible.
 

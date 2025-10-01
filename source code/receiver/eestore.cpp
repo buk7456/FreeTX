@@ -1,5 +1,5 @@
 /* 
-  Data arranged in eeprom as follows
+  Data arranged in EEPROM as follows
 
   Parameter            Offset
   ----------------------------

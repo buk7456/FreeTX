@@ -183,7 +183,7 @@ bool isTrimBeepSound = false;
 void beginTone(const uint16_t* toneArray, size_t iSize)
 {
   noTone(PIN_BUZZER); //stop any notes
-  //init values
+  //initialise values
   size = iSize;
   endTimeOfNote = 0;
   songStart = toneArray;
@@ -198,7 +198,7 @@ void beginTone(const uint16_t* toneArray, size_t iSize)
 void beginToneTrimMoved()
 {
   noTone(PIN_BUZZER); //stop any notes
-  //init values
+  //initialise values
   endTimeOfNote = 0;
   bpm = 250;
   postn = 1; //TODO: clean up, this is a hack

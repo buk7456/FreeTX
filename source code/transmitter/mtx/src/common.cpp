@@ -751,7 +751,7 @@ void resetWidgetParams(uint8_t idx)
 
 bool changeLSReference(uint8_t newRef, uint8_t oldRef)
 {
-  //Searches for and replaces all occurances of a Logical switch old reference with new reference.
+  //Searches for and replaces all occurrences of a Logical switch old reference with new reference.
 
   if(newRef >= NUM_LOGICAL_SWITCHES || oldRef >= NUM_LOGICAL_SWITCHES)
     return false;
@@ -1041,7 +1041,7 @@ void trimWhiteSpace(char* buff, uint8_t lenBuff)
   //--- trim trailing space
   if(lenBuff < 2)
     return;
-  //find the first occurance of the null character (in case of a partial string)
+  //find the first occurrence of the null character (in case of a partial string)
   uint8_t idxOfNull = 0xff;
   for(uint8_t m = i; m < lenBuff - 1; m++)
   {

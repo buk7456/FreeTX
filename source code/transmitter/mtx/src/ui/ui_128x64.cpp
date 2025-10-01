@@ -233,7 +233,7 @@ enum {
 
 //---------------------------- Misc ----------------------------------------------------------------
 
-char textBuff[32]; //generic buffer for working with strings. Leave at 32 as it's also reused to dump eeprom.
+char textBuff[32]; //generic buffer for working with strings. Leave at 32 as it's also reused to dump EEPROM.
 
 uint8_t theScreen = SCREEN_HOME;
 uint8_t lastScreen = SCREEN_HOME;
@@ -243,7 +243,7 @@ uint8_t focusedItem = 1;
 bool isEditTextDialog = false;
 bool isDisplayingBatteryWarning = false;
 
-//Cache the graph y coordinates to avoid unnecessary recomputation.
+//Cache the graph y coordinates to avoid unnecessary computation.
 int8_t graphYCoord[51]; //51 points total to plot. 
 bool   graphYCoordinatesInvalid = true;
 
@@ -441,7 +441,7 @@ void handleBatteryWarningUI()
       audioToPlay = AUDIO_BATTERY_WARNING;
       playTones();
       
-      //self dismiss warning or on a button press
+      //self-dismiss warning or on a button press
       if((pressedButton > 0 || millis() - batteryWarningMillis > 2000))
       {
         batteryWarningDismissed = true;
@@ -518,7 +518,7 @@ void handleSafetyWarningUI()  //blocking function
     uint8_t numSwitchWarnings = 0;
     for(uint8_t i = 0; i < NUM_PHYSICAL_SWITCHES; i++)
     {
-      if(Model.switchWarn[i] == -1 || Sys.swType[i] == SW_ABSENT) //dont check
+      if(Model.switchWarn[i] == -1 || Sys.swType[i] == SW_ABSENT) //don't check
         continue;
       int8_t desiredState = Model.switchWarn[i];
       if(swState[i] != desiredState)
@@ -661,7 +661,7 @@ void handleMainUI()
     return;
   
   //-------------- Enable interlace mode by default -----
-  //This can be overriden where necessary specially in some screens
+  //This can be overridden where necessary specially in some screens
   //to prevent interlace artifacts
   display.setInterlace(true); 
 
@@ -1650,7 +1650,7 @@ void handleMainUI()
 
         // fill list
         //Check at once and only update on scroll or just entered this screen so we 
-        //don't have to constantly read all names from eeprom (a somewhat slow process)
+        //don't have to constantly read all names from EEPROM (a somewhat slow process)
         static char mdlStr[numVisible][sizeof(Model.name)]; //string table
         if(modelListNeedsUpdate)
         {
@@ -2026,13 +2026,13 @@ void handleMainUI()
           //show wait message as getting the count may take some time when there are many models
           showWaitMessage();
           stopTones();
-          //find how many models we have backed up on the sd card
+          //find how many models we have backed up on the SD card
           mdlCount = sdGetModelCount();
           thisPos = 0;
           sdGetModelName(nameStr, thisPos, sizeof(nameStr));
         }
         
-        if(mdlCount == 0) //no backups exist on the sd card
+        if(mdlCount == 0) //no backups exist on the SD card
         {
           makeToast(PSTR("No models on SD card"), 2000, 0);
           initialised = false;
@@ -2090,11 +2090,11 @@ void handleMainUI()
           //restore the model
           if(sdRestoreModel(textBuff))
           {
-            //save it to eeprom
+            //save it to EEPROM
             if(maxNumOfModels > 1)
               eeSaveModelData(thisModelIdx);
             
-            //read back the active model from eeprom if we are not restoring into the active slot
+            //read back the active model from EEPROM if we are not restoring into the active slot
             if(maxNumOfModels > 1 && thisModelIdx != Sys.activeModelIdx)
               eeReadModelData(Sys.activeModelIdx);
             
@@ -2129,7 +2129,7 @@ void handleMainUI()
               display.setInterlace(false);
               display.display();
               
-              //briefly block, then self dismiss the warning
+              //briefly block, then self-dismiss the warning
               uint32_t startTime = millis();
               while(1)
               {
@@ -2214,30 +2214,30 @@ void handleMainUI()
             // Also limit the base name to 8 characters max
             uint8_t len = strlen(nameStr);
             uint8_t i = 0;
-            char basename[9];
+            char baseName[9];
             for(i = 0; i < len; i++) 
             {
               if(i == 8) 
                 break;
               if(nameStr[i] == ' ' || nameStr[i] == '/') 
-                basename[i] = '_';
+                baseName[i] = '_';
               else 
-                basename[i] = toupper(nameStr[i]);
+                baseName[i] = toupper(nameStr[i]);
             }
-            basename[i] = '\0';
+            baseName[i] = '\0';
             
             //check again if empty
             if(i == 0) 
               nameEmpty = true;
-            else if(basename[i - 1] == '.') 
+            else if(baseName[i - 1] == '.') 
             {
-              // If the basename ends with a period, remove it
+              // If the baseName ends with a period, remove it
               i--;
-              basename[i] = '\0';
+              baseName[i] = '\0';
             }
             
             //copy back to nameStr
-            strlcpy(nameStr, basename, sizeof(nameStr));
+            strlcpy(nameStr, baseName, sizeof(nameStr));
           }
           
           if(nameEmpty) //make a generic name
@@ -2273,17 +2273,17 @@ void handleMainUI()
           {
             //save the active model first
             eeSaveModelData(Sys.activeModelIdx);
-            //read into ram the model we want to back up to sd card
+            //read into ram the model we want to back up to SD card
             eeReadModelData(thisModelIdx);
           }
           
-          //back up to the sd card
+          //back up to the SD card
           if(!sdBackupModel(nameStr))
             makeToast(PSTR("Back up failed"), 2000, 0);
           
           if(maxNumOfModels > 1)
           {
-            //read back the active model from eeprom
+            //read back the active model from EEPROM
             eeReadModelData(Sys.activeModelIdx);
           }
 
@@ -2351,7 +2351,7 @@ void handleMainUI()
           }
           //restore the model type
           Model.type = mdlType;
-          //save to eeprom
+          //save to EEPROM
           if(maxNumOfModels > 1)
             eeSaveModelData(Sys.activeModelIdx);
           //reinitialise other stuff
@@ -2941,7 +2941,7 @@ void handleMainUI()
 
         bool hasCrossHairs = true;
         
-        //handle navigatation
+        //handle navigation
         focusedItem = lastFocusedItem;
         uint8_t numFocusable = listItemCount + 2; //+1 for title focus, +1 for context menu focus
         changeFocusOnUpDown(numFocusable); 
@@ -3259,7 +3259,7 @@ void handleMainUI()
         while(focusedItem >= topItem + 4)
           topItem++;
         
-        //Calculate y coord for item 0. Items are center aligned
+        //Calculate y coordinate for item 0. Items are center aligned
         uint8_t numVisible = NUM_FLIGHT_MODES <= 4 ? NUM_FLIGHT_MODES : 4;
         uint8_t y0 = ((display.height() - (numVisible * 9)) / 2) + 1;  //9 is line height
         
@@ -3356,7 +3356,7 @@ void handleMainUI()
         if(contextMenuSelectedItemID == ITEM_INSERT_FREE)
         {
           //Find a slot that is empty.
-          //If the slot exists after thisMixIdx, move it here, otherwise we dont.
+          //If the slot exists after thisMixIdx, move it here, otherwise we don't.
           uint8_t freeSlot = 0xFF;
           uint8_t mixIdx = NUM_MIX_SLOTS - 1;
           uint8_t occupiedCount = 0;
@@ -4196,7 +4196,7 @@ void handleMainUI()
         changeFocusOnUpDown(7);
         toggleEditModeOnSelectClicked();
         
-        //---- edit params
+        //---- edit parameters
         if(focusedItem == 1) //change to next or previous curve
         {
           uint8_t _prevCrvIdx = thisCrvIdx;
@@ -8081,7 +8081,7 @@ void handleMainUI()
                 topItem++;
               toggleEditModeOnSelectClicked();
               
-              //edit params
+              //edit parameters
               uint8_t idx = focusedItem - 1;
               if(idx < numItems)
                 Sys.StickAxis[idx].type = incDec(Sys.StickAxis[idx].type, 0, STICK_AXIS_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
@@ -8224,7 +8224,7 @@ void handleMainUI()
                 topItem++;
               toggleEditModeOnSelectClicked();
               
-              //edit params
+              //edit parameters
               uint8_t idx = focusedItem - 1;
               if(idx < numItems && Sys.StickAxis[idx].type == STICK_AXIS_SELF_CENTERING)
                 Sys.StickAxis[idx].deadzone = incDec(Sys.StickAxis[idx].deadzone, 0, 15, INCDEC_NOWRAP, INCDEC_SLOW);
@@ -8382,7 +8382,7 @@ void handleMainUI()
                 topItem++;
               toggleEditModeOnSelectClicked();
               
-              //edit params
+              //edit parameters
               uint8_t idx = focusedItem - 1;
               if(idx < numItems)
                 Sys.Knob[idx].type = incDec(Sys.Knob[idx].type, 0, KNOB_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
@@ -8525,7 +8525,7 @@ void handleMainUI()
                 topItem++;
               toggleEditModeOnSelectClicked();
               
-              //edit params
+              //edit parameters
               uint8_t idx = focusedItem - 1;
               if(idx < numItems && Sys.Knob[idx].type == KNOB_CENTER_DETENT)
                 Sys.Knob[idx].deadzone = incDec(Sys.Knob[idx].deadzone, 0, 15, INCDEC_NOWRAP, INCDEC_SLOW);
@@ -9472,7 +9472,7 @@ void handleMainUI()
             {
               //Calculate the vertical position of the bird
               //Here we are using the equations of linear motion, but with discrete time
-              // i.e s = ut + 1/2at^2 and v = u + at
+              // i.e. s = ut + 1/2at^2 and v = u + at
               //As our time is discrete, we treat it as 1 time unit, and can then simply
               //add the current y position to the previous y position. We also do same for velocity.
               //To move the bird up on key event, we simply assign a fixed negative value 
@@ -9977,7 +9977,7 @@ void handleMainUI()
                 topItem++;
               toggleEditModeOnSelectClicked();
             
-              //edit params
+              //edit parameters
               uint8_t idx = startIdx + focusedItem - 1;
               if(idx <= endIdx)
               {
@@ -10080,7 +10080,7 @@ void handleMainUI()
                 topItem++;
               toggleEditModeOnSelectClicked();
             
-              //edit params
+              //edit parameters
               uint8_t idx = startIdx + focusedItem - 1;
               if(idx <= endIdx && ((outputChConfig[idx] & 0x03) == SIGNAL_TYPE_SERVOPWM))
               {
@@ -10311,7 +10311,7 @@ void handleMainUI()
   //-------------- Screenshot --------------------------
   screenshotHandler();
   
-  //-------------- Show on physical lcd -----------------
+  //-------------- Show on physical LCD -----------------
   if(Sys.DBG_disableInterlacing) //override
     display.setInterlace(false);
   display.display(); 
@@ -11600,7 +11600,7 @@ void contextMenuDraw()
   while(contextMenuFocusedItem >= contextMenuTopItem + maxVisible)
     contextMenuTopItem++;
 
-  //Calculate y coord for text item 0. Items are center aligned
+  //Calculate y coordinate for text item 0. Items are center aligned
   uint8_t numVisible = _menuItemCount <= maxVisible ? _menuItemCount : maxVisible;
   uint8_t y0 = ((display.height() - (numVisible * 10)) / 2) + 1;  //10 is line height
   

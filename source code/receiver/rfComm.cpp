@@ -181,7 +181,7 @@ void doRfCommunication()
         digitalWrite(PIN_LED, HIGH);
 #endif
 
-        //Decode the rc data
+        //Decode the RC data
         uint16_t chTemp[NUM_RC_CHANNELS];
         memset(chTemp, 0, sizeof(chTemp));
         for(uint8_t chIdx = 0; chIdx < NUM_RC_CHANNELS && chIdx < numReceivedChannels; chIdx++)
@@ -271,7 +271,7 @@ void doRfCommunication()
           break;
         }
         
-        //read and save config to eeprom
+        //read and save config to EEPROM
         for(uint8_t i = 0; i < MAX_CHANNELS_PER_RECEIVER; i++)
         {
           uint8_t val = receivePayloadBuffer[i];
@@ -415,7 +415,7 @@ void bind()
     hop();
   }
   
-  //--- Save to eeprom
+  //--- Save to EEPROM
   eeSaveSysConfig();
 }
 

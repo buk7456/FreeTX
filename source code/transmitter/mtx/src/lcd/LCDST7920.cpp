@@ -12,7 +12,7 @@ The LCD oscillator frequency minimum is 470 kHz according to the datasheet, typi
 Taking the minimum of 470 kHz, the period is (1 / (470 kHz)) = 2.128 microseconds = 2128 ns.
 From empirical tests, the LCD needs at least two oscillator cycles to recognise the EN high state,
 and four oscillator cycles to recognise the EN low state.
-Thus the mimimum delays we need at the microcontroller side are (2/(470k)) and (4/(470k)) seconds,
+Thus the minimum delays we need at the microcontroller side are (2/(470k)) and (4/(470k)) seconds,
 which rounds to about 70 and 140 cycles respectively. ( 1 cycle is 62.5 ns at 16 MHz)
 */
 
@@ -341,7 +341,7 @@ void LCDST7920::begin()
   enPort = portOutputRegister(digitalPinToPort(_en));
   enPinMask = digitalPinToBitMask(_en);
   
-  //initialise lcd
+  //initialise LCD
   
   delay(100);
   

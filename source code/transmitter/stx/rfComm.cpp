@@ -313,7 +313,7 @@ void bind()
       {
         bindStatusCode = 1; //bind success
         Sys.receiverID = receivePayloadBuffer[0];
-        //Save to eeprom
+        //Save to EEPROM
         eeSaveSysConfig();
         //clear flags
         bindInitialised = false;

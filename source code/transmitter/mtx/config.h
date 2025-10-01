@@ -102,14 +102,14 @@
 #define PIN_SWH_UP   5
 #define PIN_SWH_DN   38
 
-//--- sd card
+//--- SD card
 
 #define PIN_SD_CS    53
 
 //===========================================================================
 //============================= External EEPROM =============================
 //===========================================================================
-//Maximum supported is a 512 kbit eeprom
+//Maximum supported is a 512 kbit EEPROM
 
 /* 
 //--- 24LC512

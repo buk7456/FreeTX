@@ -72,7 +72,7 @@ void setup()
   //--- delay
   delay(100);
 
-  //--- eeprom 
+  //--- EEPROM 
   eeStoreInit();
   eeReadSysConfig();
  
@@ -173,7 +173,7 @@ void writeOutputs()
         if(channelFailsafe[i] == 523) //Hold
         {
           //Nothing here. 
-          //Receiver will continue outputing the last received value before signal was lost.
+          //Receiver will continue outputting the last received value before signal was lost.
         }
         else if(channelFailsafe[i] == 522) //No Pulses
         {

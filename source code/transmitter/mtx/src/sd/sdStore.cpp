@@ -102,7 +102,7 @@ bool sdRestoreModel(const char *name)
   if(!hasSDcard)
     return false;
   
-  char fullNameStr[30]; //includes the path. e.g MODELS/qqq.mdl
+  char fullNameStr[30]; //includes the path. E.g. MODELS/qqq.mdl
   memset(fullNameStr, 0, sizeof(fullNameStr));
   strlcpy(fullNameStr, model_backup_directory, sizeof(fullNameStr));
   strlcat(fullNameStr, name, sizeof(fullNameStr));
@@ -168,7 +168,7 @@ uint16_t sdGetModelCount()
   if(!hasSDcard)
     return 0;
 
-  if(isModelDirectoryOpen) //close first so we dont get a wrong count
+  if(isModelDirectoryOpen) //close first so we don't get a wrong count
   {
     modelDir.close();
     isModelDirectoryOpen = false;
@@ -291,7 +291,7 @@ void sdShowSplashScreen()
   char pathName[sizeof(splash_full_name_str)];
   strlcpy_P(pathName, splash_full_name_str, sizeof(pathName));
   
-  //abort if it doesnt exist
+  //abort if it doesn't exist
   if(!SD.exists(pathName))
     return;
   

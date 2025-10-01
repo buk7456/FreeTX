@@ -195,7 +195,7 @@ void determineButtonEvent()
     if(!heldButtonActive)
     {
       heldButtonActive = true;
-      heldButtonEntryLoopNum = thisLoopNum; //record the loop number at which it first occured
+      heldButtonEntryLoopNum = thisLoopNum; //record the loop number at which it first occurred
     }
   }
   
@@ -315,7 +315,7 @@ void readSticks()
 
 int16_t deadzoneAndMap(int16_t input, int16_t minVal, int16_t centreVal, int16_t maxVal, int16_t deadzn, int16_t mapMin, int16_t mapMax)
 {
-  //Formula is ((maxVal-minVal)*deadzn/100)/2. We divide by 2 as its applied about center
+  //Formula is ((maxVal-minVal)*deadzn/100)/2. We divide by 2 as it is applied about center
   int16_t deadznVal = ((int32_t)(maxVal - minVal) * deadzn) / 200;
   int16_t threshR = centreVal + deadznVal;
   int16_t threshL = centreVal - deadznVal;

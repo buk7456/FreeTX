@@ -16,7 +16,7 @@ uint16_t dbgFirstErrorLineNumber = 0;
 uint16_t dbgTotalErrorLines = 0;
 
 //Buffers used by the parser to hold the keys and value. 
-//Three buffers are used for the keys as we have upto three indention levels. ie level 0,1,2
+//Three buffers are used for the keys as we have up to three indention levels. i.e. level 0,1,2
 
 char keyBuff[3][MAX_STR_SIZE];
 char valueBuff[MAX_STR_SIZE];
@@ -941,7 +941,7 @@ void importModelData(File& file)
   //--- Loop 
   while(!isEndOfFile)
   {
-    //clear value buffer so we dont work with stale values
+    //clear value buffer so we don't work with stale values
     *valueBuff = '\0';
 
     //call parser

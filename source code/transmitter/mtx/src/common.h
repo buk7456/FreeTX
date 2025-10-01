@@ -262,7 +262,7 @@ enum sensor_ID_e {
 #define fixedLoopTime  20
 /* in milliseconds. Should be greater than the time taken by radio module to transmit the 
 entire packet or else the window is missed resulting in much less throughput. 
-It should also be close to the average worst case time to do the main loop i.e when all features 
+It should also be close to the average worst case time to do the main loop i.e. when all features 
 are active (mixers, logical switches, ui, etc).
 The main loop time can be displayed by enabling the option in the debug menu.
 */
@@ -278,7 +278,7 @@ extern uint8_t screenshotSwtch;
 
 /* 
   NOTES & WARNINGS
-  - The odering in the enumerations should match the ordering in the UI.
+  - The ordering in the enumerations should match the ordering in the UI.
   - Adding new fields or parameters can corrupt the system settings. This is no big deal however.
 */
 
@@ -456,7 +456,7 @@ enum stick_mode_e {
 //====================== MODEL PARAMETERS ==========================================================
 /* 
   NOTES & WARNINGS
-  - The odering in the enumerations should match the ordering in the UI.
+  - The ordering in the enumerations should match the ordering in the UI.
   - Adding new fields/parameters or reordering the structures can corrupt model data. Always make 
     a backup of the models you care about to an SD card before updating the device's firmware.
   - If you have added new fields, remember to update the model import and export code for the SD card,

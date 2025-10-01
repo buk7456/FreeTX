@@ -33,7 +33,7 @@ enum {
 
 void setup()
 {
-  //--- init serial port
+  //--- initialise serial port
   Serial.begin(115200);  
   
   //--- delay
@@ -45,7 +45,7 @@ void setup()
   for(uint8_t i = 0; i< sizeof(Sys.fhss_schema)/sizeof(Sys.fhss_schema[0]); i++)
     Sys.fhss_schema[i] = i;
   
-  //--- eeprom 
+  //--- EEPROM 
   eeStoreInit();
   eeReadSysConfig();
  
@@ -109,7 +109,7 @@ void getSerialData()
         isRequestingTelemetry = ((buffer[flagsIdx] >> 3) & 0x01);
         rfPower = buffer[flagsIdx] & 0x07;
 
-        //Skip this rc data if we were previously requesting for telemetry
+        //Skip this RC data if we were previously requesting for telemetry
         //to allow enough time to listen. 
         static bool wasRequestingTelemetry = false;
         if(wasRequestingTelemetry)

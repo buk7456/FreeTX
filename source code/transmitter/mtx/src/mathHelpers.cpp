@@ -64,7 +64,7 @@ int16_t linearInterpolate(int16_t xValues[], int16_t yValues[], uint8_t numValue
 
 // Implementation of hermite cubic spline interpolation.
 // The x values must be ordered in ascending.
-// See the following wikipedia articles for the functions used.
+// See the following Wikipedia articles for the functions used.
 // https://en.wikipedia.org/wiki/Cubic_Hermite_spline
 // https://en.wikipedia.org/wiki/Monotone_cubic_interpolation
 // For our implementation as we are using integer math, we need to use some multiplier to scale

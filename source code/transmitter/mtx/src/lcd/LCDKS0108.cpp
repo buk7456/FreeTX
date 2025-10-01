@@ -92,7 +92,7 @@ void LCDKS0108::drawVLine(uint8_t x, uint8_t y, uint8_t h, uint8_t color)
     y1 = LCDHEIGHT - 1;
   
   //determine the start and end page in the display buffer (0 to 7). The display buffer is divided
-  //into 8 pages, just lke the LCD's RAM, with each page containg 128 bytes (columns)
+  //into 8 pages, just like the LCD's RAM, with each page containing 128 bytes (columns)
   uint8_t y8s = y0/8; //start page
   uint8_t y8e = y1/8; //end end page
   
@@ -183,7 +183,7 @@ void LCDKS0108::drawChar(uint8_t x, uint8_t y, unsigned char c, uint8_t color)
     y1 = LCDHEIGHT - 1;
   
   //determine the start and end page in the display buffer (0 to 7). The display buffer is divided
-  //into 8 pages, just lke the LCD's RAM, with each page containg 128 bytes (columns)
+  //into 8 pages, just like the LCD's RAM, with each page containing 128 bytes (columns)
   uint8_t y8s = y0/8; //start page
   uint8_t y8e = y1/8; //end page
 
@@ -289,7 +289,7 @@ void LCDKS0108::begin()
   cs2Port = portOutputRegister(digitalPinToPort(_cs2));
   cs2PinMask = digitalPinToBitMask(_cs2);
 
-  //initialise lcd
+  //initialise LCD
   lcdCommand(DISP_ON);
   lcdCommand(START_LINE);
   

@@ -55,7 +55,7 @@ GFX::GFX(uint8_t w, uint8_t h) : WIDTH(w), HEIGHT(h)
 
 void GFX::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) 
 {
-  // Bresenham's algorithm - thx wikpedia
+  // Bresenham's algorithm - thx Wikipedia
   
   int16_t steep = abs(y1 - y0) > abs(x1 - x0);
   if(steep) 

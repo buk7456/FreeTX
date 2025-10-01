@@ -60,13 +60,13 @@ void setup()
   
   initialiseSwitches();
 
-  //init serial ports 
+  //initialise serial ports 
   Serial1.begin(115200); 
   
   //delay a bit to allow time for other devices to be ready
   delay(100);
 
-  //init display
+  //initialise display
   initialiseDisplay();
   
   //set defaults
@@ -86,10 +86,10 @@ void setup()
     delay(30);
   }
   
-  //Initialise eeprom storage
+  //Initialise EEPROM storage
   eeStoreInit();  //blocking
   
-  //Load data from eeprom
+  //Load data from EEPROM
   eeReadSysConfig();
   eeReadModelData(Sys.activeModelIdx);
   
@@ -114,8 +114,8 @@ void setup()
   
   uint32_t tt = millis();
   
-  //Initialise sd card storage
-  //moved here as it implicitly blocks for about 2 seconds when there is no sd card
+  //Initialise SD card storage
+  //moved here as it implicitly blocks for about 2 seconds when there is no SD card
   sdStoreInit();
   
   if(Sys.showWelcomeMessage)
@@ -170,7 +170,7 @@ void loop()
   //Limit calling to about 10 times per second to prolong the EEPROM life.
   //Saving say 2400 bytes takes approximately 240 seconds (4 minutes) before starting over.
   //Without the limit, the same would take approximately 48 seconds, so if we let the system run
-  //for 6 hours, we would be making 450 writes to a certain eeprom cell, compared to 90 when limited.
+  //for 6 hours, we would be making 450 writes to a certain EEPROM cell, compared to 90 when limited.
   if(thisLoopNum % (100 / fixedLoopTime) == 0)
     eeLazyWriteModelData(Sys.activeModelIdx);
 
@@ -383,7 +383,7 @@ void doSerialCommunication()
               val = fsf + 500;
             }
           }
-          else //real time rc data
+          else //real time RC data
           {
             val = channelOut[chIdx] + 500; 
           }
