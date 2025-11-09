@@ -306,8 +306,8 @@ const char key_Number[] PROGMEM = "No.";
 
 const char key_Timer[] PROGMEM = "Timer";
 const char key_ResetSwitch[] PROGMEM = "Reset";
-const char key_InitialMinutes[] PROGMEM = "InitMin"; //deprecated, legacy support
 const char key_InitialSeconds[] PROGMEM = "InitialTimeSeconds";
+const char key_InitialMinutes[] PROGMEM = "InitMin"; //deprecated, legacy support
 const char key_IsPersistent[] PROGMEM = "Persistent";
 const char key_PersistVal[] PROGMEM = "PersistVal";
 
@@ -351,6 +351,7 @@ const char key_ModulatorSrc[] PROGMEM = "ModulatorSrc";
 const char key_ReverseModulator[] PROGMEM = "ReverseModulator";
 const char key_PhaseMode[] PROGMEM = "PhaseMode";
 const char key_Phase[] PROGMEM = "Phase";
+const char key_PhaseAngle[] PROGMEM = "PhaseAngle"; //deprecated, replaced with key_Phase. Legacy support.
 const char key_WidthMode[] PROGMEM = "WidthMode";
 const char key_Width[] PROGMEM = "Width";
 const char key_Period[] PROGMEM = "Period";
@@ -439,7 +440,7 @@ const char key_GaugeMin[] PROGMEM = "GaugeMin";
 const char key_GaugeMax[] PROGMEM = "GaugeMax";
 
 const char key_Notification[] PROGMEM = "Notification";
-extern const char key_Enabled[] PROGMEM = "Enabled";
+const char key_Enabled[] PROGMEM = "Enabled";
 //const char key_Switch[] PROGMEM = "Switch";
 const char key_Tone[] PROGMEM = "Tone";
 const char key_Text[] PROGMEM = "Text";
