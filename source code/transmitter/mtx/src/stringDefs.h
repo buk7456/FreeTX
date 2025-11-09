@@ -82,8 +82,8 @@ extern const char key_Number[] PROGMEM;
 
 extern const char key_Timer[] PROGMEM;
 extern const char key_ResetSwitch[] PROGMEM;
-extern const char key_InitialMinutes[] PROGMEM; //deprecated
 extern const char key_InitialSeconds[] PROGMEM;
+extern const char key_InitialMinutes[] PROGMEM; //deprecated, replaced with key_InitialSeconds
 extern const char key_IsPersistent[] PROGMEM;
 extern const char key_PersistVal[] PROGMEM;
 
@@ -127,6 +127,7 @@ extern const char key_ModulatorSrc[] PROGMEM;
 extern const char key_ReverseModulator[] PROGMEM;
 extern const char key_PhaseMode[] PROGMEM;
 extern const char key_Phase[] PROGMEM;
+extern const char key_PhaseAngle[] PROGMEM; //deprecated, replaced with key_Phase
 extern const char key_WidthMode[] PROGMEM;
 extern const char key_Width[] PROGMEM;
 extern const char key_Period[] PROGMEM;
