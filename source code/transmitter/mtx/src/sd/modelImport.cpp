@@ -510,6 +510,8 @@ void extractConfig_FunctionGenerators()
       findIdInIdStr(enum_FuncgenPhaseMode, valueBuff, fgen->phaseMode);
     else if(MATCH_P(keyBuff[1], key_Phase))
       fgen->phase = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_PhaseAngle)) //deprecated, replaced with key_Phase
+      fgen->phase = atoi_with_prefix(valueBuff);
     else if(MATCH_P(keyBuff[1], key_WidthMode))
       findIdInIdStr(enum_FuncgenWidthMode, valueBuff, fgen->widthMode);
     else if(MATCH_P(keyBuff[1], key_Width))
