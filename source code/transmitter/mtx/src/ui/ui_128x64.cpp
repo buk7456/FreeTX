@@ -2637,7 +2637,7 @@ void handleMainUI()
           {
             uint8_t ypos = 20 + line*9;
             if(focusedItem - 1 == topItem + line)
-              drawCursor(32, ypos);
+              drawCursor(30, ypos);
             
             if((topItem - 1 + line) >= ITEM_COUNT)
               break;
@@ -2652,7 +2652,7 @@ void handleMainUI()
               case ITEM_THR_SRC_RAW:
                 {
                   display.print(F("Src:"));
-                  display.setCursor(40, ypos);
+                  display.setCursor(38, ypos);
                   getSrcName(textBuff, Model.thrSrcRaw, sizeof(textBuff));
                   display.print(textBuff);
                   if(edit)
@@ -2673,8 +2673,9 @@ void handleMainUI()
               case ITEM_CURVE_NUM_POINTS:
                 {
                   display.print(F("Curv:"));
-                  display.setCursor(40, ypos);
+                  display.setCursor(38, ypos);
                   display.print(crv->numPoints);
+                  display.setCursor(display.getCursorX() + 3, ypos);
                   display.print(F("pts"));
                   if(edit)
                   {
@@ -2693,7 +2694,7 @@ void handleMainUI()
               case ITEM_CURVE_POINT:
                 {
                   display.print(F("Pt:"));
-                  display.setCursor(40, ypos);
+                  display.setCursor(38, ypos);
                   display.write(97 + thisPt);
                   if(isFocused)
                     markNode = true;
@@ -2705,7 +2706,7 @@ void handleMainUI()
               case ITEM_CURVE_XVAL:
                 {
                   display.print(F("Xval:"));
-                  display.setCursor(40, ypos);
+                  display.setCursor(38, ypos);
                   display.print(crv->xVal[thisPt]);
                   if(isFocused)
                     markNode = true;
@@ -2721,7 +2722,7 @@ void handleMainUI()
               case ITEM_CURVE_YVAL:
                 {
                   display.print(F("Yval:"));
-                  display.setCursor(40, ypos);
+                  display.setCursor(38, ypos);
                   display.print(crv->yVal[thisPt]);
                   if(isFocused)
                     markNode = true;
@@ -2733,7 +2734,7 @@ void handleMainUI()
               case ITEM_CURVE_SMOOTH:
                 {
                   display.print(F("Smth:"));
-                  drawCheckbox(40, ypos, crv->smooth);
+                  drawCheckbox(38, ypos, crv->smooth);
                   if(edit)
                     crv->smooth = incDec(crv->smooth, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
                 }
@@ -4125,34 +4126,35 @@ void handleMainUI()
         
         display.setCursor(0, 20);
         display.print(F("Type:"));
-        display.setCursor(42, 20);
+        display.setCursor(38, 20);
         display.print(crv->numPoints);
+        display.setCursor(display.getCursorX() + 3, 20);
         display.print(F("pts"));
         
         display.setCursor(0, 29);
         display.print(F("Pt:"));
-        display.setCursor(42, 29);
+        display.setCursor(38, 29);
         display.write(97 + thisCrvPt);
         
         display.setCursor(0, 38);
         display.print(F("Xval:"));
-        display.setCursor(42, 38);
+        display.setCursor(38, 38);
         display.print(crv->xVal[thisCrvPt]);
         
         display.setCursor(0, 47);
         display.print(F("Yval:"));
-        display.setCursor(42, 47);
+        display.setCursor(38, 47);
         display.print(crv->yVal[thisCrvPt]);
         
         display.setCursor(0, 56);
         display.print(F("Smth:"));
-        drawCheckbox(42, 56, crv->smooth);
+        drawCheckbox(38, 56, crv->smooth);
 
         //draw cursor
         if(focusedItem == 1) 
           drawCursor(0, 9);
         else if(focusedItem < 7)
-          drawCursor(34, (focusedItem * 9) + 2);
+          drawCursor(30, (focusedItem * 9) + 2);
         
         //draw context menu icon
         display.fillRect(120, 0, 8, 7, WHITE);
@@ -9035,6 +9037,7 @@ void handleMainUI()
                 display.print(F("Fxd loop:"));
                 display.setCursor(66, ypos);
                 display.print(fixedLoopTime);
+                display.setCursor(display.getCursorX() + 3, ypos);
                 display.print(F("ms"));
               }
               break;
