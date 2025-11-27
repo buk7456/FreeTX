@@ -81,6 +81,9 @@ public:
   uint8_t getCursorX(void) const;
   uint8_t getCursorY(void) const;
 
+  //get current color of text
+  uint8_t getTextColor(void) const;
+
 
 protected:
   
