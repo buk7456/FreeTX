@@ -3323,6 +3323,7 @@ void handleMainUI()
           ITEM_COMPACT_MIXES,
           ITEM_MIXER_TEMPLATES,
           ITEM_MIXER_OVERVIEW,
+          ITEM_TOGGLE_CURVE_PREVIEW,
         };
         
         contextMenuInitialise();
@@ -3334,6 +3335,10 @@ void handleMainUI()
         contextMenuAddItem(PSTR("Reset mix" ), ITEM_RESET_MIX);
         contextMenuAddItem(PSTR("Reset all mixes"), ITEM_RESET_ALL_MIXES);
         contextMenuAddItem(PSTR("Compact mixes"), ITEM_COMPACT_MIXES);
+        if(Sys.showCurvePreviewInMixer)
+          contextMenuAddItem(PSTR("Hide curve preview"), ITEM_TOGGLE_CURVE_PREVIEW);
+        else
+          contextMenuAddItem(PSTR("Show curve preview"), ITEM_TOGGLE_CURVE_PREVIEW);
         if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
         {
           if(Sys.mixerTemplatesEnabled)
@@ -3426,6 +3431,11 @@ void handleMainUI()
           changeToScreen(CONTEXT_MENU_MIXER_TEMPLATES);
         if(contextMenuSelectedItemID == ITEM_MIXER_OVERVIEW)
           changeToScreen(SCREEN_MIXER_OVERVIEW);
+        if(contextMenuSelectedItemID == ITEM_TOGGLE_CURVE_PREVIEW)
+        {
+          Sys.showCurvePreviewInMixer = !Sys.showCurvePreviewInMixer;
+          changeToScreen(SCREEN_MIXER);
+        }
         
         if(heldButton == KEY_SELECT) //exit
           changeToScreen(SCREEN_MIXER);
@@ -3717,36 +3727,95 @@ void handleMainUI()
         }
         
         static uint8_t thisPage = 1;
-        
+        static bool hasTooltip = false;
+        static uint8_t tooltipIdx = 0; //index in listItemIDs, also the focused index
+        static uint8_t topIdx = 0;
+        static bool viewInitialised = false;
+        //start in the page that has the current mix index
+        if(!viewInitialised)
+        {
+          bool pageFound = false;
+          for(uint8_t i = 0; i < listItemCount; i++) //search in list
+          {
+            if(listItemIDs[i] == thisMixIdx)
+            {
+              pageFound = true;
+              thisPage = (i / 6) + 1;
+              tooltipIdx = i;
+              topIdx = (thisPage - 1) * 6;
+              break;
+            }
+          }
+          if(!pageFound)
+          {
+            thisPage = 1;
+            tooltipIdx = 0;
+            topIdx = 0;
+          }
+          hasTooltip = false;
+          viewInitialised = true;
+        }
+
+
         if(listItemCount == 0)
+        {
           printFullScreenMessage(PSTR("No mixes defined yet"));
+        }
         else
         {
           uint8_t numPages = (listItemCount + 5) / 6;
-          isEditMode = true;
-          thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
           
-          uint8_t startIdx = (thisPage - 1) * 6;
-          for(uint8_t i = startIdx; i < startIdx + 6 && i < listItemCount; i++)
+          if(hasTooltip)
           {
-            uint8_t ypos = 9 * (i - startIdx + 1);
+            //scroll line by line
+            isEditMode = true;
+            tooltipIdx = incDec(tooltipIdx, listItemCount - 1, 0, INCDEC_WRAP, INCDEC_SLOW);
+            if(tooltipIdx < topIdx)
+              topIdx = tooltipIdx;
+            while(tooltipIdx >= topIdx + 6)
+              topIdx++;
+          }
+          else
+          {
+            //scroll page by page
+            isEditMode = true;
+            uint8_t prevPage = thisPage;
+            thisPage = incDec(thisPage, numPages, 1, INCDEC_WRAP, INCDEC_SLOW);
+            if(thisPage != prevPage) //page has changed, recalculate
+            {
+              tooltipIdx = (thisPage - 1) * 6;
+              topIdx = tooltipIdx;
+            }
+          }
+
+          //draw the list
+          for(uint8_t i = topIdx; i < topIdx + 6 && i < listItemCount; i++)
+          {
+            uint8_t ypos = 9 * (i - topIdx + 1);
             uint8_t mixIdx = listItemIDs[i];
             
+            if(hasTooltip && i == tooltipIdx)
+            {
+              display.fillRect(0, ypos - 1, 126, 9, BLACK);
+              display.setTextColor(WHITE);
+            }
+
             //output
-            display.setCursor(0, ypos);
+            display.setCursor(1, ypos);
             getSrcName(textBuff, Model.Mixer[mixIdx].output, sizeof(textBuff));
             display.print(textBuff);
             
             //operation
-            display.setCursor(30, ypos);
+            display.setCursor(31, ypos);
             if(Model.Mixer[mixIdx].operation == MIX_ADD) display.print(F("+="));
             if(Model.Mixer[mixIdx].operation == MIX_MULTIPLY) display.print(F("*="));
             if(Model.Mixer[mixIdx].operation == MIX_REPLACE) display.print(F("="));
             if(Model.Mixer[mixIdx].operation == MIX_HOLD) display.print(F("Hold"));
             
+            //weight and input
             if(Model.Mixer[mixIdx].operation != MIX_HOLD)
             {
-              //weight. Right align
+              //weight, right aligned
               uint8_t digits = 1;
               uint8_t num = abs(Model.Mixer[mixIdx].weight);          
               while(num >= 10)
@@ -3754,38 +3823,154 @@ void handleMainUI()
                 num /= 10;
                 digits++;
               }
-              uint8_t xpos = 60 - (digits - 1)*6;
+              uint8_t xpos = 61 - (digits - 1)*6;
               if(Model.Mixer[mixIdx].weight < 0)
                 xpos -= 6;
               display.setCursor(xpos, ypos);
               display.print(Model.Mixer[mixIdx].weight);
               
               //input 
-              display.setCursor(66, ypos);
+              display.setCursor(67, ypos);
               getSrcName(textBuff, Model.Mixer[mixIdx].input, sizeof(textBuff));
               display.print(textBuff);
             }
             
-            //swtch, right align
+            //swtch, right aligned
             if(Model.Mixer[mixIdx].swtch != CTRL_SW_NONE)
             {
               getControlSwitchName(textBuff, Model.Mixer[mixIdx].swtch, sizeof(textBuff));
               uint8_t len = strlen(textBuff);
-              uint8_t xpos = 126 - len * 6;
-              display.fillRect(xpos, ypos, (len * 6) - 1, 8, WHITE); //clear area just in case the preceding text overflowed
+              uint8_t xpos = 127 - len * 6;
+              display.fillRect(xpos, ypos, (len * 6) - 1, 8, display.getTextColor() == BLACK ? WHITE : BLACK); //clear area just in case the preceding text overflowed
               display.setCursor(xpos, ypos);
               display.print(textBuff);
             }
+            
+            display.setTextColor(BLACK); //restore
           }
           
           //scrollbar
-          drawScrollBar(127, 9, numPages, thisPage, 1, 1 * 54);
-        }
+          drawScrollBar(127, 8, listItemCount, topIdx + 1, 6, 6 * 9);
 
+          //toggle tooltip
+          if(clickedButton == KEY_SELECT && listItemCount != 0)
+            hasTooltip = !hasTooltip;
+          
+          //draw tooltip as an overlay
+          if(hasTooltip)
+          {
+            uint8_t mixIdx = listItemIDs[tooltipIdx];
+            mixer_params_t *mxr = &Model.Mixer[mixIdx];
+  
+            char strQQ[3][11]; //3 lines, each 11 characters including null
+            memset(strQQ, 0, sizeof(strQQ));
+  
+            // offset
+            if(mxr->offset != 0)
+            {
+              strlcpy_P(strQQ[0], PSTR("Ofst: "), sizeof(strQQ[0]));
+              itoa(mxr->offset, textBuff, 10);
+              strlcat(strQQ[0], textBuff, sizeof(strQQ[0]));
+            }
+  
+            // curves
+            if(mxr->curveType == MIX_CURVE_TYPE_DIFF && mxr->curveVal != 0)
+            {
+              strlcpy_P(strQQ[1], PSTR("Diff: "), sizeof(strQQ[1]));
+              itoa(mxr->curveVal, textBuff, 10);
+              strlcat(strQQ[1], textBuff, sizeof(strQQ[1]));
+            }
+            else if(mxr->curveType == MIX_CURVE_TYPE_EXPO && mxr->curveVal != 0)
+            {
+              strlcpy_P(strQQ[1], PSTR("Expo: "), sizeof(strQQ[1]));
+              itoa(mxr->curveVal, textBuff, 10);
+              strlcat(strQQ[1], textBuff, sizeof(strQQ[1]));
+            }
+            else if(mxr->curveType == MIX_CURVE_TYPE_FUNCTION && mxr->curveVal != MIX_CURVE_FUNC_NONE)
+            {
+              strlcpy_P(strQQ[1], PSTR("Func: "), sizeof(strQQ[1]));
+              strlcat(strQQ[1], findStringInIdStr(enum_MixerCurveType_Func, mxr->curveVal), sizeof(strQQ[1]));
+            }
+            else if(mxr->curveType == MIX_CURVE_TYPE_CUSTOM)
+            {
+              strlcpy_P(strQQ[1], PSTR("Crv"), sizeof(strQQ[1]));
+              itoa(mxr->curveVal + 1, textBuff, 10);
+              strlcat(strQQ[1], textBuff, sizeof(strQQ[1]));
+            }
+  
+            //delay, slow
+            bool hasDelay = (mxr->delayUp != 0 || mxr->delayDown != 0) ? true : false;
+            bool hasSlow = (mxr->slowUp != 0 || mxr->slowDown != 0) ? true : false;
+            if(hasDelay && hasSlow)
+              strlcpy_P(strQQ[2], PSTR("Dly, Slow"), sizeof(strQQ[2]));
+            else if(hasDelay)
+              strlcpy_P(strQQ[2], PSTR("Dly"), sizeof(strQQ[2]));
+            else if(hasSlow)
+              strlcpy_P(strQQ[2], PSTR("Slow"), sizeof(strQQ[2]));
+  
+            //draw, skipping empty lines
+            uint8_t lineCount = 0;
+            for(uint8_t i = 0; i < 3; i++)
+            {
+              if(!isEmptyStr(strQQ[i], sizeof(strQQ[0])))
+                lineCount++;
+            }
+            if(lineCount > 0)
+            {
+              bool isTopAligned = ((tooltipIdx - topIdx) >= 3) ? true : false;
+              uint8_t ypos = isTopAligned ? (((tooltipIdx - topIdx) - 3) * 9 + 4 + ((3 - lineCount) * 8)) : ((tooltipIdx - topIdx) * 9 + 20);
+              uint8_t height = lineCount * 8 + 3;
+              uint8_t width = 65;
+              //recalculate width if only Delay or Slow
+              if(strlen(strQQ[0]) == 0 && strlen(strQQ[1]) == 0)
+                width = strlen(strQQ[2]) * 6 + 5;
+              //clear area
+              display.fillRect(57, ypos - 2, width + 5, height + 6, WHITE); 
+              //draw bounding frame
+              if(Sys.useRoundRect)
+                display.drawRoundRect(59, ypos, width, height, 1, BLACK); 
+              else
+                display.drawRect(59, ypos, width, height,BLACK); 
+              //draw drop shadow
+              if(Sys.useRoundRect)
+              {
+                display.drawHLine(61, ypos + height, width - 2, BLACK); 
+                display.drawVLine(width + 59, ypos + 2, height - 2, BLACK);
+                display.drawPixel(width + 58, ypos + height - 1, BLACK);
+              }
+              else
+              {
+                display.drawHLine(61, ypos + height, width - 1, BLACK); 
+                display.drawVLine(width + 59, ypos + 2, height - 1, BLACK);
+              }
+              //draw connector
+              if(isTopAligned)
+                display.drawBitmap(66, ypos + height - 1, tooltip_connector_down_left, 5, 5, BLACK, WHITE); 
+              else
+                display.drawBitmap(66, ypos - 3, tooltip_connector_up_left, 4, 4, BLACK, WHITE);
+              //print the strings
+              uint8_t line = 0;
+              for(uint8_t i = 0; i < 3; i++)
+              {
+                if(isEmptyStr(strQQ[i], sizeof(strQQ[0])))
+                  continue;
+                else
+                {
+                  display.setCursor(62, ypos + 2 + (line * 8));
+                  display.print(strQQ[i]);
+                }
+                line++;
+              }
+            }
+          }
+        }
+        
+        //exit
         if(heldButton == KEY_SELECT)
         {
-          thisPage = 1;
+          viewInitialised = false;
           changeToScreen(SCREEN_MIXER);
+          
         }
       }
       break;
@@ -7842,16 +8027,12 @@ void handleMainUI()
         drawCheckbox(102, 9, Sys.autoSelectMovedControl);
         
         display.setCursor(0, 18);
-        display.print(F("Curve preview:"));
-        drawCheckbox(102, 18, Sys.showCurvePreviewInMixer);
+        display.print(F("Mixer templts:"));
+        drawCheckbox(102, 18, Sys.mixerTemplatesEnabled);
         
         display.setCursor(0, 27);
-        display.print(F("Mixer templts:"));
-        drawCheckbox(102, 27, Sys.mixerTemplatesEnabled);
-        
-        display.setCursor(0, 36);
         display.print(F("Dflt Ch order:"));
-        display.setCursor(102, 36);
+        display.setCursor(102, 27);
         if(Sys.mixerTemplatesEnabled)
         {
           //make the string for the channel order
@@ -7866,27 +8047,25 @@ void handleMainUI()
         else
           display.print(F("N/A"));
 
-        display.setCursor(0, 45);
+        display.setCursor(0, 36);
         display.print(F("Inactvty mins:"));
-        display.setCursor(102, 45);
+        display.setCursor(102, 36);
         display.print(Sys.inactivityMinutes);
 
-        changeFocusOnUpDown(5);
+        changeFocusOnUpDown(4);
         toggleEditModeOnSelectClicked();
         drawCursor(94, focusedItem * 9);
         
         if(focusedItem == 1)
           Sys.autoSelectMovedControl = incDec(Sys.autoSelectMovedControl, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 2)
-          Sys.showCurvePreviewInMixer = incDec(Sys.showCurvePreviewInMixer, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 3)
           Sys.mixerTemplatesEnabled = incDec(Sys.mixerTemplatesEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 4 && Sys.mixerTemplatesEnabled) 
+        else if(focusedItem == 3 && Sys.mixerTemplatesEnabled) 
         { 
           //there are 4P4 = 4! = 24 possible arrangements. So our range is 0 to 23.  
           Sys.defaultChannelOrder = incDec(Sys.defaultChannelOrder, 0, 23, INCDEC_WRAP, INCDEC_SLOW);
         }
-        else if(focusedItem == 5)
+        else if(focusedItem == 4)
           Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 1, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
 
         //exit

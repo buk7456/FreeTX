@@ -377,6 +377,11 @@ void GFX::setTextColor(uint8_t c)
   textcolor = c;
 }
 
+uint8_t GFX::getTextColor(void) const
+{
+  return textcolor;
+}
+
 void GFX::setTextWrap(boolean w)
 {
   wrap = w;
