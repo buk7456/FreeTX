@@ -118,19 +118,25 @@ const uint8_t left_arrow_tiny [] PROGMEM = {
 };
 
 const uint8_t tooltip_connector_down_left [] PROGMEM = {
-  // 'tooltip_connector_down_left, 5x5 px
+  // 5x5 px
   0x88, 0x98, 0xb8, 0xf0, 0x60
 };
 
 const uint8_t  tooltip_connector_down_right [] PROGMEM = {
-  // 'tooltip_connector_down_right, 5x5 px
+  // 5x5 px
   0x18, 0x98, 0x58, 0x38, 0x18
 };
 
 const uint8_t tooltip_connector_down [] PROGMEM = {
-  // 'tooltip_connector_down, 6x5 px
+  // 6x5 px
   0x04, 0x8c, 0xdc, 0x78, 0x30
 };
+
+const uint8_t tooltip_connector_up_left [] PROGMEM = {
+  // 4x4 px
+	0x80, 0xc0, 0xa0, 0x90
+};
+
 
 //-------------------------- Menu icons ----------------------------------
 //All are 15x11 px
