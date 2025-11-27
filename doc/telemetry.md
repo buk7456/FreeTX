@@ -43,7 +43,7 @@ The system remembers the last known location in case of a lost model, even when 
 If the displayed distance is inaccurate, simply reset the starting point from the context menu. 
 - Speed: The current speed over ground in metres per second. Defaults to 0 when there is no incoming telemetry.
 - Course: The current course over ground in degrees. Defaults to 0 when there is no incoming telemetry.
-- Altitude AGL: The altitude above ground level in metres. If the value is innacurate, reset it from the context menu.
+- Altitude AGL: The altitude above ground level in metres. If the value is inaccurate, reset it from the context menu.
 - Altitude MSL: The altitude relative to mean sea level in metres.
 - Latitude and Longitude: The location coordinates of the model. 
 Displays the last known location when there is no incoming telemetry.
