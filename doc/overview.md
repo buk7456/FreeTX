@@ -12,7 +12,7 @@ By default, the system is configured with the following features.
 - 20 logical switches, 5 function generators, 3 timers, 5 counters
 - 10 custom notifications 
 - 5 flight modes
-- 6 telemetry sensor slots
+- 8 telemetry sensor slots
 
 Many of these numbers are easily customisable in the source code, the limit being the available memory and I/O pins. 
 
@@ -33,5 +33,6 @@ The main features are:-
 - Telemetry support
 
 ---
+
 
 Back to [user guide](user_guide.md).
