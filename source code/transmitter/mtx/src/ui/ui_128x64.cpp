@@ -243,8 +243,16 @@ uint8_t focusedItem = 1;
 bool isEditTextDialog = false;
 bool isDisplayingBatteryWarning = false;
 
-//Cache the graph y coordinates to avoid unnecessary computation.
-int8_t graphYCoord[51]; //51 points total to plot. 
+#define VISIBLE_MODELS_IN_MODEL_SCREEN 6
+
+static union {
+  //string table to hold model names, for use in the model screen.
+  char modelNameStr[VISIBLE_MODELS_IN_MODEL_SCREEN][sizeof(Model.name)];
+  
+  //cache the graph y coordinates to avoid unnecessary computation.
+  int8_t graphYCoord[51]; //51 points total to plot. 
+};
+
 bool   graphYCoordinatesInvalid = true;
 
 //menu
@@ -1625,7 +1633,6 @@ void handleMainUI()
         drawHeader(mainMenu[MAIN_MENU_MODEL]);
         
         //------ scrollable list of models ----------
-        const uint8_t numVisible = 6;
         
         static uint8_t topItem = 1;
         static bool viewInitialised = false;
@@ -1643,7 +1650,7 @@ void handleMainUI()
         uint8_t prevTopItem = topItem;
         if(focusedItem < topItem)
           topItem = focusedItem;
-        while(focusedItem >= topItem + numVisible)
+        while(focusedItem >= topItem + VISIBLE_MODELS_IN_MODEL_SCREEN)
           topItem++;
         if(topItem != prevTopItem)
           modelListNeedsUpdate = true;
@@ -1651,31 +1658,30 @@ void handleMainUI()
         // fill list
         //Check at once and only update on scroll or just entered this screen so we 
         //don't have to constantly read all names from EEPROM (a somewhat slow process)
-        static char mdlStr[numVisible][sizeof(Model.name)]; //string table
         if(modelListNeedsUpdate)
         {
           modelListNeedsUpdate = false;
           if(maxNumOfModels > 1)
           {
-            for(uint8_t i = 0; i < numVisible && i < maxNumOfModels; i++)
+            for(uint8_t i = 0; i < VISIBLE_MODELS_IN_MODEL_SCREEN && i < maxNumOfModels; i++)
             {
               uint8_t modelIdx = topItem - 1 + i;
               if(eeModelIsFree(modelIdx)) // write 0xFF to indicate it is free
-                mdlStr[i][0] = 0xFF;
+                modelNameStr[i][0] = 0xFF;
               else //get the name
               {
                 eeGetModelName(textBuff, modelIdx, sizeof(textBuff));
-                strlcpy(&mdlStr[i][0], textBuff, sizeof(Model.name));
+                strlcpy(&modelNameStr[i][0], textBuff, sizeof(Model.name));
               }
             }
           }
           else
           {
-            strlcpy(&mdlStr[0][0], Model.name, sizeof(Model.name));
+            strlcpy(&modelNameStr[0][0], Model.name, sizeof(Model.name));
           }
         }
         
-        for(uint8_t line = 0; line < numVisible && line < maxNumOfModels; line++)
+        for(uint8_t line = 0; line < VISIBLE_MODELS_IN_MODEL_SCREEN && line < maxNumOfModels; line++)
         {
           uint8_t ypos = 10 + line * 9;
           uint8_t item = topItem + line;
@@ -1690,14 +1696,14 @@ void handleMainUI()
           
           uint8_t modelIdx = item - 1;
           display.setCursor(16, ypos);
-          if((uint8_t)mdlStr[line][0] != 0xFF)
-            printModelName(mdlStr[line], modelIdx);
+          if((uint8_t)modelNameStr[line][0] != 0xFF)
+            printModelName(modelNameStr[line], modelIdx);
           if(modelIdx == Sys.activeModelIdx) //indicate it is active
             display.drawBitmap(display.getCursorX() + 6, ypos + 1, icon_checkmark_bold, 7, 6, BLACK);
         }
         
         //scroll bar
-        drawScrollBar(127, 9, maxNumOfModels, topItem, numVisible, numVisible * 9);
+        drawScrollBar(127, 9, maxNumOfModels, topItem, VISIBLE_MODELS_IN_MODEL_SCREEN, VISIBLE_MODELS_IN_MODEL_SCREEN * 9);
 
         //----- end of list ----------------------
         
@@ -11263,30 +11269,30 @@ void drawMixerCurvePreview(mixer_params_t* mxr, bool showCrossHairs)
       if(mxr->curveType == MIX_CURVE_TYPE_EXPO)
         operand = calcExpo(operand, mxr->curveVal);
       else if(mxr->curveType == MIX_CURVE_TYPE_CUSTOM)
-    {
-      uint8_t _crvIdx = mxr->curveVal;
-      uint8_t _numPts = Model.CustomCurve[_crvIdx].numPoints;
-      if(Model.CustomCurve[_crvIdx].smooth)
-        operand = cubicHermiteInterpolate(_xx, _yy, _numPts, operand);
-      else
-        operand = linearInterpolate(_xx, _yy, _numPts, operand);
-    }
-      else if(mxr->curveType == MIX_CURVE_TYPE_FUNCTION)
-    {
-      uint8_t _func = mxr->curveVal;
-      switch(_func)
       {
-        case MIX_CURVE_FUNC_X_GREATER_THAN_ZERO: 
-          if(operand < 0) operand = 0; 
-          break;
-        case MIX_CURVE_FUNC_X_LESS_THAN_ZERO: 
-          if(operand > 0) operand = 0; 
-          break;
-        case MIX_CURVE_FUNC_ABS_X: 
-          if(operand < 0) operand = -operand; 
-          break;
+        uint8_t _crvIdx = mxr->curveVal;
+        uint8_t _numPts = Model.CustomCurve[_crvIdx].numPoints;
+        if(Model.CustomCurve[_crvIdx].smooth)
+          operand = cubicHermiteInterpolate(_xx, _yy, _numPts, operand);
+        else
+          operand = linearInterpolate(_xx, _yy, _numPts, operand);
       }
-    }
+      else if(mxr->curveType == MIX_CURVE_TYPE_FUNCTION)
+      {
+        uint8_t _func = mxr->curveVal;
+        switch(_func)
+        {
+          case MIX_CURVE_FUNC_X_GREATER_THAN_ZERO: 
+            if(operand < 0) operand = 0; 
+            break;
+          case MIX_CURVE_FUNC_X_LESS_THAN_ZERO: 
+            if(operand > 0) operand = 0; 
+            break;
+          case MIX_CURVE_FUNC_ABS_X: 
+            if(operand < 0) operand = -operand; 
+            break;
+        }
+      }
       //--- weight, offset
       operand = weightAndOffset(operand, mxr->weight, mxr->offset);
       

@@ -212,7 +212,7 @@ enum telemetry_type_e {
 
 //--- General telemetry
 
-#define NUM_CUSTOM_TELEMETRY  6
+#define NUM_CUSTOM_TELEMETRY  8
 
 extern int16_t  telemetryReceivedValue[NUM_CUSTOM_TELEMETRY]; //stores the raw received telemetry
 extern int16_t  telemetryMaxReceivedValue[NUM_CUSTOM_TELEMETRY]; //for statistics
