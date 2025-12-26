@@ -1,0 +1,47 @@
+Optimize -O3 
+
+  parseNMEA(sentence)
+  
+    $GNRMC,051630.452,V,0017.0190,N,00042.1610,W,0.000,0.00,041224,,,N,V*20     
+    180 us
+  
+    $GNGGA,051630.452,0017.0190,N,00042.1610,W,0,0,,1196.3,M,-12.2,M,,*4E
+    164 us
+  
+    $GPGSV,3,1,11,07,66,249,,02,56,177,,03,42,037,,21,40,163,,1*6C
+    144 us
+  
+  convertGNSSData()
+  568 us
+    
+  writeOutputs()
+  636 us
+  
+  getExternalVoltage()
+  288 us
+  220 us optimised with dividers that are powers of 2
+
+Optimize -Os
+
+  parseNMEA(sentence)
+  
+    $GNRMC,051630.452,V,0017.0190,N,00042.1610,W,0.000,0.00,041224,,,N,V*20     
+    188 us
+  
+    $GNGGA,051630.452,0017.0190,N,00042.1610,W,0,0,,1196.3,M,-12.2,M,,*4E
+    172 us
+  
+    $GPGSV,3,1,11,07,66,249,,02,56,177,,03,42,037,,21,40,163,,1*6C
+    144 us
+  
+  convertGNSSData()
+  572 us
+    
+  writeOutputs()
+  640 us
+  
+  getExternalVoltage()
+  288 us
+  220 us optimised with dividers that are powers of 2
+  
+
