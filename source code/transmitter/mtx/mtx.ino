@@ -1,6 +1,6 @@
 /***************************************************************************************************
   Firmware for the RC transmitter
-  Target MCU: Atmega2560
+  Target MCU: ATmega2560
   Compiles on Arduino 1.8.x or later.
   - Use compiler optimization option -O2 or -O3 if possible.
   - The warning "Low memory available, stability problems may occur" can be ignored as long as
