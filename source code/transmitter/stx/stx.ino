@@ -1,6 +1,6 @@
 /***************************************************************************************************
   Firmware for the RC transmitter.
-  Target MCU: Atmega328
+  Target MCU: ATmega328P
   Compiles on Arduino 1.8.x or later
   
   Authors:
