@@ -249,11 +249,14 @@ static union {
   //string table to hold model names, for use in the model screen.
   char modelNameStr[VISIBLE_MODELS_IN_MODEL_SCREEN][sizeof(Model.name)];
   
+  //buffer to hold name, for use with SD card model operations. Only 8.3 names supported. 
+  char nameStr[13];
+  
   //cache the graph y coordinates to avoid unnecessary computation.
   int8_t graphYCoord[51]; //51 points total to plot. 
 };
 
-bool   graphYCoordinatesInvalid = true;
+bool graphYCoordinatesInvalid = true;
 
 //menu
 uint8_t menuSelectedItemID = 0xff;
@@ -2024,7 +2027,6 @@ void handleMainUI()
         static bool initialised = false;
         static uint16_t mdlCount = 0;
         static uint16_t thisPos = 0; //Better name
-        static char nameStr[13]; //buffer to hold name. Only 8.3 names supported
         
         if(!initialised)
         {
@@ -2063,10 +2065,6 @@ void handleMainUI()
         if(clickedButton == KEY_SELECT)
         {
           initialised = false;
-          //Copy name into textBuff. 
-          //Assumption is textBuff won't be modified by something else. This isn't much of an issue 
-          //since we can always retry if the restore fails.         
-          strlcpy(textBuff, nameStr, sizeof(textBuff));
           changeToScreen(CONFIRMATION_MODEL_RESTORE);
         }
 
@@ -2094,7 +2092,7 @@ void handleMainUI()
             eeSaveModelData(Sys.activeModelIdx);
           
           //restore the model
-          if(sdRestoreModel(textBuff))
+          if(sdRestoreModel(nameStr))
           {
             //save it to EEPROM
             if(maxNumOfModels > 1)
@@ -2186,7 +2184,6 @@ void handleMainUI()
       {
         static bool initialised = false;
         static bool modelBackupExists = false;
-        static char nameStr[13]; //buffer to hold model name. Only 8.3 names supported
         
         if(!initialised)
         {
