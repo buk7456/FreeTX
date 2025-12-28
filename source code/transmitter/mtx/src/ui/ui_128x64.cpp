@@ -2102,7 +2102,7 @@ void handleMainUI()
             if(maxNumOfModels > 1 && thisModelIdx != Sys.activeModelIdx)
               eeReadModelData(Sys.activeModelIdx);
             
-            //show message if errors where encountered in the imported data
+            //show message if errors were encountered in the imported data
             if(dbgTotalErrorLines > 0)
             {
               display.clearDisplay();
@@ -6929,12 +6929,30 @@ void handleMainUI()
             Model.gnssAltitudeOffset = GNSSTelemetryData.altitude;
           else
             Model.gnssAltitudeOffset = Model.gnssLastKnownAltitude;
+          //also reset statistics for the Altitude AGL sensor
+          for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
+          {
+            if(Model.Telemetry[i].identifier == SENSOR_ID_GNSS_AGL_ALTITUDE)
+            {
+              telemetryMaxReceivedValue[i] = TELEMETRY_NO_DATA;
+              telemetryMinReceivedValue[i] = TELEMETRY_NO_DATA;
+            }
+          }
           changeToScreen(SCREEN_TELEMETRY);
         }
         if(contextMenuSelectedItemID == ITEM_RESET_STARTING_POINT)
         {
           Model.gnssHomeLatitude = GNSSTelemetryData.latitude;
           Model.gnssHomeLongitude = GNSSTelemetryData.longitude;
+          //also reset statistics for the Distance sensor
+          for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
+          {
+            if(Model.Telemetry[i].identifier == SENSOR_ID_GNSS_DISTANCE)
+            {
+              telemetryMaxReceivedValue[i] = TELEMETRY_NO_DATA;
+              telemetryMinReceivedValue[i] = TELEMETRY_NO_DATA;
+            }
+          }
           changeToScreen(SCREEN_TELEMETRY);
         }
         if(contextMenuSelectedItemID == ITEM_RESET_LAST_KNOWN_LOCATION)
