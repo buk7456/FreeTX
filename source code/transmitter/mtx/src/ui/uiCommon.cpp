@@ -591,6 +591,7 @@ uint8_t getMovedSource()
 
 uint8_t procMovedSource(uint8_t src)
 {
+  if(src == SRC_NONE) return SRC_NONE;
   if(Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER)
   {
     if(src == Model.rudSrcRaw) return SRC_RUD;
