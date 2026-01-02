@@ -405,7 +405,7 @@ Waveform:      Random
 Interval mode: Variable
 Min Interval:  1.0 s
 Max Interval:  2.0 s
-Control:       Fgen2
+Modulator:     Fgen2
 
 Fgen2  (modulates the interval of Fgen1)
 Waveform:      Random
