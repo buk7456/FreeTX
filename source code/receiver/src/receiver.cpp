@@ -3,7 +3,7 @@
 // #include <Servo.h> //replaced with modified library tailored to our application
 #include "Servo.h"
 
-#include "config.h"
+#include "../config.h"
 #include "crc.h"
 #include "common.h"
 #include "eestore.h"
