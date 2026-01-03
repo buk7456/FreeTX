@@ -3,7 +3,7 @@
 #include <SPI.h>
 
 #include "LoRa.h"
-#include "config.h"
+#include "../config.h"
 #include "common.h"
 #include "crc.h"
 #include "eestore.h"

@@ -12,7 +12,7 @@
 #include "Arduino.h"
 #include <EEPROM.h>
 
-#include "config.h"
+#include "../config.h"
 #include "common.h"
 #include "eestore.h"
 #include "crc.h"

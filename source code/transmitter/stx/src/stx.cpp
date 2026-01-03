@@ -1,6 +1,6 @@
 #include "Arduino.h"
 
-#include "config.h"
+#include "../config.h"
 #include "crc.h"
 #include "common.h"
 #include "eestore.h"
