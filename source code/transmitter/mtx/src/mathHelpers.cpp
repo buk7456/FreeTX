@@ -198,6 +198,7 @@ int32_t calcTangent(int16_t xValues[], int16_t yValues[], uint8_t numValues, uin
   return m;
 }
 
+//--------------------------------------------------------------------------------------------------
 
 //Taken from the TinyGPS++ library.
 
