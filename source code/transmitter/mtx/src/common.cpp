@@ -226,12 +226,12 @@ void resetSystemParams()
   Sys.soundOnInactivity = true;
   Sys.soundSwitches = true;
   Sys.soundKnobCenter = true;
-  Sys.soundKeys = true;
+  Sys.soundKeys = false;
   Sys.soundTrims = true;
   Sys.trimToneFreqMode = TRIM_TONE_FREQ_VARIABLE;
   
   Sys.backlightEnabled = true;
-  Sys.backlightLevel = 50;
+  Sys.backlightBrightness = 50;
   Sys.backlightTimeout = BACKLIGHT_TIMEOUT_1MIN;
   Sys.backlightWakeup = BACKLIGHT_WAKEUP_KEYS;
   Sys.backlightSuppressFirstKey = true;

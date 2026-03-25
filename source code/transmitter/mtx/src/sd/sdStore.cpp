@@ -7,8 +7,8 @@
 #include "../common.h"
 #include "../crc.h"
 #include "../ui/ui.h"
-#include "modelExport.h"
-#include "modelImport.h"
+#include "dataExport.h"
+#include "dataImport.h"
 #include "sdStore.h"
 
 #if defined (DISPLAY_KS0108)
@@ -53,7 +53,8 @@ bool sdHasCard()
   return hasSDcard;
 }
 
-//--------------------------------------------------------------------------------------------------
+
+//============================ Model backup and restore ============================================
 
 bool sdBackupModel(const char *name)
 {
@@ -279,7 +280,7 @@ bool sdSimilarModelExists(const char *name)
   return false;
 }
 
-//--------------------------- Splash screen -------------------------------------------------------
+//============================ Splash screen =======================================================
 
 void sdShowSplashScreen()
 {
@@ -356,7 +357,7 @@ void sdShowSplashScreen()
   }
 }
 
-//----------------------------Screenshot ----------------------------------------------------------
+//============================ Screenshot writer ===================================================
 
 bool sdWriteScreenshot()
 {
@@ -458,4 +459,120 @@ bool sdWriteScreenshot()
   }
 
   return false;
+}
+
+//============================ System settings backup and restore ==================================
+
+static const char system_directory[] PROGMEM = "SYSTEM/";
+
+bool sdBackupSystemSettings()
+{
+  if(!hasSDcard)
+    return false;
+
+  if(isModelDirectoryOpen) //close first if open
+  {
+    modelDir.close();
+    isModelDirectoryOpen = false;
+  }
+
+  //create the  directory
+  static bool initialised = false;
+  if(!initialised)
+  {
+    initialised = true;
+    char directoryName[sizeof(system_directory)];
+    strlcpy_P(directoryName, system_directory, sizeof(directoryName));
+    if(!SD.exists(directoryName))
+      SD.mkdir(directoryName);
+  }
+
+  char fullNameStr[30]; //includes the path
+  memset(fullNameStr, 0, sizeof(fullNameStr));
+  strlcpy_P(fullNameStr, system_directory, sizeof(fullNameStr));
+  strlcat_P(fullNameStr, PSTR("SETTINGS"), sizeof(fullNameStr));
+  
+  //remove the file if it exists, so we start afresh
+  if(SD.exists(fullNameStr))
+    SD.remove(fullNameStr);
+  
+  File myFile = SD.open(fullNameStr, FILE_WRITE);
+  if(myFile)
+  {
+    //export in human readable format
+    exportSystemData(myFile);
+    
+    //close the file
+    myFile.close(); 
+    
+    return true;
+  }
+  
+  return false;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+bool sdRestoreSystemSettings()
+{
+  if(!hasSDcard)
+    return false;
+  
+  char fullNameStr[30]; //includes the path
+  memset(fullNameStr, 0, sizeof(fullNameStr));
+  strlcpy_P(fullNameStr, system_directory, sizeof(fullNameStr));
+  strlcat_P(fullNameStr, PSTR("SETTINGS"), sizeof(fullNameStr));
+  
+  if(isModelDirectoryOpen) //close first if open
+  {
+    modelDir.close();
+    isModelDirectoryOpen = false;
+  }
+  
+  File myFile = SD.open(fullNameStr);
+  if(myFile)
+  {
+    //prevent reading large files as they could be spam or cause the system to hang
+    if(myFile.size() > FILE_SIZE_LIMIT_BYTES)
+    {
+      myFile.close();
+      return false;
+    }
+    
+    //reset the sys struct as we directly read into it
+    resetSystemParams();
+    //import the settings
+    importSystemData(myFile);
+    
+    //close the file
+    myFile.close();
+
+    //sanity check the data we just read in
+    if(!verifySystemData())
+    {
+      showMessage(PSTR("Bad system data.\nReverting changes"));
+      delay(2000);
+      resetSystemParams();
+      return false;
+    }
+    
+    return true;
+  }
+  
+  return false;
+}
+
+//--------------------------------------------------------------------------------------------------
+
+bool sdSystemSettingsExists()
+{
+  char fullNameStr[30]; //includes the path
+  memset(fullNameStr, 0, sizeof(fullNameStr));
+  strlcpy_P(fullNameStr, system_directory, sizeof(fullNameStr));
+  strlcat_P(fullNameStr, PSTR("SETTINGS"), sizeof(fullNameStr));
+  
+  if(SD.exists(fullNameStr))
+    return true;
+  else
+    return false;
 }

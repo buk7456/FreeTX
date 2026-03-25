@@ -727,7 +727,7 @@ void timerHandler()
     static bool alarmTriggered[NUM_TIMERS];
     
     if(Model.Timer[i].swtch != CTRL_SW_NONE)
-      timerForceRun[i] =  false;
+      timerForceRun[i] = false;
     
     if((Model.Timer[i].swtch != CTRL_SW_NONE && checkSwitchCondition(Model.Timer[i].swtch)) 
       || timerForceRun[i]) //run timer

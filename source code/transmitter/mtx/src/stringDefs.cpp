@@ -220,7 +220,8 @@ const id_string_t enum_DirectionOfChange[] PROGMEM = {
 
 const id_string_t enum_ChannelFailsafe[] PROGMEM = {
   {-102, "Hold"},
-  {-101, "NoPulse"},
+  {-101, "No pulse"},
+  {-101, "NoPulse"}, //legacy support
   {0, ""}
 };
 
@@ -444,6 +445,84 @@ const char key_Enabled[] PROGMEM = "Enabled";
 //const char key_Switch[] PROGMEM = "Switch";
 const char key_Tone[] PROGMEM = "Tone";
 const char key_Text[] PROGMEM = "Text";
+
+//=== System related ===
+
+const char key_StickAxis[] PROGMEM = "StickAxis";
+// const char key_Name[] PROGMEM = "Name";
+const char key_MinVal[] PROGMEM = "MinVal";
+const char key_CenterVal[] PROGMEM = "CenterVal";
+const char key_MaxVal[] PROGMEM = "MaxVal";
+const char key_Deadzone[] PROGMEM = "Deadzone";
+// const char key_Type[] PROGMEM = "Type";
+const char key_StickMode[] PROGMEM = "DefaultStickMode";
+
+const char key_Knob[] PROGMEM = "Knob";
+// const char key_Name[] PROGMEM = "Name";
+// const char key_MinVal[] PROGMEM = "MinVal";
+// const char key_CenterVal[] PROGMEM = "CenterVal";
+// const char key_MaxVal[] PROGMEM = "MaxVal";
+// const char key_Deadzone[] PROGMEM = "Deadzone";
+// const char key_Type[] PROGMEM = "Type";
+
+const char key_Switches[] PROGMEM = "Switches";
+
+const char key_Battery[] PROGMEM = "Battery";
+const char key_VoltsMin[] PROGMEM = "VoltsMin";
+const char key_VoltsMax[] PROGMEM = "VoltsMax";
+const char key_CalibrationFactor[] PROGMEM = "CalibrationFactor";
+
+const char key_Security[] PROGMEM = "Security";
+const char key_LockStartup[] PROGMEM = "LockStartup";
+const char key_LockModels[] PROGMEM = "LockModels";
+const char key_LockOnInactivity[] PROGMEM = "LockOnInactivity";
+
+const char key_RF[] PROGMEM = "RF";
+// const char key_Enabled[] PROGMEM = "Enabled";
+const char key_Power[] PROGMEM = "Power";
+
+const char key_Sound[] PROGMEM = "Sound";
+// const char key_Enabled[] PROGMEM = "Enabled";
+const char key_Inactivity[] PROGMEM = "Inactivity";
+// const char key_Switches[] PROGMEM = "Switches";
+const char key_KnobCenter[] PROGMEM = "KnobCenter";
+const char key_Keys[] PROGMEM = "Keys";
+const char key_Trims[] PROGMEM = "Trims";
+const char key_TrimToneFreqMode[] PROGMEM = "TrimToneFreqMode";
+
+const char key_Backlight[] PROGMEM = "Backlight";
+// const char key_Enabled[] PROGMEM = "Enabled";
+const char key_Brightness[] PROGMEM = "Brightness";
+const char key_Timeout[] PROGMEM = "Timeout";
+const char key_Wakeup[] PROGMEM = "Wakeup";
+const char key_SuppressFirstKey[] PROGMEM = "SuppressFirstKey";
+
+const char key_Contrast[] PROGMEM = "Contrast";
+
+const char key_Appearance[] PROGMEM = "Appearance";
+const char key_ShowMenuIcons[] PROGMEM = "ShowMenuIcons";
+const char key_RememberMenuPosition[] PROGMEM = "RememberMenuPosition";
+const char key_UseRoundRect[] PROGMEM = "UseRoundRect";
+const char key_UseDenserMenus[] PROGMEM = "UseDenserMenus";
+const char key_AnimationsEnabled[] PROGMEM = "AnimationsEnabled";
+const char key_AutohideTrims[] PROGMEM = "AutohideTrims";
+const char key_NumericalBatteryIndicator[] PROGMEM = "NumericalBattery";
+const char key_ShowSplashScreen[] PROGMEM = "ShowSplashScreen";
+const char key_ShowWelcomeMessage[] PROGMEM = "ShowWelcomeMessage";
+const char key_AlwaysShowHours[] PROGMEM = "AlwaysShowHours";
+
+const char key_Miscellaneous[] PROGMEM = "Miscellaneous";
+const char key_AutoSelectMovedControl[] PROGMEM = "AutoSelectMovedCtrl";
+const char key_MixerTemplatesEnabled[] PROGMEM = "MixerTemplates";
+const char key_DefaultChannelOrder[] PROGMEM = "DefaultChannelOrder";
+const char key_InactivityMinutes[] PROGMEM = "InactivityMinutes";
+const char key_MixerCurvePreview[] PROGMEM = "MixerCurvePreview";
+
+const char key_Debug[] PROGMEM = "Debug";
+const char key_ShowLoopTime[] PROGMEM = "ShowLoopTime";
+const char key_SimulateTelemetry[] PROGMEM = "SimulateTelemetry";
+const char key_DisableInterlacing[] PROGMEM = "DisableInterlacing";
+const char key_ScreenshotSeqNo[] PROGMEM = "ScreenshotSeqNo";
 
 //=================================================================================================
 

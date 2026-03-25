@@ -361,10 +361,12 @@ typedef struct {
 
   //--- backlight
   bool     backlightEnabled; 
-  uint8_t  backlightLevel;    //in percentage
+  uint8_t  backlightBrightness;    //in percentage
   uint8_t  backlightTimeout;
   uint8_t  backlightWakeup;
   bool     backlightSuppressFirstKey; //better name
+  
+  //--- contrast
   uint8_t  contrast;
   
   //--- appearance

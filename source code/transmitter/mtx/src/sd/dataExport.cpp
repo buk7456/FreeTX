@@ -5,7 +5,8 @@
 #include "../../config.h"
 #include "../common.h"
 #include "../stringDefs.h"
-#include "modelExport.h"
+#include "../templates.h"
+#include "dataExport.h"
 
 //----------------------------------- helpers ------------------------------------------------------
 
@@ -116,7 +117,7 @@ void writeArray_S8(File& file, uint8_t level, const char* keyStr_P, int8_t value
   }
 }
 
-//==================================================================================================
+//============================ Model data exporter =================================================
 
 void exportModelData(File& file)
 {
@@ -147,6 +148,7 @@ void exportModelData(File& file)
   }
 
   file.println(F("# ------ Warnings ------"));
+
   if((Model.type == MODEL_TYPE_AIRPLANE || Model.type == MODEL_TYPE_MULTICOPTER))
     writeKeyValue_bool(file, 0, key_CheckThrottle, Model.checkThrottle);
   writeKeyValue_Char(file, 0, key_SwitchWarn, NULL);
@@ -169,7 +171,7 @@ void exportModelData(File& file)
       continue;
 
     writeKeyValue_Char(file, 0, key_Telemetry, NULL);
-    writeKeyValue_S32(file, 1, key_Number, idx + 1);
+    writeKeyValue_U32(file, 1, key_Number, idx + 1);
 
     writeKeyValue_Char(file, 1, key_Type, findStringInIdStr(enum_TelemetryType, tlm->type));
     writeKeyValue_Char(file, 1, key_Name, tlm->name);
@@ -201,7 +203,7 @@ void exportModelData(File& file)
     timer_params_t *tmr = &Model.Timer[idx];
     
     writeKeyValue_Char(file, 0, key_Timer, NULL);
-    writeKeyValue_S32(file, 1, key_Number, idx + 1);
+    writeKeyValue_U32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Name, tmr->name);
     
     getControlSwitchName_Clean(tempBuff, tmr->swtch, sizeof(tempBuff));
@@ -239,7 +241,7 @@ void exportModelData(File& file)
   {
     file.println(F("# ------ Rates and expo ------"));
     
-    writeKeyValue_Char(file, 0, (Model.type ==  MODEL_TYPE_AIRPLANE) ? key_RudDualRate : key_YawDualRate, NULL);
+    writeKeyValue_Char(file, 0, (Model.type == MODEL_TYPE_AIRPLANE) ? key_RudDualRate : key_YawDualRate, NULL);
     writeKeyValue_S32(file, 1, key_Rate1, Model.RudDualRate.rate1);
     writeKeyValue_S32(file, 1, key_Rate2, Model.RudDualRate.rate2);
     writeKeyValue_S32(file, 1, key_Expo1, Model.RudDualRate.expo1);
@@ -247,7 +249,7 @@ void exportModelData(File& file)
     getControlSwitchName_Clean(tempBuff, Model.RudDualRate.swtch, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_Switch, tempBuff);
     
-    writeKeyValue_Char(file, 0, (Model.type ==  MODEL_TYPE_AIRPLANE) ? key_AilDualRate : key_RollDualRate, NULL);
+    writeKeyValue_Char(file, 0, (Model.type == MODEL_TYPE_AIRPLANE) ? key_AilDualRate : key_RollDualRate, NULL);
     writeKeyValue_S32(file, 1, key_Rate1, Model.AilDualRate.rate1);
     writeKeyValue_S32(file, 1, key_Rate2, Model.AilDualRate.rate2);
     writeKeyValue_S32(file, 1, key_Expo1, Model.AilDualRate.expo1);
@@ -255,7 +257,7 @@ void exportModelData(File& file)
     getControlSwitchName_Clean(tempBuff, Model.AilDualRate.swtch, sizeof(tempBuff));
     writeKeyValue_Char(file, 1, key_Switch, tempBuff);
     
-    writeKeyValue_Char(file, 0, (Model.type ==  MODEL_TYPE_AIRPLANE) ? key_EleDualRate : key_PitchDualRate, NULL);
+    writeKeyValue_Char(file, 0, (Model.type == MODEL_TYPE_AIRPLANE) ? key_EleDualRate : key_PitchDualRate, NULL);
     writeKeyValue_S32(file, 1, key_Rate1, Model.EleDualRate.rate1);
     writeKeyValue_S32(file, 1, key_Rate2, Model.EleDualRate.rate2);
     writeKeyValue_S32(file, 1, key_Expo1, Model.EleDualRate.expo1);
@@ -266,7 +268,7 @@ void exportModelData(File& file)
     file.println(F("# ------ Throttle curve ------"));
   
     writeKeyValue_Char(file, 0, key_ThrottleCurve, NULL);
-    writeKeyValue_S32(file, 1, key_NumPoints, Model.ThrottleCurve.numPoints);
+    writeKeyValue_U32(file, 1, key_NumPoints, Model.ThrottleCurve.numPoints);
     writeArray_S8(file, 1, key_XVal, Model.ThrottleCurve.xVal, Model.ThrottleCurve.numPoints);
     writeArray_S8(file, 1, key_YVal, Model.ThrottleCurve.yVal, Model.ThrottleCurve.numPoints);
     writeKeyValue_bool(file, 1, key_Smooth, Model.ThrottleCurve.smooth);
@@ -279,7 +281,7 @@ void exportModelData(File& file)
     funcgen_t *fgen = &Model.Funcgen[idx];
     
     writeKeyValue_Char(file, 0, key_Funcgen, NULL);
-    writeKeyValue_S32(file, 1, key_Number, idx + 1);
+    writeKeyValue_U32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Waveform, findStringInIdStr(enum_FuncgenWaveform, fgen->waveform));
 
     if(fgen->waveform == FUNCGEN_WAVEFORM_PULSE)
@@ -313,7 +315,7 @@ void exportModelData(File& file)
       continue;
     
     writeKeyValue_Char(file, 0, key_Mixer, NULL);
-    writeKeyValue_S32(file, 1, key_Number, idx + 1);
+    writeKeyValue_U32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Name, mxr->name);
     
     getSrcName_Clean(tempBuff, mxr->output, sizeof(tempBuff));
@@ -379,9 +381,9 @@ void exportModelData(File& file)
   {
     custom_curve_t *crv = &Model.CustomCurve[idx];
     writeKeyValue_Char(file, 0, key_CustomCurve, NULL);
-    writeKeyValue_S32(file, 1, key_Number, idx + 1);
+    writeKeyValue_U32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Name, crv->name);
-    writeKeyValue_S32(file, 1, key_NumPoints, crv->numPoints);
+    writeKeyValue_U32(file, 1, key_NumPoints, crv->numPoints);
     writeArray_S8(file, 1, key_XVal, crv->xVal, crv->numPoints);
     writeArray_S8(file, 1, key_YVal, crv->yVal, crv->numPoints);
     writeKeyValue_bool(file, 1, key_Smooth, crv->smooth);
@@ -395,7 +397,7 @@ void exportModelData(File& file)
     if(idx > 0 && ls->func == LS_FUNC_NONE)
       continue;
     writeKeyValue_Char(file, 0, key_LogicalSwitch, NULL);
-    writeKeyValue_S32(file, 1, key_Number, idx + 1);
+    writeKeyValue_U32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Func, findStringInIdStr(enum_LogicalSwitch_Func, ls->func));
     
     if(ls->func <= LS_FUNC_GROUP3_LAST)
@@ -461,7 +463,7 @@ void exportModelData(File& file)
       continue;
 
     writeKeyValue_Char(file, 0, key_Counter, NULL);
-    writeKeyValue_S32(file, 1, key_Number, idx + 1);
+    writeKeyValue_U32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Name, counter->name);
     writeKeyValue_Char(file, 1, key_Type, findStringInIdStr(enum_CounterType, counter->type));
     if(counter->type == COUNTER_TYPE_BASIC)
@@ -501,7 +503,7 @@ void exportModelData(File& file)
         continue;
       
       writeKeyValue_Char(file, 0, key_FlightMode, NULL);
-      writeKeyValue_S32(file, 1, key_Number, idx + 1);
+      writeKeyValue_U32(file, 1, key_Number, idx + 1);
       writeKeyValue_Char(file, 1, key_Name, fmd->name);
     
       getControlSwitchName_Clean(tempBuff, fmd->swtch, sizeof(tempBuff));
@@ -521,7 +523,7 @@ void exportModelData(File& file)
   {
     channel_params_t *ch = &Model.Channel[idx];
     writeKeyValue_Char(file, 0, key_Channel, NULL);
-    writeKeyValue_S32(file, 1, key_Number, idx + 1);
+    writeKeyValue_U32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Name, ch->name);
 
     if(ch->curve == -1)
@@ -555,7 +557,7 @@ void exportModelData(File& file)
   {
     widget_params_t *widget = &Model.Widget[idx];
     writeKeyValue_Char(file, 0, key_Widget, NULL);
-    writeKeyValue_S32(file, 1, key_Number, idx + 1);
+    writeKeyValue_U32(file, 1, key_Number, idx + 1);
     writeKeyValue_Char(file, 1, key_Type, findStringInIdStr(enum_WidgetType, widget->type));
     
     if(widget->type == WIDGET_TYPE_TELEMETRY)
@@ -611,7 +613,7 @@ void exportModelData(File& file)
       continue;
 
     writeKeyValue_Char(file, 0, key_Notification, NULL);
-    writeKeyValue_S32(file, 1, key_Number, idx + 1);
+    writeKeyValue_U32(file, 1, key_Number, idx + 1);
 
     writeKeyValue_bool(file, 1, key_Enabled, notification->enabled);
 
@@ -625,5 +627,167 @@ void exportModelData(File& file)
 
     writeKeyValue_Char(file, 1, key_Text, notification->text);
   }
+
+}
+
+//============================ System data exporter ================================================
+
+void exportSystemData(File& file)
+{
+  char tempBuff[MAX_STR_SIZE];
+  memset(tempBuff, 0, sizeof(tempBuff));
+  
+  file.println(F("##### System configuration file #####"));
+  file.println(F("##### Exported from version " _FIRMWARE_VERSION " #####"));
+
+  file.println(F("# ------ Sticks ------"));
+
+  for(uint8_t idx = 0; idx < NUM_STICK_AXES; idx++)
+  {
+    writeKeyValue_Char(file, 0, key_StickAxis, NULL);
+
+    getSrcName_Clean(tempBuff, SRC_STICK_AXIS_FIRST + idx, sizeof(tempBuff));
+    writeKeyValue_Char(file, 1, key_Name, tempBuff);
+
+    writeKeyValue_S32(file, 1, key_MinVal, Sys.StickAxis[idx].minVal);
+    writeKeyValue_S32(file, 1, key_CenterVal, Sys.StickAxis[idx].centerVal);
+    writeKeyValue_S32(file, 1, key_MaxVal, Sys.StickAxis[idx].maxVal);
+    
+    writeKey_helper(file, 1, key_Deadzone);
+    file.print(Sys.StickAxis[idx].deadzone);
+    file.print(F("%"));
+    file.println();
+
+    writeKeyValue_Char(file, 1, key_Type, findStringInIdStr(enum_StickAxisType, Sys.StickAxis[idx].type));
+  }
+  writeKeyValue_Char(file, 0, key_StickMode, findStringInIdStr(enum_StickMode, Sys.defaultStickMode));
+  
+  file.println(F("# ------ Knobs ------"));
+
+  for(uint8_t idx = 0; idx < NUM_KNOBS; idx++)
+  {
+    writeKeyValue_Char(file, 0, key_Knob, NULL);
+
+    getSrcName_Clean(tempBuff, SRC_KNOB_FIRST + idx, sizeof(tempBuff));
+    writeKeyValue_Char(file, 1, key_Name, tempBuff);
+
+    writeKeyValue_S32(file, 1, key_MinVal, Sys.Knob[idx].minVal);
+    writeKeyValue_S32(file, 1, key_CenterVal, Sys.Knob[idx].centerVal);
+    writeKeyValue_S32(file, 1, key_MaxVal, Sys.Knob[idx].maxVal);
+    
+    writeKey_helper(file, 1, key_Deadzone);
+    file.print(Sys.Knob[idx].deadzone);
+    file.print(F("%"));
+    file.println();
+
+    writeKeyValue_Char(file, 1, key_Type, findStringInIdStr(enum_KnobType, Sys.Knob[idx].type));
+  }
+
+  file.println(F("# ------ Switches ------"));
+
+  writeKeyValue_Char(file, 0, key_Switches, NULL);
+  for(uint8_t idx = 0; idx < NUM_PHYSICAL_SWITCHES; idx++)
+  {
+    printIndention_helper(file, 1);
+    getSrcName_Clean(tempBuff, SRC_SW_PHYSICAL_FIRST + idx, sizeof(tempBuff));
+    file.print(tempBuff);
+    file.print(F(": "));
+    file.print(findStringInIdStr(enum_SwitchType, Sys.swType[idx]));
+    file.println();
+  }
+
+  file.println(F("# ------ Battery ------"));
+
+  writeKeyValue_Char(file, 0, key_Battery, NULL);
+  writeKeyValue_S32(file, 1, key_VoltsMin, Sys.batteryVoltsMin);
+  writeKeyValue_S32(file, 1, key_VoltsMax, Sys.batteryVoltsMax);
+  writeKeyValue_S32(file, 1, key_CalibrationFactor, Sys.batteryCalibrationFactor);
+
+  file.println(F("# ------ Security ------"));
+
+  writeKeyValue_Char(file, 0, key_Security, NULL);
+  writeKeyValue_bool(file, 1, key_LockStartup, Sys.lockStartup);
+  writeKeyValue_bool(file, 1, key_LockModels, Sys.lockModels);
+  writeKeyValue_bool(file, 1, key_LockOnInactivity, Sys.lockOnInactivity);
+
+  file.println(F("# ------ RF ------"));
+
+  writeKeyValue_Char(file, 0, key_RF, NULL);
+  // writeKeyValue_bool(file, 1, key_Enabled, Sys.rfEnabled);
+  writeKeyValue_Char(file, 1, key_Power, findStringInIdStr(enum_RFpower, Sys.rfPower));
+
+  file.println(F("# ------ Sound ------"));
+
+  writeKeyValue_Char(file, 0, key_Sound, NULL);
+  writeKeyValue_bool(file, 1, key_Enabled, Sys.soundEnabled);
+  writeKeyValue_bool(file, 1, key_Inactivity, Sys.soundOnInactivity);
+  writeKeyValue_bool(file, 1, key_Switches, Sys.soundSwitches);
+  writeKeyValue_bool(file, 1, key_KnobCenter, Sys.soundKnobCenter);
+  writeKeyValue_bool(file, 1, key_Keys, Sys.soundKeys);
+  writeKeyValue_bool(file, 1, key_Trims, Sys.soundTrims);
+  writeKeyValue_Char(file, 1, key_TrimToneFreqMode, findStringInIdStr(enum_TrimToneFreqMode, Sys.trimToneFreqMode));
+  
+  file.println(F("# ------ Backlight ------"));
+
+  writeKeyValue_Char(file, 0, key_Backlight, NULL);
+  writeKeyValue_bool(file, 1, key_Enabled, Sys.backlightEnabled);
+
+  writeKey_helper(file, 1, key_Brightness);
+  file.print(Sys.backlightBrightness);
+  file.print(F("%"));
+  file.println();
+
+  writeKeyValue_Char(file, 1, key_Timeout, findStringInIdStr(enum_BacklightTimeout, Sys.backlightTimeout));
+  writeKeyValue_Char(file, 1, key_Wakeup, findStringInIdStr(enum_BacklightWakeup, Sys.backlightWakeup));
+  writeKeyValue_bool(file, 1, key_SuppressFirstKey, Sys.backlightSuppressFirstKey);
+
+  file.println(F("# ------ Contrast ------"));
+
+  writeKey_helper(file, 0, key_Contrast);
+  file.print(Sys.contrast);
+  file.print(F("%"));
+  file.println();
+
+  file.println(F("# ------ Appearance ------"));
+
+  writeKeyValue_Char(file, 0, key_Appearance, NULL);
+  writeKeyValue_bool(file, 1, key_ShowMenuIcons, Sys.showMenuIcons);
+  writeKeyValue_bool(file, 1, key_RememberMenuPosition, Sys.rememberMenuPosition);
+  writeKeyValue_bool(file, 1, key_UseRoundRect, Sys.useRoundRect);
+  writeKeyValue_bool(file, 1, key_UseDenserMenus, Sys.useDenserMenus);
+  writeKeyValue_bool(file, 1, key_AnimationsEnabled, Sys.animationsEnabled);
+  writeKeyValue_bool(file, 1, key_AutohideTrims, Sys.autohideTrims);
+  writeKeyValue_bool(file, 1, key_NumericalBatteryIndicator, Sys.useNumericalBatteryIndicator);
+  writeKeyValue_bool(file, 1, key_ShowSplashScreen, Sys.showSplashScreen);
+  writeKeyValue_bool(file, 1, key_ShowWelcomeMessage, Sys.showWelcomeMessage);
+  writeKeyValue_bool(file, 1, key_AlwaysShowHours, Sys.alwaysShowHours);
+
+  file.println(F("# ------ Miscellaneous ------"));
+
+  writeKeyValue_Char(file, 0, key_Miscellaneous, NULL);
+  writeKeyValue_bool(file, 1, key_AutoSelectMovedControl, Sys.autoSelectMovedControl);
+  writeKeyValue_bool(file, 1, key_MixerTemplatesEnabled, Sys.mixerTemplatesEnabled);
+
+  writeKey_helper(file, 1, key_DefaultChannelOrder);
+  //make the string for the channel order
+  char tmpStr[5];
+  tmpStr[getChannelIdx('A')] = 'A';
+  tmpStr[getChannelIdx('E')] = 'E';
+  tmpStr[getChannelIdx('T')] = 'T';
+  tmpStr[getChannelIdx('R')] = 'R';
+  tmpStr[4] = '\0';
+  file.print(tmpStr);
+  file.println();
+
+  writeKeyValue_U32(file, 1, key_InactivityMinutes, Sys.inactivityMinutes);
+  writeKeyValue_bool(file, 1, key_MixerCurvePreview, Sys.showCurvePreviewInMixer);
+
+  file.println(F("# ------ Debug ------"));
+
+  writeKeyValue_Char(file, 0, key_Debug, NULL);
+  writeKeyValue_bool(file, 1, key_ShowLoopTime, Sys.DBG_showLoopTime);
+  writeKeyValue_bool(file, 1, key_SimulateTelemetry, Sys.DBG_simulateTelemetry);
+  writeKeyValue_bool(file, 1, key_DisableInterlacing, Sys.DBG_disableInterlacing);
+  writeKeyValue_U32(file, 1, key_ScreenshotSeqNo, Sys.screenshotSeqNo);
 
 }

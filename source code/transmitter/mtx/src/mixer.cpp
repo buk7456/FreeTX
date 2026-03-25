@@ -285,7 +285,7 @@ void computeChannelOutputs()
           hldOldVal[mixIdx] = mixSources[mxr->output];
         }
         //override the source with the value we captured
-        mixSources[mxr->output] =  hldOldVal[mixIdx];
+        mixSources[mxr->output] = hldOldVal[mixIdx];
       }
       else
         hldOldState[mixIdx] = false;
