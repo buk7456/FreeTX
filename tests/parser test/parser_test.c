@@ -223,9 +223,13 @@ int main(int argc, char *argv[])
     for(uint8_t i = 0; i < sizeof(keyBuff)/sizeof(keyBuff[0]); i++)
     {
       if(*keyBuff[i])
-        printf("%s ", keyBuff[i]);
+      {
+        if(i > 0)
+          printf(" ");
+        printf("%s", keyBuff[i]);
+      }
     }
-    printf("= %s\n", valueBuff); 
+    printf(" = %s\n", valueBuff); 
    
 /*     
     //--- Print in tabulated form
