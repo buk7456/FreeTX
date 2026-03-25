@@ -224,4 +224,81 @@ extern const char key_Text[] PROGMEM;
 
 extern const char key_SecondaryRcvrEnabled[] PROGMEM;
 
+//=== System related ===
+
+extern const char key_StickAxis[] PROGMEM;
+// extern const char key_Name[] PROGMEM;
+extern const char key_MinVal[] PROGMEM;
+extern const char key_CenterVal[] PROGMEM;
+extern const char key_MaxVal[] PROGMEM;
+extern const char key_Deadzone[] PROGMEM;
+// extern const char key_Type[] PROGMEM;
+extern const char key_StickMode[] PROGMEM;
+
+extern const char key_Knob[] PROGMEM;
+// extern const char key_Name[] PROGMEM;
+// extern const char key_MinVal[] PROGMEM;
+// extern const char key_CenterVal[] PROGMEM;
+// extern const char key_MaxVal[] PROGMEM;
+// extern const char key_Deadzone[] PROGMEM;
+// extern const char key_Type[] PROGMEM;
+
+extern const char key_Switches[] PROGMEM;
+
+extern const char key_Battery[] PROGMEM;
+extern const char key_VoltsMin[] PROGMEM;
+extern const char key_VoltsMax[] PROGMEM;
+extern const char key_CalibrationFactor[] PROGMEM;
+
+extern const char key_Security[] PROGMEM;
+extern const char key_LockStartup[] PROGMEM;
+extern const char key_LockModels[] PROGMEM;
+extern const char key_LockOnInactivity[] PROGMEM;
+
+extern const char key_RF[] PROGMEM;
+// extern const char key_Enabled[] PROGMEM;
+extern const char key_Power[] PROGMEM;
+
+extern const char key_Sound[] PROGMEM;
+// extern const char key_Enabled[] PROGMEM;
+extern const char key_Inactivity[] PROGMEM;
+// extern const char key_Switches[] PROGMEM;
+extern const char key_KnobCenter[] PROGMEM;
+extern const char key_Keys[] PROGMEM;
+extern const char key_Trims[] PROGMEM;
+extern const char key_TrimToneFreqMode[] PROGMEM;
+
+extern const char key_Backlight[] PROGMEM;
+// extern const char key_Enabled[] PROGMEM;
+extern const char key_Brightness[] PROGMEM;
+extern const char key_Timeout[] PROGMEM;
+extern const char key_Wakeup[] PROGMEM;
+extern const char key_SuppressFirstKey[] PROGMEM;
+extern const char key_Contrast[] PROGMEM;
+
+extern const char key_Appearance[] PROGMEM;
+extern const char key_ShowMenuIcons[] PROGMEM;
+extern const char key_RememberMenuPosition[] PROGMEM;
+extern const char key_UseRoundRect[] PROGMEM;
+extern const char key_UseDenserMenus[] PROGMEM;
+extern const char key_AnimationsEnabled[] PROGMEM;
+extern const char key_AutohideTrims[] PROGMEM;
+extern const char key_NumericalBatteryIndicator[] PROGMEM;
+extern const char key_ShowSplashScreen[] PROGMEM;
+extern const char key_ShowWelcomeMessage[] PROGMEM;
+extern const char key_AlwaysShowHours[] PROGMEM;
+
+extern const char key_Miscellaneous[] PROGMEM;
+extern const char key_AutoSelectMovedControl[] PROGMEM;
+extern const char key_MixerTemplatesEnabled[] PROGMEM;
+extern const char key_DefaultChannelOrder[] PROGMEM;
+extern const char key_InactivityMinutes[] PROGMEM;
+extern const char key_MixerCurvePreview[] PROGMEM;
+
+extern const char key_Debug[] PROGMEM;
+extern const char key_ShowLoopTime[] PROGMEM;
+extern const char key_SimulateTelemetry[] PROGMEM;
+extern const char key_DisableInterlacing[] PROGMEM;
+extern const char key_ScreenshotSeqNo[] PROGMEM;
+
 #endif

@@ -5,7 +5,8 @@
 #include "../common.h"
 #include "../ui/ui.h" 
 #include "../stringDefs.h"
-#include "modelImport.h"
+#include "../templates.h"
+#include "dataImport.h"
 
 bool isEndOfFile = false;
 
@@ -920,7 +921,221 @@ void extractConfig_Notifications()
     hasEncounteredInvalidParam = true;
 }
 
-//============================ Core function =======================================================
+//--- system related --- 
+
+void extractConfig_Sticks()
+{
+  if(MATCH_P(keyBuff[1], key_Name))
+    thisIdx = getSrcId(valueBuff) - SRC_STICK_AXIS_FIRST;
+  else if(thisIdx < NUM_STICK_AXES)
+  {
+    if(MATCH_P(keyBuff[1], key_MinVal))
+      Sys.StickAxis[thisIdx].minVal = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_CenterVal))
+      Sys.StickAxis[thisIdx].centerVal = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_MaxVal))
+      Sys.StickAxis[thisIdx].maxVal = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_Deadzone))
+      Sys.StickAxis[thisIdx].deadzone = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_Type))
+      findIdInIdStr(enum_StickAxisType, valueBuff, Sys.StickAxis[thisIdx].type);
+    else
+      hasEncounteredInvalidParam = true;
+  }
+  else
+    hasEncounteredInvalidParam = true;
+}
+
+void extractConfig_StickMode()
+{
+  findIdInIdStr(enum_StickMode, valueBuff, Sys.defaultStickMode);
+}
+
+void extractConfig_Knobs()
+{
+  if(MATCH_P(keyBuff[1], key_Name))
+    thisIdx = getSrcId(valueBuff) - SRC_KNOB_FIRST;
+  else if(thisIdx < NUM_KNOBS)
+  {
+    if(MATCH_P(keyBuff[1], key_MinVal))
+      Sys.Knob[thisIdx].minVal = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_CenterVal))
+      Sys.Knob[thisIdx].centerVal = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_MaxVal))
+      Sys.Knob[thisIdx].maxVal = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_Deadzone))
+      Sys.Knob[thisIdx].deadzone = atoi_with_prefix(valueBuff);
+    else if(MATCH_P(keyBuff[1], key_Type))
+      findIdInIdStr(enum_KnobType, valueBuff, Sys.Knob[thisIdx].type);
+    else
+      hasEncounteredInvalidParam = true;
+  }
+  else
+    hasEncounteredInvalidParam = true;
+}
+
+void extractConfig_Switches()
+{
+  thisIdx = getSrcId(keyBuff[1]) - SRC_SW_PHYSICAL_FIRST;
+  if(thisIdx < NUM_PHYSICAL_SWITCHES)
+    findIdInIdStr(enum_SwitchType, valueBuff, Sys.swType[thisIdx]);
+  else
+    hasEncounteredInvalidParam = true;
+}
+
+void extractConfig_Battery()
+{
+  if(MATCH_P(keyBuff[1], key_VoltsMin))
+    Sys.batteryVoltsMin = atoi_with_prefix(valueBuff);
+  else if(MATCH_P(keyBuff[1], key_VoltsMax))
+    Sys.batteryVoltsMax = atoi_with_prefix(valueBuff);
+  else if(MATCH_P(keyBuff[1], key_CalibrationFactor))
+    Sys.batteryCalibrationFactor = atoi_with_prefix(valueBuff);
+  else
+    hasEncounteredInvalidParam = true;
+}
+
+void extractConfig_Security()
+{
+  if(MATCH_P(keyBuff[1], key_LockStartup))
+    readValue_bool(valueBuff, &Sys.lockStartup);
+  else if(MATCH_P(keyBuff[1], key_LockModels))
+    readValue_bool(valueBuff, &Sys.lockModels);
+  else if(MATCH_P(keyBuff[1], key_LockOnInactivity))
+    readValue_bool(valueBuff, &Sys.lockOnInactivity);
+  else
+    hasEncounteredInvalidParam = true;
+}
+
+void extractConfig_RF()
+{
+  if(MATCH_P(keyBuff[1], key_Power))
+    findIdInIdStr(enum_RFpower, valueBuff, Sys.rfPower);
+  else
+    hasEncounteredInvalidParam = true;
+}
+
+void extractConfig_Sound()
+{
+  if(MATCH_P(keyBuff[1], key_Enabled))
+    readValue_bool(valueBuff, &Sys.soundEnabled);
+  else if(MATCH_P(keyBuff[1], key_Inactivity))
+    readValue_bool(valueBuff, &Sys.soundOnInactivity);
+  else if(MATCH_P(keyBuff[1], key_Switches))
+    readValue_bool(valueBuff, &Sys.soundSwitches);
+  else if(MATCH_P(keyBuff[1], key_KnobCenter))
+    readValue_bool(valueBuff, &Sys.soundKnobCenter);
+  else if(MATCH_P(keyBuff[1], key_Keys))
+    readValue_bool(valueBuff, &Sys.soundKeys);
+  else if(MATCH_P(keyBuff[1], key_Trims))
+    readValue_bool(valueBuff, &Sys.soundTrims);
+  else if(MATCH_P(keyBuff[1], key_TrimToneFreqMode))
+    findIdInIdStr(enum_TrimToneFreqMode, valueBuff, Sys.trimToneFreqMode);
+  else
+    hasEncounteredInvalidParam = true;
+}
+
+void extractConfig_Backlight()
+{
+  if(MATCH_P(keyBuff[1], key_Enabled))
+    readValue_bool(valueBuff, &Sys.backlightEnabled);
+  else if(MATCH_P(keyBuff[1], key_Brightness))
+    Sys.backlightBrightness = atoi_with_prefix(valueBuff);
+  else if(MATCH_P(keyBuff[1], key_Timeout))
+    findIdInIdStr(enum_BacklightTimeout, valueBuff, Sys.backlightTimeout);
+  else if(MATCH_P(keyBuff[1], key_Wakeup))
+    findIdInIdStr(enum_BacklightWakeup, valueBuff, Sys.backlightWakeup);
+  else if(MATCH_P(keyBuff[1], key_SuppressFirstKey))
+    readValue_bool(valueBuff, &Sys.backlightSuppressFirstKey);
+  else
+    hasEncounteredInvalidParam = true;
+}
+
+void extractConfig_Contrast()
+{
+  Sys.contrast = atoi_with_prefix(valueBuff);
+}
+
+void extractConfig_Appearance()
+{
+  if(MATCH_P(keyBuff[1], key_ShowMenuIcons))
+    readValue_bool(valueBuff, &Sys.showMenuIcons);
+  else if(MATCH_P(keyBuff[1], key_RememberMenuPosition))
+    readValue_bool(valueBuff, &Sys.rememberMenuPosition);
+  else if(MATCH_P(keyBuff[1], key_UseRoundRect))
+    readValue_bool(valueBuff, &Sys.useRoundRect);
+  else if(MATCH_P(keyBuff[1], key_UseDenserMenus))
+    readValue_bool(valueBuff, &Sys.useDenserMenus);
+  else if(MATCH_P(keyBuff[1], key_AnimationsEnabled))
+    readValue_bool(valueBuff, &Sys.animationsEnabled);
+  else if(MATCH_P(keyBuff[1], key_AutohideTrims))
+    readValue_bool(valueBuff, &Sys.autohideTrims);
+  else if(MATCH_P(keyBuff[1], key_NumericalBatteryIndicator))
+    readValue_bool(valueBuff, &Sys.useNumericalBatteryIndicator);
+  else if(MATCH_P(keyBuff[1], key_ShowSplashScreen))
+    readValue_bool(valueBuff, &Sys.showSplashScreen);
+  else if(MATCH_P(keyBuff[1], key_ShowWelcomeMessage))
+    readValue_bool(valueBuff, &Sys.showWelcomeMessage);
+  else if(MATCH_P(keyBuff[1], key_AlwaysShowHours))
+    readValue_bool(valueBuff, &Sys.alwaysShowHours);
+  else
+    hasEncounteredInvalidParam = true;
+}
+
+void extractConfig_Miscellaneous()
+{
+  if(MATCH_P(keyBuff[1], key_AutoSelectMovedControl))
+    readValue_bool(valueBuff, &Sys.autoSelectMovedControl);
+  else if(MATCH_P(keyBuff[1], key_MixerTemplatesEnabled))
+    readValue_bool(valueBuff, &Sys.mixerTemplatesEnabled);
+  else if(MATCH_P(keyBuff[1], key_DefaultChannelOrder))
+  {
+    uint8_t *val = &Sys.defaultChannelOrder;
+    bool found = false;
+    char tmpStr[5];
+    for(*val = 0; *val < 24; (*val)++)
+    {
+      //make the string for the channel order and compare with the valueBuff
+      tmpStr[getChannelIdx('A')] = 'A';
+      tmpStr[getChannelIdx('E')] = 'E';
+      tmpStr[getChannelIdx('T')] = 'T';
+      tmpStr[getChannelIdx('R')] = 'R';
+      tmpStr[4] = '\0';
+      if(MATCH(tmpStr, valueBuff))
+      {
+        found = true;
+        break;
+      }
+    }
+    if(!found)
+    {
+      Sys.defaultChannelOrder = 0;
+      hasEncounteredInvalidParam = true;
+    }
+  }
+  else if(MATCH_P(keyBuff[1], key_InactivityMinutes))
+    Sys.inactivityMinutes = atoi_with_prefix(valueBuff);
+  else if(MATCH_P(keyBuff[1], key_MixerCurvePreview))
+    readValue_bool(valueBuff, &Sys.showCurvePreviewInMixer);
+  else
+    hasEncounteredInvalidParam = true;
+}
+
+void extractConfig_Debug()
+{
+  if(MATCH_P(keyBuff[1], key_ShowLoopTime))
+    readValue_bool(valueBuff, &Sys.DBG_showLoopTime);
+  else if(MATCH_P(keyBuff[1], key_SimulateTelemetry))
+    readValue_bool(valueBuff, &Sys.DBG_simulateTelemetry);
+  else if(MATCH_P(keyBuff[1], key_DisableInterlacing))
+    readValue_bool(valueBuff, &Sys.DBG_disableInterlacing);
+  else if(MATCH_P(keyBuff[1], key_ScreenshotSeqNo))
+    Sys.screenshotSeqNo = atoi_with_prefix(valueBuff);
+  else
+    hasEncounteredInvalidParam = true;
+}
+
+//============================ Model data importer =================================================
 
 void importModelData(File& file)
 {
@@ -1003,4 +1218,66 @@ void importModelData(File& file)
     }
   }
 
+}
+
+//============================ System data importer ===============================================
+
+void importSystemData(File& file)
+{
+  // Calls the parser and then the extractor functions on the corresponding root item. 
+  // The extractor functions have no control over the parser. They neither call it to fetch the next line,
+  // nor modify the key buffers used by the parser.
+  
+  //--- Initialise
+  isEndOfFile = false;
+  hasEncounteredInvalidParam = false;
+  idNotFoundInIdStr = false;
+  dbgLineNumber = 0;
+  dbgFirstErrorLineNumber = 0;
+  dbgTotalErrorLines = 0;
+  memset(keyBuff[0], 0, sizeof(keyBuff[0]));
+  memset(keyBuff[1], 0, sizeof(keyBuff[0]));
+  memset(keyBuff[2], 0, sizeof(keyBuff[0]));
+  memset(valueBuff, 0, sizeof(valueBuff));
+
+  //--- Loop 
+  while(!isEndOfFile)
+  {
+    //clear value buffer so we don't work with stale values
+    *valueBuff = '\0';
+
+    //call parser
+    parser(file);
+
+    //if value is empty, continue parsing
+    if(*valueBuff == '\0')
+      continue;
+    
+    //call the appropriate extractor function, depending on the root key
+    if(MATCH_P(keyBuff[0], key_StickAxis)) extractConfig_Sticks();
+    else if(MATCH_P(keyBuff[0], key_StickMode)) extractConfig_StickMode();
+    else if(MATCH_P(keyBuff[0], key_Knob)) extractConfig_Knobs();
+    else if(MATCH_P(keyBuff[0], key_Switches)) extractConfig_Switches();
+    else if(MATCH_P(keyBuff[0], key_Battery)) extractConfig_Battery();
+    else if(MATCH_P(keyBuff[0], key_Security)) extractConfig_Security();
+    else if(MATCH_P(keyBuff[0], key_RF)) extractConfig_RF();
+    else if(MATCH_P(keyBuff[0], key_Sound)) extractConfig_Sound();
+    else if(MATCH_P(keyBuff[0], key_Backlight)) extractConfig_Backlight();
+    else if(MATCH_P(keyBuff[0], key_Contrast)) extractConfig_Contrast();
+    else if(MATCH_P(keyBuff[0], key_Appearance)) extractConfig_Appearance();
+    else if(MATCH_P(keyBuff[0], key_Miscellaneous)) extractConfig_Miscellaneous();
+    else if(MATCH_P(keyBuff[0], key_Debug)) extractConfig_Debug();
+    else 
+      hasEncounteredInvalidParam = true;
+    
+    if((hasEncounteredInvalidParam || idNotFoundInIdStr))
+    {
+      dbgTotalErrorLines++;
+      if(dbgFirstErrorLineNumber == 0)
+        dbgFirstErrorLineNumber = dbgLineNumber;
+      //reset flags
+      hasEncounteredInvalidParam = false;
+      idNotFoundInIdStr = false;
+    }
+  }
 }

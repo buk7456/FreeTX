@@ -98,7 +98,7 @@ void setup()
   
   //backlight
   if(Sys.backlightEnabled)
-    analogWrite(PIN_LCD_BACKLIGHT, ((uint16_t) 255 * Sys.backlightLevel) / 100);
+    analogWrite(PIN_LCD_BACKLIGHT, ((uint16_t) 255 * Sys.backlightBrightness) / 100);
   
   //Initialise battery reading
   batteryVoltsNow = Sys.batteryVoltsMax; 
@@ -246,7 +246,7 @@ void controlBacklight()
   static const uint16_t durTable[] PROGMEM = {5, 15, 60, 120, 300, 600, 1800, 0};
   uint32_t duration = (uint32_t) 1000 * pgm_read_word(&durTable[Sys.backlightTimeout]);
   
-  uint8_t val = ((uint16_t) 255 * Sys.backlightLevel) / 100;
+  uint8_t val = ((uint16_t) 255 * Sys.backlightBrightness) / 100;
   uint32_t elapsed = 0;
 
   if(Sys.backlightWakeup == BACKLIGHT_WAKEUP_KEYS)
@@ -697,7 +697,7 @@ void handlePowerOff()
   {
     showMessage(PSTR("Shutting down"));
     if(Sys.backlightEnabled)
-      analogWrite(PIN_LCD_BACKLIGHT, ((uint16_t) 255 * Sys.backlightLevel) / 100);
+      analogWrite(PIN_LCD_BACKLIGHT, ((uint16_t) 255 * Sys.backlightBrightness) / 100);
     delay(1000);
     //save changes
     if(eeStoreIsInitialised())

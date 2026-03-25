@@ -10,6 +10,9 @@ bool sdSimilarModelExists(const char *name);
 bool sdGetModelName(char *buff, uint16_t idx, uint8_t lenBuff);
 void sdShowSplashScreen();
 bool sdWriteScreenshot();
+bool sdBackupSystemSettings();
+bool sdRestoreSystemSettings();
+bool sdSystemSettingsExists();
 
 extern uint16_t dbgFirstErrorLineNumber;
 extern uint16_t dbgTotalErrorLines;

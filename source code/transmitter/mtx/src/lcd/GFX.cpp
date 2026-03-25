@@ -326,7 +326,7 @@ void GFX::drawChar(uint8_t x, uint8_t y, unsigned char c, uint8_t color)
   for(uint8_t i = 0; i < 5; i++)
   { 
     // Char bitmap is 5 columns
-    uint16_t idx =  (uint16_t) 5 * c + i;
+    uint16_t idx = (uint16_t) 5 * c + i;
     uint8_t line = pgm_read_byte(&font[idx]);
     for(uint8_t j = 0; j < 8; j++, line >>= 1)
     {

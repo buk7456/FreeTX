@@ -216,6 +216,8 @@ enum {
   SCREEN_EXTERNAL_EEPROM_DUMP,
   SCREEN_CHARACTER_SET,
   SCREEN_SCREENSHOT_CONFIG,
+  CONFIRMATION_BACKUP_SYSTEM_SETTINGS,
+  CONFIRMATION_RESTORE_SYSTEM_SETTINGS,
   CONFIRMATION_FACTORY_RESET,
   SCREEN_ABOUT,
   SCREEN_EASTER_EGG,
@@ -311,6 +313,7 @@ uint8_t thisWidgetIdx = 0;
 uint8_t destWidgetIdx = 0;
 
 //others 
+bool isRequestingSettingsRestore = false;
 bool isRequestingStickCalibration = false;
 bool isRequestingKnobCalibration = false;
 bool isRequestingSwitchesSetup = false;
@@ -339,7 +342,7 @@ void drawScrollBar(uint8_t xpos, uint8_t ypos, uint16_t numItems, uint16_t topIt
 void drawCheckbox(uint8_t xpos, uint8_t ypos, bool val);
 void drawLoaderSpinner(uint8_t xpos, uint8_t ypos, uint8_t size);
 void drawAnimatedSprite(uint8_t x, uint8_t y, const uint8_t* const bitmapTable[], uint8_t w, uint8_t h, uint8_t color, 
-                        uint8_t frameCount, uint16_t frameTime, uint32_t timeOffset);
+                        uint8_t frameCount, uint16_t frameTime, uint32_t timeOffset, bool forceAnimation);
 void drawHorizontalBarChart(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t valMin, int16_t valMax);
 void drawHorizontalBarChartZeroCentered(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t range);
 void drawTrimSliders();
@@ -385,6 +388,7 @@ void initialiseDisplay()
 
 void startInitialSetup()
 {
+  isRequestingSettingsRestore = true;
   isRequestingStickCalibration = true;
   isRequestingKnobCalibration = true;
   isRequestingSwitchesSetup = true;
@@ -442,7 +446,7 @@ void handleBatteryWarningUI()
     {
       //show warning
       display.clearDisplay();
-      drawAnimatedSprite(50, 14, animation_low_battery, 27, 11, BLACK, 7, 300, batteryWarningMillis);
+      drawAnimatedSprite(50, 14, animation_low_battery, 27, 11, BLACK, 7, 300, batteryWarningMillis, false);
       printFullScreenMessage(PSTR("\nBattery low"));
       display.display();
       
@@ -683,6 +687,17 @@ void handleMainUI()
     
     case SCREEN_HOME:
       {
+        if(isRequestingSettingsRestore)
+        {
+          if(sdHasCard() && sdSystemSettingsExists())
+          {
+            changeToScreen(CONFIRMATION_RESTORE_SYSTEM_SETTINGS);
+            break;
+          }
+          else
+            isRequestingSettingsRestore = false;
+        }
+
         if(isRequestingStickCalibration)
         {
           changeToScreen(SCREEN_STICKS);
@@ -1401,7 +1416,7 @@ void handleMainUI()
                 display.print(findStringInIdStr(enum_WidgetDisplay, widget->disp));
                 if(edit)
                 {
-                  uint8_t prevDisp =  widget->disp;
+                  uint8_t prevDisp = widget->disp;
                   do {
                     widget->disp = incDec(widget->disp, 0, WIDGET_DISP_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
                   } while(widget->type == WIDGET_TYPE_TELEMETRY && widget->disp == WIDGET_DISP_GAUGE_ZERO_CENTERED);
@@ -2265,7 +2280,7 @@ void handleMainUI()
         }
         
         if(modelBackupExists)
-          printFullScreenMessage(PSTR("A backup with\na similar name\nexists.\nOverwrite it?\n\nYes [Up] \nNo [Down]"));
+          printFullScreenMessage(PSTR("A backup with\na similar name\nalready exists.\nOverwrite it?\n\nYes [Up] \nNo [Down]"));
         
         if(clickedButton == KEY_UP || !modelBackupExists)
         {
@@ -3115,7 +3130,7 @@ void handleMainUI()
                 if(input == SRC_THR) input = Model.thrSrcRaw;
                 if(input == SRC_AIL) input = Model.ailSrcRaw;
                 if(input == SRC_ELE) input = Model.eleSrcRaw;
-                if(input ==  SRC_X1_AXIS || input == SRC_Y1_AXIS || input == SRC_X2_AXIS || input == SRC_Y2_AXIS)
+                if(input == SRC_X1_AXIS || input == SRC_Y1_AXIS || input == SRC_X2_AXIS || input == SRC_Y2_AXIS)
                 {
                   drawCheckbox(56, ypos, mxr->trimEnabled);
                   if(edit)
@@ -3700,7 +3715,7 @@ void handleMainUI()
         if(clickedButton == KEY_SELECT)
         {
           if(theScreen == DIALOG_COPY_MIX)
-            Model.Mixer[destMixIdx] =  Model.Mixer[thisMixIdx];
+            Model.Mixer[destMixIdx] = Model.Mixer[thisMixIdx];
           else
             moveMix(destMixIdx, thisMixIdx);
           thisMixIdx = destMixIdx; 
@@ -7840,7 +7855,7 @@ void handleMainUI()
           display.setCursor(0, 18);
           display.print(F("Brightness:"));
           display.setCursor(72, 18);
-          display.print(Sys.backlightLevel);
+          display.print(Sys.backlightBrightness);
           display.print(F("%"));
           
           display.setCursor(0, 27);
@@ -7865,7 +7880,7 @@ void handleMainUI()
         if(focusedItem == 1)
           Sys.backlightEnabled = incDec(Sys.backlightEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
         else if(focusedItem == 2)
-          Sys.backlightLevel = incDec(Sys.backlightLevel, 10, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
+          Sys.backlightBrightness = incDec(Sys.backlightBrightness, 10, 100, INCDEC_NOWRAP, INCDEC_NORMAL);
         else if(focusedItem == 3)
           Sys.backlightTimeout = incDec(Sys.backlightTimeout, 0, BACKLIGHT_TIMEOUT_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
         else if(focusedItem == 4)
@@ -8985,6 +9000,8 @@ void handleMainUI()
           ITEM_SIMULATE_TELEMETRY,
           ITEM_DUMP_INTERNAL_EEPROM,
           ITEM_DUMP_EXTERNAL_EEPROM,
+          ITEM_BACKUP_SYSTEM_SETTINGS,
+          ITEM_RESTORE_SYSTEM_SETTINGS,
           ITEM_FACTORY_RESET,
           
           ITEM_COUNT
@@ -9120,13 +9137,44 @@ void handleMainUI()
               {
                 display.print(F("[Screenshot config]"));
                 if(isFocused && clickedButton == KEY_SELECT)
-                  changeToScreen(SCREEN_SCREENSHOT_CONFIG);
+                {
+                  if(sdHasCard())
+                    changeToScreen(SCREEN_SCREENSHOT_CONFIG);
+                  else
+                    makeToast(PSTR("SD card not found"), 2000, 0);
+                }
+              }
+              break;
+
+            case ITEM_BACKUP_SYSTEM_SETTINGS:
+              {
+                display.print(F("[Back up settings]")); 
+                if(isFocused && clickedButton == KEY_SELECT)
+                {
+                  if(sdHasCard())
+                    changeToScreen(CONFIRMATION_BACKUP_SYSTEM_SETTINGS);
+                  else
+                    makeToast(PSTR("SD card not found"), 2000, 0);
+                }
+              }
+              break;
+
+            case ITEM_RESTORE_SYSTEM_SETTINGS:
+              {
+                display.print(F("[Restore settings]")); 
+                if(isFocused && clickedButton == KEY_SELECT)
+                {
+                  if(sdHasCard())
+                    changeToScreen(CONFIRMATION_RESTORE_SYSTEM_SETTINGS);
+                  else
+                    makeToast(PSTR("SD card not found"), 2000, 0);
+                }
               }
               break;
               
             case ITEM_FACTORY_RESET:
               {
-                display.print(F("[Factory Reset]")); 
+                display.print(F("[Factory reset]")); 
                 if(isFocused && clickedButton == KEY_SELECT)
                   changeToScreen(CONFIRMATION_FACTORY_RESET);
               }
@@ -9408,14 +9456,6 @@ void handleMainUI()
     case SCREEN_SCREENSHOT_CONFIG:
       {
         drawHeader(PSTR("Screenshot config"));
-
-        if(!sdHasCard())
-        {
-          printFullScreenMessage(PSTR("SD card not found"));
-          if(heldButton == KEY_SELECT)
-            changeToScreen(SCREEN_DEBUG);
-          break;
-        }
         
         //use a temporary variable for the swtch and assign later 
         //to avoid unintended action while scrolling through the options
@@ -9457,6 +9497,122 @@ void handleMainUI()
           //assign from temp
           screenshotSwtch = tempSwtch;
           tempInitialised = false;
+        }
+      }
+      break;
+
+    case CONFIRMATION_BACKUP_SYSTEM_SETTINGS:
+      {
+        static bool initialised = false;
+        static bool fileExists = false;
+        if(!initialised)
+        {
+          fileExists = sdSystemSettingsExists();
+          initialised = true;
+        }
+        if(fileExists)
+          printFullScreenMessage(PSTR("The backup file\nalready exists.\nOverwrite it?\n\nYes [Up] \nNo [Down]"));
+        if(clickedButton == KEY_UP || !fileExists)
+        {
+          showWaitMessage();
+          if(!sdBackupSystemSettings())
+            makeToast(PSTR("Back up failed"), 2000, 0);
+          initialised = false;
+          changeToScreen(SCREEN_DEBUG);
+        }
+        else if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT)
+        {
+          initialised = false;
+          changeToScreen(SCREEN_DEBUG);
+        }
+      }
+      break;
+
+    case CONFIRMATION_RESTORE_SYSTEM_SETTINGS:
+      {
+        if(lastScreen == SCREEN_HOME)
+          printFullScreenMessage(PSTR("Restore system\nsettings from\nthe backup file?\n\nYes [Up] \nNo [Down]"));
+        else
+          printFullScreenMessage(PSTR("System settings will\nbe overwritten.\nContinue?\n\nYes [Up] \nNo [Down]"));
+        if(clickedButton == KEY_UP)
+        {
+          showWaitMessage();
+          eeSaveSysConfig(); //save first to EEPROM to be able to revert changes
+          if(sdRestoreSystemSettings())
+          {
+            //reset flags coming from initial setup
+            isRequestingSettingsRestore = false;
+            isRequestingStickCalibration = false;
+            isRequestingKnobCalibration = false;
+            isRequestingSwitchesSetup = false;
+            batteryGaugeCalibrated = true;
+
+            //save to EEPROM
+            eeSaveSysConfig();
+
+            //show message if errors were encountered in the imported data
+            if(dbgTotalErrorLines > 0)
+            {
+              display.clearDisplay();
+              
+              //print the items center aligned
+              
+              strlcpy_P(textBuff, PSTR("Some data skipped"), sizeof(textBuff));
+              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 11);
+              display.print(textBuff);
+              
+              char temp[6];
+              utoa(dbgTotalErrorLines, temp, 10);
+              strlcpy(textBuff, temp, sizeof(textBuff));
+              strlcat_P(textBuff, PSTR(" errors,"), sizeof(textBuff));
+              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 29);
+              display.print(textBuff);
+              
+              strlcpy_P(textBuff, PSTR("first error at"), sizeof(textBuff));
+              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 37);
+              display.print(textBuff);
+              
+              strlcpy_P(textBuff, PSTR("line "), sizeof(textBuff));
+              utoa(dbgFirstErrorLineNumber, temp, 10);
+              strlcat(textBuff, temp, sizeof(textBuff));
+              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 46);
+              display.print(textBuff);
+              
+              display.setInterlace(false);
+              display.display();
+              
+              //briefly block, then self-dismiss the warning
+              uint32_t startTime = millis();
+              while(1)
+              {
+                readSwitchesAndButtons();
+                determineButtonEvent();
+                playTones();
+                handlePowerOff();
+                if(millis() - startTime > 5000 || clickedButton == KEY_SELECT)
+                {
+                  killButtonEvents();
+                  break;
+                }
+                delay(10);
+              }
+            }
+          }
+          else
+          {
+            eeReadSysConfig(); //revert changes
+            if(!sdSystemSettingsExists())
+              makeToast(PSTR("File not found"), 2000, 0);
+            else
+              makeToast(PSTR("Restore failed"), 2000, 0);
+          }
+          isRequestingSettingsRestore = false;
+          changeToScreen(lastScreen);
+        }
+        else if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT)
+        {
+          isRequestingSettingsRestore = false;
+          changeToScreen(lastScreen);
         }
       }
       break;
@@ -9818,8 +9974,8 @@ void handleMainUI()
               
               //Draw the bird
               display.fillRect(game->birdX, game->birdY, BIRD_LENGTH, BIRD_HEIGHT, WHITE);
-              drawAnimatedSprite(game->birdX, game->birdY, animation_bird, BIRD_LENGTH, BIRD_HEIGHT, BLACK, 3, 80, 0);
-              
+              drawAnimatedSprite(game->birdX, game->birdY, animation_bird, BIRD_LENGTH, BIRD_HEIGHT, BLACK, 3, 80, 0, true);
+
               //Draw the score
               display.setCursor(0, 0);
               display.print(game->score);
@@ -10861,11 +11017,11 @@ void drawLoaderSpinner(uint8_t xpos, uint8_t ypos, uint8_t size)
 //--------------------------------------------------------------------------------------------------
 
 void drawAnimatedSprite(uint8_t x, uint8_t y, const uint8_t* const bitmapTable[], uint8_t w, uint8_t h, uint8_t color, 
-                        uint8_t frameCount, uint16_t frameTime, uint32_t timeOffset)
+                        uint8_t frameCount, uint16_t frameTime, uint32_t timeOffset, bool forceAnimation)
 {
-  uint8_t frameIdx = ((millis() - timeOffset) % (frameCount * frameTime)) / frameTime; 
-  if(!Sys.animationsEnabled)
-    frameIdx = 0;
+  uint8_t frameIdx = 0;
+  if(Sys.animationsEnabled || forceAnimation)
+    frameIdx = ((millis() - timeOffset) % (frameCount * frameTime)) / frameTime; 
   display.drawBitmap(x, y, (uint8_t *)pgm_read_word(&bitmapTable[frameIdx]), w, h, color);
 }
 
