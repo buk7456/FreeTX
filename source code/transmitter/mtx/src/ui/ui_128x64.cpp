@@ -9515,6 +9515,7 @@ void handleMainUI()
         if(clickedButton == KEY_UP || !fileExists)
         {
           showWaitMessage();
+          stopTones();
           if(!sdBackupSystemSettings())
             makeToast(PSTR("Back up failed"), 2000, 0);
           initialised = false;
@@ -9537,6 +9538,7 @@ void handleMainUI()
         if(clickedButton == KEY_UP)
         {
           showWaitMessage();
+          stopTones();
           eeSaveSysConfig(); //save first to EEPROM to be able to revert changes
           if(sdRestoreSystemSettings())
           {
