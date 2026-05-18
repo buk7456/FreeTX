@@ -8328,9 +8328,9 @@ void handleMainUI()
           case PAGE_MOVE_STICKS:
             {
               if(hasSelfCenteringAxes)
-                printFullScreenMessage(PSTR("Move sticks fully,\nthen center them.\n"));
+                printFullScreenMessage(PSTR("Move all stick axes\nfully, then center\nthem. Proceed\nwhen done."));
               else
-                printFullScreenMessage(PSTR("Move sticks fully\n"));
+                printFullScreenMessage(PSTR("Move all stick axes\nfully. Proceed\nwhen done."));
                 
               calibrateSticks(CALIBRATE_MOVE);
 
@@ -8629,9 +8629,9 @@ void handleMainUI()
           case PAGE_MOVE_KNOBS:
             {
               if(hasCenterDetentKnobs)
-                printFullScreenMessage(PSTR("Move knobs fully,\nthen center them.\n"));
+                printFullScreenMessage(PSTR("Move all knobs\nfully, then center\nthem. Proceed\nwhen done."));
               else
-                printFullScreenMessage(PSTR("Move knobs fully\n"));
+                printFullScreenMessage(PSTR("Move all knobs\nfully. Proceed\nwhen done."));
               
               calibrateKnobs(CALIBRATE_MOVE);
               
