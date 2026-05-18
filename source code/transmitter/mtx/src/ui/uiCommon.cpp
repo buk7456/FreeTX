@@ -777,10 +777,9 @@ void notificationHandler()
 
   const uint8_t MAX_QUEUE_SIZE = 3; //maximum length of the queue. Keep it small
   static queue_t queue[MAX_QUEUE_SIZE];
-
+  static uint8_t queueSize = 0;
   static uint8_t lastId = 0xff;
   static bool lastState[NUM_CUSTOM_NOTIFICATIONS];
-
   static bool initialised = false;
 
   static uint8_t lastModelIdx = 0xff; 
@@ -793,23 +792,12 @@ void notificationHandler()
   if(!initialised)
   {
     initialised = true;
+    queueSize = 0;
     for(uint8_t i = 0; i < MAX_QUEUE_SIZE; i++)
-    {
       queue[i].notificationId = 0xff;
-    }
     for(uint8_t i = 0; i < NUM_CUSTOM_NOTIFICATIONS; i++)
-    {
       lastState[i] = checkSwitchCondition(Model.CustomNotification[i].swtch);
-    }
     lastId = 0xff;
-  }
-
-  //determine the queue's current size
-  uint8_t queueSize = 0;
-  for(uint8_t i = 0; i < MAX_QUEUE_SIZE; i++)
-  {
-    if(queue[i].notificationId != 0xff)
-      queueSize++;
   }
 
   //--- Add to the queue
@@ -835,7 +823,6 @@ void notificationHandler()
             break;
           }
         }
-        
         if(!alreadyQueued)
         {
           queue[queueSize].notificationId = i;
@@ -844,9 +831,7 @@ void notificationHandler()
       }
     }
     if(!state) //went off
-    {
       lastState[i] = false;
-    }
   }
 
   //--- Process queue
@@ -854,31 +839,20 @@ void notificationHandler()
   
   if(queueSize > 0)
   {
-    static bool toneStarted = false;
     static uint32_t startTime;
-    static uint32_t endTime;
-
     if(lastId != queue[0].notificationId)
     {
       lastId = queue[0].notificationId;
       startTime = millis();
-      endTime = startTime + 3500;
-      toneStarted = false;
+      //play the specified melody
+      audioToPlay = Model.CustomNotification[queue[0].notificationId].tone;
     }
-    
+    uint32_t endTime = startTime + 3500;
     if(millis() < endTime)
     {
       //show notification
       if(!isEmptyStr(Model.CustomNotification[queue[0].notificationId].text, sizeof(Model.CustomNotification[0].text)))
-      {
         drawNotificationOverlay(queue[0].notificationId, startTime, endTime); 
-      }
-      //play the specified melody
-      if(!toneStarted)
-      {
-        toneStarted = true;
-        audioToPlay = Model.CustomNotification[queue[0].notificationId].tone;
-      }
     }
     else 
     {
@@ -886,9 +860,7 @@ void notificationHandler()
       //Item 0 has been processed, remove it.
       //Here we shift array elements to the left by one position.
       for(uint8_t i = 0; i < MAX_QUEUE_SIZE - 1; i++)
-      {
         queue[i] = queue[i + 1];
-      }
       queue[MAX_QUEUE_SIZE - 1].notificationId = 0xff;
       //decrement the count
       queueSize--;
