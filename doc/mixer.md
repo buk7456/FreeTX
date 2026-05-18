@@ -23,7 +23,7 @@ Counters can also be used as inputs in the mixer, although they are not classifi
 
 ## Mixer fields
 - **Output:** The channel that is to be affected by the mix. If none, the mix is inactive and is not computed.
-- **Switch:** The control switch to turn on or off the mix. The mix is always active if no is switch specified.
+- **Switch:** The control switch to turn the mix on or off. The mix is always active if no switch is specified.
 - **Operation:** Add, Multiply, Replace, Hold.
 - **Input:** This is the mixer source.
 - **Weight:** Determines how much of an effect the input has on the output. -100 to 100.

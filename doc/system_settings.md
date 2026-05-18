@@ -28,9 +28,8 @@ The System menu provides comprehensive configuration options so you can tailor t
 <img src="images/screenshots/system_rf.png"/>
 </p>
 
-- **RF output:** This toggles on/off the RF transceiver. An icon is displayed on the home screen when RF output is enabled. Note that changing to a different Model automatically turns off the RF output for safety reasons, hence the output has to be manually turned on again. 
-- **RF power:** Controls the RF transceiver power level for transmission. 
-Increasing the power level increases the range, at the expense of higher battery consumption.
+- **RF output:** Toggle the RF transceiver on or off. When enabled, an RF icon appears on the home screen. RF output is automatically disabled when switching to a different model for safety, thus it has to be re-enabled manually after changing models.
+- **RF power:** Adjust the transceiver's transmission power. Higher power increases range but uses more battery.
 
 <a id="section_id_sound"></a>
 
@@ -40,13 +39,13 @@ Increasing the power level increases the range, at the expense of higher battery
 <img src="images/screenshots/system_sound.png"/>
 </p>
 
-- **Enable:** Globally turns off/on all sounds. A mute icon is shown on the home screen when sound is disabled.
-- **Inactivity:** Whether the inactivity alarm is enabled. The alarm is sounded after the user has not interacted with the handset for a while.
-- **Switches:** Whether to produce a tone whenever the physical switches are moved.
-- **Knobs:** Whether to produce a tone when the knobs are at the center (for knobs with a detent).
-- **Keys:** Whether to produce a tone when the UI physical buttons are pressed.
-- **Trims:** Whether to produce a tone when the trims are being adjusted.
-- **Trim tone:** Controls the pitch/frequency of the trim tone. Fixed pitch or Variable pitch.
+- **Enable:** Toggle all sounds on or off. When off, a mute icon appears on the home screen.
+- **Inactivity:** Turn the inactivity alarm on or off. When enabled, a warning tone plays after a period without user interaction.
+- **Switches:** Play a tone when any physical switch is moved.
+- **Knobs:** Play a tone when a knob with a center detent is positioned at center.
+- **Keys:** Play a tone when the physical UI buttons are pressed.
+- **Trims:** Play a tone while trims are being adjusted.
+- **Trim tone:** Set the trim tone behaviour. Fixed pitch (single frequency) or Variable pitch (changes with trim position).
 
 <a id="section_id_backlight"></a>
 
@@ -56,11 +55,11 @@ Increasing the power level increases the range, at the expense of higher battery
 <img src="images/screenshots/system_backlight.png"/>
 </p>
 
-- **Enable:** This enables/disables the backlight. This may be useful for example to save energy on certain kinds of LCDs.
-- **Brightness:** Controls the brightness level of the display. Higher brightness results in higher battery consumption.
+- **Enable:** Enables/disables the backlight. This may be useful for example to save energy on certain kinds of LCDs.
+- **Brightness:** Controls the brightness level of the display. Higher brightness causes higher battery consumption.
 - **Timeout:** Specifies the time before the backlight is turned off when the handset is inactive.
-- **Wake up:** Specifies how the backlight is triggered on. Keys or Activity. When set to Keys, only the UI keys can wake up the backlight. On the other hand, setting to Activity enables all the physical controls to wake up the backlight. This is useful when we want the backlight to stay on when operating a model, especially for LCDs that are not sunlight readable.
-- **Key filter:** When enabled, the first key press only wakes up the backlight without triggering any event in the User Interface. This setting is useful for LCDs that are not sunlight readable.
+- **Wake up:** Specifies how the backlight is triggered on. Keys or Activity. When set to Keys, only the UI keys can wake up the backlight. Setting to Activity enables all the physical controls to wake up the backlight. This is useful when we want the backlight to stay on when operating a model, especially for LCDs that are not sunlight readable.
+- **Key filter:** When enabled, the first key press only wakes the backlight without triggering any event in the User Interface. This setting is useful for LCDs that are not sunlight readable.
 
 <a id="section_id_appearance"></a>
 
@@ -76,7 +75,7 @@ Increasing the power level increases the range, at the expense of higher battery
 - **Round corners:** Turns on/off rounded corners in menus, dialog boxes, etc.
 - **Animations:** Turns animations on/off for toast messages, loading spinners, etc.
 - **Autohide trims:** Hides the trim bars on the home screen when the trims buttons are not being interacted with.
-- **Always show hours:** Whether to always shows the hours counter for timers.
+- **Always show hours:** Whether to always show the hours digits for timers.
 - **Numeric battery voltage:** Replaces the graphical battery gauge with the actual voltage readout on the home screen.
 - **Welcome message:** Turns on/off the "Welcome" message when starting up the handset. 
 - **Splash screen:** Whether to show the user's custom splash screen during boot. See the "splash screen" folder for instructions on how to make a custom splash screen.
