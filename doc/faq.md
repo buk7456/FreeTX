@@ -28,4 +28,4 @@ I plan on working on this in the near future, but I haven't yet found a compelli
 
 ### SD card is not working or can't be detected.
 The card should be formatted with the FAT (FAT16 or FAT32) file system. Other file systems are not supported. Also try to keep
-the number of files on the card minimal.
+the number of files on the card minimal. Always power the system off before inserting or removing the SD card.

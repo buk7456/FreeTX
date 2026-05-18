@@ -22,7 +22,7 @@ modifications to the servo.
 <img src="images/screenshots/receiver_config_servo_pwm_range.png"/>
 </p>
 
-Note: 
+**Note:**  
 1. These configuration settings are stored in the receiver, not the transmitter.
 2. Normal PWM is only available on certain pins, depending on the pin mapping.
 3. Any changes made take effect immediately upon pressing the 'Write' button.

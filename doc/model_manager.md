@@ -10,7 +10,12 @@ The model manager enables various actions, such as creating, loading, and deleti
 SD cards are also supported and are useful for backing up and restoring models. Model data on the SD card is stored
 in a human-readable text format similar to YAML.
 
-Note:
+**Available model types**
+- Airplane: Used for fixed wing aircraft.
+- Multicopter: Used for aircraft with rotors, e.g. quadcopters, helicopters, etc.
+- Other: This is a generic type for anything else. Boats, land vehicles, robots, animatronics, etc.
+
+**Note:**
 1. An external EEPROM is recommended but not mandatory. However, without it, the system will only have one model slot available, 
 which makes it cumbersome to switch between different models, as we would always need to rely on the SD card to load a different model.
 2. Before updating the firmware in the transmitter, always back up your models to the SD card to avoid any potential data loss or corruption.

@@ -22,18 +22,18 @@ Mixer sources can be any of the following:
 Counters can also be used as inputs in the mixer, although they are not classified as true mixer sources.
 
 ## Mixer fields
-- Output: The channel that is to be affected by the mix. If none, the mix is inactive and is not computed.
-- Switch: The control switch to turn on or off the mix. The mix is always active if no is switch specified.
-- Operation: Add, Multiply, Replace, Hold.
-- Input: This is the mixer source.
-- Weight: Determines how much of an effect the input has on the output. -100 to 100.
-- Offset: The input is offset by this value after the weight has been applied. -100 to 100.
-- Curve: Differential, Expo, Function, Custom curve.
-- Curve value: Differential {-100 to 100}, Expo {-100 to 100}, Function {x>0, x<0, |x|}, Curve name if custom curve.
-- Trim: Whether to add trim or not.
-- F-Mode: The flight mode in which the mix applies.
-- Delay Up and Down: This is used to delay the input. 0 to 60 seconds.
-- Slow Up and Down: This when non-zero specifies how fast the input changes. 0 to 60 seconds.
+- **Output:** The channel that is to be affected by the mix. If none, the mix is inactive and is not computed.
+- **Switch:** The control switch to turn on or off the mix. The mix is always active if no is switch specified.
+- **Operation:** Add, Multiply, Replace, Hold.
+- **Input:** This is the mixer source.
+- **Weight:** Determines how much of an effect the input has on the output. -100 to 100.
+- **Offset:** The input is offset by this value after the weight has been applied. -100 to 100.
+- **Curve:** Differential, Expo, Function, Custom curve.
+- **Curve value:** Differential {-100 to 100}, Expo {-100 to 100}, Function {x>0, x<0, |x|}, Curve name if custom curve.
+- **Trim:** Whether to add trim or not.
+- **F-Mode:** The flight mode in which the mix applies.
+- **Delay Up and Down:** This is used to delay the input. 0 to 60 seconds.
+- **Slow Up and Down:** This when non-zero specifies how fast the input changes. 0 to 60 seconds.
 
 ## Order of mixer operations
 <p align="left">
@@ -45,7 +45,7 @@ When editing mixes, it is recommended to disable RF output or remove propellers 
 <br>This is because all changes/adjustments made are applied instantly and may bring surprises :-)
 
 ## Example mixes
-Note: 
+**Note:** 
 - The convention used in these examples is -ve for left/downward going control surfaces, +ve for right/upward going control surfaces. For example if the Ail stick is moved right, the left aileron moves down and the right aileron moves up. Hence we use a negative weight for the left aileron and a positive weight for the right aileron.
 - If a servo is moving in wrong direction, reversing the direction in Outputs screen solves this.
 - The Mixer is all about control logic. Any mechanical differences should be handled in the Outputs screen and not inside the Mixer.
