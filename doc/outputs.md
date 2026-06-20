@@ -4,7 +4,7 @@ Outputs are the last stage of the processing chain (Inputs ---> Mixer ---> Outpu
 It is where final adjustments to the control data are made before transmission to the receiver.
 
 <p align="left">
-<img src="images/screenshots/outputs.png"/>
+<img src="images/screenshots/outputs.png" style="margin-right: 10px;"/>
 <img src="images/screenshots/outputs_monitor.png"/>
 </p>
 

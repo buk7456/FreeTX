@@ -3,7 +3,8 @@ The mixer is where the inputs (mixer sources) get linked to the output channels 
 This controller features a mixer system that draws inspiration from that found in OpenTX(R) based RC transmitters, though not directly compatible.
 
 <p align="left">
-<img src="images/screenshots/mixer.png"/>
+<img src="images/screenshots/mixer.png" style="margin-right: 10px;"/>
+<img src="images/screenshots/mixer_context_menu.png"/>
 </p>
 
 ## Mixer sources
@@ -39,6 +40,19 @@ Counters can also be used as inputs in the mixer, although they are not classifi
 <p align="left">
 <img src="images/Drawing1.png"/>
 </p>
+
+## Context menu actions
+- **View outputs:** Opens the mixer monitor, which displays the real-time status of all output channels. Clicking the select button while in the mixer monitor shows a tooltip with the exact value of the output channel.
+- **Copy mix to:** Copies this mix to a specified destination.
+- **Move mix to:** Moves this mix to a specified destination.
+- **Insert free:** Inserts a free mix slot at the current position.
+- **Rename mix:** Opens the text editor dialog to specify a name for this mix.
+- **Reset mix:** Resets this mix to the default setting.
+- **Reset all mixes:** Resets all mixes to the default settings.
+- **Compact mixes:** Removes all empty/free slots that exist in-between the defined mixes.
+- **Show curve preview:** Whether to draw the curve on the mixer screen. The displayed curve shows a trace of the output vs input for this specific mix.
+- **Templates:** Use this option to load the predefined mixer templates.
+- **Show overview:** Display a summary of the configured mixes. In the overview screen, clicking the select button displays a tooltip with extra information about the highlighted mix line.
 
 ## Important safety note
 When editing mixes, it is recommended to disable RF output or remove propellers first.

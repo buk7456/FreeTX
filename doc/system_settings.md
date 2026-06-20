@@ -118,8 +118,8 @@ This menu provides access to various advanced system settings. It is protected w
 ### Calibrating the sticks
 
 <p align="left">
-<img src="images/screenshots/sticks_calibration_1.png"/>
-<img src="images/screenshots/sticks_calibration_2.png"/>
+<img src="images/screenshots/sticks_calibration_1.png" style="margin-right: 10px;"/>
+<img src="images/screenshots/sticks_calibration_2.png" style="margin-right: 10px;"/>
 <img src="images/screenshots/sticks_calibration_3.png"/>
 </p>
 
@@ -148,9 +148,9 @@ How often you need to recalibrate the sticks depends on their build quality and 
 ### Calibrating the knobs
 
 <p align="left">
-<img src="images/screenshots/knobs_calibration_1.png"/>
-<img src="images/screenshots/knobs_calibration_2.png"/>
-<img src="images/screenshots/knobs_calibration_3.png"/>
+<img src="images/screenshots/knobs_calibration_1.png" style="margin-right: 10px;"/>
+<img src="images/screenshots/knobs_calibration_2.png" style="margin-right: 10px;"/>
+<img src="images/screenshots/knobs_calibration_3.png" style="margin-right: 10px;"/>
 </p>
 
 **Procedure:**

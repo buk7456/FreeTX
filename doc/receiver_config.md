@@ -18,7 +18,7 @@ The servo PWM range can as well be adjusted to get extra travel from a servo, wi
 modifications to the servo.
 
 <p align="left">
-<img src="images/screenshots/receiver_config_signal_type.png"/>
+<img src="images/screenshots/receiver_config_signal_type.png" style="margin-right: 10px;"/>
 <img src="images/screenshots/receiver_config_servo_pwm_range.png"/>
 </p>
 

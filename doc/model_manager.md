@@ -1,7 +1,7 @@
 # Model manager
 
 <p align="left">
-<img src="images/screenshots/model_manager.png"/>
+<img src="images/screenshots/model_manager.png" style="margin-right: 10px;"/>
 <img src="images/screenshots/model_manager_context_menu_active.png"/>
 </p>
 
