@@ -42,7 +42,7 @@ Counters can also be used as inputs in the mixer, although they are not classifi
 </p>
 
 ## Context menu actions
-- **View outputs:** Opens the mixer monitor, which displays the real-time status of all output channels. Clicking the select button while in the mixer monitor shows a tooltip with the exact value of the output channel.
+- **View outputs:** Opens the mixer monitor, which shows the real-time status of all output channels. Click the Select button within this monitor to view a tooltip containing the exact value of the selected channel.
 - **Copy mix to:** Copies this mix to a specified destination.
 - **Move mix to:** Moves this mix to a specified destination.
 - **Insert free:** Inserts a free mix slot at the current position.
@@ -52,7 +52,7 @@ Counters can also be used as inputs in the mixer, although they are not classifi
 - **Compact mixes:** Removes all empty/free slots that exist in-between the defined mixes.
 - **Show curve preview:** Whether to draw the curve on the mixer screen. The displayed curve shows a trace of the output vs input for this specific mix.
 - **Templates:** Use this option to load the predefined mixer templates.
-- **Show overview:** Display a summary of the configured mixes. In the overview screen, clicking the select button displays a tooltip with extra information about the highlighted mix line.
+- **Show overview:** Display a summary of the configured mixes. In the overview screen, click the select button to display a tooltip with extra information about the highlighted mix line.
 
 ## Important safety note
 When editing mixes, it is recommended to disable RF output or remove propellers first.
