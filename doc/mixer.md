@@ -52,7 +52,7 @@ Counters can also be used as inputs in the mixer, although they are not classifi
 - **Compact mixes:** Removes all empty/free slots that exist in-between the defined mixes.
 - **Show curve preview:** Whether to draw the curve on the mixer screen. The displayed curve shows a trace of the output vs input for this specific mix.
 - **Templates:** Use this option to load the predefined mixer templates.
-- **Show overview:** Display a summary of the configured mixes. In the overview screen, click the select button to display a tooltip with extra information about the highlighted mix line.
+- **Show overview:** Display a summary of the configured mixes. In the overview screen, click the Select button to display a tooltip with extra information about the highlighted mix line.
 
 ## Important safety note
 When editing mixes, it is recommended to disable RF output or remove propellers first.
