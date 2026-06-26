@@ -36,7 +36,6 @@ Three buttons are used for navigating the user interface i.e. Up, Select, Down. 
 
 ## Frequently Asked Questions
 Got a question? [See the FAQ.](doc/faq.md)  
-<br> This project is based on an older project found [here.](https://github.com/buk7456/Arduino-LoRa-RC-transmitter-and-reciever)
 
 ## Gallery
 
@@ -46,3 +45,7 @@ Got a question? [See the FAQ.](doc/faq.md)
 [<img src="doc/images/img10.jpg" width="256"/>](doc/images/img10.jpg)
 [<img src="doc/images/yt.jpg" width="256"/>](https://www.youtube.com/watch?v=rDpRMRE8av0)
 [<img src="doc/images/yt2.jpg" width="256"/>](https://www.youtube.com/watch?v=9EZkyRHkMpg)
+
+---
+
+This project is based on an older project found [here.](https://github.com/buk7456/Arduino-LoRa-RC-transmitter-and-reciever)
