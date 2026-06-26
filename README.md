@@ -2,7 +2,7 @@
 Open source radio control system for almost anything.  
 Remotely operate model airplanes, multicopters, helicopters, boats, land vehicles, robots, animatronics, etc.
 <p align="left">
-<img src="doc/images/tx_views.jpg" width="480"/>
+<img src="doc/images/tx_views.jpg" width="720"/>
 </p>
 
 ## Main features
