@@ -34,9 +34,6 @@ Three buttons are used for navigating the user interface i.e. Up, Select, Down. 
 ## User guide
 [User guide](doc/user_guide.md)
 
-## Frequently Asked Questions
-Got a question? [See the FAQ.](doc/faq.md)  
-
 ## Gallery
 
 [<img src="doc/images/img6.jpg" width="256"/>](doc/images/img6.jpg)
@@ -45,6 +42,9 @@ Got a question? [See the FAQ.](doc/faq.md)
 [<img src="doc/images/img10.jpg" width="256"/>](doc/images/img10.jpg)
 [<img src="doc/images/yt.jpg" width="256"/>](https://www.youtube.com/watch?v=rDpRMRE8av0)
 [<img src="doc/images/yt2.jpg" width="256"/>](https://www.youtube.com/watch?v=9EZkyRHkMpg)
+
+## Frequently Asked Questions
+Got a question? [See the FAQ.](doc/faq.md)  
 
 ---
 
