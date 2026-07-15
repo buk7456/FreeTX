@@ -194,6 +194,7 @@ enum {
 
   //gnss telemetry
   SCREEN_TELEMETRY_GNSS,
+  SCREEN_SELECT_GNSSS_UNITS,
   
   //---- System settings ----
 
@@ -335,6 +336,7 @@ void toggleEditModeOnSelectClicked();
 void drawCursor(uint8_t xpos, uint8_t ypos);
 void drawHeader(const char* str);
 void drawHeader_Menu(const char* str);
+void drawSubheader(const char* str, uint8_t ypos);
 void drawDottedVLine(uint8_t x, uint8_t y, uint8_t len, uint8_t fgColor, uint8_t bgColor);
 void drawDottedHLine(uint8_t x, uint8_t y, uint8_t len, uint8_t fgColor, uint8_t bgColor);
 void drawBoundingBox(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color);
@@ -343,8 +345,8 @@ void drawCheckbox(uint8_t xpos, uint8_t ypos, bool val);
 void drawLoaderSpinner(uint8_t xpos, uint8_t ypos, uint8_t size);
 void drawAnimatedSprite(uint8_t x, uint8_t y, const uint8_t* const bitmapTable[], uint8_t w, uint8_t h, uint8_t color, 
                         uint8_t frameCount, uint16_t frameTime, uint32_t timeOffset, bool forceAnimation);
-void drawHorizontalBarChart(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t valMin, int16_t valMax);
-void drawHorizontalBarChartZeroCentered(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t range);
+void drawHorizontalBarChart(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int32_t val, int32_t valMin, int32_t valMax);
+void drawHorizontalBarChartZeroCentered(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int32_t val, int32_t range);
 void drawTrimSliders();
 void drawDialogCopyMove(const char* str, uint8_t srcIdx, uint8_t destIdx, bool isCopy);
 void drawCustomCurve(custom_curve_t *crv, uint8_t selectPt, uint8_t src);
@@ -900,7 +902,9 @@ void handleMainUI()
               {
                 int32_t tVal = ((int32_t) telemetryReceivedValue[idx] * Model.Telemetry[idx].multiplier) / 100;
                 tVal += Model.Telemetry[idx].offset;
-                drawHorizontalBarChart(70, ypos + 1, 41, 4, BLACK, tVal, widget->gaugeMin, widget->gaugeMax);
+                int32_t valMin = ((int32_t) widget->gaugeMin * Model.Telemetry[idx].multiplier) / 100;
+                int32_t valMax = ((int32_t) widget->gaugeMax * Model.Telemetry[idx].multiplier) / 100;
+                drawHorizontalBarChart(70, ypos + 1, 41, 4, BLACK, tVal, valMin, valMax);
               }
             }
             hasPrinted = true;
@@ -1414,7 +1418,7 @@ void handleMainUI()
                 display.print(F("Disp:"));
                 display.setCursor(48, ypos);
                 display.print(findStringInIdStr(enum_WidgetDisplay, widget->disp));
-                if(edit)
+                if(edit && (buttonCode == KEY_UP || buttonCode == KEY_DOWN))
                 {
                   uint8_t prevDisp = widget->disp;
                   do {
@@ -2216,46 +2220,15 @@ void handleMainUI()
             nameEmpty = true;
           else
           {
-            //Force conforming to 8.3 naming rules. Basic checks only
-            
-            // Strip leading periods
-            uint8_t k = 0;
-            while(nameStr[k] == '.') 
-            {
-              if(!isalnum(nameStr[k]) && nameStr[k] != '_')                  
-                memmove(&nameStr[k], &nameStr[k + 1], strlen(nameStr) - k);
-              else
-                k++;
-            }
-            
-            // Convert name to uppercase and replace invalid characters with '_'
-            // Also limit the base name to 8 characters max
-            uint8_t len = strlen(nameStr);
-            uint8_t i = 0;
+            // Force conforming to 8.3 naming rules.
             char baseName[9];
-            for(i = 0; i < len; i++) 
-            {
-              if(i == 8) 
-                break;
-              if(nameStr[i] == ' ' || nameStr[i] == '/') 
-                baseName[i] = '_';
-              else 
-                baseName[i] = toupper(nameStr[i]);
-            }
-            baseName[i] = '\0';
-            
-            //check again if empty
-            if(i == 0) 
-              nameEmpty = true;
-            else if(baseName[i - 1] == '.') 
-            {
-              // If the baseName ends with a period, remove it
-              i--;
-              baseName[i] = '\0';
-            }
-            
-            //copy back to nameStr
+            strlcpy(baseName, nameStr, sizeof(baseName));
+            sanitize83BaseName(baseName);
+            // copy back to nameStr
             strlcpy(nameStr, baseName, sizeof(nameStr));
+            // check again if empty
+            if(nameStr[0] == '\0') 
+              nameEmpty = true;
           }
           
           if(nameEmpty) //make a generic name
@@ -3005,7 +2978,7 @@ void handleMainUI()
                   display.setCursor(display.getCursorX() + 6, ypos);
                   display.print(Model.Channel[chIdx].name);
                 }
-                if(edit)
+                if(edit && (buttonCode == KEY_UP || buttonCode == KEY_DOWN))
                 {
                   do {
                   tempMixerOutput = incDecSource(tempMixerOutput, INCDEC_FLAG_MIX_SRC);
@@ -6620,7 +6593,7 @@ void handleMainUI()
         drawCursor(34, focusedItem * 9);
         
         //edit
-        if(isEditMode && focusedItem <= 4)
+        if(isEditMode && focusedItem <= 4 && (buttonCode == KEY_UP || buttonCode == KEY_DOWN))
         {
           uint8_t i = focusedItem - 1;
           do {
@@ -6838,10 +6811,10 @@ void handleMainUI()
           ITEM_RSSI,
           ITEM_LINK_QUALITY,
           ITEM_GNSS,
-          ITEM_GNSS_MSL_ALTITUDE,
-          ITEM_GNSS_AGL_ALTITUDE,
           ITEM_GNSS_DISTANCE,
           ITEM_GNSS_SPEED,
+          ITEM_GNSS_AGL_ALTITUDE,
+          ITEM_GNSS_MSL_ALTITUDE,
         };
         
         contextMenuInitialise();
@@ -6856,10 +6829,10 @@ void handleMainUI()
           if(Model.Telemetry[i].type == TELEMETRY_TYPE_GNSS)
           {
             isGNSSAlreadyAdded = true;
+            contextMenuAddItem(PSTR("GNSS distance"), ITEM_GNSS_DISTANCE);
+            contextMenuAddItem(PSTR("GNSS speed"), ITEM_GNSS_SPEED);
             contextMenuAddItem(PSTR("GNSS altitude AGL"), ITEM_GNSS_AGL_ALTITUDE);
             contextMenuAddItem(PSTR("GNSS altitude MSL"), ITEM_GNSS_MSL_ALTITUDE);
-            contextMenuAddItem(PSTR("GNSS speed"), ITEM_GNSS_SPEED);
-            contextMenuAddItem(PSTR("GNSS distance"), ITEM_GNSS_DISTANCE);
             break;
           }
         }
@@ -6872,13 +6845,25 @@ void handleMainUI()
         if(contextMenuSelectedItemID == ITEM_EXTVOLTS_4S)  loadSensorTemplateExtVolts4S(thisTelemIdx);
         if(contextMenuSelectedItemID == ITEM_RSSI)         loadSensorTemplateRSSI(thisTelemIdx);
         if(contextMenuSelectedItemID == ITEM_LINK_QUALITY) loadSensorTemplateLinkQuality(thisTelemIdx);
-        if(contextMenuSelectedItemID == ITEM_GNSS)         loadSensorTemplateGNSS(thisTelemIdx);
+
+        if(contextMenuSelectedItemID == ITEM_GNSS)         
+        {
+          loadSensorTemplateGNSS(thisTelemIdx);
+          if(Sys.defaultGnssUnits == GNSS_DEFAULT_UNITS_NONE)
+            changeToScreen(SCREEN_SELECT_GNSSS_UNITS);
+          else
+          {
+            loadDefaultGnssUnits();
+            changeToScreen(SCREEN_TELEMETRY);
+          }
+        }
+
         if(contextMenuSelectedItemID == ITEM_GNSS_SPEED)   loadSensorTemplateGNSSSpeed(thisTelemIdx);
         if(contextMenuSelectedItemID == ITEM_GNSS_DISTANCE)  loadSensorTemplateGNSSDistance(thisTelemIdx);
         if(contextMenuSelectedItemID == ITEM_GNSS_AGL_ALTITUDE)  loadSensorTemplateGNSSAGLAltitude(thisTelemIdx);
         if(contextMenuSelectedItemID == ITEM_GNSS_MSL_ALTITUDE)  loadSensorTemplateGNSSMSLAltitude(thisTelemIdx);
         
-        if(contextMenuSelectedItemID != 0xff) 
+        if(contextMenuSelectedItemID != 0xff && contextMenuSelectedItemID != ITEM_GNSS) 
           changeToScreen(SCREEN_TELEMETRY);
         
         if(heldButton == KEY_SELECT) //exit
@@ -6896,6 +6881,7 @@ void handleMainUI()
           ITEM_RESET_AGL_ALTITUDE,
           ITEM_RESET_LAST_KNOWN_LOCATION,
           ITEM_RESET_STARTING_POINT,
+          ITEM_CHANGE_GNSS_UNITS,
         };
         
         contextMenuInitialise();
@@ -6904,24 +6890,24 @@ void handleMainUI()
           contextMenuAddItem(PSTR("View statistics"), ITEM_VIEW_STATISTICS);
           contextMenuAddItem(PSTR("Edit sensor"), ITEM_EDIT_SENSOR);
           contextMenuAddItem(PSTR("Delete sensor"), ITEM_DELETE_SENSOR);
-          if(Model.Telemetry[thisTelemIdx].identifier == SENSOR_ID_GNSS_AGL_ALTITUDE)
-            contextMenuAddItem(PSTR("Reset altitude AGL"), ITEM_RESET_AGL_ALTITUDE);
           if(Model.Telemetry[thisTelemIdx].identifier == SENSOR_ID_GNSS_DISTANCE)
             contextMenuAddItem(PSTR("Reset starting point"), ITEM_RESET_STARTING_POINT);
+          if(Model.Telemetry[thisTelemIdx].identifier == SENSOR_ID_GNSS_AGL_ALTITUDE)
+            contextMenuAddItem(PSTR("Reset altitude AGL"), ITEM_RESET_AGL_ALTITUDE);
         }
         else if(Model.Telemetry[thisTelemIdx].type == TELEMETRY_TYPE_GNSS)
         {
           contextMenuAddItem(PSTR("View GNSS data"), ITEM_VIEW_GNSS_DATA);
-          contextMenuAddItem(PSTR("Reset altitude AGL"), ITEM_RESET_AGL_ALTITUDE);
           contextMenuAddItem(PSTR("Reset starting point"), ITEM_RESET_STARTING_POINT);
+          contextMenuAddItem(PSTR("Reset altitude AGL"), ITEM_RESET_AGL_ALTITUDE);
           contextMenuAddItem(PSTR("Reset last known location"), ITEM_RESET_LAST_KNOWN_LOCATION);
-          //add delete option if all the child items have been deleted
+          // Add "Delete sensor" option if all the child items have been deleted. Same behaviour for "Change units" option.
           bool hasChildren = false;
           for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
           {
             uint8_t id = Model.Telemetry[i].identifier;
-            if(id == SENSOR_ID_GNSS_SPEED
-              || id == SENSOR_ID_GNSS_DISTANCE
+            if(id == SENSOR_ID_GNSS_DISTANCE
+              || id == SENSOR_ID_GNSS_SPEED
               || id == SENSOR_ID_GNSS_AGL_ALTITUDE
               || id == SENSOR_ID_GNSS_MSL_ALTITUDE)
             {
@@ -6930,7 +6916,10 @@ void handleMainUI()
             }
           }
           if(!hasChildren)
+          {
             contextMenuAddItem(PSTR("Delete sensor"), ITEM_DELETE_SENSOR);
+            contextMenuAddItem(PSTR("Change units"), ITEM_CHANGE_GNSS_UNITS);
+          }
         }
         contextMenuDraw();
         
@@ -6938,6 +6927,7 @@ void handleMainUI()
         if(contextMenuSelectedItemID == ITEM_EDIT_SENSOR) changeToScreen(SCREEN_EDIT_SENSOR);
         if(contextMenuSelectedItemID == ITEM_DELETE_SENSOR) changeToScreen(CONFIRMATION_DELETE_SENSOR);
         if(contextMenuSelectedItemID == ITEM_VIEW_GNSS_DATA) changeToScreen(SCREEN_TELEMETRY_GNSS);
+        if(contextMenuSelectedItemID == ITEM_CHANGE_GNSS_UNITS) changeToScreen(SCREEN_SELECT_GNSSS_UNITS);
         if(contextMenuSelectedItemID == ITEM_RESET_AGL_ALTITUDE)
         {
           if(GNSSTelemetryData.positionFix != 0)
@@ -7159,7 +7149,7 @@ void handleMainUI()
         { 
           drawCursor(0, 9);
           toggleEditModeOnSelectClicked();  
-          if(isEditMode)
+          if(isEditMode && (buttonCode == KEY_UP || buttonCode == KEY_DOWN))
           {
             do {
               page = incDec(page, 0, NUM_CUSTOM_TELEMETRY - 1, INCDEC_WRAP, INCDEC_SLOW);
@@ -7309,7 +7299,7 @@ void handleMainUI()
                   display.print(F("0"));
                 display.print(val);
                 if(edit)
-                  tlm->multiplier = incDec(tlm->multiplier, 1, 1000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
+                  tlm->multiplier = incDec(tlm->multiplier, 1, 10000, INCDEC_NOWRAP, INCDEC_NORMAL, INCDEC_FAST);
               }
               break;
             
@@ -7419,6 +7409,57 @@ void handleMainUI()
         }
         else if(clickedButton == KEY_DOWN || heldButton == KEY_SELECT) //exit
           changeToScreen(SCREEN_TELEMETRY);
+      }
+      break;
+
+    case SCREEN_SELECT_GNSSS_UNITS:
+      {
+        drawHeader(PSTR("Select units"));
+
+        display.setCursor(0, 9);
+        display.print(F("Distance:"));
+        display.setCursor(72, 9);
+        display.print(findStringInIdStr(enum_DisplayedUnits, Model.gnssDistanceUnits));
+        
+        display.setCursor(0, 18);
+        display.print(F("Speed:"));
+        display.setCursor(72, 18);
+        display.print(findStringInIdStr(enum_DisplayedUnits, Model.gnssSpeedUnits));
+        
+        display.setCursor(0, 27);
+        display.print(F("Altitude:"));
+        display.setCursor(72, 27);
+        display.print(findStringInIdStr(enum_DisplayedUnits, Model.gnssAltitudeUnits));
+
+        drawDottedHLine(0, 54, 128, BLACK, WHITE);
+        display.setCursor(78, 56);
+        display.print(F("[Finish]"));
+        if(focusedItem == 4)
+          drawCursor(70, 56);
+
+        if(focusedItem < 4)
+          drawCursor(64, focusedItem * 9);
+        
+        changeFocusOnUpDown(4);
+        toggleEditModeOnSelectClicked();
+        
+        //edit items
+        if(focusedItem == 1)
+          Model.gnssDistanceUnits = incDec(Model.gnssDistanceUnits, UNITS_DISTANCE_FIRST, UNITS_DISTANCE_LAST, INCDEC_WRAP, INCDEC_SLOW);
+        else if(focusedItem == 2)
+          Model.gnssSpeedUnits = incDec(Model.gnssSpeedUnits, UNITS_SPEED_FIRST, UNITS_SPEED_LAST, INCDEC_WRAP, INCDEC_SLOW);
+        else if(focusedItem == 3 && isEditMode && (buttonCode == KEY_UP || buttonCode == KEY_DOWN))
+        {
+          do {
+          Model.gnssAltitudeUnits = incDec(Model.gnssAltitudeUnits, UNITS_DISTANCE_FIRST, UNITS_DISTANCE_LAST, INCDEC_WRAP, INCDEC_SLOW);
+          } while (Model.gnssAltitudeUnits != UNITS_METRES && Model.gnssAltitudeUnits != UNITS_FEET );
+        }
+
+        //exit
+        if(focusedItem == 4 && clickedButton == KEY_SELECT)
+        {
+          changeToScreen(SCREEN_TELEMETRY);
+        }
       }
       break;
 
@@ -7532,57 +7573,117 @@ void handleMainUI()
               break;
 
             case ITEM_MSL_ALTITUDE:
-              {
-                display.print(F("Altitude:"));
-                display.setCursor(60, ypos);
-                if(GNSSTelemetryData.positionFix != 0)
-                  display.print(GNSSTelemetryData.altitude);
-                else
-                  display.print(Model.gnssLastKnownAltitude);
-                display.setCursor(display.getCursorX() + 3, ypos);
-                display.print(F("m"));
-                display.setCursor(108, ypos);
-                display.print(F("MSL"));
-              }
-              break;
-
             case ITEM_AGL_ALTITUDE:
-              {
-                display.print(F("Altitude:"));
-                display.setCursor(60, ypos);
-                if(GNSSTelemetryData.positionFix != 0)
-                  display.print(GNSSTelemetryData.altitude - Model.gnssAltitudeOffset);
-                else
-                  display.print(Model.gnssLastKnownAltitude - Model.gnssAltitudeOffset);
-                display.setCursor(display.getCursorX() + 3, ypos);
-                display.print(F("m"));
-                display.setCursor(108, ypos);
-                display.print(F("AGL"));
-              }
-              break;
-
             case ITEM_DISTANCE:
               {
-                display.print(F("Distance:"));
-                display.setCursor(60, ypos);
-                int32_t distance = Model.gnssLastKnownDistanceFromHome;
-                if(GNSSTelemetryData.positionFix != 0)
-                  distance = gnssDistanceFromHome;
-                if(distance < 1000)
+                int32_t val = 0; // the raw value is in metres.
+                uint8_t units = Model.gnssAltitudeUnits;
+                if(itemID == ITEM_MSL_ALTITUDE)
                 {
-                  display.print(distance);
-                  display.setCursor(display.getCursorX() + 3, ypos);
-                  display.print(F("m"));
-                }
-                else
-                {
-                  if(distance < 100000)
-                    printFixedPointVal(distance, 3);
+                  display.print(F("Altitude:"));
+                  if(GNSSTelemetryData.positionFix != 0)
+                    val = GNSSTelemetryData.altitude;
                   else
-                    printFixedPointVal(distance / 100, 1);
-                  display.setCursor(display.getCursorX() + 3, ypos);
-                  display.print(F("km"));
+                    val = Model.gnssLastKnownAltitude;
                 }
+                else if(itemID == ITEM_AGL_ALTITUDE)
+                {
+                  display.print(F("Altitude:"));
+                  if(GNSSTelemetryData.positionFix != 0)
+                    val = GNSSTelemetryData.altitude - Model.gnssAltitudeOffset;
+                  else
+                    val = Model.gnssLastKnownAltitude - Model.gnssAltitudeOffset;
+                }
+                else if(itemID == ITEM_DISTANCE)
+                {
+                  display.print(F("Distance:"));
+                  if(GNSSTelemetryData.positionFix != 0)
+                    val = gnssDistanceFromHome;
+                  else 
+                    val = Model.gnssLastKnownDistanceFromHome;
+                  units = Model.gnssDistanceUnits;
+                }
+
+                display.setCursor(60, ypos);
+                 
+                switch(units)
+                {
+                  case UNITS_METRES:
+                    {
+                      display.print(val);
+                      display.setCursor(display.getCursorX() + 3, ypos);
+                      display.print(findStringInIdStr(enum_DisplayedUnits, UNITS_METRES));
+                    }
+                    break;
+
+                  case UNITS_METRES_KILOMETRES:
+                    {
+                      if(val < 1000)
+                      {
+                        display.print(val);
+                        display.setCursor(display.getCursorX() + 3, ypos);
+                        display.print(findStringInIdStr(enum_DisplayedUnits, UNITS_METRES));
+                      }
+                      else
+                      {
+                        printFixedPointVal(val, 3);
+                        display.setCursor(display.getCursorX() + 3, ypos);
+                        display.print(findStringInIdStr(enum_DisplayedUnits, UNITS_KILOMETRES));
+                      }
+                    }
+                    break;
+
+                  case UNITS_KILOMETRES:
+                    {
+                      printFixedPointVal(val, 3);
+                      display.setCursor(display.getCursorX() + 3, ypos);
+                      display.print(findStringInIdStr(enum_DisplayedUnits, UNITS_KILOMETRES));
+                    }
+                    break;
+
+                  case UNITS_FEET:
+                    {
+                      val = (float) val * 3.28;
+                      display.print(val);
+                      display.setCursor(display.getCursorX() + 3, ypos);
+                      display.print(findStringInIdStr(enum_DisplayedUnits, UNITS_FEET));
+                    }
+                    break;
+
+                  case UNITS_FEET_MILES:
+                    {
+                      if(val < 1609)
+                      {
+                        val = (float) val * 3.28;
+                        display.print(val);
+                        display.setCursor(display.getCursorX() + 3, ypos);
+                        display.print(findStringInIdStr(enum_DisplayedUnits, UNITS_FEET));
+                      }
+                      else
+                      {
+                        val = (float) val * 0.621;
+                        printFixedPointVal(val, 3);
+                        display.setCursor(display.getCursorX() + 3, ypos);
+                        display.print(findStringInIdStr(enum_DisplayedUnits, UNITS_MILES));
+                      }
+                    }
+                    break;
+
+                  case UNITS_MILES:
+                    {
+                      val = (float) val * 0.621;
+                      printFixedPointVal(val, 3);
+                      display.setCursor(display.getCursorX() + 3, ypos);
+                      display.print(findStringInIdStr(enum_DisplayedUnits, UNITS_MILES));
+                    }
+                    break;
+                }
+
+                display.setCursor(108, ypos);
+                if(itemID == ITEM_MSL_ALTITUDE)
+                  display.print(F("MSL"));
+                else if(itemID == ITEM_AGL_ALTITUDE)
+                  display.print(F("AGL"));
               }
               break;
             
@@ -7590,11 +7691,35 @@ void handleMainUI()
               {
                 display.print(F("Speed:"));
                 display.setCursor(60, ypos);
-                display.print(GNSSTelemetryData.speed / 10);
-                display.print(F("."));
-                display.print(GNSSTelemetryData.speed % 10);
+                int32_t val = GNSSTelemetryData.speed;
+                switch(Model.gnssSpeedUnits)
+                {
+                  case UNITS_METRES_PER_SECOND:
+                    printFixedPointVal(val, 1);
+                    break;
+
+                  case UNITS_KILOMETRES_PER_HOUR:
+                    val = (val * 360) / 100;
+                    printFixedPointVal(val, 1);
+                    break;
+
+                  case UNITS_FEET_PER_SECOND:
+                    val = (val * 328) / 100;
+                    printFixedPointVal(val, 1);
+                    break;
+
+                  case UNITS_MILES_PER_HOUR:
+                    val = (val * 224) / 100;
+                    printFixedPointVal(val, 1);
+                    break;
+                  
+                  case UNITS_KNOTS:
+                    val = (val * 194) / 100;
+                    printFixedPointVal(val, 1);
+                    break;
+                }
                 display.setCursor(display.getCursorX() + 3, ypos);
-                display.print(F("m/s"));
+                display.print(findStringInIdStr(enum_DisplayedUnits, Model.gnssSpeedUnits));
               }
               break;
 
@@ -8058,56 +8183,203 @@ void handleMainUI()
       {
         drawHeader(systemMenu[SYSTEM_MENU_MISCELLANEOUS]);
         
-        display.setCursor(0, 9);
-        display.print(F("Autoslct input:"));
-        drawCheckbox(102, 9, Sys.autoSelectMovedControl);
+        enum {
+          ITEM_AUTOSELECT_INPUT,
+          ITEM_MIXER_TEMPLATES,
+          ITEM_DEFAULT_CHANNEL_ORDER,
+          ITEM_INACTIVITY_MINUTES,
+          
+          ITEM_SUBHEADING_GNSS_UNITS,
+          ITEM_DEFAULT_GNSS_UNITS,
+          ITEM_CUSTOM_GNSS_DISTANCE_UNITS,
+          ITEM_CUSTOM_GNSS_SPEED_UNITS,
+          ITEM_CUSTOM_GNSS_ALTITUDE_UNITS,
+          ITEM_CUSTOM_GNSS_UNITS_FIRST = ITEM_CUSTOM_GNSS_DISTANCE_UNITS,
+          ITEM_CUSTOM_GNSS_UNITS_LAST = ITEM_CUSTOM_GNSS_ALTITUDE_UNITS,
+          
+          ITEM_COUNT
+        };
         
-        display.setCursor(0, 18);
-        display.print(F("Mixer templts:"));
-        drawCheckbox(102, 18, Sys.mixerTemplatesEnabled);
+        uint8_t listItemIDs[ITEM_COUNT]; 
+        uint8_t listItemCount = 0;
         
-        display.setCursor(0, 27);
-        display.print(F("Dflt Ch order:"));
-        display.setCursor(102, 27);
-        if(Sys.mixerTemplatesEnabled)
+        //add item Ids to the list of Ids
+        for(uint8_t i = 0; i < sizeof(listItemIDs); i++)
         {
-          //make the string for the channel order
-          char tmpStr[5];
-          tmpStr[getChannelIdx('A')] = 'A';
-          tmpStr[getChannelIdx('E')] = 'E';
-          tmpStr[getChannelIdx('T')] = 'T';
-          tmpStr[getChannelIdx('R')] = 'R';
-          tmpStr[4] = '\0';
-          display.print(tmpStr);
+          if(Sys.defaultGnssUnits != GNSS_DEFAULT_UNITS_CUSTOM 
+              && i >= ITEM_CUSTOM_GNSS_UNITS_FIRST 
+              && i <= ITEM_CUSTOM_GNSS_UNITS_LAST)
+          {
+            continue;
+          }
+          listItemIDs[listItemCount++] = i;
         }
-        else
-          display.print(F("N/A"));
-
-        display.setCursor(0, 36);
-        display.print(F("Inactvty mins:"));
-        display.setCursor(102, 36);
-        display.print(Sys.inactivityMinutes);
-
-        changeFocusOnUpDown(4);
-        toggleEditModeOnSelectClicked();
-        drawCursor(94, focusedItem * 9);
         
-        if(focusedItem == 1)
-          Sys.autoSelectMovedControl = incDec(Sys.autoSelectMovedControl, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 2)
-          Sys.mixerTemplatesEnabled = incDec(Sys.mixerTemplatesEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-        else if(focusedItem == 3 && Sys.mixerTemplatesEnabled) 
-        { 
-          //there are 4P4 = 4! = 24 possible arrangements. So our range is 0 to 23.  
-          Sys.defaultChannelOrder = incDec(Sys.defaultChannelOrder, 0, 23, INCDEC_WRAP, INCDEC_SLOW);
+        //initialise
+        static uint8_t topItem;
+        static bool viewInitialised = false;
+        if(!viewInitialised)
+        {
+          focusedItem = 1;
+          topItem = 1;
+          viewInitialised = true;
         }
-        else if(focusedItem == 4)
-          Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 1, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
+        
+        //handle navigation
+        do {
+          changeFocusOnUpDown(listItemCount);
+        } while(listItemIDs[focusedItem - 1] == ITEM_SUBHEADING_GNSS_UNITS);
+        if(focusedItem < topItem)
+          topItem = focusedItem;
+        while(focusedItem >= topItem + 6)
+          topItem++;
+        
+        toggleEditModeOnSelectClicked();
+        
+        //fill list and edit items
+        for(uint8_t line = 0; line < 6 && line < listItemCount; line++)
+        {
+          uint8_t ypos = 9 + line*9;
+          
+          if((topItem - 1 + line) >= listItemCount)
+            break;
+          
+          uint8_t itemID = listItemIDs[topItem - 1 + line];
+          bool isFocused = (itemID == listItemIDs[focusedItem - 1]);
+          bool edit = (isFocused && isEditMode);
+          
+          display.setCursor(0, ypos);
+          switch(itemID)
+          {
+            case ITEM_AUTOSELECT_INPUT:
+              {
+                display.print(F("Autoslct input:"));
+                drawCheckbox(102, ypos, Sys.autoSelectMovedControl);
+                if(isFocused)
+                  drawCursor(94, ypos);
+                if(edit)                  
+                  Sys.autoSelectMovedControl = incDec(Sys.autoSelectMovedControl, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+            
+            case ITEM_MIXER_TEMPLATES:
+              {
+                display.print(F("Mixer templts:"));
+                drawCheckbox(102, ypos, Sys.mixerTemplatesEnabled);
+                if(isFocused)
+                  drawCursor(94, ypos);
+                if(edit)                  
+                  Sys.mixerTemplatesEnabled = incDec(Sys.mixerTemplatesEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+              }
+              break;
+              
+            case ITEM_DEFAULT_CHANNEL_ORDER:
+              {
+                display.print(F("Dflt Ch order:"));
+                display.setCursor(102, ypos);
+                if(Sys.mixerTemplatesEnabled)
+                {
+                  //make the string for the channel order
+                  char tmpStr[5];
+                  tmpStr[getChannelIdx('A')] = 'A';
+                  tmpStr[getChannelIdx('E')] = 'E';
+                  tmpStr[getChannelIdx('T')] = 'T';
+                  tmpStr[getChannelIdx('R')] = 'R';
+                  tmpStr[4] = '\0';
+                  display.print(tmpStr);
+                }
+                else
+                  display.print(F("N/A"));
+                if(isFocused)
+                  drawCursor(94, ypos);
+                if(edit && Sys.mixerTemplatesEnabled) 
+                {
+                  //there are 4P4 = 4! = 24 possible arrangements. So our range is 0 to 23.  
+                  Sys.defaultChannelOrder = incDec(Sys.defaultChannelOrder, 0, 23, INCDEC_WRAP, INCDEC_SLOW);
+                }
+              }
+              break;
+              
+            case ITEM_INACTIVITY_MINUTES:
+              {
+                display.print(F("Inactvty mins:"));
+                display.setCursor(102, ypos);
+                display.print(Sys.inactivityMinutes);
+                if(isFocused)
+                  drawCursor(94, ypos);
+                if(edit)                  
+                  Sys.inactivityMinutes = incDec(Sys.inactivityMinutes, 1, 240, INCDEC_NOWRAP, INCDEC_SLOW, INCDEC_NORMAL);
+              }
+              break;
+              
+            case ITEM_SUBHEADING_GNSS_UNITS:
+              {
+                drawSubheader(PSTR("GNSS units"), ypos);
+              }
+              break;
+              
+            case ITEM_DEFAULT_GNSS_UNITS:
+              {
+                display.print(F("Default:"));
+                display.setCursor(66, ypos);
+                display.print(findStringInIdStr(enum_DefaultGNSSUnits, Sys.defaultGnssUnits));
+                if(isFocused)
+                  drawCursor(58, ypos);
+                if(edit) 
+                  Sys.defaultGnssUnits = incDec(Sys.defaultGnssUnits, 0, GNSS_DEFAULT_UNITS_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
+              }
+              break;
 
+            case ITEM_CUSTOM_GNSS_DISTANCE_UNITS:
+              {
+                display.print(F("Distance:"));
+                display.setCursor(66, ypos);
+                display.print(findStringInIdStr(enum_DisplayedUnits, Sys.customGnssDistanceUnits));
+                if(isFocused)
+                  drawCursor(58, ypos);
+                if(edit) 
+                  Sys.customGnssDistanceUnits = incDec(Sys.customGnssDistanceUnits, UNITS_DISTANCE_FIRST, UNITS_DISTANCE_LAST, INCDEC_WRAP, INCDEC_SLOW);
+              }
+              break;
+
+            case ITEM_CUSTOM_GNSS_SPEED_UNITS:
+              {
+                display.print(F("Speed:"));
+                display.setCursor(66, ypos);
+                display.print(findStringInIdStr(enum_DisplayedUnits, Sys.customGnssSpeedUnits));
+                if(isFocused)
+                  drawCursor(58, ypos);
+                if(edit) 
+                  Sys.customGnssSpeedUnits = incDec(Sys.customGnssSpeedUnits, UNITS_SPEED_FIRST, UNITS_SPEED_LAST, INCDEC_WRAP, INCDEC_SLOW);
+              }
+              break;
+              
+            case ITEM_CUSTOM_GNSS_ALTITUDE_UNITS:
+              {
+                display.print(F("Altitude:"));
+                display.setCursor(66, ypos);
+                display.print(findStringInIdStr(enum_DisplayedUnits, Sys.customGnssAltitudeUnits));
+                if(isFocused)
+                  drawCursor(58, ypos);
+                if(edit && (buttonCode == KEY_UP || buttonCode == KEY_DOWN))
+                {
+                  do {
+                    Sys.customGnssAltitudeUnits = incDec(Sys.customGnssAltitudeUnits, UNITS_DISTANCE_FIRST, UNITS_DISTANCE_LAST, INCDEC_WRAP, INCDEC_SLOW);
+                  } while (Sys.customGnssAltitudeUnits != UNITS_METRES && Sys.customGnssAltitudeUnits != UNITS_FEET);
+                }
+              }
+              break;
+          }
+        }
+        
+        //Draw scroll bar
+        drawScrollBar(127, 9, listItemCount, topItem, 6, 6 * 9);
+        
         //exit
         if(heldButton == KEY_SELECT)
         {
           changeToScreen(SCREEN_SYSTEM_MENU);
+          viewInitialised = false;
         }
       }
       break;
@@ -10316,7 +10588,7 @@ void handleMainUI()
                   display.print(F(":"));
                   display.setCursor(42, ypos);
                   uint8_t val = outputChConfig[idx] & 0x03;
-                  display.print(findStringInIdStr(enum_outputChConfig, val));
+                  display.print(findStringInIdStr(enum_OutputChConfig, val));
                 }
               }
               
@@ -10966,11 +11238,24 @@ void drawHeader(const char* str)
 {
   strlcpy_P(textBuff, str, sizeof(textBuff));
   uint8_t textWidthPix = strlen(textBuff) * 6;
-  uint8_t headingXOffset = (display.width() - textWidthPix) / 2; //middle align heading
+  uint8_t headingXOffset = (display.width() - textWidthPix) / 2; //middle align
   display.setCursor(headingXOffset, 0);
   display.print(textBuff);
   display.drawHLine(0, 3, headingXOffset - 2, BLACK);
   display.drawHLine(headingXOffset + textWidthPix + 1, 3, 128 - (headingXOffset + textWidthPix + 1), BLACK);
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void drawSubheader(const char* str, uint8_t ypos)
+{
+  strlcpy_P(textBuff, str, sizeof(textBuff));
+  uint8_t textWidthPix = strlen(textBuff) * 6;
+  uint8_t headingXOffset = (display.width() - textWidthPix) / 2; //middle align
+  display.setCursor(headingXOffset, ypos);
+  display.print(textBuff);
+  drawDottedHLine(0, ypos + 3, headingXOffset - 2, BLACK, WHITE);
+  drawDottedHLine(headingXOffset + textWidthPix + 1, ypos + 3, 126 - (headingXOffset + textWidthPix + 1), BLACK, WHITE);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -11230,35 +11515,42 @@ void drawDialogCopyMove(const char* str, uint8_t srcIdx, uint8_t destIdx, bool i
 
 //--------------------------------------------------------------------------------------------------
 
-void drawHorizontalBarChart(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t valMin, int16_t valMax)
+void drawHorizontalBarChart(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int32_t val, int32_t valMin, int32_t valMax)
 {
   display.drawRect(x, y, w, h, color);
-  if(val < valMin) val = valMin;
-  if(val > valMax) val = valMax;
-  if(valMin > valMax) return;
-  if(valMax - valMin == 0) return;
-  w = divRoundClosest(((int32_t)w - 2)* (val - valMin), valMax - valMin);
+  if(val < valMin) 
+    val = valMin;
+  if(val > valMax) 
+    val = valMax;
+  if(valMin > valMax) 
+    return;
+  if(valMax - valMin == 0) 
+    return;
+  w = divRoundClosest(((int32_t)w - 2) * (val - valMin), valMax - valMin);
   display.fillRect(x+1, y, w, h, color);
 }
 
 //--------------------------------------------------------------------------------------------------
 
-void drawHorizontalBarChartZeroCentered(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int16_t val, int16_t range)
+void drawHorizontalBarChartZeroCentered(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color, int32_t val, int32_t range)
 {
   int8_t xCenter = x + w/2;
   if(range != 0)
   {
-    if(range < 0) range = -range;
+    if(range < 0) 
+      range = -range;
     if(val > 0)
     {
-      if(val > range/2) val = range/2;
+      if(val > range/2) 
+        val = range/2;
       int8_t xLen = (val*w)/range;
       display.fillRect(xCenter, y, xLen + 1, h, color);
     }
     else if(val < 0)
     {
       val = -val;
-      if(val > range/2) val = range/2;
+      if(val > range/2) 
+        val = range/2;
       int8_t xLen = (val*w)/range;
       display.fillRect(xCenter - xLen, y, xLen, h, color);
     }
