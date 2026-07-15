@@ -52,7 +52,7 @@ void setup()
   pinMode(PIN_KEY_UP, INPUT_PULLUP);
   pinMode(PIN_KEY_DOWN, INPUT_PULLUP);
   
-  pinMode(PIN_BUZZER, OUTPUT);
+  pinMode(PIN_SPEAKER, OUTPUT);
   
   pinMode(PIN_POWER_OFF_SENSE, INPUT);
   pinMode(PIN_POWER_LATCH, OUTPUT);
@@ -658,6 +658,8 @@ void handleTelemetry()
       telemetryMaxReceivedValue[i] = TELEMETRY_NO_DATA;
       telemetryMinReceivedValue[i] = TELEMETRY_NO_DATA;
     }
+    //also reset the GNSSTelemetryData struct
+    memset(&GNSSTelemetryData, 0, sizeof(GNSSTelemetryData));
   }
 
   //-- reset RF link statistics if RF is disabled
