@@ -49,7 +49,7 @@
 #define PIN_BATTERY_VOLTS    A6
 
 #define PIN_LCD_BACKLIGHT   2
-#define PIN_BUZZER          3
+#define PIN_SPEAKER         3
 
 #define PIN_POWER_OFF_SENSE 12
 #define PIN_POWER_LATCH     13

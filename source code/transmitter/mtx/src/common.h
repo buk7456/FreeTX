@@ -44,6 +44,8 @@ void resetWidgetParams(uint8_t idx);
 
 bool changeLSReference(uint8_t newRef, uint8_t oldRef);
 
+void loadDefaultGnssUnits();
+
 bool verifySystemData();
 bool verifyModelData();
 
@@ -51,6 +53,8 @@ uint16_t joinBytes(uint8_t highByte, uint8_t lowByte);
 
 bool isEmptyStr(char* buff, uint8_t lenBuff);
 void trimWhiteSpace(char* buff, uint8_t lenBuff);
+
+void sanitize83BaseName(char *str);
 
 //----------------- Output channels -----------------------
 
@@ -208,6 +212,28 @@ extern uint8_t telemetryType;
 enum telemetry_type_e {
   TELEMETRY_TYPE_GENERAL = 0,
   TELEMETRY_TYPE_GNSS = 1,
+};
+
+enum displayed_units_e {
+  //altitude, distance
+  UNITS_METRES,
+  UNITS_METRES_KILOMETRES,
+  UNITS_KILOMETRES,
+  UNITS_FEET,
+  UNITS_FEET_MILES,
+  UNITS_MILES,
+  UNITS_DISTANCE_FIRST = UNITS_METRES,
+  UNITS_DISTANCE_LAST = UNITS_MILES,
+  //speed
+  UNITS_METRES_PER_SECOND,
+  UNITS_KILOMETRES_PER_HOUR,
+  UNITS_FEET_PER_SECOND,
+  UNITS_MILES_PER_HOUR,
+  UNITS_KNOTS,
+  UNITS_SPEED_FIRST = UNITS_METRES_PER_SECOND,
+  UNITS_SPEED_LAST = UNITS_KNOTS,
+
+  UNITS_COUNT
 };
 
 //--- General telemetry
@@ -387,6 +413,11 @@ typedef struct {
   uint8_t  defaultChannelOrder;
   uint8_t  inactivityMinutes;
   bool     showCurvePreviewInMixer;
+
+  uint8_t  defaultGnssUnits;
+  uint8_t  customGnssDistanceUnits;
+  uint8_t  customGnssSpeedUnits;
+  uint8_t  customGnssAltitudeUnits;
   
   //--- debug
   bool     DBG_showLoopTime;
@@ -455,6 +486,15 @@ enum stick_mode_e {
   STICK_MODE_COUNT
 };
 
+enum default_gnss_units_e {
+  GNSS_DEFAULT_UNITS_NONE,
+  GNSS_DEFAULT_UNITS_METRIC,
+  GNSS_DEFAULT_UNITS_IMPERIAL,
+  GNSS_DEFAULT_UNITS_CUSTOM,
+
+  GNSS_DEFAULT_UNITS_COUNT
+};
+
 //====================== MODEL PARAMETERS ==========================================================
 /* 
   NOTES & WARNINGS
@@ -491,7 +531,7 @@ typedef struct {
   char     unitsName[6];   //5 chars + null
   uint8_t  type;           
   uint8_t  identifier;     //ID 00 to FE. FF is unused
-  int16_t  multiplier;     //1 to 1000, scales to 0.01 to 10.00
+  int16_t  multiplier;     //1 to 10000, scales to 0.01 to 100.00
   int8_t   factor10;       //-3 to 3. Means x10^
   int16_t  offset;         //-30000 to 30000
   uint8_t  alarmCondition; //None, >Threshold, <Threshold
@@ -927,7 +967,10 @@ typedef struct {
   widget_params_t Widget[NUM_WIDGETS];
 
   //--- GNSS telemetry
-  //These should not be exported to the SD card, for privacy.
+  uint8_t gnssDistanceUnits;
+  uint8_t gnssSpeedUnits;
+  uint8_t gnssAltitudeUnits;
+  //The following should not be exported to the SD card, for privacy.
   int16_t gnssAltitudeOffset;
   int32_t gnssHomeLatitude;
   int32_t gnssHomeLongitude;

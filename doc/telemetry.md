@@ -30,25 +30,24 @@ should be done before sending the telemetry to the transmitter.
 GNSS telemetry is also supported. A premade template is used to add the GNSS sensor to the telemetry screen.  
 The receiver directly connects to the GNSS/GPS module via serial (UART), and handles parsing of the NMEA sentences 
 as well as data conversion. GPS, GLONASS, BeiDou, Galileo are supported.  
-The system remembers the last known location in case of a lost model, even when the transmitter is powered off.
+The system remembers the last known location in case of a lost model, even when the transmitter is powered off.  
+Various units of measurement can be displayed; metric and imperial supported.
 
 <p align="left">
-<img src="images/screenshots/telemetry_gnss.png"/>
+<img src="images/screenshots/telemetry_gnss_page_1.png" style="margin-right: 10px;"/>
+<img src="images/screenshots/telemetry_gnss_page_2.png"/>
 </p>
 
 - **Satellites:** The number of satellites in use / in view. "Fix" is appended when we have a position fix.
 - **Distance:** The calculated distance between the model's current location and the home location (starting point). 
 If the displayed distance is inaccurate, simply reset the starting point from the context menu. 
-- **Speed:** The current speed over ground in metres per second. Defaults to 0 when there is no incoming telemetry.
-- **Course:** The current course over ground in degrees. Defaults to 0 when there is no incoming telemetry.
-- **Altitude AGL:** The altitude above ground level in metres. If the value is inaccurate, reset it from the context menu.
-- **Altitude MSL:** The altitude relative to mean sea level in metres.
+- **Speed:** The speed over ground. This is the speed at which your model is moving relative to the Earth's surface. The last received value is shown when there is no incoming telemetry or no position fix. 
+- **Course:** The course over ground. This is direction of movement of your model over the Earth's surface, irrespective of the direction your model is pointing. The last received value is shown when there is no incoming telemetry or no position fix.
+- **Altitude AGL:** The altitude above ground level. If the value is inaccurate, reset it from the context menu. The last received value is shown when there is no incoming telemetry or no position fix.
+- **Altitude MSL:** The altitude relative to mean sea level. The last received value is shown when there is no incoming telemetry or no position fix. 
 - **Latitude and Longitude:** The location coordinates of the model. 
-Displays the last known location when there is no incoming telemetry.
+Displays the last known location when there is no incoming telemetry or no position fix.
 - **Starting point:** Displays the coordinates of the home location.
-
-**Note:**  
-If different units of measurement are desired, use the provided GNSS sensor sub-templates (speed, distance, altitude) and change the multiplier and units.
 
 ---
 

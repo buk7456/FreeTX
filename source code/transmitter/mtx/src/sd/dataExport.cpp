@@ -163,7 +163,9 @@ void exportModelData(File& file)
   }
   
   file.println(F("# ------ Telemetry ------"));
-  
+
+  bool hasGNSSTelemetrySensor = false;
+
   for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++)
   {
     telemetry_params_t *tlm = &Model.Telemetry[idx];
@@ -177,7 +179,10 @@ void exportModelData(File& file)
     writeKeyValue_Char(file, 1, key_Name, tlm->name);
     
     if(tlm->type == TELEMETRY_TYPE_GNSS)
+    {
+      hasGNSSTelemetrySensor = true;
       continue;
+    }
 
     writeKeyValue_Char(file, 1, key_UnitsName, tlm->unitsName);
     
@@ -194,6 +199,13 @@ void exportModelData(File& file)
     writeKeyValue_bool(file, 1, key_ShowOnHome, tlm->showOnHome);
     writeKeyValue_bool(file, 1, key_RecordMaximum, tlm->recordMaximum);
     writeKeyValue_bool(file, 1, key_RecordMinimum, tlm->recordMinimum);
+  }
+
+  if(hasGNSSTelemetrySensor)
+  {
+    writeKeyValue_Char(file, 0, key_GnssDistanceUnits, findStringInIdStr(enum_DisplayedUnits, Model.gnssDistanceUnits));
+    writeKeyValue_Char(file, 0, key_GnssSpeedUnits, findStringInIdStr(enum_DisplayedUnits, Model.gnssSpeedUnits));
+    writeKeyValue_Char(file, 0, key_GnssAltitudeUnits, findStringInIdStr(enum_DisplayedUnits, Model.gnssAltitudeUnits));
   }
 
   file.println(F("# ------ Timers ------"));
@@ -781,7 +793,12 @@ void exportSystemData(File& file)
 
   writeKeyValue_U32(file, 1, key_InactivityMinutes, Sys.inactivityMinutes);
   writeKeyValue_bool(file, 1, key_MixerCurvePreview, Sys.showCurvePreviewInMixer);
-
+  
+  writeKeyValue_Char(file, 1, key_DefaultGnssUnits, findStringInIdStr(enum_DefaultGNSSUnits, Sys.defaultGnssUnits));
+  writeKeyValue_Char(file, 1, key_CustomGnssDistanceUnits, findStringInIdStr(enum_DisplayedUnits, Sys.customGnssDistanceUnits));
+  writeKeyValue_Char(file, 1, key_CustomGnssSpeedUnits, findStringInIdStr(enum_DisplayedUnits, Sys.customGnssSpeedUnits));
+  writeKeyValue_Char(file, 1, key_CustomGnssAltitudeUnits, findStringInIdStr(enum_DisplayedUnits, Sys.customGnssAltitudeUnits));
+  
   file.println(F("# ------ Debug ------"));
 
   writeKeyValue_Char(file, 0, key_Debug, NULL);

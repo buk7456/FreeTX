@@ -15,7 +15,12 @@ shifts the usable range of the servo to -95 to 100.
 - **Override:** This is mainly a safety feature used for throttle cut, etc. It overrides the channel's output 
 with the specified value when the activation switch is on.
 - **Failsafe:** The receiver will output the specified value after about 1 second of signal loss from the transmitter.
-Supported modes are Hold, No pulse, or custom value.
+Supported modes are Hold, No pulse, or Custom value.  
+    - Hold - The receiver continues outputting the last value received prior to signal loss.  
+    - No pulse - The receiver stops outputting pulses when signal loss occurs.  
+    - Custom value - The receiver outputs a user-defined preset value.
+
+    Always ensure that the correct failsafe setting is being used for the respective channel, especially for channels controlling motors or engines.
 - **Endpoints:** Sets the overall travel or endpoints of the servo arm movement. Useful when we want to avoid any potential binding of a linkage or surface.
 - **Curve:** Specifies the custom curve to use for this output. Useful when we want to correct for linkage geometry, mechanical differences, etc.
 

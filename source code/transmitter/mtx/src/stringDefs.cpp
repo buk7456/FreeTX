@@ -86,10 +86,18 @@ const id_string_t enum_KnobType[] PROGMEM = {
   {0, ""}
 };
 
-const id_string_t enum_outputChConfig[] PROGMEM = {
+const id_string_t enum_OutputChConfig[] PROGMEM = {
   {SIGNAL_TYPE_DIGITAL, "Digital"},
   {SIGNAL_TYPE_SERVOPWM, "Servo PWM"},
   {SIGNAL_TYPE_PWM, "PWM"},
+  {0, ""}
+};
+
+const id_string_t enum_DefaultGNSSUnits[] PROGMEM = {
+  {GNSS_DEFAULT_UNITS_NONE, "None"},
+  {GNSS_DEFAULT_UNITS_METRIC, "Metric"},
+  {GNSS_DEFAULT_UNITS_IMPERIAL, "Imperial"},
+  {GNSS_DEFAULT_UNITS_CUSTOM, "Custom"},
   {0, ""}
 };
 
@@ -242,6 +250,21 @@ const id_string_t enum_TelemetryAlarmCondition[] PROGMEM = {
   {TELEMETRY_ALARM_CONDITION_LESS_THAN, "<Threshold"},
   {TELEMETRY_ALARM_CONDITION_GREATER_THAN, ">Thresh"}, //legacy support
   {TELEMETRY_ALARM_CONDITION_LESS_THAN, "<Thresh"}, //legacy support
+  {0, ""}
+};
+
+const id_string_t enum_DisplayedUnits[] PROGMEM = {
+  {UNITS_METRES, "m"},
+  {UNITS_METRES_KILOMETRES, "m, km"},
+  {UNITS_KILOMETRES, "km"},
+  {UNITS_FEET, "ft"},
+  {UNITS_FEET_MILES, "ft, mi"},
+  {UNITS_MILES, "mi"},
+  {UNITS_METRES_PER_SECOND, "m/s"},
+  {UNITS_KILOMETRES_PER_HOUR, "km/h"},
+  {UNITS_FEET_PER_SECOND, "ft/s"},
+  {UNITS_MILES_PER_HOUR, "mph"},
+  {UNITS_KNOTS, "knots"},
   {0, ""}
 };
 
@@ -433,6 +456,10 @@ const char key_ShowOnHome[] PROGMEM = "ShowOnHome";
 const char key_RecordMaximum[] PROGMEM = "RecordMaximum";
 const char key_RecordMinimum[] PROGMEM = "RecordMinimum";
 
+const char key_GnssDistanceUnits[] PROGMEM = "GnssDistanceUnits";
+const char key_GnssSpeedUnits[] PROGMEM = "GnssSpeedUnits";
+const char key_GnssAltitudeUnits[] PROGMEM = "GnssAltitudeUnits";
+
 const char key_Widget[] PROGMEM = "Widget";
 const char key_Type[] PROGMEM = "Type";
 const char key_Src[] PROGMEM = "Src";
@@ -517,6 +544,11 @@ const char key_MixerTemplatesEnabled[] PROGMEM = "MixerTemplates";
 const char key_DefaultChannelOrder[] PROGMEM = "DefaultChannelOrder";
 const char key_InactivityMinutes[] PROGMEM = "InactivityMinutes";
 const char key_MixerCurvePreview[] PROGMEM = "MixerCurvePreview";
+
+const char key_DefaultGnssUnits[] PROGMEM = "DefaultGnssUnits";
+const char key_CustomGnssDistanceUnits[] PROGMEM = "CustomDistanceUnits";
+const char key_CustomGnssSpeedUnits[] PROGMEM = "CustomSpeedUnits";
+const char key_CustomGnssAltitudeUnits[] PROGMEM = "CustomAltitudeUnits";
 
 const char key_Debug[] PROGMEM = "Debug";
 const char key_ShowLoopTime[] PROGMEM = "ShowLoopTime";

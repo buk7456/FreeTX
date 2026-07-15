@@ -1,5 +1,5 @@
 # Counters
-A counters stores and shows the number of times a particular event has occurred, in relationship to a clock signal.
+A counter stores and shows the number of times a particular event has occurred, in relationship to a clock signal.
 
 <p align="left">
 <img src="images/screenshots/counters_basic.png" style="margin-right: 10px;"/>
@@ -27,7 +27,6 @@ Assuming SwG is our 3 position momentary switch, setup the counter as follows.
 
 ```txt
 Counter1
----------
 Inc clock:  SwG_down
 Inc edge:   Rising
 Dec clock:  SwG_up
@@ -40,7 +39,6 @@ Then in the Mixer,
 
 ```txt
 1. Ch1  Add  Counter1  (Weight 100)
-
 ```
 
 Note: The mixer automatically maps the counter's value in proportion to the counter's modulus.  

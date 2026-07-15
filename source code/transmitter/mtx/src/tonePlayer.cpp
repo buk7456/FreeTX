@@ -182,7 +182,7 @@ bool isTrimBeepSound = false;
 
 void beginTone(const uint16_t* toneArray, size_t iSize)
 {
-  noTone(PIN_BUZZER); //stop any notes
+  noTone(PIN_SPEAKER); //stop any notes
   //initialise values
   size = iSize;
   endTimeOfNote = 0;
@@ -197,7 +197,7 @@ void beginTone(const uint16_t* toneArray, size_t iSize)
 
 void beginToneTrimMoved()
 {
-  noTone(PIN_BUZZER); //stop any notes
+  noTone(PIN_SPEAKER); //stop any notes
   //initialise values
   endTimeOfNote = 0;
   bpm = 250;
@@ -228,11 +228,11 @@ void playback()
     endTimeOfNote = currTime + duration;
     postn += 2;
     if(freq)
-      tone(PIN_BUZZER, freq, duration);
+      tone(PIN_SPEAKER, freq, duration);
   }
   else
   {
-    noTone(PIN_BUZZER);
+    noTone(PIN_SPEAKER);
     int16_t note = pgm_read_word(songStart + postn);
     /* 
     int16_t wholenote = (60 * 1000L / bpm) * 4;  // time for whole note in milliseconds
@@ -242,7 +242,7 @@ void playback()
     endTimeOfNote = currTime + duration;
     postn += 2;
     if(note)
-      tone(PIN_BUZZER, note, duration);
+      tone(PIN_SPEAKER, note, duration);
   }
 }
 
@@ -252,7 +252,7 @@ void stopPlayback()
 {
   if(isPlaying)
   {
-    noTone(PIN_BUZZER);
+    noTone(PIN_SPEAKER);
     isPlaying = false;
     isTrimBeepSound = false;
   }

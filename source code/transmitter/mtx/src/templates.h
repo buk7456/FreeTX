@@ -12,10 +12,10 @@ void loadSensorTemplateExtVolts4S(uint8_t telemIdx);
 void loadSensorTemplateRSSI(uint8_t telemIdx);
 void loadSensorTemplateLinkQuality(uint8_t telemIdx);
 void loadSensorTemplateGNSS(uint8_t telemIdx);
-void loadSensorTemplateGNSSSpeed(uint8_t telemIdx);
 void loadSensorTemplateGNSSDistance(uint8_t telemIdx);
-void loadSensorTemplateGNSSMSLAltitude(uint8_t telemIdx);
+void loadSensorTemplateGNSSSpeed(uint8_t telemIdx);
 void loadSensorTemplateGNSSAGLAltitude(uint8_t telemIdx);
+void loadSensorTemplateGNSSMSLAltitude(uint8_t telemIdx);
 
 uint8_t getChannelIdx(char c);
 

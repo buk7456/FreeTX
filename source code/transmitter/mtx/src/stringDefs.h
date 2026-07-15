@@ -34,7 +34,8 @@ extern const id_string_t enum_StickMode[] PROGMEM;
 extern const id_string_t enum_StickAxisType[] PROGMEM;
 extern const id_string_t enum_StickAxisName[] PROGMEM;
 extern const id_string_t enum_KnobType[] PROGMEM;
-extern const id_string_t enum_outputChConfig[] PROGMEM;
+extern const id_string_t enum_OutputChConfig[] PROGMEM;
+extern const id_string_t enum_DefaultGNSSUnits[] PROGMEM;
 
 //model related
 extern const id_string_t enum_ModelType[] PROGMEM;
@@ -60,6 +61,7 @@ extern const id_string_t enum_WidgetSource[] PROGMEM;
 extern const id_string_t enum_WidgetDisplay[] PROGMEM;
 extern const id_string_t enum_SwitchWarn[] PROGMEM;
 extern const id_string_t enum_ClockEdge[] PROGMEM;
+extern const id_string_t enum_DisplayedUnits[] PROGMEM;
 
 //---- Strings for the keys -----
 //Key descriptors should be unique, but can also be shared.
@@ -209,6 +211,10 @@ extern const char key_ShowOnHome[] PROGMEM;
 extern const char key_RecordMaximum[] PROGMEM;
 extern const char key_RecordMinimum[] PROGMEM;
 
+extern const char key_GnssDistanceUnits[] PROGMEM;
+extern const char key_GnssSpeedUnits[] PROGMEM;
+extern const char key_GnssAltitudeUnits[] PROGMEM;
+
 extern const char key_Widget[] PROGMEM;
 extern const char key_Type[] PROGMEM;
 extern const char key_Src[] PROGMEM;
@@ -294,6 +300,11 @@ extern const char key_MixerTemplatesEnabled[] PROGMEM;
 extern const char key_DefaultChannelOrder[] PROGMEM;
 extern const char key_InactivityMinutes[] PROGMEM;
 extern const char key_MixerCurvePreview[] PROGMEM;
+
+extern const char key_DefaultGnssUnits[] PROGMEM;
+extern const char key_CustomGnssDistanceUnits[] PROGMEM;
+extern const char key_CustomGnssSpeedUnits[] PROGMEM;
+extern const char key_CustomGnssAltitudeUnits[] PROGMEM;
 
 extern const char key_Debug[] PROGMEM;
 extern const char key_ShowLoopTime[] PROGMEM;
