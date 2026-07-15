@@ -183,24 +183,102 @@ void loadSensorTemplateGNSS(uint8_t telemIdx)
 
 void loadSensorTemplateGNSSSpeed(uint8_t telemIdx)
 {
-  loadTelemetryParams(telemIdx, PSTR("Speed"), PSTR("m/s"), SENSOR_ID_GNSS_SPEED, 100, -1, 0,
-                     TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+  switch(Model.gnssSpeedUnits)
+  {
+    case UNITS_METRES_PER_SECOND:
+      loadTelemetryParams(telemIdx, PSTR("Speed"), PSTR("m/s"), SENSOR_ID_GNSS_SPEED, 100, -1, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+      break;
+    case UNITS_KILOMETRES_PER_HOUR:
+      loadTelemetryParams(telemIdx, PSTR("Speed"), PSTR("km/h"), SENSOR_ID_GNSS_SPEED, 360, -1, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+      break;
+    case UNITS_FEET_PER_SECOND:
+      loadTelemetryParams(telemIdx, PSTR("Speed"), PSTR("ft/s"), SENSOR_ID_GNSS_SPEED, 3281, -2, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+      break;
+    case UNITS_MILES_PER_HOUR:
+      loadTelemetryParams(telemIdx, PSTR("Speed"), PSTR("mph"), SENSOR_ID_GNSS_SPEED, 224, -1, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+      break;
+    case UNITS_KNOTS:
+      loadTelemetryParams(telemIdx, PSTR("Speed"), PSTR("knots"), SENSOR_ID_GNSS_SPEED, 194, -1, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+      break;
+  }
 }
 
 void loadSensorTemplateGNSSDistance(uint8_t telemIdx)
 {
-  loadTelemetryParams(telemIdx, PSTR("Distance"), PSTR("m"), SENSOR_ID_GNSS_DISTANCE, 100, 0, 0, 
-                     TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+  switch(Model.gnssDistanceUnits)
+  {
+    case UNITS_METRES:
+    case UNITS_METRES_KILOMETRES:
+      loadTelemetryParams(telemIdx, PSTR("Distance"), PSTR("m"), SENSOR_ID_GNSS_DISTANCE, 100, 0, 0, 
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+      break;
+    case UNITS_KILOMETRES:
+      loadTelemetryParams(telemIdx, PSTR("Distance"), PSTR("km"), SENSOR_ID_GNSS_DISTANCE, 100, -3, 0, 
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+      break;
+    case UNITS_FEET:
+    case UNITS_FEET_MILES:
+      loadTelemetryParams(telemIdx, PSTR("Distance"), PSTR("ft"), SENSOR_ID_GNSS_DISTANCE, 328, 0, 0, 
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+      break;
+    case UNITS_MILES:
+      loadTelemetryParams(telemIdx, PSTR("Distance"), PSTR("mi"), SENSOR_ID_GNSS_DISTANCE, 62, -3, 0, 
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
+      break;
+  }
 }
 
 void loadSensorTemplateGNSSMSLAltitude(uint8_t telemIdx)
 {
-  loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("m"), SENSOR_ID_GNSS_MSL_ALTITUDE, 100, 0, 0,
-                     TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+  switch(Model.gnssAltitudeUnits)
+  {
+    case UNITS_METRES:
+    case UNITS_METRES_KILOMETRES:
+      loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("m"), SENSOR_ID_GNSS_MSL_ALTITUDE, 100, 0, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+      break;
+    case UNITS_KILOMETRES:
+      loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("km"), SENSOR_ID_GNSS_MSL_ALTITUDE, 100, -3, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+      break;
+    case UNITS_FEET:
+    case UNITS_FEET_MILES:
+      loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("ft"), SENSOR_ID_GNSS_MSL_ALTITUDE, 328, 0, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+      break;
+    case UNITS_MILES:
+      loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("mi"), SENSOR_ID_GNSS_MSL_ALTITUDE, 62, -3, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+      break;
+  }
 }
 
 void loadSensorTemplateGNSSAGLAltitude(uint8_t telemIdx)
 {
-  loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("m"), SENSOR_ID_GNSS_AGL_ALTITUDE, 100, 0, 0,
-                     TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+  switch(Model.gnssAltitudeUnits)
+  {
+    case UNITS_METRES:
+    case UNITS_METRES_KILOMETRES:
+      loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("m"), SENSOR_ID_GNSS_AGL_ALTITUDE, 100, 0, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+      break;
+    case UNITS_KILOMETRES:
+      loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("km"), SENSOR_ID_GNSS_AGL_ALTITUDE, 100, -3, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+      break;
+    case UNITS_FEET:
+    case UNITS_FEET_MILES:
+      loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("ft"), SENSOR_ID_GNSS_AGL_ALTITUDE, 328, 0, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+      break;
+    case UNITS_MILES:
+      loadTelemetryParams(telemIdx, PSTR("Altitude"), PSTR("mi"), SENSOR_ID_GNSS_AGL_ALTITUDE, 62, -3, 0,
+                         TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, true);
+      break;
+  }
 }
