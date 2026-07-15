@@ -39,7 +39,7 @@ The System menu provides comprehensive configuration options so you can tailor t
 <img src="images/screenshots/system_sound.png"/>
 </p>
 
-- **Enable:** Toggle all sounds on or off. When off, a mute icon appears on the home screen.
+- **Enable:** Toggle all sounds on or off. When off, a mute icon appears on the home screen. Holding the Down key while powering on will also mute all sounds.
 - **Inactivity:** Turn the inactivity alarm on or off. When enabled, a warning tone plays after a period without user interaction.
 - **Switches:** Play a tone when any physical switch is moved.
 - **Knobs:** Play a tone when a knob with a center detent is positioned at center.
@@ -92,6 +92,10 @@ The System menu provides comprehensive configuration options so you can tailor t
 - **Mixer templates:** Whether to enable the default mixer template when creating new models. Turning off this also removes the entry from the mixer context menu.
 - **Default channel order:** Specifies the default channel order when creating new models. E.g., selecting AETR sends Ail to Ch1, Ele to Ch2, Thr to Ch3, and Rud to Ch4 in the mixer. The order can always be overridden in the mixer; this option is merely a time saving feature for new models.
 - **Inactivity minutes:** How long before the inactivity event is triggered, specifically for the inactivity alarm.
+- **Default GNSS units:** Specifies the default units of measurement to use when adding the GNSS telemetry sensor template.
+Available options are Metric, Imperial, Custom, or None.  
+When set to Custom, the user can set custom defaults for Distance, Speed, and Altitude.  
+When set to None, the system prompts the user to select units whenever adding the GNSS sensor.
 
 <a id="section_id_advanced_settings"></a>
 

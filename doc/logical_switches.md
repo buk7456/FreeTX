@@ -31,11 +31,9 @@ We need to set up a logical switch say L1 as follows.
 
 ```txt
 L1
----
 Functn: AND
 Value1: SwA_down
 Value2: SwB_down
-
 ```
 Then in the mixer, we simply have to set the control switch to L1.
 
@@ -47,18 +45,15 @@ voltage (telemetry) falls below a certain threshold for more than say five secon
 
 ```txt
 L1
----
 Functn: a<x
 Value1: FlghtBatt
 Value2: 10.80 V
 Delay:  5.0 s
 
 L2
----
 Functn: Pulse
 Width:  1.0 s
 Period: 2.0 s
-
 ``` 
 Then in the mixer, we simply use L2 as the input source and L1 as the control switch for the mix, to
 operate the channel assigned to the LED lights.
@@ -71,24 +66,20 @@ reset.
 
 ```txt
 L1
----
 Functn: Toggle
 Clock:  SwH_down
 Edge:   Falling
 Clear:  L2
 
 L2
----
 Functn: a>x
 Value1: SwH
 Value2: 0
 Delay:  0.5 s
 
 Timer1
-------
 Switch: L1
 Reset:  L2
-
 ```
 
 <a id="section_id_throttle_timer_simple"></a>
@@ -99,21 +90,17 @@ Assume the throttle source is the Y1 axis.
 
 ```txt
 L1
----
 Functn: a>x
 Value1: Y1
 Value2: -90
 
 L2
----
 Functn: AND
 Value1: L1
 Value2: SwA_down
 
 Timer1
-------
 Switch: L2
-
 ```
 
 <a id="section_id_throttle_timer_advanced"></a>
@@ -127,7 +114,6 @@ Using the built-in function generator to generate a pulse width modulated signal
 
 ```txt
 Fgen1
------
 Waveform:   Pulse
 Width mode: Variable
 Modulator:  Y1
@@ -135,21 +121,17 @@ Reverse:    False
 Period:     1.0 s
 
 L1
----
 Functn: a>x
 Value1: Fgen1
 Value2: 0
 
 L2
----
 Functn: AND
 Value1: L1
 Value2: SwA_down
 
 Timer1
-------
 Switch: L2
-
 ```
 
 #### Method 2:
@@ -157,31 +139,25 @@ Using the mixer and a virtual channel to create a pulse width modulated signal t
 
 ```txt
 Mixer
------
 1. Virt1  Add  L1 (Weight 99, SlowUp 0.5 s, SlowDown 0.5 s)
 
 L1
----
 Functn: Pulse
 Width:  0.5 s
 Period: 1.0 s
 
 L2
----
 Functn: a>b
 Value1: Y1
 Value2: Virt1
 
 L3
----
 Functn: AND
 Value1: L2
 Value2: SwA_down
 
 Timer1
-------
 Switch: L3
-
 ```
 
 If desired, we can also include a custom curve through a virtual channel, to compensate for the real world
@@ -194,18 +170,15 @@ we can trigger some other action.
 
 ```txt
 L1
----
 Functn: a>=x
 Value1: Fgen1
 Value2: 0
 
 L2
----
 Functn: |delta|>x
 Value1: L1
 Value2: 0
 Dirctn: Both
-
 ```
 
 L2 will now output a brief pulse whenever the output of the function generator crosses zero.
@@ -219,17 +192,14 @@ Set up a '2-bit' binary counter with its outputs on L2 and L1 as follows.
 
 ```txt
 L1
----
 Functn: Toggle
 Clock:  SwH_down
 Edge:   Rising 
 
 L2
----
 Functn: Toggle
 Clock:  L1
 Edge:   Falling
-
 ```
 
 Use a truth table to set up logical switches L3, L4, L5, and L6
@@ -243,29 +213,24 @@ Use a truth table to set up logical switches L3, L4, L5, and L6
 
 ```txt
 L3
----
 Functn: AND
 Value1: !L2
 Value2: !L1
 
 L4
----
 Functn: AND
 Value1: !L2
 Value2: L1
 
 L5
----
 Functn: AND
 Value1: L2
 Value2: !L1
 
 L6
----
 Functn: AND
 Value1: L2
 Value2: L1
-
 ```
 
 Then in the Mixer,
@@ -275,43 +240,36 @@ Then in the Mixer,
 2. Ch1  RplcW  Max  (weight -33,   Switch L4)
 3. Ch1  RplcW  Max  (weight  33,   Switch L5)
 4. Ch1  RplcW  Max  (weight  100,  Switch L6)
-
 ```
 #### Method 2:
 This makes use of the built-in counter as follows.
 
 ```txt
 Counter1
---------
 Clock:   SwH_down
 Edge:    Rising
 Modulus: 4
 Dirctn:  Up
 
 L3
----
 Functn: a==x
 Value1: Counter1
 Value2: 0
 
 L4
----
 Functn: a==x
 Value1: Counter1
 Value2: 1
 
 L5
----
 Functn: a==x
 Value1: Counter1
 Value2: 2
 
 L6
----
 Functn: a==x
 Value1: Counter1
 Value2: 3
-
 ```
 Then in the Mixer,
 
@@ -333,19 +291,16 @@ Then set up a logical switch and custom notifications as follows.
 
 ```txt
 L1
----
 Functn: a>x
 Value1: LinkQlty
 Value2: 0
 
 Notification1
--------------
 Switch: L1
 Tone:   (Your preferred tone)
 Text:   RX connect
 
 Notification2
--------------
 Switch: !L1
 Tone:   (Your preferred tone)
 Text:   RX disconnect

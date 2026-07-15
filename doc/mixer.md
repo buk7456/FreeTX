@@ -213,7 +213,7 @@ Assuming we use the X1 axis to steer, Y1 axis as our throttle source, and the st
 
 <a id="section_id_adjust_throttle_idle"></a>
 ### Example 12: Adjust idle throttle with knob
-Suppose we have a gasoline-powered model and want to adjust the idle setting of engine with the knob without affecting full throttle.
+Suppose we want to adjust the idle setting of the engine, without affecting full throttle.
 Assuming the throttle servo is in Ch3,
 ```txt
 1. Ch3   Add     KnobA (Weight 20, Offset 20)
