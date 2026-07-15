@@ -258,6 +258,11 @@ void resetSystemParams()
   Sys.defaultChannelOrder = 0;
   Sys.inactivityMinutes = 10;
   Sys.showCurvePreviewInMixer = false;
+
+  Sys.defaultGnssUnits = GNSS_DEFAULT_UNITS_METRIC;
+  Sys.customGnssDistanceUnits = UNITS_METRES;
+  Sys.customGnssSpeedUnits = UNITS_METRES_PER_SECOND;
+  Sys.customGnssAltitudeUnits = UNITS_METRES;
   
   Sys.DBG_showLoopTime = false;
   Sys.DBG_simulateTelemetry = false;
@@ -410,6 +415,35 @@ void resetModelParams()
   Model.gnssLastKnownLongitude = 0;
   Model.gnssLastKnownAltitude = 0;
   Model.gnssLastKnownDistanceFromHome = 0;
+  loadDefaultGnssUnits();
+
+}
+
+//--------------------------------------------------------------------------------------------------
+
+void loadDefaultGnssUnits()
+{
+  switch(Sys.defaultGnssUnits)
+  {
+    case GNSS_DEFAULT_UNITS_METRIC:
+      Model.gnssDistanceUnits = UNITS_METRES_KILOMETRES;
+      Model.gnssSpeedUnits = UNITS_KILOMETRES_PER_HOUR;
+      Model.gnssAltitudeUnits = UNITS_METRES;
+      break;
+
+    case GNSS_DEFAULT_UNITS_IMPERIAL:
+      Model.gnssDistanceUnits = UNITS_FEET_MILES;
+      Model.gnssSpeedUnits = UNITS_MILES_PER_HOUR;
+      Model.gnssAltitudeUnits = UNITS_FEET;
+      break;
+    
+    case GNSS_DEFAULT_UNITS_NONE:
+    case GNSS_DEFAULT_UNITS_CUSTOM:
+      Model.gnssDistanceUnits = Sys.customGnssDistanceUnits;
+      Model.gnssSpeedUnits = Sys.customGnssSpeedUnits;
+      Model.gnssAltitudeUnits = Sys.customGnssAltitudeUnits;
+      break;
+  }
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -1061,3 +1095,57 @@ void trimWhiteSpace(char* buff, uint8_t lenBuff)
   buff[k] = '\0';  //add a null terminator
 }
 
+//--------------------------------------------------------------------------------------------------
+
+// Helper function for use when generating 8.3 file names.
+// It replaces all invalid characters in the base name with an underscore.
+// This function only validates individual characters. 
+// It does not enforce other 8.3 rules such as maximum 8-character base name, 
+// maximum 3-character extension, only one period separating name and extension.
+
+void sanitize83BaseName(char *str)
+{
+  //convert to upper case
+  size_t len = strlen(str);
+  for(size_t i = 0; i < len; i++)
+    str[i] = toupper(str[i]);
+  
+  //replace invalid characters
+  while (*str)
+  {
+    unsigned char c = (unsigned char)*str;
+    
+    if (isalnum(c))
+    {
+      str++;
+      continue;
+    }
+    
+    switch (c)
+    {
+      case '!':
+      case '#':
+      case '$':
+      case '%':
+      case '&':
+      case '\'':
+      case '(':
+      case ')':
+      case '-':
+      case '@':
+      // case '^':
+      case '_':
+      case '`':
+      case '{':
+      case '}':
+      case '~':
+        break; // Valid character
+        
+      default:
+        *str = '_'; // Invalid character, replace with underscore
+        break;
+    }
+
+    str++;
+  }
+}
