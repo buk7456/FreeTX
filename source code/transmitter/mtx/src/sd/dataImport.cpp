@@ -322,6 +322,21 @@ void extractConfig_Telemetry()
     hasEncounteredInvalidParam = true;
 }
 
+void extractConfig_GnssDistanceUnits()
+{
+  findIdInIdStr(enum_DisplayedUnits, valueBuff, Model.gnssDistanceUnits);
+}
+
+void extractConfig_GnssSpeedUnits()
+{
+  findIdInIdStr(enum_DisplayedUnits, valueBuff, Model.gnssSpeedUnits);
+}
+
+void extractConfig_GnssAltitudeUnits()
+{
+  findIdInIdStr(enum_DisplayedUnits, valueBuff, Model.gnssAltitudeUnits);
+}
+
 void extractConfig_Timers()
 {
   if(MATCH_P(keyBuff[1], key_Number))
@@ -1117,6 +1132,14 @@ void extractConfig_Miscellaneous()
     Sys.inactivityMinutes = atoi_with_prefix(valueBuff);
   else if(MATCH_P(keyBuff[1], key_MixerCurvePreview))
     readValue_bool(valueBuff, &Sys.showCurvePreviewInMixer);
+  else if(MATCH_P(keyBuff[1], key_DefaultGnssUnits))
+    findIdInIdStr(enum_DefaultGNSSUnits, valueBuff, Sys.defaultGnssUnits);
+  else if(MATCH_P(keyBuff[1], key_CustomGnssDistanceUnits))
+    findIdInIdStr(enum_DisplayedUnits, valueBuff, Sys.customGnssDistanceUnits);
+  else if(MATCH_P(keyBuff[1], key_CustomGnssSpeedUnits))
+    findIdInIdStr(enum_DisplayedUnits, valueBuff, Sys.customGnssSpeedUnits);
+  else if(MATCH_P(keyBuff[1], key_CustomGnssAltitudeUnits))
+    findIdInIdStr(enum_DisplayedUnits, valueBuff, Sys.customGnssAltitudeUnits);
   else
     hasEncounteredInvalidParam = true;
 }
@@ -1182,6 +1205,9 @@ void importModelData(File& file)
     else if(MATCH_P(keyBuff[0], key_CheckThrottle)) extractConfig_ThrottleWarning();
     else if(MATCH_P(keyBuff[0], key_SwitchWarn)) extractConfig_SwitchWarning();
     else if(MATCH_P(keyBuff[0], key_Telemetry)) extractConfig_Telemetry();
+    else if(MATCH_P(keyBuff[0], key_GnssDistanceUnits)) extractConfig_GnssDistanceUnits();
+    else if(MATCH_P(keyBuff[0], key_GnssSpeedUnits)) extractConfig_GnssSpeedUnits();
+    else if(MATCH_P(keyBuff[0], key_GnssAltitudeUnits)) extractConfig_GnssAltitudeUnits();
     else if(MATCH_P(keyBuff[0], key_Timer)) extractConfig_Timers();
     else if(MATCH_P(keyBuff[0], key_X1Trim)) extractConfig_X1Trim();
     else if(MATCH_P(keyBuff[0], key_Y1Trim)) extractConfig_Y1Trim();
