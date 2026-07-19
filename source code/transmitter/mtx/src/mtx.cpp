@@ -541,7 +541,7 @@ void doSerialCommunication()
           float lat2 = (float) GNSSTelemetryData.latitude / 100000;
           float lng2 = (float) GNSSTelemetryData.longitude / 100000; 
           gnssDistanceFromHome = (int32_t) distanceBetween(lat1, lng1, lat2, lng2);
-          //store last know position
+          //store last known position
           Model.gnssLastKnownLatitude = GNSSTelemetryData.latitude;
           Model.gnssLastKnownLongitude = GNSSTelemetryData.longitude;
           Model.gnssLastKnownAltitude = GNSSTelemetryData.altitude;
