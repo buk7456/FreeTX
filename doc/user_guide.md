@@ -19,3 +19,6 @@
 - [Telemetry](telemetry.md)  
 - [System](system_settings.md)  
 - [Receiver](receiver_config.md)  
+
+See also
+- [Frequently Asked Questions](faq.md)  

@@ -18,9 +18,16 @@ Many of these numbers are easily customisable in the source code, the limit bein
 
 ## System architecture
 
-#### Hardware block diagram
+### Transmitter hardware block diagram
+
 <p align="left">
 <img src="images/tx_block_diagram.png" width="600"/>
+</p>
+
+### Receiver hardware block diagram
+
+<p align="left">
+<img src="images/rx_block_diagram.png" width="600"/>
 </p>
 
 ## RF protocol
@@ -33,6 +40,5 @@ The main features are:-
 - Telemetry support
 
 ---
-
 
 Back to [user guide](user_guide.md).
