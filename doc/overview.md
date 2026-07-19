@@ -21,13 +21,13 @@ Many of these numbers are easily customisable in the source code, the limit bein
 ### Transmitter hardware block diagram
 
 <p align="left">
-<img src="images/tx_block_diagram.png"/>
+<img src="images/tx_block_diagram.png" width="600"/>
 </p>
 
 ### Receiver hardware block diagram
 
 <p align="left">
-<img src="images/rx_block_diagram.png"/>
+<img src="images/rx_block_diagram.png" width="600"/>
 </p>
 
 ## RF protocol
