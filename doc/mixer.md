@@ -38,9 +38,9 @@ Counters can also be used as inputs in the mixer, although they are not classifi
 
 ## Control switches
 These can be used to activate or deactivate various functions, for example enabling or disabling mixes, starting or stopping timers, and more. The following control switches are available:
-- Physical switches (SwA↑, SwA−, SwA↓, etc.).
-- Logical switches (L1, L2, !L1, !L2, etc.).
-- Trim buttons (X1Trim←, X1Trim→, Y1Trim↑, Y1Trim↓, etc.).
+- Physical switches (SwA↑, SwA−, SwA↓, etc.)
+- Logical switches (L1, L2, !L1, !L2, etc.)
+- Trim buttons (X1Trim←, X1Trim→, Y1Trim↑, Y1Trim↓, etc.)
 - Flight modes as control switches (Fmd1, Fmd2, !Fmd1, !Fmd2, etc.)
 
 The symbols "↑", "−", and "↓" correspond to the up, middle (center), and down positions of physical switches, respectively.  
