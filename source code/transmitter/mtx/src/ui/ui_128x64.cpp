@@ -194,7 +194,7 @@ enum {
 
   //gnss telemetry
   SCREEN_TELEMETRY_GNSS,
-  SCREEN_SELECT_GNSSS_UNITS,
+  SCREEN_SELECT_GNSS_UNITS,
   
   //---- System settings ----
 
@@ -6850,7 +6850,7 @@ void handleMainUI()
         {
           loadSensorTemplateGNSS(thisTelemIdx);
           if(Sys.defaultGnssUnits == GNSS_DEFAULT_UNITS_NONE)
-            changeToScreen(SCREEN_SELECT_GNSSS_UNITS);
+            changeToScreen(SCREEN_SELECT_GNSS_UNITS);
           else
           {
             loadDefaultGnssUnits();
@@ -6927,7 +6927,7 @@ void handleMainUI()
         if(contextMenuSelectedItemID == ITEM_EDIT_SENSOR) changeToScreen(SCREEN_EDIT_SENSOR);
         if(contextMenuSelectedItemID == ITEM_DELETE_SENSOR) changeToScreen(CONFIRMATION_DELETE_SENSOR);
         if(contextMenuSelectedItemID == ITEM_VIEW_GNSS_DATA) changeToScreen(SCREEN_TELEMETRY_GNSS);
-        if(contextMenuSelectedItemID == ITEM_CHANGE_GNSS_UNITS) changeToScreen(SCREEN_SELECT_GNSSS_UNITS);
+        if(contextMenuSelectedItemID == ITEM_CHANGE_GNSS_UNITS) changeToScreen(SCREEN_SELECT_GNSS_UNITS);
         if(contextMenuSelectedItemID == ITEM_RESET_AGL_ALTITUDE)
         {
           if(GNSSTelemetryData.positionFix != 0)
@@ -7412,7 +7412,7 @@ void handleMainUI()
       }
       break;
 
-    case SCREEN_SELECT_GNSSS_UNITS:
+    case SCREEN_SELECT_GNSS_UNITS:
       {
         drawHeader(PSTR("Select units"));
 
