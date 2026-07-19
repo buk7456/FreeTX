@@ -94,7 +94,7 @@ void LCDKS0108::drawVLine(uint8_t x, uint8_t y, uint8_t h, uint8_t color)
   //determine the start and end page in the display buffer (0 to 7). The display buffer is divided
   //into 8 pages, just like the LCD's RAM, with each page containing 128 bytes (columns)
   uint8_t y8s = y0/8; //start page
-  uint8_t y8e = y1/8; //end end page
+  uint8_t y8e = y1/8; //end page
   
   const uint8_t ystab[8] = {0xff, 0xfe, 0xfc, 0xf8, 0xf0, 0xe0, 0xc0, 0x80};
   const uint8_t yetab[8] = {0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, 0xff};
