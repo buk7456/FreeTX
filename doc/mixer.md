@@ -23,29 +23,30 @@ This controller features a mixer system that draws inspiration from that found i
 
 ## Mixer sources
 Mixer sources can be any of the following:
-- Raw stick axes (X1, Y1, X2, Y2, ...)
+- Raw stick axes (X1, Y1, X2, Y2, etc.)
 - Processed sticks (Rud/Yaw, Thr, Ail/Roll, Ele/Pitch)
 - Knobs (KnobA, KnobB)
 - Constants (Max)
-- Function generators (Fgen1, Fgen2, ...)
+- Function generators (Fgen1, Fgen2, etc.)
 - Trims (X1Trim, Y1Trim, X2Trim, Y2Trim)
-- Physical switches (SwA, SwB, ...)
-- Logical switches (L1, L2, ...)
-- Channels (Ch1, Ch2, ...)
-- Virtual channels (Virt1, Virt2, ...)
+- Physical switches (SwA, SwB, etc.)
+- Logical switches (L1, L2, etc.)
+- Channels (Ch1, Ch2, etc.)
+- Virtual channels (Virt1, Virt2, etc.)
 
 Counters can also be used as inputs in the mixer, although they are not classified as true mixer sources.
 
 ## Control switches
-- Physical switches (SwA↑, SwA−, SwA↓, ...).
-- Logical switches (L1, L2, ..., !L1, !L2, ...).
-- Trim buttons (X1Trim←, X1Trim→, Y1Trim↑, Y1Trim↓, ...).
-- Flight modes as control switches (Fmd1, Fmd2, ..., !Fmd1, !Fmd2, ...)
+These can be used to activate or deactivate various functions, for example enabling or disabling mixes, starting or stopping timers, and more. The following control switches are available:
+- Physical switches (SwA↑, SwA−, SwA↓, etc.).
+- Logical switches (L1, L2, !L1, !L2, etc.).
+- Trim buttons (X1Trim←, X1Trim→, Y1Trim↑, Y1Trim↓, etc.).
+- Flight modes as control switches (Fmd1, Fmd2, !Fmd1, !Fmd2, etc.)
 
-**Note:**
-- The symbols ↑, −, ↓ correspond to the up, middle (center), and down positions of physical switches, respectively. The ↑ and ↓ symbols are also used on vertical trim buttons to indicate an active upward or downward press.
-- The symbols ←, → denote the left and right press states of the horizontal trim buttons.
-- The ! symbol functions as a logical NOT operator. For example, the condition "!SwC↑" evaluates as true when Switch C is not in the up position.
+The symbols "↑", "−", and "↓" correspond to the up, middle (center), and down positions of physical switches, respectively.  
+The "↑" and "↓" symbols are also used on vertical trim buttons to indicate an active upward or downward press.  
+The "←", and "→" symbols also denote the left and right press states of the horizontal trim buttons.  
+The "!" symbol indicates a logical NOT operator. For example, the condition "!SwC↑" evaluates as true when SwC is not in the up position.
 
 ## Order of mixer operations
 <p align="left">
