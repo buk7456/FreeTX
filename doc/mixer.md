@@ -7,6 +7,20 @@ This controller features a mixer system that draws inspiration from that found i
 <img src="images/screenshots/mixer_context_menu.png"/>
 </p>
 
+## Mixer fields
+- **Output:** The channel that is to be affected by the mix. If none, the mix is inactive and is not computed.
+- **Switch:** The control switch to turn the mix on or off. The mix is always active if no switch is specified.
+- **Operation:** Add, Multiply, Replace with, Hold.
+- **Input:** This is the mixer source.
+- **Weight:** Determines how much of an effect the input has on the output. -100 to 100.
+- **Offset:** The input is offset by this value after the weight has been applied. -100 to 100.
+- **Curve:** Differential, Expo, Function, Custom curve.
+- **Curve value:** Differential {-100 to 100}, Expo {-100 to 100}, Function {x>0, x<0, |x|}, Curve name if custom curve.
+- **Trim:** Whether to add trim or not.
+- **F-Mode:** The flight mode in which the mix applies.
+- **Delay Up and Down:** This is used to delay the input. 0 to 60 seconds.
+- **Slow Up and Down:** This when non-zero specifies how fast the input changes. 0 to 60 seconds.
+
 ## Mixer sources
 Mixer sources can be any of the following:
 - Raw stick axes (X1, Y1, X2, Y2, ...)
@@ -22,19 +36,16 @@ Mixer sources can be any of the following:
 
 Counters can also be used as inputs in the mixer, although they are not classified as true mixer sources.
 
-## Mixer fields
-- **Output:** The channel that is to be affected by the mix. If none, the mix is inactive and is not computed.
-- **Switch:** The control switch to turn the mix on or off. The mix is always active if no switch is specified.
-- **Operation:** Add, Multiply, Replace, Hold.
-- **Input:** This is the mixer source.
-- **Weight:** Determines how much of an effect the input has on the output. -100 to 100.
-- **Offset:** The input is offset by this value after the weight has been applied. -100 to 100.
-- **Curve:** Differential, Expo, Function, Custom curve.
-- **Curve value:** Differential {-100 to 100}, Expo {-100 to 100}, Function {x>0, x<0, |x|}, Curve name if custom curve.
-- **Trim:** Whether to add trim or not.
-- **F-Mode:** The flight mode in which the mix applies.
-- **Delay Up and Down:** This is used to delay the input. 0 to 60 seconds.
-- **Slow Up and Down:** This when non-zero specifies how fast the input changes. 0 to 60 seconds.
+## Control switches
+- Physical switches (SwA↑, SwA−, SwA↓, ...).
+- Logical switches (L1, L2, ..., !L1, !L2, ...).
+- Trim buttons (X1Trim←, X1Trim→, Y1Trim↑, Y1Trim↓, ...).
+- Flight modes as control switches (Fmd1, Fmd2, ..., !Fmd1, !Fmd2, ...)
+
+**Note:**
+- The symbols ↑, −, ↓ correspond to the up, middle (center), and down positions of physical switches, respectively. The ↑ and ↓ symbols are also used on vertical trim buttons to indicate an active upward or downward press.
+- The symbols ←, → denote the left and right press states of the horizontal trim buttons.
+- The ! symbol functions as a logical NOT operator. For example, the condition "!SwC↑" evaluates as true when Switch C is not in the up position.
 
 ## Order of mixer operations
 <p align="left">
@@ -55,12 +66,11 @@ Counters can also be used as inputs in the mixer, although they are not classifi
 - **Show overview:** Display a summary of the configured mixes. In the overview screen, click the Select button to display a tooltip with extra information about the highlighted mix line.
 
 ## Important safety note
-When editing mixes, it is recommended to disable RF output or remove propellers first.
-<br>This is because all changes/adjustments made are applied instantly and may bring surprises :-)
+When editing mixes, it is recommended to disable RF output or remove propellers first. This is because all changes/adjustments made are applied instantly and may bring surprises.
 
 ## Example mixes
 **Note:** 
-- The convention used in these examples is -ve for left/downward going control surfaces, +ve for right/upward going control surfaces. For example if the Ail stick is moved right, the left aileron moves down and the right aileron moves up. Hence we use a negative weight for the left aileron and a positive weight for the right aileron.
+- The convention used in these examples is negative for left/downward going control surfaces, positive for right/upward going control surfaces. For example if the Ail stick is moved right, the left aileron moves down and the right aileron moves up. Hence we use a negative weight for the left aileron and a positive weight for the right aileron.
 - If a servo is moving in wrong direction, reversing the direction in Outputs screen solves this.
 - The Mixer is all about control logic. Any mechanical differences should be handled in the Outputs screen and not inside the Mixer.
 
