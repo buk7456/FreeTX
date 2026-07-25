@@ -82,6 +82,12 @@ Switch: L1
 Reset:  L2
 ```
 
+Explanation:  
+The output of L1 toggles whenever SwH is released. L1 is then used to run/stop the timer.  
+L2 goes high when SwH is down for more than 0.5 seconds, providing a signal for resetting the timer.
+L2 is also used to clear the state of L1 such that resetting the timer does not falsely trigger it to run on releasing the switch.
+
+
 <a id="section_id_throttle_timer_simple"></a>
 ### Example 4: Throttle timer (simple)
 When the throttle is moved beyond a certain threshold, the timer runs.  
@@ -134,6 +140,11 @@ Timer1
 Switch: L2
 ```
 
+Explanation:  
+The throttle source (Y1 axis) is used to modulate the pulse width of the generated pulse waveform.  
+Since the timer only accepts signals from control switches, we need to convert the output from the function generator. This is done via L1.  
+When SwA is in the down position, the resulting signal is passed to the timer to control it.
+
 #### Method 2:
 Using the mixer and a virtual channel to create a pulse width modulated signal that controls the timer.
 
@@ -159,6 +170,9 @@ Value2: SwA_down
 Timer1
 Switch: L3
 ```
+Explanation:  
+L1 and Virt1 effectively create a triangle waveform, which gets compared with the value of the throttle source (Y1 axis) via L2.
+When SwA is in the down position, the resulting signal is passed to the timer to control it.
 
 If desired, we can also include a custom curve through a virtual channel, to compensate for the real world
 nonlinear relationship between current draw and throttle value. 

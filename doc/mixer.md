@@ -538,7 +538,7 @@ This example illustrates a method for adjusting aileron differential in-flight, 
 tweak the setting. It is quite handy for experimenting with different values and helping with fine tuning.  
 As we rotate the knob clockwise, the differential increases from 0% to 100%.
 
-Setup a logical switch as follows.
+Set up a logical switch as follows.
 ```txt
 L1
 Func:   a>x
