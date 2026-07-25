@@ -150,6 +150,7 @@ const id_string_t enum_FuncgenWidthMode[] PROGMEM = {
 
 const id_string_t enum_FuncgenPhaseMode[] PROGMEM = {
   {FUNCGEN_PHASEMODE_AUTO, "Auto"},
+  {FUNCGEN_PHASEMODE_AUTO, "Automatic"}, //alias
   {FUNCGEN_PHASEMODE_FIXED, "Fixed"},
   {0, ""}
 };
@@ -280,6 +281,7 @@ const id_string_t enum_WidgetType[] PROGMEM = {
 
 const id_string_t enum_WidgetSource[] PROGMEM = {
   {WIDGET_SRC_AUTO, "Auto"},
+  {WIDGET_SRC_AUTO, "Automatic"}, //alias
   {0, ""}
 };
 
