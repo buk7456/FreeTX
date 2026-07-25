@@ -78,7 +78,8 @@ The System menu provides comprehensive configuration options so you can tailor t
 - **Always show hours:** Whether to always show the hours digits for timers.
 - **Numeric battery voltage:** Replaces the graphical battery gauge with the actual voltage readout on the home screen.
 - **Welcome message:** Turns on/off the "Welcome" message when starting up the handset. 
-- **Splash screen:** Whether to show the user's custom splash screen during boot. See the "splash screen" folder for instructions on how to make a custom splash screen.
+- **Splash screen:** Whether to show the user's custom splash screen during boot.  
+To make a custom splash screen, create a monochrome bitmap image with 128x64 px resolution and save it as "SPLASH.BMP" inside the "IMAGES" folder on the SD card.
 
 <a id="section_id_miscellaneous"></a>
 
