@@ -32,6 +32,8 @@ const char* model_backup_directory = "MODELS/";
 File modelDir;
 bool isModelDirectoryOpen = false; //keeps track of open status
 
+void showMonochromeBMP();
+
 //--------------------------------------------------------------------------------------------------
 
 void sdStoreInit()
@@ -282,21 +284,32 @@ bool sdSimilarModelExists(const char *name)
 
 //============================ Splash screen =======================================================
 
+#define MAX_PATH_SIZE 26 
+static const char splash_full_name_str[MAX_PATH_SIZE] PROGMEM = "IMAGES/SPLASH";         // Raw bytes, headerless
+static const char splash_BMP_full_name_str[MAX_PATH_SIZE] PROGMEM = "IMAGES/SPLASH.BMP"; // BMP
+
 void sdShowSplashScreen()
 {
   if(!hasSDcard)
     return;
+
+  char filename[MAX_PATH_SIZE];
+ 
+  // Check for the BMP first, then fallback to the Raw
+  strlcpy_P(filename, splash_BMP_full_name_str, sizeof(filename));
+  if(SD.exists(filename))
+  {
+    showMonochromeBMP();
+    return;
+  }
   
-  static const char splash_full_name_str[] PROGMEM = "IMAGES/SPLASH";
-  
-  char pathName[sizeof(splash_full_name_str)];
-  strlcpy_P(pathName, splash_full_name_str, sizeof(pathName));
+  strlcpy_P(filename, splash_full_name_str, sizeof(filename));
   
   //abort if it doesn't exist
-  if(!SD.exists(pathName))
+  if(!SD.exists(filename))
     return;
   
-  File myFile = SD.open(pathName);
+  File myFile = SD.open(filename);
   if(myFile)
   {
     if(myFile.isDirectory())//not a file, abort
@@ -355,6 +368,81 @@ void sdShowSplashScreen()
     //delay to make it noticeable
     delay(3000);
   }
+}
+
+//---------------------------- BMP splash helper ---------------------------------------------------
+
+void showMonochromeBMP()
+{
+  char filename[MAX_PATH_SIZE];
+  strlcpy_P(filename, splash_BMP_full_name_str, sizeof(filename));
+  
+  // abort if it doesn't exist
+  if(!SD.exists(filename))
+    return;
+
+  File bmp = SD.open(filename);
+
+  if(!bmp)
+    return;
+
+  uint8_t header[54];
+
+  if(bmp.read(header, 54) != 54)
+  {
+    bmp.close();
+    return;
+  }
+
+  // check BMP signature
+  if(header[0] != 'B' || header[1] != 'M')
+  {
+    bmp.close();
+    return;
+  }
+
+  uint32_t dataOffset = *(uint32_t *)&header[10];
+  int32_t width = *(int32_t *)&header[18];
+  int32_t height = *(int32_t *)&header[22];
+  uint16_t bpp = *(uint16_t *)&header[28];
+
+  if(width != 128 || (height != 64 && height != -64) || bpp != 1)
+  {
+    bmp.close();
+    return;
+  }
+
+  bool topDown = (height < 0);
+  int absHeight = abs(height);
+  uint16_t rowSize = ((width + 31) / 32) * 4;
+  
+  bmp.seek(dataOffset);
+  
+  uint8_t row[16];  // 128 pixels = 16 bytes
+  
+  display.clearDisplay();
+  display.fillRect(0, 0, 128, 64, BLACK);
+
+  for(int rowNum = 0; rowNum < absHeight; rowNum++)
+  {
+    bmp.read(row, rowSize);
+    int y = topDown ? rowNum : (absHeight - 1 - rowNum);
+    for(int x = 0; x < width; x++)
+    {
+      uint8_t b = row[x >> 3];
+      if(b & (0x80 >> (x & 7)))
+      {
+        display.drawPixel(x, y, WHITE);
+      }
+    }
+  }
+
+  bmp.close();
+  
+  display.display();
+  
+  //delay to make it noticeable
+  delay(3000);
 }
 
 //============================ Screenshot writer ===================================================
