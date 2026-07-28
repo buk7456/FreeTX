@@ -7,9 +7,8 @@ Each receiver supports up to 10 channels. To use all the 20 channels, two receiv
 
 ## Binding to a receiver
 A receiver can be bound as either a main receiver or a secondary receiver.  
-By default, RC channels 1 to 10 are handled by the main receiver, while RC channels 11 to 20 are handled by the secondary receiver.  
-To bind, select the bind option, then cycle the power to the receiver. If the binding is successful, a "Success" toast message will be shown and a tune played.  
-Also note that only the main receiver can send back telemetry.
+By default, RC channels 1 to 10 are handled by the main receiver, while RC channels 11 to 20 are handled by the secondary receiver. Only the main receiver can send back telemetry.  
+To bind, select the bind option, then cycle the power to the receiver. If the binding is successful, a "Success" toast message will be shown and a tune played.
 
 ## Configuring receiver outputs
 The receiver outputs can be configured from the transmitter to any of the three signal types; 
