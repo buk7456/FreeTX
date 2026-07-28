@@ -77,7 +77,7 @@ Modulus:    100
 Rollover:   False
 ```
 
-Here, the modulus can be any value. For example if our modulus is 100, it will take 4 seconds (=100/25) to increment from 0 to 99.  
+Here, the modulus can be any value. For example if the modulus is 100, it will take 4 seconds (=100/25) to increment from 0 to 99.  
 
 We then use the counter as input inside the Mixer like follows. 
 
