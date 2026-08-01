@@ -31,7 +31,9 @@ Three buttons are used for navigating the user interface i.e. Up, Select, Down. 
 </p>
 
 ## User guide
-[User guide](doc/user_guide.md)
+[User guide](doc/user_guide.md)  
+
+A PDF version is also available [here.](https://raw.githubusercontent.com/buk7456/FreeTX/main/doc/FreeTX%20-%20User%20manual.pdf)
 
 ## Gallery
 
