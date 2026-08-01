@@ -42,23 +42,23 @@ int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEna
   
   if(initialSpeed == INCDEC_SLOW && finalSpeed == INCDEC_NORMAL)
   {
-    if(timeQQ > 2000 + LONGPRESSDELAY)
+    if(timeQQ > 2500 + LONGPRESSDELAY)
     {
       speed = INCDEC_NORMAL;
-      timeOffset = 2000;
+      timeOffset = 2500;
     }
   }
   else if(initialSpeed == INCDEC_SLOW && finalSpeed == INCDEC_FAST)
   {
-    if(timeQQ > 2000 + LONGPRESSDELAY)
+    if(timeQQ > 2500 + LONGPRESSDELAY)
     {
       speed = INCDEC_NORMAL;
-      timeOffset = 2000;
+      timeOffset = 2500;
     }
-    if(timeQQ > 6000 + LONGPRESSDELAY)
+    if(timeQQ > 6500 + LONGPRESSDELAY)
     {
       speed = INCDEC_FAST;
-      timeOffset = 6000;
+      timeOffset = 6500;
     }
   }
   else if(initialSpeed == INCDEC_NORMAL && finalSpeed == INCDEC_FAST)
