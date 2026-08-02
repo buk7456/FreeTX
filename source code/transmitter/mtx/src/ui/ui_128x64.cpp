@@ -3822,8 +3822,18 @@ void handleMainUI()
               
               //input 
               display.setCursor(67, ypos);
-              getSrcName(textBuff, Model.Mixer[mixIdx].input, sizeof(textBuff));
-              display.print(textBuff);
+              if(Model.Mixer[mixIdx].input >= SRC_COUNTER_FIRST && Model.Mixer[mixIdx].input <= SRC_COUNTER_LAST 
+                 && Model.Mixer[mixIdx].swtch != CTRL_SW_NONE)
+              {
+                //fix for text overflowing when input is a counter and there is a switch assigned
+                display.print(F("Cntr"));
+                display.print(Model.Mixer[mixIdx].input - SRC_COUNTER_FIRST + 1);
+              }
+              else
+              {
+                getSrcName(textBuff, Model.Mixer[mixIdx].input, sizeof(textBuff));
+                display.print(textBuff);
+              }
             }
             
             //swtch, right aligned
