@@ -902,9 +902,7 @@ void handleMainUI()
               {
                 int32_t tVal = ((int32_t) telemetryReceivedValue[idx] * Model.Telemetry[idx].multiplier) / 100;
                 tVal += Model.Telemetry[idx].offset;
-                int32_t valMin = ((int32_t) widget->gaugeMin * Model.Telemetry[idx].multiplier) / 100;
-                int32_t valMax = ((int32_t) widget->gaugeMax * Model.Telemetry[idx].multiplier) / 100;
-                drawHorizontalBarChart(70, ypos + 1, 41, 4, BLACK, tVal, valMin, valMax);
+                drawHorizontalBarChart(70, ypos + 1, 41, 4, BLACK, tVal, widget->gaugeMin, widget->gaugeMax);
               }
             }
             hasPrinted = true;
