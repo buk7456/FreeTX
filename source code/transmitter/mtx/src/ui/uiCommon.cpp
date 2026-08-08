@@ -465,7 +465,7 @@ uint8_t getLSFuncGroup(uint8_t func)
 
 uint8_t getMovedControlSwitch()
 {
-  // Detects which control switch is moved, so we can auto select it in the UI.
+  // Detects which control switch is moved, so we can auto-select it in the UI.
   // Physical Switches (up, mid, down states) are detected. Invert of these are not detected.
   // Logical Switches are not detected.
   // Trims as switches are detected.
@@ -527,8 +527,8 @@ uint8_t getMovedControlSwitch()
 
 uint8_t getMovedSource()
 {
-  //Detects which source is moved.
-  //Stick axes, knobs, physical switches, stick axis trims.
+  // Detects which source is moved, so we can auto-select it in the UI.
+  // Stick axes, knobs, physical switches, stick axis trims are detected.
   
   if(!Sys.autoSelectMovedControl)
     return SRC_NONE;
@@ -569,7 +569,13 @@ uint8_t getMovedSource()
       {
         lastValQQ[idxQQ] = mixSources[srcQQ[idxQQ]];
         if(thisLoopNum - lastLoopNum == 1)
-          movedSrc = srcQQ[idxQQ];
+        {
+          // Only assign if the trim button is actually being pushed, to prevent false detections
+          // when the value in mixSources changes due to changing the flight mode.
+          uint8_t i = srcQQ[idxQQ] - SRC_TRIM_FIRST;
+          if(checkSwitchCondition(CTRL_SW_TRIM_FIRST + (i * 2)) || checkSwitchCondition(CTRL_SW_TRIM_FIRST + (i * 2) + 1))
+            movedSrc = srcQQ[idxQQ];
+        }
       }
     }
     else
