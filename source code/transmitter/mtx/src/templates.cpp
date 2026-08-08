@@ -194,7 +194,7 @@ void loadSensorTemplateGNSSSpeed(uint8_t telemIdx)
                          TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
       break;
     case UNITS_FEET_PER_SECOND:
-      loadTelemetryParams(telemIdx, PSTR("Speed"), PSTR("ft/s"), SENSOR_ID_GNSS_SPEED, 3281, -2, 0,
+      loadTelemetryParams(telemIdx, PSTR("Speed"), PSTR("ft/s"), SENSOR_ID_GNSS_SPEED, 328, -1, 0,
                          TELEMETRY_ALARM_CONDITION_NONE, 0, true, true, false);
       break;
     case UNITS_MILES_PER_HOUR:
