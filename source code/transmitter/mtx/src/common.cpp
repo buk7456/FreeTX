@@ -226,7 +226,7 @@ void resetSystemParams()
   Sys.soundOnInactivity = true;
   Sys.soundSwitches = true;
   Sys.soundKnobCenter = true;
-  Sys.soundKeys = false;
+  Sys.soundKeys = true;
   Sys.soundTrims = true;
   Sys.trimToneFreqMode = TRIM_TONE_FREQ_VARIABLE;
   
