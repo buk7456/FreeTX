@@ -7660,7 +7660,7 @@ void handleMainUI()
 
                   case UNITS_FEET_MILES:
                     {
-                      if(val < 1609)
+                      if(val <= 1610)
                       {
                         val = (float) val * 3.28;
                         display.print(val);
@@ -7669,7 +7669,7 @@ void handleMainUI()
                       }
                       else
                       {
-                        val = (float) val * 0.6214;
+                        val = (float) val * 0.621;
                         printFixedPointVal(val, 3);
                         display.setCursor(display.getCursorX() + 3, ypos);
                         display.print(findStringInIdStr(enum_DisplayedUnits, UNITS_MILES));
@@ -7679,7 +7679,7 @@ void handleMainUI()
 
                   case UNITS_MILES:
                     {
-                      val = (float) val * 0.6214;
+                      val = (float) val * 0.621;
                       printFixedPointVal(val, 3);
                       display.setCursor(display.getCursorX() + 3, ypos);
                       display.print(findStringInIdStr(enum_DisplayedUnits, UNITS_MILES));
