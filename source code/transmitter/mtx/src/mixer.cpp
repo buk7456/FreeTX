@@ -1372,10 +1372,10 @@ int16_t adjustTrim(uint8_t idx, int16_t val, uint8_t incButton, uint8_t decButto
 
   uint8_t _heldBtn = 0;
   uint8_t _repeatDelay = 200;
-  if(millis() - buttonStartTime > 1000 + LONGPRESSDELAY) //speed up
+  if(millis() - buttonStartTime > (1000 + Sys.longPressDelay)) //speed up
   {
     _repeatDelay = 100;
-    if((millis() - buttonStartTime > 3000 + LONGPRESSDELAY) && step == STEP_VAL_FINE)
+    if((millis() - buttonStartTime > (3000 + Sys.longPressDelay)) && step == STEP_VAL_FINE)
       step = STEP_VAL_MEDIUM;
   }
 
@@ -1396,7 +1396,7 @@ int16_t adjustTrim(uint8_t idx, int16_t val, uint8_t incButton, uint8_t decButto
   }
   if(paused[idx])
   {
-    if((thisLoopNum - pausedLoopNum[idx]) < ((uint32_t) LONGPRESSDELAY / fixedLoopTime))
+    if((thisLoopNum - pausedLoopNum[idx]) < ((uint32_t) Sys.longPressDelay / fixedLoopTime))
       _heldBtn = 0;
   }
   
