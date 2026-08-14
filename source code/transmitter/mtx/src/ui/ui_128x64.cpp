@@ -217,6 +217,8 @@ enum {
   SCREEN_EXTERNAL_EEPROM_DUMP,
   SCREEN_CHARACTER_SET,
   SCREEN_SCREENSHOT_CONFIG,
+  DIALOG_ADJUST_LONG_PRESS_DELAY,
+  DIALOG_ADJUST_KEY_REPEAT_INTERVAL,
   CONFIRMATION_BACKUP_SYSTEM_SETTINGS,
   CONFIRMATION_RESTORE_SYSTEM_SETTINGS,
   CONFIRMATION_FACTORY_RESET,
@@ -9266,7 +9268,7 @@ void handleMainUI()
         }
       }
       break;
-      
+    
     case SCREEN_DEBUG:
       {
         drawHeader(advancedMenu[ADVANCED_MENU_DEBUG]);
@@ -9278,6 +9280,8 @@ void handleMainUI()
           ITEM_SHOW_LOOP_TIME,
           ITEM_DISABLE_INTERLACING,
           ITEM_SIMULATE_TELEMETRY,
+          ITEM_ADJUST_LONG_PRESS_DELAY,
+          ITEM_ADJUST_KEY_REPEAT_INTERVAL,
           ITEM_DUMP_INTERNAL_EEPROM,
           ITEM_DUMP_EXTERNAL_EEPROM,
           ITEM_BACKUP_SYSTEM_SETTINGS,
@@ -9343,31 +9347,30 @@ void handleMainUI()
               }
               break;
 
-
             case ITEM_SHOW_LOOP_TIME:
               {
-                drawCheckbox(display.getCursorX(), ypos, Sys.DBG_showLoopTime);
+                drawCheckbox(display.getCursorX(), ypos, Sys.showLoopTime);
                 display.setCursor(display.getCursorX() + 10, ypos);
                 display.print(F("Show loop time"));
                 if(isFocused)
                 {
                   toggleEditModeOnSelectClicked();
-                  Sys.DBG_showLoopTime = incDec(Sys.DBG_showLoopTime, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                  Sys.showLoopTime = incDec(Sys.showLoopTime, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
                 }
               }
               break;
-              
+
             case ITEM_SIMULATE_TELEMETRY:
               {
-                drawCheckbox(display.getCursorX(), ypos, Sys.DBG_simulateTelemetry);
+                drawCheckbox(display.getCursorX(), ypos, Sys.simulateTelemetry);
                 display.setCursor(display.getCursorX() + 10, ypos);
                 display.print(F("Simulate telemetry"));
                 if(isFocused)
                 {
                   toggleEditModeOnSelectClicked();
-                  bool lastState = Sys.DBG_simulateTelemetry;
-                  Sys.DBG_simulateTelemetry = incDec(Sys.DBG_simulateTelemetry, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-                  if(!lastState && Sys.DBG_simulateTelemetry)
+                  bool lastState = Sys.simulateTelemetry;
+                  Sys.simulateTelemetry = incDec(Sys.simulateTelemetry, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                  if(!lastState && Sys.simulateTelemetry)
                     makeToast(PSTR("ID:0x30, Src:Virt1"), 2000, 300);
                 }
               }
@@ -9375,17 +9378,33 @@ void handleMainUI()
               
             case ITEM_DISABLE_INTERLACING:
               {
-                drawCheckbox(display.getCursorX(), ypos, Sys.DBG_disableInterlacing);
+                drawCheckbox(display.getCursorX(), ypos, Sys.disableInterlacing);
                 display.setCursor(display.getCursorX() + 10, ypos);
                 display.print(F("No LCD interlacing"));
                 if(isFocused)
                 {
                   toggleEditModeOnSelectClicked();
-                  bool lastState = Sys.DBG_disableInterlacing;
-                  Sys.DBG_disableInterlacing = incDec(Sys.DBG_disableInterlacing, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-                  if(!lastState && Sys.DBG_disableInterlacing)
+                  bool lastState = Sys.disableInterlacing;
+                  Sys.disableInterlacing = incDec(Sys.disableInterlacing, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
+                  if(!lastState && Sys.disableInterlacing)
                     makeToast(PSTR("May reduce performnc"), 2000, 300);
                 }
+              }
+              break;
+
+            case ITEM_ADJUST_LONG_PRESS_DELAY: 
+              {
+                display.print(F("[Long press delay]")); 
+                if(isFocused && clickedButton == KEY_SELECT)
+                  changeToScreen(DIALOG_ADJUST_LONG_PRESS_DELAY);
+              }
+              break;
+
+            case ITEM_ADJUST_KEY_REPEAT_INTERVAL: 
+              {
+                display.print(F("[Key repeat intrvl]")); 
+                if(isFocused && clickedButton == KEY_SELECT)
+                  changeToScreen(DIALOG_ADJUST_KEY_REPEAT_INTERVAL);
               }
               break;
               
@@ -9544,7 +9563,7 @@ void handleMainUI()
             
             case ITEM_FREE_RAM:
               {
-                display.print(F("Free ram:"));
+                display.print(F("Free RAM:"));
                 display.setCursor(66, ypos);
                 display.print(getFreeRam());
                 display.setCursor(display.getCursorX() + 3, ypos);
@@ -9778,6 +9797,44 @@ void handleMainUI()
           screenshotSwtch = tempSwtch;
           tempInitialised = false;
         }
+      }
+      break;
+
+    case DIALOG_ADJUST_LONG_PRESS_DELAY:
+      {
+        drawBoundingBox(11, 14, 105, 35,BLACK);
+        display.setCursor(17, 18);
+        display.print(F("Long press delay"));
+        display.setCursor(47, 28);
+        display.print(Sys.longPressDelay);
+        display.setCursor(display.getCursorX() + 3, 28);
+        display.print(F("ms"));
+        drawCursor(39, 28);
+
+        isEditMode = true;
+        Sys.longPressDelay = incDec(Sys.longPressDelay, LONG_PRESS_DELAY_MIN, LONG_PRESS_DELAY_MAX, INCDEC_NOWRAP, INCDEC_NORMAL);
+
+        if(clickedButton == KEY_SELECT || heldButton == KEY_SELECT)
+          changeToScreen(SCREEN_DEBUG);
+      }
+      break;
+
+    case DIALOG_ADJUST_KEY_REPEAT_INTERVAL:
+      {
+        drawBoundingBox(2, 14, 124, 35,BLACK);
+        display.setCursor(7, 18);
+        display.print(F("Key repeat interval"));
+        display.setCursor(47, 28);
+        display.print(Sys.keyRepeatInterval);
+        display.setCursor(display.getCursorX() + 3, 28);
+        display.print(F("ms"));
+        drawCursor(39, 28);
+
+        isEditMode = true;
+        Sys.keyRepeatInterval = incDec(Sys.keyRepeatInterval, KEY_REPEAT_INTERVAL_MIN, KEY_REPEAT_INTERVAL_MAX, INCDEC_NOWRAP, INCDEC_NORMAL);
+
+        if(clickedButton == KEY_SELECT || heldButton == KEY_SELECT)
+          changeToScreen(SCREEN_DEBUG);
       }
       break;
 
@@ -10939,7 +10996,7 @@ void handleMainUI()
   notificationHandler();
   
   //-------------- Debug print --------------------------
-  if(Sys.DBG_showLoopTime)
+  if(Sys.showLoopTime)
   {
     // display.fillRect(102, 55, 26, 9, WHITE);
     display.setCursor(103, 56);
@@ -10953,7 +11010,7 @@ void handleMainUI()
   screenshotHandler();
   
   //-------------- Show on physical LCD -----------------
-  if(Sys.DBG_disableInterlacing) //override
+  if(Sys.disableInterlacing) //override
     display.setInterlace(false);
   display.display(); 
   display.clearDisplay();
@@ -12127,6 +12184,12 @@ uint8_t _menuItemIDs[_MENU_MAX_ITEMS];
 const uint8_t* _menuItemIcons[_MENU_MAX_ITEMS];
 uint8_t _menuItemCount = 0;
 
+// variables to help in horizontal scrolling for lengthy text
+bool _scrollInitialised = false;
+uint8_t _counter = 0;
+uint32_t _loopNumOffset;
+bool _scrollStarted = false;
+
 void menuInitialise()
 {
   _menuItemCount = 0;
@@ -12153,15 +12216,17 @@ void menuDraw(uint8_t *topItem, uint8_t *highlightedItem)
   if(_menuItemCount == 0)
     return;
   
-  uint8_t numVisible = 4;
+  uint8_t maxVisible = 4;
   uint8_t lineHeight = 13;
   uint8_t y0 = 14;
   if(Sys.useDenserMenus)
   {
-    numVisible = 5;
+    maxVisible = 5;
     lineHeight = 11;
     y0 = 11;
   }
+  
+  uint8_t numVisible = (_menuItemCount <= maxVisible) ? _menuItemCount : maxVisible;
   
   //handle scenario of being called with invalid highlightedItem
   if(*highlightedItem > _menuItemCount) 
@@ -12173,7 +12238,7 @@ void menuDraw(uint8_t *topItem, uint8_t *highlightedItem)
   isEditMode = false;
   if(*highlightedItem < *topItem)
     *topItem = *highlightedItem;
-  while(*highlightedItem >= *topItem + numVisible)
+  while(*highlightedItem >= *topItem + maxVisible)
     (*topItem)++;
 
   //check if there are any icons in the menu
@@ -12186,9 +12251,22 @@ void menuDraw(uint8_t *topItem, uint8_t *highlightedItem)
       break;
     }
   }
+
+  //horizontal scrolling for lengthy text
+  if(!_scrollInitialised)
+  {
+    _scrollInitialised = true;
+    _counter = 0;
+    _loopNumOffset = thisLoopNum;
+    _scrollStarted = false;
+  }
+  if(buttonCode == KEY_UP || buttonCode == KEY_DOWN || heldButton == KEY_SELECT)
+  {
+    _scrollInitialised = false;
+  }
   
   //fill menu slots
-  for(uint8_t line = 0; line < numVisible && line < _menuItemCount; line++)
+  for(uint8_t line = 0; line < numVisible; line++)
   {
     //prevent showing garbage entries when we've changed to using denser menus
     if(*topItem + line > _menuItemCount)
@@ -12196,13 +12274,17 @@ void menuDraw(uint8_t *topItem, uint8_t *highlightedItem)
     
     uint8_t item = *topItem + line;
     uint8_t ypos = y0 + line * lineHeight;
+
     //highlight selection
+    bool isFocused = false;
     if(*highlightedItem == item)
     {
-      display.fillRoundRect(2, Sys.useDenserMenus ? ypos - 2 : ypos - 3, _menuItemCount <= numVisible ? 124 : 123, 
+      isFocused = true;
+      display.fillRoundRect(2, Sys.useDenserMenus ? ypos - 2 : ypos - 3, _menuItemCount <= maxVisible ? 124 : 123, 
                             lineHeight, Sys.useRoundRect ? 4 : 0, BLACK);
       display.setTextColor(WHITE);
     }
+
     //show icon
     if(_menuItemIcons[item - 1] != NULL && Sys.showMenuIcons)
       display.drawBitmap(7, ypos - 2 , _menuItemIcons[item - 1], 15, 11, *highlightedItem == item ? WHITE : BLACK);
@@ -12210,7 +12292,48 @@ void menuDraw(uint8_t *topItem, uint8_t *highlightedItem)
     //show text
     display.setCursor((hasMenuIcons && Sys.showMenuIcons) ? 26 : 10, ypos);
     strlcpy_P(textBuff, _menuItems[item - 1], sizeof(textBuff));
-    display.print(textBuff);
+    uint8_t maxVisibleCharacters = hasMenuIcons ? 16 : 19;
+    if(strlen(textBuff) <= maxVisibleCharacters)
+    {
+      display.print(textBuff);
+    }
+    else //long text, horizontal scroll it
+    {
+      if(isFocused)
+      {
+        uint8_t lenStr = strlen(textBuff);
+        uint8_t lenTotal = lenStr + 6; //6 extra spaces inserted in-between tail and head
+        for(uint8_t i = 0; i < maxVisibleCharacters; i++)
+        {
+          uint8_t idx = (_counter + i) % lenTotal;
+          char c = (idx < lenStr) ? textBuff[idx] : 0x20;
+          display.print(c);
+        }
+        uint16_t scrollDelay = _scrollStarted ? 240 : 600;
+        if((thisLoopNum - _loopNumOffset + 1) % divRoundClosest(scrollDelay, fixedLoopTime) == 0)
+        {
+          _counter++;
+          if(_counter >= lenTotal)
+            _counter = 0;
+          _loopNumOffset = thisLoopNum; //reset the offset
+          _scrollStarted = true;
+        }
+      }
+      else
+      {
+        for(uint8_t i = 0; i < maxVisibleCharacters - 1; i++)
+        {
+          char c = textBuff[i];
+          display.print(c);
+        }
+        //show an ellipsis character
+        uint8_t x = display.getCursorX();
+        uint8_t y = ypos + 6;
+        display.drawPixel(x, y, BLACK);
+        display.drawPixel(x + 2, y, BLACK);
+        display.drawPixel(x + 4, y, BLACK);
+      }
+    }
     display.setTextColor(BLACK);
   }
   
@@ -12220,7 +12343,11 @@ void menuDraw(uint8_t *topItem, uint8_t *highlightedItem)
   //get the id of the item selected
   menuSelectedItemID = 0xff;
   if(clickedButton == KEY_SELECT)
+  {
     menuSelectedItemID = _menuItemIDs[*highlightedItem - 1];
+    //reset some variables
+    _scrollInitialised = false;
+  }
 }
 
 void contextMenuInitialise()
@@ -12269,14 +12396,16 @@ void contextMenuDraw()
   drawBoundingBox(3, y0 - 4, 122, numVisible * 10 + 5, BLACK);  
   
   //horizontal scrolling for lengthy text
-  static uint8_t counter = 0;
-  static uint32_t loopNumOffset;
-  static bool scrollStarted = false;
+  if(!_scrollInitialised)
+  {
+    _scrollInitialised = true;
+    _counter = 0;
+    _loopNumOffset = thisLoopNum;
+    _scrollStarted = false;
+  }
   if(buttonCode == KEY_UP || buttonCode == KEY_DOWN || heldButton == KEY_SELECT)
   {
-    counter = 0;
-    loopNumOffset = thisLoopNum;
-    scrollStarted = false;
+    _scrollInitialised = false;
   }
   
   //fill list
@@ -12307,18 +12436,18 @@ void contextMenuDraw()
         uint8_t lenTotal = lenStr + 6; //6 extra spaces inserted in-between tail and head
         for(uint8_t i = 0; i < 18; i++)
         {
-          uint8_t idx = (counter + i) % lenTotal;
+          uint8_t idx = (_counter + i) % lenTotal;
           char c = (idx < lenStr) ? textBuff[idx] : 0x20;
           display.print(c);
         }
-        uint16_t scrollDelay = scrollStarted ? 200 : 600;
-        if((thisLoopNum - loopNumOffset + 1) % divRoundClosest(scrollDelay, fixedLoopTime) == 0)
+        uint16_t scrollDelay = _scrollStarted ? 240 : 600;
+        if((thisLoopNum - _loopNumOffset + 1) % divRoundClosest(scrollDelay, fixedLoopTime) == 0)
         {
-          counter++;
-          if(counter >= lenTotal)
-            counter = 0;
-          loopNumOffset = thisLoopNum; //reset the offset
-          scrollStarted = true;
+          _counter++;
+          if(_counter >= lenTotal)
+            _counter = 0;
+          _loopNumOffset = thisLoopNum; //reset the offset
+          _scrollStarted = true;
         }
       }
       else
@@ -12351,9 +12480,7 @@ void contextMenuDraw()
   {
     contextMenuSelectedItemID = _menuItemIDs[contextMenuFocusedItem - 1];
     //reset some variables
-    counter = 0;
-    loopNumOffset = thisLoopNum;
-    scrollStarted = false;
+    _scrollInitialised = false;
   }
 }
 
