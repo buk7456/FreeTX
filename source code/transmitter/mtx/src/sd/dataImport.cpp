@@ -1147,11 +1147,15 @@ void extractConfig_Miscellaneous()
 void extractConfig_Debug()
 {
   if(MATCH_P(keyBuff[1], key_ShowLoopTime))
-    readValue_bool(valueBuff, &Sys.DBG_showLoopTime);
+    readValue_bool(valueBuff, &Sys.showLoopTime);
   else if(MATCH_P(keyBuff[1], key_SimulateTelemetry))
-    readValue_bool(valueBuff, &Sys.DBG_simulateTelemetry);
+    readValue_bool(valueBuff, &Sys.simulateTelemetry);
   else if(MATCH_P(keyBuff[1], key_DisableInterlacing))
-    readValue_bool(valueBuff, &Sys.DBG_disableInterlacing);
+    readValue_bool(valueBuff, &Sys.disableInterlacing);
+  else if(MATCH_P(keyBuff[1], key_LongPressDelay))
+    Sys.longPressDelay = atoi_with_prefix(valueBuff);
+  else if(MATCH_P(keyBuff[1], key_KeyRepeatInterval))
+    Sys.keyRepeatInterval = atoi_with_prefix(valueBuff);
   else if(MATCH_P(keyBuff[1], key_ScreenshotSeqNo))
     Sys.screenshotSeqNo = atoi_with_prefix(valueBuff);
   else

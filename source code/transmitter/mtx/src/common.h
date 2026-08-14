@@ -125,10 +125,18 @@ extern uint32_t buttonReleaseTime;
 extern uint32_t heldButtonEntryLoopNum;
 
 //Button events
-#define LONGPRESSDELAY 350
+
 extern uint8_t  pressedButton; //triggered once when the button goes down
 extern uint8_t  clickedButton; //triggered when the button is released before heldButton event
 extern uint8_t  heldButton;    //triggered when button is held down long enough
+
+#define LONG_PRESS_DELAY_MIN      200
+#define LONG_PRESS_DELAY_MAX      700
+#define LONG_PRESS_DELAY_DEFAULT  350
+
+#define KEY_REPEAT_INTERVAL_MIN      100
+#define KEY_REPEAT_INTERVAL_MAX      240
+#define KEY_REPEAT_INTERVAL_DEFAULT  160
 
 //----------------- Transmitter Battery -------------------
 
@@ -418,12 +426,14 @@ typedef struct {
   uint8_t  customGnssDistanceUnits;
   uint8_t  customGnssSpeedUnits;
   uint8_t  customGnssAltitudeUnits;
-  
-  //--- debug
-  bool     DBG_showLoopTime;
-  bool     DBG_simulateTelemetry; //fakes telemetry value on sensor ID 0x30
-  bool     DBG_disableInterlacing; 
 
+  //--- debug
+  bool     showLoopTime;
+  bool     simulateTelemetry; //fakes telemetry value on sensor ID 0x30
+  bool     disableInterlacing; 
+  uint16_t longPressDelay;
+  uint16_t keyRepeatInterval;
+  
   //--- screenshots
   uint16_t screenshotSeqNo;
 

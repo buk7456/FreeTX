@@ -263,10 +263,12 @@ void resetSystemParams()
   Sys.customGnssDistanceUnits = UNITS_METRES;
   Sys.customGnssSpeedUnits = UNITS_METRES_PER_SECOND;
   Sys.customGnssAltitudeUnits = UNITS_METRES;
+
+  Sys.longPressDelay = LONG_PRESS_DELAY_DEFAULT;
   
-  Sys.DBG_showLoopTime = false;
-  Sys.DBG_simulateTelemetry = false;
-  Sys.DBG_disableInterlacing = false;
+  Sys.showLoopTime = false;
+  Sys.simulateTelemetry = false;
+  Sys.disableInterlacing = false;
 
   Sys.screenshotSeqNo = 0;
 }
@@ -1020,6 +1022,12 @@ bool verifySystemData()
   
   if(Sys.trimToneFreqMode >= TRIM_TONE_FREQ_MODE_COUNT) 
     isSane = false;
+
+  if(Sys.longPressDelay < LONG_PRESS_DELAY_MIN || Sys.longPressDelay > LONG_PRESS_DELAY_MAX)
+    Sys.longPressDelay = LONG_PRESS_DELAY_DEFAULT;
+
+  if(Sys.keyRepeatInterval < KEY_REPEAT_INTERVAL_MIN || Sys.keyRepeatInterval > KEY_REPEAT_INTERVAL_MAX)
+    Sys.keyRepeatInterval = KEY_REPEAT_INTERVAL_DEFAULT;
   
   return isSane;
 }

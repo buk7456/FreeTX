@@ -38,55 +38,64 @@ int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEna
   int16_t delta = 1;
   uint8_t speed = initialSpeed;
   uint32_t timeQQ = millis() - buttonStartTime;
-  uint32_t timeOffset = 0;
+  
+  uint16_t timeOffset = Sys.longPressDelay;
+  
+  uint16_t slowToNormalDelay = 21 * Sys.keyRepeatInterval;
+  uint16_t normalToFastDelay = 4000;
+  uint16_t slowToFastDelay = slowToNormalDelay + normalToFastDelay;
   
   if(initialSpeed == INCDEC_SLOW && finalSpeed == INCDEC_NORMAL)
   {
-    if(timeQQ > 2500 + LONGPRESSDELAY)
+    uint16_t timeVal = slowToNormalDelay + Sys.longPressDelay;
+    if(timeQQ > timeVal)
     {
       speed = INCDEC_NORMAL;
-      timeOffset = 2500;
+      timeOffset = timeVal;
     }
   }
   else if(initialSpeed == INCDEC_SLOW && finalSpeed == INCDEC_FAST)
   {
-    if(timeQQ > 2500 + LONGPRESSDELAY)
+    uint16_t timeVal = slowToNormalDelay + Sys.longPressDelay;
+    if(timeQQ > timeVal)
     {
       speed = INCDEC_NORMAL;
-      timeOffset = 2500;
+      timeOffset = timeVal;
     }
-    if(timeQQ > 6500 + LONGPRESSDELAY)
+    timeVal = slowToFastDelay + Sys.longPressDelay;
+    if(timeQQ > timeVal)
     {
       speed = INCDEC_FAST;
-      timeOffset = 6500;
+      timeOffset = timeVal;
     }
   }
   else if(initialSpeed == INCDEC_NORMAL && finalSpeed == INCDEC_FAST)
   {
-    if(timeQQ > 4000 + LONGPRESSDELAY)
+    uint16_t timeVal = normalToFastDelay + Sys.longPressDelay;
+    if(timeQQ > timeVal)
     {
       speed = INCDEC_FAST;
-      timeOffset = 4000;
+      timeOffset = timeVal;
     }
   }
 
   switch(speed)
   {
     case INCDEC_SLOW:
-      if((thisLoopNum - heldButtonEntryLoopNum) % divRoundClosest(120, fixedLoopTime) == 0) //about 8.3 items per second
+      if((thisLoopNum - heldButtonEntryLoopNum) % divRoundClosest(Sys.keyRepeatInterval, fixedLoopTime) == 0)
         heldBtnQQ = heldButton;
       break;
 
     case INCDEC_NORMAL:
       delta = 1;
-      if(timeQQ > (2000 + LONGPRESSDELAY + timeOffset))
+      if(timeQQ > (2000 + timeOffset))
         delta = 2;
       heldBtnQQ = heldButton;
       break;
       
     case INCDEC_FAST:
       delta = 10;
-      if(timeQQ > (2000 + LONGPRESSDELAY + timeOffset))
+      if(timeQQ > (4000 + timeOffset))
         delta = 100;
       heldBtnQQ = heldButton;
       break;

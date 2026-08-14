@@ -310,6 +310,8 @@ extern const char key_Debug[] PROGMEM;
 extern const char key_ShowLoopTime[] PROGMEM;
 extern const char key_SimulateTelemetry[] PROGMEM;
 extern const char key_DisableInterlacing[] PROGMEM;
+extern const char key_LongPressDelay[] PROGMEM;
+extern const char key_KeyRepeatInterval[] PROGMEM;
 extern const char key_ScreenshotSeqNo[] PROGMEM;
 
 #endif
