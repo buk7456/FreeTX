@@ -213,6 +213,19 @@ The Debug menu contains options intended primarily for troubleshooting, developm
 
 <a id="section_id_about"></a>
 
+- **View statistics:** Displays basic system statistics, including system uptime, available free memory, and RF packet rate.
+- **View character set:** Displays all glyphs included in the system font.
+- **Screenshot configuration:** Assigns a physical switch to trigger screenshot capture.
+- **Show loop time:** Displays the total execution time of the main program loop, measured in milliseconds.
+- **No LCD interlacing:** Disables interlacing for the LCD screen. (Interlacing improves performance on slower displays by splitting the image into alternate frames and updating them across successive program loops.)
+- **Simulate telemetry:** Simulates telemetry data on sensor ID 0x30 for testing purposes.
+- **Long press delay:** Sets the duration that a physical button must be held before a long-press event is recognized. This setting applies to both UI buttons and trim buttons.
+- **Key repeat interval:** Sets the time interval between repeated key events when scrolling through menus and some options, effectively determining the scrolling speed.
+- **Dump EEPROM:** Displays a hexadecimal dump of the EEPROM contents.
+- **Back up settings:** Backs up system settings to the SD card. Model-specific settings are not included in this backup.
+- **Restore settings:** Restores system settings from the SD card.
+- **Factory reset:** Erases all system and model settings, restoring the device to its factory default state. Only data in the EEPROM gets erased; data on the SD card is not affected.
+
 ## About
 
 The About menu provides information regarding firmware version, legal notices, credits, and support/contact resources.
