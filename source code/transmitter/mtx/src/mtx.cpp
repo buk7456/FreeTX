@@ -185,7 +185,7 @@ void loop()
   //Code section changed to use micros() instead of millis().
   //Rollover isn't a problem here. 
   uint32_t loopTime = micros() - loopStartTime;
-  if(Sys.DBG_showLoopTime) //debug
+  if(Sys.showLoopTime) //debug
     DBG_loopTime = loopTime;
   if(loopTime < (fixedLoopTime * 1000)) 
     delayMicroseconds((fixedLoopTime * 1000) - loopTime);
@@ -613,7 +613,7 @@ void handleTelemetry()
   uint32_t currMillis = millis();
 
   //-- simulated telemetry
-  if(Sys.DBG_simulateTelemetry)
+  if(Sys.simulateTelemetry)
   {
     //check against configured Ids and copy to telemetryReceivedValue 
     for(uint8_t idx = 0; idx < NUM_CUSTOM_TELEMETRY; idx++)
