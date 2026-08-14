@@ -802,9 +802,11 @@ void exportSystemData(File& file)
   file.println(F("# ------ Debug ------"));
 
   writeKeyValue_Char(file, 0, key_Debug, NULL);
-  writeKeyValue_bool(file, 1, key_ShowLoopTime, Sys.DBG_showLoopTime);
-  writeKeyValue_bool(file, 1, key_SimulateTelemetry, Sys.DBG_simulateTelemetry);
-  writeKeyValue_bool(file, 1, key_DisableInterlacing, Sys.DBG_disableInterlacing);
+  writeKeyValue_bool(file, 1, key_ShowLoopTime, Sys.showLoopTime);
+  writeKeyValue_bool(file, 1, key_SimulateTelemetry, Sys.simulateTelemetry);
+  writeKeyValue_bool(file, 1, key_DisableInterlacing, Sys.disableInterlacing);
+  writeKeyValue_U32(file, 1, key_LongPressDelay, Sys.longPressDelay);
+  writeKeyValue_U32(file, 1, key_KeyRepeatInterval, Sys.keyRepeatInterval);
   writeKeyValue_U32(file, 1, key_ScreenshotSeqNo, Sys.screenshotSeqNo);
 
 }
