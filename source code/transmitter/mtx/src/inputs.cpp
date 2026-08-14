@@ -189,7 +189,7 @@ void determineButtonEvent()
   
   //button is down long enough, trigger heldButton event
   static bool heldButtonActive = false;
-  if(buttonActive && (millis() - buttonStartTime > LONGPRESSDELAY))
+  if(buttonActive && (millis() - buttonStartTime > Sys.longPressDelay))
   {
     heldButton = lastButtonCode; //event
     if(!heldButtonActive)
