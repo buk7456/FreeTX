@@ -265,6 +265,7 @@ void resetSystemParams()
   Sys.customGnssAltitudeUnits = UNITS_METRES;
 
   Sys.longPressDelay = LONG_PRESS_DELAY_DEFAULT;
+  Sys.keyRepeatInterval = KEY_REPEAT_INTERVAL_DEFAULT;
   
   Sys.showLoopTime = false;
   Sys.simulateTelemetry = false;
