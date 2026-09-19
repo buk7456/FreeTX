@@ -2,6 +2,8 @@
 
 #if defined (UI_128X64)
 
+uint32_t entryTime;
+
 void ui_handler_receiver()
 {
   switch(theScreen)
@@ -57,19 +59,9 @@ void ui_handler_receiver()
           listItemIDs[listItemCount++] = i;
         }
         
-        //initialise
-        static uint8_t topItem;
-        static bool viewInitialised = false;
-        if(!viewInitialised)
-        {
-          focusedItem = 1;
-          topItem = 1;
-          viewInitialised = true;
-        }
-        
         //handle navigation
         changeFocusOnUpDown(listItemCount + 1); //+1 for title focus
-        toggleEditModeOnSelectClicked();
+        static uint8_t topItem = 1;
         if(focusedItem == 1) //title focus
           topItem = 1;
         else if(focusedItem > 1)
@@ -79,6 +71,8 @@ void ui_handler_receiver()
           while(focusedItem - 1 >= topItem + 5)
             topItem++;
         }
+
+        toggleEditModeOnSelectClicked();
 
         //fill list and edit items
         for(uint8_t line = 0; line < 5 && line < listItemCount; line++)
@@ -149,7 +143,6 @@ void ui_handler_receiver()
       
     case SCREEN_RECEIVER_BINDING:
       {
-        static uint32_t entryTime = 0;
         static bool initialised = false;
         if(!initialised)
         {
@@ -195,7 +188,6 @@ void ui_handler_receiver()
         
         static uint8_t state = QUERYING_CONFIG;
         static bool stateInitialised = false;
-        static uint32_t entryTime = 0;
         static bool actionStarted = false;
         
         if(!stateInitialised)

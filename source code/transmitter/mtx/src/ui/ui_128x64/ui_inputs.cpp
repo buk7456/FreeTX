@@ -52,6 +52,8 @@ void ui_handler_inputs()
           //Show cursor
           drawCursor(0, 9);
         }
+
+        static uint32_t lastMovedTime = 0; //used when drawing the stick input marker
           
         //------ RUD, AIL, ELE CURVES 
         if(page == PAGE_RUD_CURVE || page == PAGE_AIL_CURVE || page == PAGE_ELE_CURVE)  
@@ -167,7 +169,6 @@ void ui_handler_inputs()
           
           //draw stick input marker
           static int8_t lastVal = 0;
-          static uint32_t lastMovedTime = 0;
           int16_t difference = qqValIn[idx]/5 - lastVal;
           if(difference >= 5 || difference <= -5)
           {
@@ -369,7 +370,6 @@ void ui_handler_inputs()
           //--- draw graph
           //draw stick input marker
           static int8_t lastVal = mixSources[Model.thrSrcRaw]/5;
-          static uint32_t lastMovedTime = 0;
           bool moved = false;
           int16_t difference = mixSources[Model.thrSrcRaw]/5 - lastVal;
           if(difference >= 5 || difference <= -5)
