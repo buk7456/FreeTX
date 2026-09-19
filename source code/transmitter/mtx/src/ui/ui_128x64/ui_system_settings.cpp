@@ -107,18 +107,9 @@ void ui_handler_system_settings()
           listItemIDs[listItemCount++] = i;
         }
         
-        //initialise
-        static uint8_t topItem;
-        static bool viewInitialised = false;
-        if(!viewInitialised)
-        {
-          focusedItem = 1;
-          topItem = 1;
-          viewInitialised = true;
-        }
-        
         //handle navigation
         changeFocusOnUpDown(listItemCount);
+        static uint8_t topItem = 1;
         if(focusedItem < topItem)
           topItem = focusedItem;
         while(focusedItem >= topItem + 6)
@@ -213,10 +204,7 @@ void ui_handler_system_settings()
         
         //exit
         if(heldButton == KEY_SELECT)
-        {
           changeToScreen(SCREEN_SYSTEM_MENU);
-          viewInitialised = false;
-        }
       }
       break;
       
@@ -295,24 +283,14 @@ void ui_handler_system_settings()
           ITEM_COUNT
         };
         
-        //initialise
-        static uint8_t topItem;
-        static bool viewInitialised = false;
-        if(!viewInitialised)
-        {
-          focusedItem = 1;
-          topItem = 1;
-          viewInitialised = true;
-        }
-        
         //handle navigation
-        changeFocusOnUpDown(ITEM_COUNT);
+        changeFocusOnUpDown(ITEM_COUNT); 
+        toggleEditModeOnSelectClicked();
+        static uint8_t topItem = 1;
         if(focusedItem < topItem)
           topItem = focusedItem;
         while(focusedItem >= topItem + 6)
           topItem++;
-        
-        toggleEditModeOnSelectClicked();
         
         //fill list and edit items
         for(uint8_t line = 0; line < 6 && line < ITEM_COUNT; line++)
@@ -422,15 +400,12 @@ void ui_handler_system_settings()
           }
         }
         
-        //Draw scroll bar
+        //scrollbar
         drawScrollBar(127, 9, ITEM_COUNT, topItem, 6, 6 * 9);
-        
+
         //exit
         if(heldButton == KEY_SELECT)
-        {
           changeToScreen(SCREEN_SYSTEM_MENU);
-          viewInitialised = false;
-        }
       }
       break;
 
@@ -469,21 +444,12 @@ void ui_handler_system_settings()
           }
           listItemIDs[listItemCount++] = i;
         }
-        
-        //initialise
-        static uint8_t topItem;
-        static bool viewInitialised = false;
-        if(!viewInitialised)
-        {
-          focusedItem = 1;
-          topItem = 1;
-          viewInitialised = true;
-        }
-        
+
         //handle navigation
         do {
           changeFocusOnUpDown(listItemCount);
         } while(listItemIDs[focusedItem - 1] == ITEM_SUBHEADING_GNSS_UNITS);
+        static uint8_t topItem = 1;
         if(focusedItem < topItem)
           topItem = focusedItem;
         while(focusedItem >= topItem + 6)
@@ -632,10 +598,7 @@ void ui_handler_system_settings()
         
         //exit
         if(heldButton == KEY_SELECT)
-        {
           changeToScreen(SCREEN_SYSTEM_MENU);
-          viewInitialised = false;
-        }
       }
       break;
       
@@ -1508,9 +1471,7 @@ void ui_handler_system_settings()
 
         //exit
         if(heldButton == KEY_SELECT)
-        {
           changeToScreen(SCREEN_ADVANCED_MENU);
-        }
       }
       break;
     
