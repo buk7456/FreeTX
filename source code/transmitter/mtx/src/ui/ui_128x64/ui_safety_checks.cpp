@@ -37,18 +37,9 @@ void ui_handler_safety_checks()
           listItemIDs[listItemCount++] = i;
         }
         
-        //initialise
-        static uint8_t topItem;
-        static bool viewInitialised = false;
-        if(!viewInitialised)
-        {
-          focusedItem = 1;
-          topItem = 1;
-          viewInitialised = true;
-        }
-        
         //handle navigation
         changeFocusOnUpDown(listItemCount);
+        static uint8_t topItem = 1;
         if(focusedItem < topItem)
           topItem = focusedItem;
         while(focusedItem >= topItem + 6)
