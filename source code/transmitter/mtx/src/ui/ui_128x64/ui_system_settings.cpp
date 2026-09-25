@@ -74,9 +74,7 @@ void ui_handler_system_settings()
         
         //exit
         if(heldButton == KEY_SELECT)
-        {
           changeToScreen(SCREEN_SYSTEM_MENU);
-        }
       }
       break;
       
@@ -114,7 +112,6 @@ void ui_handler_system_settings()
           topItem = focusedItem;
         while(focusedItem >= topItem + 6)
           topItem++;
-        
         toggleEditModeOnSelectClicked();
         
         //fill list and edit items
@@ -258,9 +255,7 @@ void ui_handler_system_settings()
         
         //exit
         if(heldButton == KEY_SELECT)
-        {
           changeToScreen(SCREEN_SYSTEM_MENU);
-        }
       }
       break;
       
@@ -285,12 +280,12 @@ void ui_handler_system_settings()
         
         //handle navigation
         changeFocusOnUpDown(ITEM_COUNT); 
-        toggleEditModeOnSelectClicked();
         static uint8_t topItem = 1;
         if(focusedItem < topItem)
           topItem = focusedItem;
         while(focusedItem >= topItem + 6)
           topItem++;
+        toggleEditModeOnSelectClicked();
         
         //fill list and edit items
         for(uint8_t line = 0; line < 6 && line < ITEM_COUNT; line++)
@@ -680,6 +675,9 @@ void ui_handler_system_settings()
         if(cntrQQ == NUM_STICK_AXES)
           allAxesAbsent = true;
         
+        static uint8_t topItem;
+        static bool viewInitialised = false;
+        
         switch(page)
         {
           case PAGE_START:
@@ -733,9 +731,6 @@ void ui_handler_system_settings()
               display.print(F("Type of axis"));
               
               //scrollable list
-              
-              static uint8_t topItem;
-              static bool viewInitialised = false;
               if(!viewInitialised)
               {
                 focusedItem = 1;
@@ -864,9 +859,7 @@ void ui_handler_system_settings()
               display.print(F("Adjust deadzone"));
               
               //scrollable list
-              
-              static uint8_t topItem;
-              static bool viewInitialised = false;
+
               if(!viewInitialised)
               {
                 focusedItem = 1;
@@ -988,6 +981,9 @@ void ui_handler_system_settings()
         if(cntrQQ == NUM_KNOBS)
           allKnobsAbsent = true;
 
+        static uint8_t topItem;
+        static bool viewInitialised = false;
+
         switch(page)
         {
           case PAGE_START:
@@ -1025,7 +1021,7 @@ void ui_handler_system_settings()
               }
             }
             break;
-          
+                    
           case PAGE_KNOB_TYPE:
             {
               isCalibratingControls = true;
@@ -1035,8 +1031,6 @@ void ui_handler_system_settings()
               
               //scrollable list
               
-              static uint8_t topItem;
-              static bool viewInitialised = false;
               if(!viewInitialised)
               {
                 focusedItem = 1;
@@ -1165,9 +1159,7 @@ void ui_handler_system_settings()
               display.print(F("Adjust deadzone"));
               
               //scrollable list
-              
-              static uint8_t topItem;
-              static bool viewInitialised = false;
+
               if(!viewInitialised)
               {
                 focusedItem = 1;
@@ -1257,40 +1249,22 @@ void ui_handler_system_settings()
         drawHeader(advancedMenu[ADVANCED_MENU_SWITCHES]);
 
         //-- Scrollable list
-        static uint8_t topItem;
-        static bool showWarning = true;
-        static bool viewInitialised = false;
-        if(!viewInitialised)
-        {
-          viewInitialised = true;
-          showWarning = true;
-          focusedItem = 1;
-          topItem = 1;
-        }
-        
+
         bool hasNextButton = false;
         if(lastScreen == SCREEN_HOME)
-        {
-          showWarning = false;
           hasNextButton = true;
-        }
 
-        if(showWarning)
-        {
-          printFullScreenMessage(PSTR("\nThese settings might\naffect your existing\nmodels.\n\n[OK] to continue"));
-          if(clickedButton == KEY_SELECT)
-            showWarning = false;
-          else if(heldButton == KEY_SELECT)
-          {
-            viewInitialised = false;
-            changeToScreen(SCREEN_ADVANCED_MENU);
-          }
-          
-          break;
-        }
+        //handle navigation
+        changeFocusOnUpDown(hasNextButton ? NUM_PHYSICAL_SWITCHES + 1 : NUM_PHYSICAL_SWITCHES);
+        uint8_t end = hasNextButton ? 5 : 6;
+        static uint8_t topItem = 1;
+        if(focusedItem < topItem)
+          topItem = focusedItem;
+        while(focusedItem >= topItem + end && focusedItem < NUM_PHYSICAL_SWITCHES + 1)
+          topItem++;
+        toggleEditModeOnSelectClicked();
 
         //fill list
-        uint8_t end = hasNextButton ? 5 : 6;
         for(uint8_t line = 0; line < end && line < NUM_PHYSICAL_SWITCHES; line++)
         {
           uint8_t ypos = 9 + line * 9;
@@ -1304,9 +1278,14 @@ void ui_handler_system_settings()
           display.setCursor(36, ypos);
           display.print(findStringInIdStr(enum_SwitchType, Sys.swType[idx]));
         }
-        
-        //Draw scroll bar
+
+        //scroll bar
         drawScrollBar(127, 9, NUM_PHYSICAL_SWITCHES, topItem, end, hasNextButton ? 44 : 54);
+
+        //edit items
+        uint8_t idx = focusedItem - 1;
+        if(idx < NUM_PHYSICAL_SWITCHES)
+          Sys.swType[idx] = incDec(Sys.swType[idx], 0, SW_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
         
         //show the 'next' button
         if(hasNextButton)
@@ -1317,25 +1296,11 @@ void ui_handler_system_settings()
           if(focusedItem == NUM_PHYSICAL_SWITCHES + 1)
             drawCursor(82, 56);
         }
-        
-        //Navigate
-        changeFocusOnUpDown(hasNextButton ? NUM_PHYSICAL_SWITCHES + 1 : NUM_PHYSICAL_SWITCHES);
-        toggleEditModeOnSelectClicked();
-        if(focusedItem < topItem)
-          topItem = focusedItem;
-        while(focusedItem >= topItem + end && focusedItem < NUM_PHYSICAL_SWITCHES + 1)
-          topItem++;
-        
-        //Edit items
-        uint8_t idx = focusedItem - 1;
-        if(idx < NUM_PHYSICAL_SWITCHES)
-          Sys.swType[idx] = incDec(Sys.swType[idx], 0, SW_TYPE_COUNT - 1, INCDEC_WRAP, INCDEC_SLOW);
 
         //exit
         if((heldButton == KEY_SELECT && !hasNextButton)
            || (focusedItem == NUM_PHYSICAL_SWITCHES + 1 && clickedButton == KEY_SELECT))
         {
-          viewInitialised = false;
           changeToScreen(lastScreen);
           isRequestingSwitchesSetup = false;
         }
@@ -1718,12 +1683,6 @@ void ui_handler_system_settings()
 
         //initialise
         static uint8_t thisPage = 1;
-        static bool viewInitialised = false;
-        if(!viewInitialised)
-        {
-          thisPage = 1;
-          viewInitialised = true;
-        }
 
         //handle navigation
         uint8_t numPages = (ITEM_COUNT + 5) / 6;
@@ -1794,7 +1753,6 @@ void ui_handler_system_settings()
                 display.print(F("ms"));
               }
               break;
-
           }
         }
 
@@ -1804,9 +1762,9 @@ void ui_handler_system_settings()
         //exit
         if(heldButton == KEY_SELECT)
         {
-          viewInitialised = false;
           changeToScreen(SCREEN_DEBUG);
           telemetryForceRequest = false;
+          thisPage = 1;
         }
       }
       break;
@@ -2097,51 +2055,7 @@ void ui_handler_system_settings()
 
             //show message if errors were encountered in the imported data
             if(dbgTotalErrorLines > 0)
-            {
-              display.clearDisplay();
-              
-              //print the items center aligned
-              
-              strlcpy_P(textBuff, PSTR("Some data skipped"), sizeof(textBuff));
-              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 11);
-              display.print(textBuff);
-              
-              char temp[6];
-              utoa(dbgTotalErrorLines, temp, 10);
-              strlcpy(textBuff, temp, sizeof(textBuff));
-              strlcat_P(textBuff, PSTR(" errors,"), sizeof(textBuff));
-              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 29);
-              display.print(textBuff);
-              
-              strlcpy_P(textBuff, PSTR("first error at"), sizeof(textBuff));
-              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 37);
-              display.print(textBuff);
-              
-              strlcpy_P(textBuff, PSTR("line "), sizeof(textBuff));
-              utoa(dbgFirstErrorLineNumber, temp, 10);
-              strlcat(textBuff, temp, sizeof(textBuff));
-              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 46);
-              display.print(textBuff);
-              
-              display.setInterlace(false);
-              display.display();
-              
-              //briefly block, then self-dismiss the warning
-              uint32_t startTime = millis();
-              while(1)
-              {
-                readSwitchesAndButtons();
-                determineButtonEvent();
-                playTones();
-                handlePowerOff();
-                if(millis() - startTime > 5000 || clickedButton == KEY_SELECT)
-                {
-                  killButtonEvents();
-                  break;
-                }
-                delay(10);
-              }
-            }
+              handleDataImportWarningUI();
           }
           else
           {
