@@ -18,14 +18,6 @@ void ui_handler_timers()
         
         drawHeader(extrasMenu[EXTRAS_MENU_TIMERS]);
 
-        static bool viewInitialised = false;
-        static uint8_t lastFocusedItem = 1;
-        if(!viewInitialised)
-        {
-          viewInitialised = true;
-          lastFocusedItem = 1;
-        }
-
         display.setCursor(8, 9);
         getSrcName(textBuff, SRC_TIMER_FIRST + thisTimerIdx, sizeof(textBuff));
         display.print(textBuff);
@@ -85,6 +77,8 @@ void ui_handler_timers()
         else if(focusedItem <= 6)
           drawCursor(52, 20 + 9 * (focusedItem - 2));
         
+        //handle navigation
+        static uint8_t lastFocusedItem = 1;
         focusedItem = lastFocusedItem;
         changeFocusOnUpDown(7);
         toggleEditModeOnSelectClicked();
@@ -106,14 +100,14 @@ void ui_handler_timers()
         else if(focusedItem == 7 && isEditMode)
         {
           changeToScreen(CONTEXT_MENU_TIMERS);
-          viewInitialised = false;
+          lastFocusedItem = 1;
         }
 
         //exit 
         if(heldButton == KEY_SELECT)
         {
           changeToScreen(SCREEN_EXTRAS_MENU);
-          viewInitialised = false;
+          lastFocusedItem = 1;
         }
       }
       break;
