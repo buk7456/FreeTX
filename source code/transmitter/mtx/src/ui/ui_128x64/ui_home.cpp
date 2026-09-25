@@ -117,7 +117,7 @@ void ui_handler_home()
         static uint32_t endTime; 
         if(buttonCode >= KEY_TRIM_FIRST && buttonCode <= KEY_TRIM_LAST)
           endTime = millis() + 3000;
-        if(!Sys.autohideTrims ||(Sys.autohideTrims && millis() < endTime) || isOnscreenTrimMode)
+        if(!Sys.autohideTrims || (Sys.autohideTrims && millis() < endTime) || isOnscreenTrimMode)
           drawTrimSliders();
 
         //------------ Model name, flight modes -------------
