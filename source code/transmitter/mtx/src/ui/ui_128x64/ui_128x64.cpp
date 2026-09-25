@@ -476,6 +476,57 @@ void handleSafetyWarningUI()  //blocking function
   }
 }
 
+//============================ Data import warning =================================================
+
+void handleDataImportWarningUI() // blocking function
+{
+  display.clearDisplay();
+              
+  //print the items center aligned
+  
+  strlcpy_P(textBuff, PSTR("Unrecognised data"), sizeof(textBuff));
+  display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 9);
+  display.print(textBuff);
+
+  strlcpy_P(textBuff, PSTR("was skipped."), sizeof(textBuff));
+  display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 18);
+  display.print(textBuff);
+
+  char temp[6];
+  utoa(dbgTotalErrorLines, temp, 10);
+  strlcpy_P(textBuff, PSTR("("), sizeof(textBuff));
+  strlcat(textBuff, temp, sizeof(textBuff));
+  strlcat_P(textBuff, PSTR(" lines skipped,"), sizeof(textBuff));
+  display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 36);
+  display.print(textBuff);
+  
+  strlcpy_P(textBuff, PSTR("first at line "), sizeof(textBuff));
+  utoa(dbgFirstErrorLineNumber, temp, 10);
+  strlcat(textBuff, temp, sizeof(textBuff));
+  strlcat_P(textBuff, PSTR(")"), sizeof(textBuff));
+  display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 45);
+  display.print(textBuff);
+  
+  display.setInterlace(false);
+  display.display();
+  
+  //briefly block, then self-dismiss the warning
+  uint32_t startTime = millis();
+  while(1)
+  {
+    readSwitchesAndButtons();
+    determineButtonEvent();
+    playTones();
+    handlePowerOff();
+    if(millis() - startTime > 5000 || clickedButton == KEY_SELECT)
+    {
+      killButtonEvents();
+      break;
+    }
+    delay(10);
+  }
+}
+
 //============================ Main user interface =================================================
 
 void handleMainUI()
