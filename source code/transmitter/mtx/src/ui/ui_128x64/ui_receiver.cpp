@@ -105,9 +105,7 @@ void ui_handler_receiver()
               {
                 display.print(F("[Configure]"));
                 if(isFocused && clickedButton == KEY_SELECT)
-                {
                   changeToScreen(SCREEN_RECEIVER_CONFIG);
-                }
               }
               break;
               
@@ -117,9 +115,7 @@ void ui_handler_receiver()
                 display.setCursor(18, ypos);
                 display.print(F("Enable"));
                 if(isFocused && isEditMode)
-                {
                   Model.secondaryRcvrEnabled = incDec(Model.secondaryRcvrEnabled, 0, 1, INCDEC_WRAP, INCDEC_PRESSED);
-                }
               }
               break;
           }
@@ -199,6 +195,9 @@ void ui_handler_receiver()
           stateInitialised = true;
           receiverConfigStatusCode = 0;
         }
+
+        static uint8_t topItem;
+        static bool viewInitialised = false;
         
         switch(state)
         {
@@ -237,9 +236,7 @@ void ui_handler_receiver()
               display.print(F("Type of signal"));
             
               //--scrollable list--
-              
-              static uint8_t topItem;
-              static bool viewInitialised = false;
+
               if(!viewInitialised)
               {
                 focusedItem = 1;
@@ -331,9 +328,7 @@ void ui_handler_receiver()
               display.print(F("Servo PWM range"));
             
               //--scrollable list--
-              
-              static uint8_t topItem;
-              static bool viewInitialised = false;
+
               if(!viewInitialised)
               {
                 focusedItem = 1;
