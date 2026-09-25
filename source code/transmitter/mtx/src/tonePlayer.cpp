@@ -161,7 +161,7 @@ const uint16_t notificationTone[][32] PROGMEM = {
 
 //--- Function declarations ---
 
-void beginTone(const uint16_t* toneArray, size_t iSize);
+void beginTone(const uint16_t* toneArray, uint8_t iSize);
 void beginToneTrimMoved();
 void playback();
 void stopPlayback();
@@ -172,7 +172,7 @@ uint32_t endTimeOfNote = 0;
 bool isPlaying = false;
 int16_t bpm;
 uint8_t postn = 0;
-size_t size = 0;
+uint8_t size = 0;
 
 const uint16_t* songStart;
 
@@ -180,7 +180,7 @@ bool isTrimBeepSound = false;
 
 //--------------------------------------------------------------------------------------------------
 
-void beginTone(const uint16_t* toneArray, size_t iSize)
+void beginTone(const uint16_t* toneArray, uint8_t iSize)
 {
   noTone(PIN_SPEAKER); //stop any notes
   //initialise values
