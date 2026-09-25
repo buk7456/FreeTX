@@ -193,6 +193,7 @@ void ui_handler_receiver();
 void ui_handler_text_viewer();
 
 void handleBatteryWarningUI();
+void handleDataImportWarningUI();
 
 void changeToScreen(uint8_t scrn);
 void changeFocusOnUpDown(uint8_t numItems);
