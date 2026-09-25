@@ -407,7 +407,7 @@ void ui_handler_model_manager()
       {
         static bool initialised = false;
         static uint16_t mdlCount = 0;
-        static uint16_t thisPos = 0; //Better name
+        static uint16_t thisPos = 0;
         
         if(!initialised)
         {
@@ -485,51 +485,7 @@ void ui_handler_model_manager()
             
             //show message if errors were encountered in the imported data
             if(dbgTotalErrorLines > 0)
-            {
-              display.clearDisplay();
-              
-              //print the items center aligned
-              
-              strlcpy_P(textBuff, PSTR("Some data skipped"), sizeof(textBuff));
-              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 11);
-              display.print(textBuff);
-              
-              char temp[6];
-              utoa(dbgTotalErrorLines, temp, 10);
-              strlcpy(textBuff, temp, sizeof(textBuff));
-              strlcat_P(textBuff, PSTR(" errors,"), sizeof(textBuff));
-              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 29);
-              display.print(textBuff);
-              
-              strlcpy_P(textBuff, PSTR("first error at"), sizeof(textBuff));
-              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 37);
-              display.print(textBuff);
-              
-              strlcpy_P(textBuff, PSTR("line "), sizeof(textBuff));
-              utoa(dbgFirstErrorLineNumber, temp, 10);
-              strlcat(textBuff, temp, sizeof(textBuff));
-              display.setCursor((display.width() - strlen(textBuff) * 6) / 2, 46);
-              display.print(textBuff);
-              
-              display.setInterlace(false);
-              display.display();
-              
-              //briefly block, then self-dismiss the warning
-              uint32_t startTime = millis();
-              while(1)
-              {
-                readSwitchesAndButtons();
-                determineButtonEvent();
-                playTones();
-                handlePowerOff();
-                if(millis() - startTime > 5000 || clickedButton == KEY_SELECT)
-                {
-                  killButtonEvents();
-                  break;
-                }
-                delay(10);
-              }
-            }
+              handleDataImportWarningUI();
             
             //if we have restored into the active model slot, reinitialise some items
             if(thisModelIdx == Sys.activeModelIdx)
