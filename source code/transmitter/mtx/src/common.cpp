@@ -1115,8 +1115,8 @@ void trimWhiteSpace(char* buff, uint8_t lenBuff)
 void sanitize83BaseName(char *str)
 {
   //convert to upper case
-  size_t len = strlen(str);
-  for(size_t i = 0; i < len; i++)
+  uint8_t len = strlen(str);
+  for(uint8_t i = 0; i < len; i++)
     str[i] = toupper(str[i]);
   
   //replace invalid characters
