@@ -8,7 +8,7 @@ The curve can also be optionally smoothed, although this feature should be used 
 </p>
 
 #### Combining two curves for extra points or nodes
-If more curve points are needed, a work around is to combine two curves by switching out one for the other in the mixer, with help of a logical switch.
+If more curve points are needed, a workaround is to combine two curves by switching out one for the other in the mixer, with help of a logical switch.
 
 ## Usage examples
 Below are some examples demonstrating the use of custom curves.

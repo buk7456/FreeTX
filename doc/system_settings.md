@@ -42,7 +42,7 @@ The System menu provides comprehensive configuration options so you can tailor t
 - **Enable:** Toggle all sounds on or off. When off, a mute icon appears on the home screen. Holding the Down key while powering on will also mute all sounds.
 - **Inactivity:** Turn the inactivity alarm on or off. When enabled, a warning tone plays after a period without user interaction.
 - **Switches:** Play a tone when any physical switch is moved.
-- **Knobs:** Play a tone when a knob with a center detent is positioned at center.
+- **Knobs:** Play a tone when a knob is positioned at center.
 - **Keys:** Play a tone when the physical UI buttons are pressed.
 - **Trims:** Play a tone while trims are being adjusted.
 - **Trim tone:** Set the trim tone behaviour. Fixed pitch (single frequency) or Variable pitch (changes with trim position).
@@ -90,7 +90,7 @@ To make a custom splash screen, create a monochrome bitmap image with 128x64 px 
 </p>
 
 - **Autoselect input:** This enables automatic detection of the moved physical control when editing sources or switches, so that we can quickly select the desired control without having to scroll through the options.
-- **Mixer templates:** Whether to enable the default mixer template when creating new models. Turning off this also removes the entry from the mixer context menu.
+- **Mixer templates:** Whether to enable the default mixer template when creating new models. Turning this off also removes the entry from the mixer context menu.
 - **Default channel order:** Specifies the default channel order when creating new models. E.g., selecting AETR sends Ail to Ch1, Ele to Ch2, Thr to Ch3, and Rud to Ch4 in the mixer. The order can always be overridden in the mixer; this option is merely a time saving feature for new models.
 - **Inactivity minutes:** How long before the inactivity event is triggered, specifically for the inactivity alarm.
 - **Default GNSS units:** Specifies the default units of measurement to use when adding the GNSS telemetry sensor template.
