@@ -14,9 +14,8 @@
 
 //------ Menu strings --------
 // Max 19 characters per string
-
 char const mainMenu[][20] PROGMEM = { 
-  "Model", "Inputs", "Mixer", "Outputs", "Extras", "Telemetry", "System", "Receiver"
+  "Model", "Inputs", "Mixer", "Outputs", "Extras", "Telemetry", "System", "Receiver", "About"
 };
 
 char const extrasMenu[][20] PROGMEM = { 
@@ -25,11 +24,11 @@ char const extrasMenu[][20] PROGMEM = {
 };
 
 char const systemMenu[][20] PROGMEM = { 
-  "RF setup", "Sound", "Backlight", "Appearance", "Miscellaneous", "Advanced", "About"
+  "RF setup", "Sound", "Backlight", "Appearance", "Miscellaneous", "Hardware", "Security", "Debug"
 };
 
-char const advancedMenu[][20] PROGMEM = { 
-  "Sticks", "Knobs", "Switches", "Battery", "Security", "Debug"
+char const hardwareMenu[][20] PROGMEM = { 
+  "Sticks", "Knobs", "Switches", "Battery"
 };
 
 //------ Misc ---------------
@@ -208,13 +207,18 @@ const ScreenHandler screen_handlers[TOTAL_SCREEN_COUNT] PROGMEM = {
   [SCREEN_BACKLIGHT] = ui_handler_system_settings,
   [SCREEN_APPEARANCE] = ui_handler_system_settings,
   [SCREEN_MISCELLANEOUS] = ui_handler_system_settings,
-  [SCREEN_UNLOCK_ADVANCED_MENU] = ui_handler_system_settings,
-  [SCREEN_ADVANCED_MENU] = ui_handler_system_settings,
+
+  [SCREEN_UNLOCK_HARDWARE_MENU] = ui_handler_system_settings,
+  [SCREEN_HARDWARE_MENU] = ui_handler_system_settings,
   [SCREEN_STICKS] = ui_handler_system_settings,
   [SCREEN_KNOBS] = ui_handler_system_settings,
   [SCREEN_SWITCHES] = ui_handler_system_settings,
   [SCREEN_BATTERY] = ui_handler_system_settings,
+
+  [SCREEN_UNLOCK_SECURITY] = ui_handler_system_settings,
   [SCREEN_SECURITY] = ui_handler_system_settings,
+
+  [SCREEN_UNLOCK_DEBUG] = ui_handler_system_settings,
   [SCREEN_DEBUG] = ui_handler_system_settings,
   [SCREEN_DEBUG_STATISTICS] = ui_handler_system_settings,
   [SCREEN_INTERNAL_EEPROM_DUMP] = ui_handler_system_settings,
@@ -223,15 +227,17 @@ const ScreenHandler screen_handlers[TOTAL_SCREEN_COUNT] PROGMEM = {
   [SCREEN_SCREENSHOT_CONFIG] = ui_handler_system_settings,
   [DIALOG_ADJUST_LONG_PRESS_DELAY] = ui_handler_system_settings,
   [DIALOG_ADJUST_KEY_REPEAT_INTERVAL] = ui_handler_system_settings,
+  [DIALOG_ADJUST_FIXED_LOOP_TIME] = ui_handler_system_settings,
   [CONFIRMATION_BACKUP_SYSTEM_SETTINGS] = ui_handler_system_settings,
   [CONFIRMATION_RESTORE_SYSTEM_SETTINGS] = ui_handler_system_settings,
   [CONFIRMATION_FACTORY_RESET] = ui_handler_system_settings,
-  [SCREEN_ABOUT] = ui_handler_system_settings,
-  [SCREEN_EASTER_EGG] = ui_handler_system_settings,
   
   [SCREEN_RECEIVER] = ui_handler_receiver,
   [SCREEN_RECEIVER_CONFIG] = ui_handler_receiver,
   [SCREEN_RECEIVER_BINDING] = ui_handler_receiver,
+
+  [SCREEN_ABOUT] = ui_handler_about,
+  [SCREEN_EASTER_EGG] = ui_handler_about,
   
   [SCREEN_TEXT_VIEWER] = ui_handler_text_viewer,
 };
@@ -298,6 +304,16 @@ void handleBatteryWarningUI()
 {
   if(!batteryGaugeCalibrated)
     return;
+
+  //Re-initialise the battery reading to prevent false alarms at initial setup.
+  static bool initialised = false;
+  if(!initialised)
+  {
+    initialised = true;
+    batteryVoltsNow = Sys.batteryVoltsMax; 
+    for(uint8_t i = 0; i < 100; i++)
+      checkBattery();
+  }
   
   static uint32_t batteryWarningMillis = millis();
   static bool batteryWarningDismissed = false;
@@ -1925,7 +1941,7 @@ void menuDraw(uint8_t *topItem, uint8_t *highlightedItem)
           display.print(c);
         }
         uint16_t scrollDelay = _scrollStarted ? 240 : 600;
-        if((thisLoopNum - _loopNumOffset + 1) % divRoundClosest(scrollDelay, fixedLoopTime) == 0)
+        if((thisLoopNum - _loopNumOffset + 1) % divRoundClosest(scrollDelay, Sys.fixedLoopTime) == 0)
         {
           _counter++;
           if(_counter >= lenTotal)
@@ -2056,7 +2072,7 @@ void contextMenuDraw()
           display.print(c);
         }
         uint16_t scrollDelay = _scrollStarted ? 240 : 600;
-        if((thisLoopNum - _loopNumOffset + 1) % divRoundClosest(scrollDelay, fixedLoopTime) == 0)
+        if((thisLoopNum - _loopNumOffset + 1) % divRoundClosest(scrollDelay, Sys.fixedLoopTime) == 0)
         {
           _counter++;
           if(_counter >= lenTotal)
