@@ -245,7 +245,7 @@ void resetSystemParams()
   Sys.showMenuIcons = true;
   Sys.rememberMenuPosition = false;
   Sys.useRoundRect = true;
-  Sys.useDenserMenus = true;
+  Sys.useDenserMenus = false;
   Sys.animationsEnabled = true;
   Sys.autohideTrims = false;
   Sys.showSplashScreen = true;
@@ -266,6 +266,8 @@ void resetSystemParams()
 
   Sys.longPressDelay = LONG_PRESS_DELAY_DEFAULT;
   Sys.keyRepeatInterval = KEY_REPEAT_INTERVAL_DEFAULT;
+  
+  Sys.fixedLoopTime = FIXED_LOOP_TIME_DEFAULT;
   
   Sys.showLoopTime = false;
   Sys.simulateTelemetry = false;
@@ -419,7 +421,6 @@ void resetModelParams()
   Model.gnssLastKnownAltitude = 0;
   Model.gnssLastKnownDistanceFromHome = 0;
   loadDefaultGnssUnits();
-
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -1029,6 +1030,9 @@ bool verifySystemData()
 
   if(Sys.keyRepeatInterval < KEY_REPEAT_INTERVAL_MIN || Sys.keyRepeatInterval > KEY_REPEAT_INTERVAL_MAX)
     Sys.keyRepeatInterval = KEY_REPEAT_INTERVAL_DEFAULT;
+
+  if(Sys.fixedLoopTime < FIXED_LOOP_TIME_MIN || Sys.fixedLoopTime > FIXED_LOOP_TIME_MAX)
+    Sys.fixedLoopTime = FIXED_LOOP_TIME_DEFAULT;
   
   return isSane;
 }
@@ -1120,17 +1124,17 @@ void sanitize83BaseName(char *str)
     str[i] = toupper(str[i]);
   
   //replace invalid characters
-  while (*str)
+  while(*str)
   {
     unsigned char c = (unsigned char)*str;
     
-    if (isalnum(c))
+    if(isalnum(c))
     {
       str++;
       continue;
     }
     
-    switch (c)
+    switch(c)
     {
       case '!':
       case '#':
