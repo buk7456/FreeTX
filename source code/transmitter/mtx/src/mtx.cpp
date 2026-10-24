@@ -103,10 +103,7 @@ void setup()
   //Initialise battery reading
   batteryVoltsNow = Sys.batteryVoltsMax; 
   for(uint8_t i = 0; i < 100; i++)
-  {
     checkBattery();
-    delay(1);
-  }
 
   //Welcome message
   if(Sys.showWelcomeMessage)
@@ -144,7 +141,6 @@ void setup()
   randomSeed(batteryVoltsNow);
   reinitialiseMixerCalculations();
   loopStartTime = micros();
-
 }
 
 //==================================================================================================
@@ -167,30 +163,33 @@ void loop()
   handleMainUI();
   
   ///--- LAZY SAVE MODEL DATA TO EEPROM
-  //Limit calling to about 10 times per second to prolong the EEPROM life.
-  //Saving say 2400 bytes takes approximately 240 seconds (4 minutes) before starting over.
-  //Without the limit, the same would take approximately 48 seconds, so if we let the system run
-  //for 6 hours, we would be making 450 writes to a certain EEPROM cell, compared to 90 when limited.
-  if(thisLoopNum % (100 / fixedLoopTime) == 0)
+  //Limit the write rate to prolong the EEPROM life
+  if(thisLoopNum % 8 == 0) // The cycle time is (fixedLoopTime * 8 * sizeof(Model))
     eeLazyWriteModelData(Sys.activeModelIdx);
 
   ///--- LAZY SAVE SYSTEM DATA TO EEPROM
-  //The cycle time set to about 5 minutes
-  const uint32_t intervalMillis = 300000UL / sizeof(Sys); 
-  if(thisLoopNum % (intervalMillis / fixedLoopTime) == 0)
+  //Limit the write rate to prolong the EEPROM life
+  if(thisLoopNum % 128 == 0) // The cycle time is (fixedLoopTime * 128 * sizeof(Sys))
     eeLazyWriteSysConfig();
+  /* 
+  const uint32_t intervalMillis = 300000UL / sizeof(Sys); // intervalMillis = cycleTime / totalBytes
+  if(thisLoopNum % (intervalMillis / Sys.fixedLoopTime) == 0)
+    eeLazyWriteSysConfig();
+  */
   
   ///--- LIMIT MAX RATE OF LOOP
   //This is done here for a more consistent timing of communications.
-  //Code section changed to use micros() instead of millis().
-  //Rollover isn't a problem here. 
+  uint32_t qq = (uint32_t)Sys.fixedLoopTime * 1000;
   uint32_t loopTime = micros() - loopStartTime;
-  if(Sys.showLoopTime) //debug
-    DBG_loopTime = loopTime;
-  if(loopTime < (fixedLoopTime * 1000)) 
-    delayMicroseconds((fixedLoopTime * 1000) - loopTime);
-  loopStartTime = micros(); 
-
+  if(loopTime < qq)
+  {
+    uint32_t tt = qq - loopTime;
+    delay(tt / 1000);
+    delayMicroseconds(tt % 1000);
+  }
+  
+  loopStartTime = micros();
+  
   ///--- COMMUNICATIONS
   doSerialCommunication();
 
@@ -205,6 +204,9 @@ void loop()
   
   ///--- HANDLE POWER OFF 
   handlePowerOff();
+
+  if(Sys.showLoopTime) //debug
+    DBG_loopTime = loopTime;
 }
 
 //==================================================================================================
@@ -334,10 +336,10 @@ void doSerialCommunication()
       {
         bool isRequestingTelemetry = false;
         bool isFailsafeData = false;
-        uint8_t qq = thisLoopNum % 64;
+        uint8_t qq = thisLoopNum % 32;
         if(qq == 16) //send failsafe data
           isFailsafeData = true;
-        else if(qq == 0 || qq == 32) //request telemetry
+        else if(qq == 0) //request telemetry
         {
           //only request telemetry when necessary i.e. if there are configured sensors
           //or we are forcing telemetry request
@@ -641,7 +643,7 @@ void handleTelemetry()
         telemetryMinReceivedValue[i] = telemetryReceivedValue[i];
     }
     //-- reset received telemetry if timeout
-    if(currMillis - telemetryLastReceivedTime[i] > 3000)
+    if(currMillis - telemetryLastReceivedTime[i] > ((uint16_t) 200 * Sys.fixedLoopTime))
       telemetryReceivedValue[i] = TELEMETRY_NO_DATA; 
   }
   
@@ -670,7 +672,7 @@ void handleTelemetry()
   }
 
   //reset gnss specific data
-  if(currMillis - gnssTelemetrylastReceivedTime > 3000)
+  if(currMillis - gnssTelemetrylastReceivedTime > ((uint16_t) 200 * Sys.fixedLoopTime))
   {
     GNSSTelemetryData.satellitesInUse = 0;
     GNSSTelemetryData.satellitesInView = 0;
@@ -687,7 +689,7 @@ void handlePowerOff()
     _counter++;
   else if(_counter > 0)
     _counter--;
-  if(_counter > 1000/fixedLoopTime) //power off
+  if(_counter > (1000 / Sys.fixedLoopTime)) //power off
   {
     showMessage(PSTR("Shutting down"));
     if(Sys.backlightEnabled)
