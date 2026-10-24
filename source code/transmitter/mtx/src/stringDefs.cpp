@@ -558,6 +558,7 @@ const char key_SimulateTelemetry[] PROGMEM = "SimulateTelemetry";
 const char key_DisableInterlacing[] PROGMEM = "DisableInterlacing";
 const char key_LongPressDelay[] PROGMEM = "LongPressDelay";
 const char key_KeyRepeatInterval[] PROGMEM = "KeyRepeatInterval";
+const char key_FixedLoopTime[] PROGMEM = "FixedLoopTime";
 const char key_ScreenshotSeqNo[] PROGMEM = "ScreenshotSeqNo";
 
 //=================================================================================================

@@ -1,7 +1,7 @@
-/* Adapted by BUK7456 from Sandeep Mistry's LoRa library
+/* 
+ Adapted by BUK7456 from Sandeep Mistry's LoRa library
  Changes made:
   - isTransmitting() made public
- 
 */
 
 // Copyright (c) Sandeep Mistry. All rights reserved.
@@ -45,13 +45,15 @@ public:
 
   int beginPacket(int implicitHeader = false);
   int endPacket(bool async = false);
-
-  bool isTransmitting(); 
   
+  bool isTransmitting();
+
   int parsePacket(int size = 0);
   int packetRssi();
   float packetSnr();
   long packetFrequencyError();
+
+  int rssi();
 
   // from Print
   virtual size_t write(uint8_t byte);
@@ -65,9 +67,11 @@ public:
 
 #ifndef ARDUINO_SAMD_MKRWAN1300
   void onReceive(void(*callback)(int));
+  void onCadDone(void(*callback)(boolean));
   void onTxDone(void(*callback)());
 
   void receive(int size = 0);
+  void channelActivityDetection(void);
 #endif
   void idle();
   void sleep();
@@ -83,8 +87,12 @@ public:
   void disableCrc();
   void enableInvertIQ();
   void disableInvertIQ();
+  void enableLowDataRateOptimize();
+  void disableLowDataRateOptimize();
   
   void setOCP(uint8_t mA); // Over Current Protection control
+  
+  void setGain(uint8_t gain); // Set LNA gain
 
   // deprecated
   void crc() { enableCrc(); }
@@ -108,6 +116,7 @@ private:
   long getSignalBandwidth();
 
   void setLdoFlag();
+  void setLdoFlagForced(const boolean);
 
   uint8_t readRegister(uint8_t address);
   void writeRegister(uint8_t address, uint8_t value);
@@ -125,6 +134,7 @@ private:
   int _packetIndex;
   int _implicitHeaderMode;
   void (*_onReceive)(int);
+  void (*_onCadDone)(boolean);
   void (*_onTxDone)();
 };
 

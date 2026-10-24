@@ -11,14 +11,13 @@ The System menu provides comprehensive configuration options so you can tailor t
 - [Backlight](#section_id_backlight)  
 - [Appearance](#section_id_appearance)  
 - [Miscellaneous](#section_id_miscellaneous)  
-- [Advanced](#section_id_advanced_settings)  
+- Hardware
   - [Sticks](#section_id_sticks)  
   - [Knobs](#section_id_knobs)  
   - [Switches](#section_id_switches)  
   - [Battery](#section_id_battery)  
-  - [Security](#section_id_security)  
-  - [Debug](#section_id_debug)  
-- [About](#section_id_about)
+- [Security](#section_id_security)  
+- [Debug](#section_id_debug)  
 
 <a id="section_id_rf_setup"></a>
 
@@ -97,16 +96,6 @@ To make a custom splash screen, create a monochrome bitmap image with 128x64 px 
 Available options are Metric, Imperial, Custom, or None.  
 When set to Custom, the user can set custom defaults for Distance, Speed, and Altitude.  
 When set to None, the system prompts the user to select units whenever adding the GNSS sensor.
-
-<a id="section_id_advanced_settings"></a>
-
-# Advanced settings
-
-This menu provides access to various advanced system settings. It is protected with a password (if set) to prevent unwanted configuration changes, for instance when we lend out the transmitter. 
-
-<p align="left">
-<img src="images/screenshots/system_advanced_menu.png"/>
-</p>
 
 <a id="section_id_sticks"></a>
 
@@ -199,7 +188,8 @@ To calibrate the battery gauge, use a digital multimeter to measure the actual b
 - **Lock models:** Locks the model manager screen, preventing access to the models.
 - **Lock startup:** Locks the main menu on startup, effectively preventing changes to all settings (both model and system), unless the correct password is entered.
 - **Lock on inactivity:** Locks the main menu after the system has been idle for the specified inactivity minutes. This setting applies only while the home screen is being displayed.
-- **Set/Change password:** Opens the text edit dialog to edit the password. To remove the existing password, simply clear the field. Setting a password also protects the Advanced system menu.
+- **Set/Change password:** Opens the text edit dialog to edit the password. To remove the existing password, simply clear the field. Setting a password also protects the hardware menu and debug menu.  
+A password is useful in preventing unwanted configuration changes, for instance when we lend out the transmitter. 
 
 <a id="section_id_debug"></a>
 
@@ -211,8 +201,6 @@ The Debug menu contains options intended primarily for troubleshooting, developm
 <img src="images/screenshots/system_debug.png"/>
 </p>
 
-<a id="section_id_about"></a>
-
 - **View statistics:** Displays basic system statistics, including system uptime, available free memory, and RF packet rate.
 - **View character set:** Displays all glyphs included in the system font.
 - **Screenshot configuration:** Assigns a physical switch to trigger screenshot capture.
@@ -221,18 +209,11 @@ The Debug menu contains options intended primarily for troubleshooting, developm
 - **Simulate telemetry:** Simulates telemetry data on sensor ID 0x30 for testing purposes.
 - **Long press delay:** Sets the duration that a physical button must be held before a long-press event is recognized. This setting applies to both UI buttons and trim buttons.
 - **Key repeat interval:** Sets the time interval between repeated key events when scrolling through menus and some options, effectively determining the scrolling speed.
+- **Fixed loop time:** Sets the fixed loop time of the main program loop.
 - **Dump EEPROM:** Displays a hexadecimal dump of the EEPROM contents.
 - **Back up settings:** Backs up system settings to the SD card. Model-specific settings are not included in this backup.
 - **Restore settings:** Restores system settings from the SD card.
 - **Factory reset:** Erases all system and model settings, restoring the device to its factory default state. Only data in the EEPROM gets erased; data on the SD card is not affected.
-
-## About
-
-The About menu provides information regarding firmware version, legal notices, credits, and support/contact resources.
-
-<p align="left">
-<img src="images/screenshots/system_about.png"/>
-</p>
 
 ---
 

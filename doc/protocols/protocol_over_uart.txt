@@ -104,9 +104,9 @@ MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE:
 
   Data is 2 bytes as follows:
     byte 0    Transmitter packet rate, 
-              i.e. how many RC packets are being sent out by transmitter.
+              i.e. how many RC packets are being sent out by transmitter every second.
     byte 1    Receiver packet rate, 
-              i.e. how many valid RC packets are being seen by the receiver.
+              i.e. how many valid RC packets are being seen by the receiver every second.
 
 
 MESSAGE_TYPE_TELEMETRY_GENERAL:

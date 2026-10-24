@@ -807,6 +807,6 @@ void exportSystemData(File& file)
   writeKeyValue_bool(file, 1, key_DisableInterlacing, Sys.disableInterlacing);
   writeKeyValue_U32(file, 1, key_LongPressDelay, Sys.longPressDelay);
   writeKeyValue_U32(file, 1, key_KeyRepeatInterval, Sys.keyRepeatInterval);
+  writeKeyValue_U32(file, 1, key_FixedLoopTime, Sys.fixedLoopTime);
   writeKeyValue_U32(file, 1, key_ScreenshotSeqNo, Sys.screenshotSeqNo);
-
 }

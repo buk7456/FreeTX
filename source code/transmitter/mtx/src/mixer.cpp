@@ -1253,14 +1253,14 @@ int32_t applySlow(int32_t currVal, int32_t targetVal, int32_t range, int32_t mul
 {
   if(currVal < targetVal && riseTime > 0)
   {
-    int32_t step = (multiplier * range * fixedLoopTime) / riseTime;
+    int32_t step = (multiplier * range * Sys.fixedLoopTime) / riseTime;
     currVal += step;
     if(currVal > targetVal)
       currVal = targetVal;
   }
   else if(currVal > targetVal && fallTime > 0) 
   {
-    int32_t step = (multiplier * range * fixedLoopTime) / fallTime;
+    int32_t step = (multiplier * range * Sys.fixedLoopTime) / fallTime;
     currVal -= step;
     if(currVal < targetVal)
       currVal = targetVal;
@@ -1371,15 +1371,15 @@ int16_t adjustTrim(uint8_t idx, int16_t val, uint8_t incButton, uint8_t decButto
   }
 
   uint8_t _heldBtn = 0;
-  uint8_t _repeatDelay = 200;
+  uint16_t desiredRepeatInterval = 200;
   if(millis() - buttonStartTime > (1000 + Sys.longPressDelay)) //speed up
   {
-    _repeatDelay = 100;
+    desiredRepeatInterval /= 2;
     if((millis() - buttonStartTime > (3000 + Sys.longPressDelay)) && step == STEP_VAL_FINE)
       step = STEP_VAL_MEDIUM;
   }
-
-  if((thisLoopNum - heldButtonEntryLoopNum) % (_repeatDelay / fixedLoopTime) == 0) 
+  uint16_t repeatInterval = desiredRepeatInterval + (desiredRepeatInterval % Sys.fixedLoopTime); //compensate to keep close to (1000/desiredRepeatInterval)
+  if((thisLoopNum - heldButtonEntryLoopNum) % (repeatInterval / Sys.fixedLoopTime) == 0) 
     _heldBtn = heldButton;
   
   //briefly pause at the center
@@ -1396,7 +1396,7 @@ int16_t adjustTrim(uint8_t idx, int16_t val, uint8_t incButton, uint8_t decButto
   }
   if(paused[idx])
   {
-    if((thisLoopNum - pausedLoopNum[idx]) < ((uint32_t) Sys.longPressDelay / fixedLoopTime))
+    if((thisLoopNum - pausedLoopNum[idx]) < ((uint32_t) Sys.longPressDelay / Sys.fixedLoopTime))
       _heldBtn = 0;
   }
   

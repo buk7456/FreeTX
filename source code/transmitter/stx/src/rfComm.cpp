@@ -20,14 +20,15 @@
   The frequencies in this UHF band lie between 902 MHz and 928 MHz.
 */
 
-#if defined (ISM_433MHZ)
+#if defined (ISM_433_MHZ)
   // Separation here is 525 kHz (500 kHz total lora bw +  25 kHz guard band).
   #define NUM_FREQ 4
   uint32_t freqList[NUM_FREQ] = {
     433150000, 433675000, 434200000, 434725000
+    // 443000000, 445000000, 447000000, 449000000
   };
   
-#elif defined (ISM_915MHZ)
+#elif defined (ISM_915_MHZ)
   // Separation here is 550 kHz (500 kHz total Lora bw + 50 kHz guard band).
   // Frequencies here are in range 915 MHz to 925 MHz to avoid clashing with the GSM900 frequencies.
   #define NUM_FREQ 15
@@ -87,8 +88,12 @@ uint8_t checkReceivedPacket(uint8_t sourceID, uint8_t destinationID);
 
 void initialiseRfModule()
 {
-  //setup lora module
   LoRa.setPins(PIN_LORA_SS, PIN_LORA_RESET); 
+
+#if defined (RF_MODULE_SPI_FREQUENCY)
+  LoRa.setSPIFrequency(RF_MODULE_SPI_FREQUENCY);
+#endif
+
   if(LoRa.begin(freqList[0]))
   {
     LoRa.setSpreadingFactor(7); 
@@ -226,7 +231,7 @@ void bind()
   static bool isListeningForAck = false;
   
   #define TIMEOUT_MODE_BIND  4500 
-  #define TIMEOUT_BIND_ACK   100  //Max time waiting for receiver's ack before retransmission
+  #define TIMEOUT_BIND_ACK   30  //Max time waiting for receiver's ack before retransmission
   
   /// INITIALISE
   if(!bindInitialised)

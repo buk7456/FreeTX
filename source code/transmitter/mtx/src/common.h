@@ -293,14 +293,6 @@ enum sensor_ID_e {
 
 //----------------- Main loop control ---------------------
 
-#define fixedLoopTime  20
-/* in milliseconds. Should be greater than the time taken by radio module to transmit the 
-entire packet or else the window is missed resulting in much less throughput. 
-It should also be close to the average worst case time to do the main loop i.e. when all features 
-are active (mixers, logical switches, UI, etc).
-The main loop time can be displayed by enabling the option in the debug menu.
-*/
-
 extern uint32_t thisLoopNum; //main loop counter
 
 //----------------- Debug ---------------------------------
@@ -433,6 +425,7 @@ typedef struct {
   bool     disableInterlacing; 
   uint16_t longPressDelay;
   uint16_t keyRepeatInterval;
+  uint8_t  fixedLoopTime;
   
   //--- screenshots
   uint16_t screenshotSeqNo;
@@ -504,6 +497,17 @@ enum default_gnss_units_e {
 
   GNSS_DEFAULT_UNITS_COUNT
 };
+
+#define FIXED_LOOP_TIME_MIN 20
+#define FIXED_LOOP_TIME_MAX 40
+#define FIXED_LOOP_TIME_DEFAULT 20
+
+/* The fixed loop time (in milliseconds). Should be greater than the time taken by radio module to transmit the 
+entire packet or else the window is missed resulting in much less throughput. 
+It should also be close to the average worst case time to do the main loop i.e. when all features 
+are active (mixers, logical switches, UI, etc).
+The main loop time can be displayed by enabling the option in the debug menu.
+*/
 
 //====================== MODEL PARAMETERS ==========================================================
 /* 

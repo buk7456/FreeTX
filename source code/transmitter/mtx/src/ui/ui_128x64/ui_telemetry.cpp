@@ -781,7 +781,7 @@ void ui_handler_telemetry()
         {
           do {
           Model.gnssAltitudeUnits = incDec(Model.gnssAltitudeUnits, UNITS_DISTANCE_FIRST, UNITS_DISTANCE_LAST, INCDEC_WRAP, INCDEC_SLOW);
-          } while (Model.gnssAltitudeUnits != UNITS_METRES && Model.gnssAltitudeUnits != UNITS_FEET );
+          } while(Model.gnssAltitudeUnits != UNITS_METRES && Model.gnssAltitudeUnits != UNITS_FEET );
         }
 
         //exit

@@ -56,7 +56,7 @@ uint8_t getChannelIdx(char c)
   };
   
   uint8_t result = 0;
-  switch (c)
+  switch(c)
   {
     case 'A': result = pgm_read_byte(&lut[Sys.defaultChannelOrder]) >> 6 & 0x03; break;
     case 'E': result = pgm_read_byte(&lut[Sys.defaultChannelOrder]) >> 4 & 0x03; break;  

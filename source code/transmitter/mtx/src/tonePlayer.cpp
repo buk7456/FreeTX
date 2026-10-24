@@ -57,9 +57,9 @@
 
 //--- Sounds ---
 
-// batteryLow:d=4,o=5,b=290:4p,4c6,32p,4a#,32p,4g.
+// batteryLow:d=4,o=5,b=300:4p,4c6,32p,4a#,32p,4g.
 const uint16_t batteryLowSound[] PROGMEM  = {
-  290,NOTE_C6,4,NOTE_REST,32,NOTE_AS5,4,NOTE_REST,32,NOTE_G5,4
+  300,NOTE_C6,4,NOTE_REST,32,NOTE_AS5,4,NOTE_REST,32,NOTE_G5,4
 }; 
 
 // warning:d=4,o=4,b=120:16p,8e5
@@ -67,14 +67,14 @@ const uint16_t warningSound[] PROGMEM = {
   120,NOTE_REST,16,NOTE_E5,8
 };
 
-// shortBeep:d=4,o=4,b=250:16d5
+// shortBeep:d=4,o=4,b=300:16d5
 const uint16_t shortBeepSound[] PROGMEM = {
-  250,NOTE_D5,16
+  300,NOTE_D5,16
 }; 
 
-// timerElapsed:d=4,o=5,b=210:16p,16b6,16p,8b6
+// timerElapsed:d=4,o=5,b=200:16p,16b6,16p,8b6
 const uint16_t timerElapsedSound[] PROGMEM = {
-  210,NOTE_REST,16,NOTE_B6,16,NOTE_REST,16,NOTE_B6,8
+  200,NOTE_REST,16,NOTE_B6,16,NOTE_REST,16,NOTE_B6,8
 }; 
 
 // idle:d=4,o=5,b=90:8p,32c5,32g4,32c5
@@ -97,14 +97,14 @@ const uint16_t bindSound[] PROGMEM = {
   75,NOTE_DS5,32,NOTE_G5,32,NOTE_AS5,32,NOTE_D6,16
 }; 
 
-// trimMoved:d=4,o=4,b=250:16a#7
+// trimMoved:d=4,o=4,b=300:16a#7
 const uint16_t trimMovedSound[] PROGMEM = {
-  250,NOTE_AS7,16
+  300,NOTE_AS7,16
 }; 
 
-// trimCentered:d=4,o=4,b=250:8a#7
+// trimCentered:d=4,o=4,b=300:8a#7
 const uint16_t trimCenteredSound[] PROGMEM = {
-  250,NOTE_AS7,8
+  300,NOTE_AS7,8
 }; 
 
 //trimEntered:d=4,o=5,b=120:32d#5,32g5,32a5
@@ -200,7 +200,7 @@ void beginToneTrimMoved()
   noTone(PIN_SPEAKER); //stop any notes
   //initialise values
   endTimeOfNote = 0;
-  bpm = 250;
+  bpm = 300;
   postn = 1; //TODO: clean up, this is a hack
   size = 2;  //TODO: clean up, this is a hack
   isPlaying = true;

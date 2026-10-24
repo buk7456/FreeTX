@@ -1156,6 +1156,8 @@ void extractConfig_Debug()
     Sys.longPressDelay = atoi_with_prefix(valueBuff);
   else if(MATCH_P(keyBuff[1], key_KeyRepeatInterval))
     Sys.keyRepeatInterval = atoi_with_prefix(valueBuff);
+  else if(MATCH_P(keyBuff[1], key_FixedLoopTime))
+    Sys.fixedLoopTime = atoi_with_prefix(valueBuff);
   else if(MATCH_P(keyBuff[1], key_ScreenshotSeqNo))
     Sys.screenshotSeqNo = atoi_with_prefix(valueBuff);
   else
