@@ -35,14 +35,15 @@ uint8_t receivePacketLength;
   The frequencies in this UHF band lie between 902 MHz and 928 MHz.
 */
 
-#if defined (ISM_433MHZ)
+#if defined (ISM_433_MHZ)
   // Separation here is 525 kHz (500 kHz total lora bw +  25 kHz guard band).
   #define NUM_FREQ 4
   uint32_t freqList[NUM_FREQ] = {
     433150000, 433675000, 434200000, 434725000
+    // 443000000, 445000000, 447000000, 449000000
   };
   
-#elif defined (ISM_915MHZ)
+#elif defined (ISM_915_MHZ)
   // Separation here is 550 kHz (500 kHz total Lora bw + 50 kHz guard band).
   // Frequencies here are in range 915 MHz to 925 MHz to avoid clashing with the GSM900 frequencies,
   #define NUM_FREQ 15
@@ -79,9 +80,8 @@ enum {
 
 bool radioInitialised = false;
 uint32_t rcPacketCount = 0;
-
+bool rcPacketCalculationInitialised = false;
 bool isSendingTelemetry = false;
-
 int16_t telem_rssi;
 
 #define MAX_LISTEN_TIME_ON_HOP_CHANNEL 100 //in ms
@@ -99,8 +99,12 @@ uint8_t checkReceivedPacket(uint8_t sourceID, uint8_t destinationID);
 
 void initialiseRfModule()
 {
-  //setup lora module
-  LoRa.setPins(PIN_LORA_SS, PIN_LORA_RESET); 
+  LoRa.setPins(PIN_LORA_SS, PIN_LORA_RESET);
+
+#if defined (RF_MODULE_SPI_FREQUENCY)
+  LoRa.setSPIFrequency(RF_MODULE_SPI_FREQUENCY);
+#endif
+
   if(LoRa.begin(freqList[0]))
   {
     LoRa.setSpreadingFactor(7);
@@ -301,6 +305,9 @@ void doRfCommunication()
     digitalWrite(PIN_LED, LOW);
 #endif
 
+  //-- RE-INITIALISE PACKET RATE CALCULATION
+  if(millis() - lastRCPacketMillis > 1000)
+    rcPacketCalculationInitialised = false;
 }
 
 //================================= HELPERS ========================================================
@@ -350,7 +357,7 @@ void bind()
   //--- Listen for bind
   
   bool receivedBind = false;
-  const uint16_t BIND_LISTEN_TIMEOUT = 500;
+  const uint16_t BIND_LISTEN_TIMEOUT = 200;
   uint32_t endTime = millis() + BIND_LISTEN_TIMEOUT;
   while(millis() < endTime)
   {
@@ -367,7 +374,7 @@ void bind()
         }
       }
     }
-    delay(10);
+    delay(2);
   }
   
   if(!receivedBind) //hop and exit
@@ -449,18 +456,22 @@ void sendTelemetry() //TODO: implement custom telemetry, establish standard IDs
       case TELEMETRY_TYPE_GENERAL: //TODO: improve this section to avoid possible buffer overflows
         {
           //calculate RC packets per second
+          static uint8_t rcPacketsPerSecond = 0; 
           static uint32_t prevRCPacketCount = 0; 
           static uint32_t ttPrevMillis = 0;
-          static uint8_t rcPacketsPerSecond = 0; 
+          if(!rcPacketCalculationInitialised)
+          {
+            rcPacketCalculationInitialised = true;
+            ttPrevMillis = lastRCPacketMillis;
+            rcPacketsPerSecond = 0;
+          }
           uint32_t ttElapsed = millis() - ttPrevMillis;
-          if (ttElapsed >= 1000)
+          if(ttElapsed >= 1000)
           {
             ttPrevMillis = millis();
             rcPacketsPerSecond = ((rcPacketCount - prevRCPacketCount) * 1000) / ttElapsed;
             prevRCPacketCount = rcPacketCount;
           }
-          if(millis() - lastRCPacketMillis >= 1000)
-            rcPacketsPerSecond = 0;
 
           uint8_t idx = 0;
 
