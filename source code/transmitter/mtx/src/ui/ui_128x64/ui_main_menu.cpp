@@ -27,6 +27,7 @@ void ui_handler_main_menu()
         menuAddItem(mainMenu[MAIN_MENU_TELEMETRY], MAIN_MENU_TELEMETRY, icon_m_telemetry);
         menuAddItem(mainMenu[MAIN_MENU_SYSTEM], MAIN_MENU_SYSTEM, icon_m_system);
         menuAddItem(mainMenu[MAIN_MENU_RECEIVER], MAIN_MENU_RECEIVER, icon_m_receiver);
+        menuAddItem(mainMenu[MAIN_MENU_ABOUT], MAIN_MENU_ABOUT, icon_m_about);
         menuDraw(&topItem, &highlightedItem);
 
         if(menuSelectedItemID == MAIN_MENU_MODEL) 
@@ -43,6 +44,7 @@ void ui_handler_main_menu()
         else if(menuSelectedItemID == MAIN_MENU_TELEMETRY) changeToScreen(SCREEN_TELEMETRY);
         else if(menuSelectedItemID == MAIN_MENU_SYSTEM) changeToScreen(SCREEN_SYSTEM_MENU);
         else if(menuSelectedItemID == MAIN_MENU_RECEIVER) changeToScreen(SCREEN_RECEIVER);
+        else if(menuSelectedItemID == MAIN_MENU_ABOUT) changeToScreen(SCREEN_ABOUT);
 
         if(heldButton == KEY_SELECT)
         {
