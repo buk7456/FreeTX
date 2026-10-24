@@ -107,18 +107,19 @@ void ui_handler_about()
           float    birdY; 
           float    pipeX;
           float    pipeY;
+          float    bgX;
           uint8_t  pipeVariant;
-          float    velocity; 
-          float    scrollVelocity;
-          bool     maxScrollVelocityReached;
           int16_t  score;
           bool     hasScored;
-          float    bgScrollVelocity;
-          float    bgX;
           float    gravity; 
-          float    scroll_acc; 
-          float    scroll_velocity_max;
-          float    bg_scroll_acc;
+          float    verticalVelocity; 
+          float    scrollAcc; 
+          float    scrollVelocity;
+          float    scrollVelocityMax;
+          bool     maxScrollVelocityReached;
+          float    bgScrollAcc;
+          float    bgScrollVelocity;
+          uint32_t prevMillis;
           uint8_t  state;
         } *game = NULL;
         
@@ -148,26 +149,25 @@ void ui_handler_about()
               printFullScreenMessage(PSTR("Get ready"));
               if(clickedButton == KEY_SELECT || millis() - buttonReleaseTime > 1000)
               {
-                //initialise variables
+                //Initialise variables
                 game->birdX = 24.0;
-                // game->birdY = 11.0;
-                game->birdY = 0.0;
-                game->velocity = 0.0;
-                game->bgX = 0.0;
-                game->score = 0;
-                game->hasScored = false;
+                game->birdY = 11.0;
                 game->pipeX = 127.0;
                 game->pipeY = random(5 + PIPE_GAP, 51);
+                game->bgX = 0.0;
                 game->pipeVariant = random() % PIPE_VARIANT_COUNT;
-                game->scrollVelocity = 0.0325 * Sys.fixedLoopTime;
-                game->bgScrollVelocity = 0.0081 * Sys.fixedLoopTime;
+                game->score = 0;
+                game->hasScored = false;
+                game->gravity = 185.0; // pixels per second per second
+                game->verticalVelocity = 0.0;
+                game->scrollAcc = 1.4; // pixels per second per second
+                game->scrollVelocity = 20.0; // pixels per second
+                game->scrollVelocityMax = 112.0; // pixels per second
                 game->maxScrollVelocityReached = false;
-                game->gravity = 0.0034 * Sys.fixedLoopTime; 
-                game->scroll_acc = 0.00002 * Sys.fixedLoopTime; 
-                game->scroll_velocity_max = 0.1 * Sys.fixedLoopTime;
-                game->bg_scroll_acc = 0.00001 * Sys.fixedLoopTime;
-                
-                //change state
+                game->bgScrollAcc = 0.5; // pixels per second per second
+                game->bgScrollVelocity = 5.0; // pixels per second
+                game->prevMillis = millis();
+                //Change state
                 game->state = GAME_STATE_PLAYING;
                 killButtonEvents();
               }
@@ -176,41 +176,39 @@ void ui_handler_about()
           
           case GAME_STATE_PLAYING:
             {
-              //Calculate the vertical position of the bird
-              //Here we are using the equations of linear motion, but with discrete time
-              // i.e. s = ut + 1/2at^2 and v = u + at
-              //As our time is discrete, we treat it as 1 time unit, and can then simply
-              //add the current y position to the previous y position. We also do same for velocity.
-              //To move the bird up on key event, we simply assign a fixed negative value 
-              //to the velocity (not realistic physics).
+              // Every frame, we perform these two calculations in order:
+              // 1. We update the velocity, i.e. velocity = velocity + (acceleration × delta time)
+              // 2. We update the position, i.e. position = position + (velocity × delta time)
 
-              //Because of the low precision of float on the AVR Arduino, the computations accumulate rounding errors over time. 
-              //A better approach would be to use delta time instead of discrete time, but this is not worth the effort for a very simple game.
+              //--- Calculate the vertical position of the bird
 
-              if(pressedButton == KEY_SELECT || pressedButton == KEY_UP)
-                game->velocity = -4 * sqrt(game->gravity); //about some constant * sqrt(gravity). Constant determined to be about -4
+              // When we press the jump button in a Flappy Bird clone, we instantly override the bird's vertical velocity.
+              if(pressedButton == KEY_SELECT || pressedButton == KEY_UP) 
+                game->verticalVelocity = -4 * sqrt(game->gravity); // About some constant * sqrt(gravity). Constant determined to be about -4
               
-              // s = ut + (1/2)at^2, v = u + at, time is unity and discrete.
-              game->birdY += (game->velocity + (game->gravity / 2.0));
-              game->velocity += game->gravity;
+              float deltaTime = (millis() - game->prevMillis) / 1000.0f;
+              game->prevMillis = millis();
+
+              game->verticalVelocity = game->verticalVelocity + (game->gravity * deltaTime);
+              game->birdY = game->birdY + (game->verticalVelocity * deltaTime);
               
               if(game->birdY > BIRD_YMAX)
                 game->birdY = BIRD_YMAX;
               
-              //Calculate the pipe x position
-              if(game->maxScrollVelocityReached)
-                game->pipeX -= game->scrollVelocity;
-              else
-              {
-                game->pipeX -= (game->scrollVelocity + (game->scroll_acc / 2.0));
-                game->scrollVelocity += game->scroll_acc;
-                if(game->scrollVelocity > game->scroll_velocity_max)
-                  game->maxScrollVelocityReached = true;
-              }
+              //--- Calculate the pipe x position
               
+              if(!game->maxScrollVelocityReached)
+                game->scrollVelocity = game->scrollVelocity + (game->scrollAcc * deltaTime);
+              if(game->scrollVelocity > game->scrollVelocityMax)
+              {
+                game->scrollVelocity = game->scrollVelocityMax;
+                game->maxScrollVelocityReached = true;
+              }
+              game->pipeX = game->pipeX - (game->scrollVelocity * deltaTime);
+
               // game->maxScrollVelocityReached = false; //##debug
               
-              //Generate new pipe when out of view
+              //--- Generate new pipe when out of view
               if(game->pipeX < 0.0 - PIPE_WIDTH)
               {
                 game->pipeX = 127;
@@ -223,16 +221,12 @@ void ui_handler_about()
                   game->pipeY = random(PIPE_GAP, 51);
               }
               
-              //Calculate background position.
+              //--- Calculate background position.
               //The background is parallax scrolled
-              if(game->maxScrollVelocityReached)
-                game->bgX += game->bgScrollVelocity;
-              else
-              {
-                game->bgX += (game->bgScrollVelocity + (game->bg_scroll_acc / 2.0));
-                game->bgScrollVelocity += game->bg_scroll_acc;
-              }
-              
+              if(!game->maxScrollVelocityReached)
+                game->bgScrollVelocity = game->bgScrollVelocity + (game->bgScrollAcc * deltaTime);
+              game->bgX = game->bgX + (game->bgScrollVelocity * deltaTime);
+
               if(game->bgX > 127)
                 game->bgX = 0.0;
               
@@ -261,7 +255,7 @@ void ui_handler_about()
               
               // collided = false; //###Debug
               
-              ///--- Calculate scores ---
+              ///--- Calculate scores
               
               if(game->birdX > (game->pipeX + PIPE_WIDTH) && !game->hasScored && !collided)
               {
@@ -273,7 +267,7 @@ void ui_handler_about()
               if(game->birdX < game->pipeX)
                 game->hasScored = false;
               
-              ///--- Draw on the screen ---
+              ///--- Draw on the screen
               
               //draw the background
               uint8_t idx = game->bgX;
@@ -336,7 +330,7 @@ void ui_handler_about()
               // display.setCursor(0, 16);
               // display.print(game->bgScrollVelocity);
               
-              ///--- Play audio ---
+              ///--- Play audio
               /* 
               if(audioToPlay = AUDIO_KEY_PRESSED) //always suppress key press tones
                 audioToPlay = AUDIO_NONE;
@@ -346,7 +340,7 @@ void ui_handler_about()
                 audioToPlay = AUDIO_NONE; //replace with actual 
               */
 
-              ///--- Change game state ---
+              ///--- Change game state
               
               //change state if collided
               if(collided)
