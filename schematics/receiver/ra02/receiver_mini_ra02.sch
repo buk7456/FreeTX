@@ -7059,7 +7059,7 @@ Standard 5-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 <part name="PAD1" library="wirepad" deviceset="2,15/1,0" device=""/>
 <part name="C3" library="rcl" deviceset="C-EU" device="C0805K" value="100n"/>
 <part name="Q2" library="transistor-npn" deviceset="BC817*" device="SMD" technology="-16" value=""/>
-<part name="R7" library="rcl" deviceset="R-US_" device="R0805" value="4.7k"/>
+<part name="R7" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
 <part name="R2" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
 <part name="+3V32" library="supply1" deviceset="+3V3" device=""/>
 <part name="P+3" library="supply1" deviceset="+5V" device=""/>
@@ -7068,14 +7068,14 @@ Standard 5-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 <part name="GND8" library="supply1" deviceset="GND" device=""/>
 <part name="R12" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
 <part name="P+4" library="supply1" deviceset="+5V" device=""/>
-<part name="R9" library="rcl" deviceset="R-US_" device="R0805" value="4.7k"/>
-<part name="R5" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
-<part name="R8" library="rcl" deviceset="R-US_" device="R0805" value="4.7k"/>
-<part name="R4" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
-<part name="R10" library="rcl" deviceset="R-US_" device="R0805" value="4.7k"/>
-<part name="R3" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
-<part name="R11" library="rcl" deviceset="R-US_" device="R0805" value="4.7k"/>
-<part name="R6" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
+<part name="R9" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R5" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
+<part name="R8" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R4" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
+<part name="R10" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R3" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
+<part name="R11" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R6" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
 <part name="GND7" library="supply1" deviceset="GND" device=""/>
 <part name="P+2" library="supply1" deviceset="+5V" device=""/>
 <part name="P+1" library="supply1" deviceset="+5V" device=""/>
