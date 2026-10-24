@@ -42,7 +42,7 @@ int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEna
   uint16_t timeOffset = Sys.longPressDelay;
   
   uint16_t slowToNormalDelay = 21 * Sys.keyRepeatInterval;
-  uint16_t normalToFastDelay = 4000;
+  uint16_t normalToFastDelay = (uint16_t) 200 * Sys.fixedLoopTime;
   uint16_t slowToFastDelay = slowToNormalDelay + normalToFastDelay;
   
   if(initialSpeed == INCDEC_SLOW && finalSpeed == INCDEC_NORMAL)
@@ -82,20 +82,23 @@ int16_t incDec(int16_t val, int16_t lowerLimit, int16_t upperLimit, bool wrapEna
   switch(speed)
   {
     case INCDEC_SLOW:
-      if((thisLoopNum - heldButtonEntryLoopNum) % divRoundClosest(Sys.keyRepeatInterval, fixedLoopTime) == 0)
-        heldBtnQQ = heldButton;
+      {
+        uint16_t repeatInterval = Sys.keyRepeatInterval + (Sys.keyRepeatInterval % Sys.fixedLoopTime); //compensated to keep close to the desired rate
+        if((thisLoopNum - heldButtonEntryLoopNum) % (repeatInterval / Sys.fixedLoopTime) == 0) 
+          heldBtnQQ = heldButton;
+      }
       break;
 
     case INCDEC_NORMAL:
       delta = 1;
-      if(timeQQ > (2000 + timeOffset))
+      if(timeQQ > (((uint16_t) 100 * Sys.fixedLoopTime) + timeOffset))
         delta = 2;
       heldBtnQQ = heldButton;
       break;
       
     case INCDEC_FAST:
       delta = 10;
-      if(timeQQ > (4000 + timeOffset))
+      if(timeQQ > (((uint16_t) 200 * Sys.fixedLoopTime) + timeOffset))
         delta = 100;
       heldBtnQQ = heldButton;
       break;
@@ -672,7 +675,7 @@ void telemetryAlarmHandler()
   
   //--- play audio
 
-  static uint8_t tCounter[NUM_CUSTOM_TELEMETRY];
+  static uint16_t tCounter[NUM_CUSTOM_TELEMETRY];
   static bool tWarnStarted[NUM_CUSTOM_TELEMETRY];
   for(uint8_t i = 0; i < NUM_CUSTOM_TELEMETRY; i++)
   {
@@ -687,8 +690,15 @@ void telemetryAlarmHandler()
       if(tCounter[i] > 0) --tCounter[i];
       if(tCounter[i] == 0) tWarnStarted[i] = false;
     }
-    //if more than 3 seconds, trigger warning
-    if(tCounter[i] > (3000 / fixedLoopTime) && !tWarnStarted[i]) 
+    // If more than 5.2 seconds, trigger warning.
+    // The 5.2 seconds comes as follows.
+    // We want to minimise nuisance triggers, 
+    // so we assume the worst fixed loop time of 40 ms, and 2 consecutive missed general telemetry packets.
+    // 40 * (telemetry request ratio * 2) * (consecutive missed telemetry packets)
+    // = 40 * (32 * 2) * 2
+    // = 5120 ms
+    // We then account for some small jitter and arrive to 5200 ms.
+    if(tCounter[i] > (5200 / Sys.fixedLoopTime) && !tWarnStarted[i]) 
       tWarnStarted[i] = true;
   }
   
@@ -710,7 +720,7 @@ void telemetryAlarmHandler()
   }
   
   //sound the alarm, repeat every 5 seconds
-  if(hasWarning && ((thisLoopNum - lastLoopNum) % (5000 / fixedLoopTime) == 0) && !telemetryMuteAlarms)
+  if(hasWarning && ((thisLoopNum - lastLoopNum) % (5000 / Sys.fixedLoopTime) == 0) && !telemetryMuteAlarms)
     audioToPlay = AUDIO_TELEM_WARNING;
 }
 
@@ -744,8 +754,7 @@ void timerHandler()
     if(Model.Timer[i].swtch != CTRL_SW_NONE)
       timerForceRun[i] = false;
     
-    if((Model.Timer[i].swtch != CTRL_SW_NONE && checkSwitchCondition(Model.Timer[i].swtch)) 
-      || timerForceRun[i]) //run timer
+    if((Model.Timer[i].swtch != CTRL_SW_NONE && checkSwitchCondition(Model.Timer[i].swtch)) || timerForceRun[i]) //run timer
     {
       timerElapsedTime[i] = timerLastElapsedTime[i] + millis() - timerLastPaused[i];
       timerIsRunning[i] = true;
