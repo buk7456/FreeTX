@@ -17095,18 +17095,18 @@ Standard schematic elements and footprints for 5mm, 3mm, 1206, and 0603 sized LE
 <part name="R20" library="rcl" deviceset="R-US_" device="0204/7" value="1k"/>
 <part name="P+9" library="supply1" deviceset="+5V" device=""/>
 <part name="P+4" library="supply1" deviceset="+5V" device=""/>
-<part name="R9" library="rcl" deviceset="R-US_" device="0204/2V" value="5.6k"/>
-<part name="R10" library="rcl" deviceset="R-US_" device="0204/2V" value="5.6k"/>
-<part name="R11" library="rcl" deviceset="R-US_" device="0204/2V" value="5.6k"/>
-<part name="R12" library="rcl" deviceset="R-US_" device="0204/2V" value="5.6k"/>
-<part name="R8" library="rcl" deviceset="R-US_" device="0204/2V" value="10k"/>
-<part name="R6" library="rcl" deviceset="R-US_" device="0204/2V" value="10k"/>
-<part name="R5" library="rcl" deviceset="R-US_" device="0204/2V" value="10k"/>
-<part name="R4" library="rcl" deviceset="R-US_" device="0204/2V" value="10k"/>
+<part name="R9" library="rcl" deviceset="R-US_" device="0204/2V" value="560"/>
+<part name="R10" library="rcl" deviceset="R-US_" device="0204/2V" value="560"/>
+<part name="R11" library="rcl" deviceset="R-US_" device="0204/2V" value="560"/>
+<part name="R12" library="rcl" deviceset="R-US_" device="0204/2V" value="560"/>
+<part name="R8" library="rcl" deviceset="R-US_" device="0204/2V" value="1k"/>
+<part name="R6" library="rcl" deviceset="R-US_" device="0204/2V" value="1k"/>
+<part name="R5" library="rcl" deviceset="R-US_" device="0204/2V" value="1k"/>
+<part name="R4" library="rcl" deviceset="R-US_" device="0204/2V" value="1k"/>
 <part name="GND8" library="supply1" deviceset="GND" device=""/>
 <part name="P+8" library="supply1" deviceset="+5V" device=""/>
 <part name="P+7" library="supply1" deviceset="+5V" device=""/>
-<part name="R7" library="rcl" deviceset="R-US_" device="0204/2V" value="5.6k"/>
+<part name="R7" library="rcl" deviceset="R-US_" device="0204/2V" value="1k"/>
 <part name="R2" library="rcl" deviceset="R-US_" device="0207/15" value="10k"/>
 <part name="+3V32" library="supply1" deviceset="+3V3" device=""/>
 <part name="P+6" library="supply1" deviceset="+5V" device=""/>
@@ -17344,12 +17344,12 @@ DIO3</text>
 <instance part="P+8" gate="1" x="175.26" y="55.88"/>
 <instance part="P+7" gate="1" x="172.72" y="33.02" rot="R90"/>
 <instance part="R7" gate="G$1" x="116.84" y="7.62" smashed="yes">
-<attribute name="NAME" x="114.554" y="8.8646" size="1.778" layer="95"/>
-<attribute name="VALUE" x="113.03" y="4.318" size="1.778" layer="96"/>
+<attribute name="NAME" x="115.824" y="8.8646" size="1.778" layer="95"/>
+<attribute name="VALUE" x="115.57" y="4.318" size="1.778" layer="96"/>
 </instance>
 <instance part="R2" gate="G$1" x="99.06" y="7.62" smashed="yes">
-<attribute name="NAME" x="102.87" y="5.3086" size="1.778" layer="95"/>
-<attribute name="VALUE" x="95.25" y="4.318" size="1.778" layer="96"/>
+<attribute name="NAME" x="97.282" y="9.3726" size="1.778" layer="95"/>
+<attribute name="VALUE" x="96.774" y="4.318" size="1.778" layer="96"/>
 </instance>
 <instance part="+3V32" gate="G$1" x="88.9" y="7.62" smashed="yes" rot="R90">
 <attribute name="VALUE" x="93.98" y="5.08" size="1.778" layer="96" rot="R180"/>
@@ -17400,7 +17400,10 @@ DIO3</text>
 <instance part="GND17" gate="1" x="45.72" y="73.66" smashed="yes" rot="R270">
 <attribute name="VALUE" x="43.18" y="76.2" size="1.778" layer="96" rot="R270"/>
 </instance>
-<instance part="T1" gate="G$1" x="106.68" y="5.08" rot="R270"/>
+<instance part="T1" gate="G$1" x="106.68" y="5.08" smashed="yes" rot="R270">
+<attribute name="NAME" x="104.14" y="0" size="1.778" layer="95"/>
+<attribute name="VALUE" x="104.14" y="-2.54" size="1.778" layer="96"/>
+</instance>
 <instance part="J6" gate="G$1" x="241.3" y="35.56" rot="R180"/>
 <instance part="D1" gate="G$1" x="101.6" y="149.86" rot="R90"/>
 <instance part="D2" gate="G$1" x="101.6" y="165.1" rot="R90"/>
