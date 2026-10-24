@@ -7064,7 +7064,7 @@ Standard 5-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 <part name="GND4" library="supply1" deviceset="GND" device=""/>
 <part name="U1" library="RFM95_Lora_module" deviceset="RFM95_LORA_MODULE" device=""/>
 <part name="Q2" library="transistor-npn" deviceset="BC817*" device="SMD" technology="-16" value=""/>
-<part name="R7" library="rcl" deviceset="R-US_" device="R0805" value="5.6k"/>
+<part name="R7" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
 <part name="R2" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
 <part name="+3V32" library="supply1" deviceset="+3V3" device=""/>
 <part name="P+3" library="supply1" deviceset="+5V" device=""/>
@@ -7073,14 +7073,14 @@ Standard 5-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 <part name="GND8" library="supply1" deviceset="GND" device=""/>
 <part name="R12" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
 <part name="P+4" library="supply1" deviceset="+5V" device=""/>
-<part name="R9" library="rcl" deviceset="R-US_" device="R0805" value="5.6k"/>
-<part name="R5" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
-<part name="R8" library="rcl" deviceset="R-US_" device="R0805" value="5.6k"/>
-<part name="R4" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
-<part name="R10" library="rcl" deviceset="R-US_" device="R0805" value="5.6k"/>
-<part name="R3" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
-<part name="R11" library="rcl" deviceset="R-US_" device="R0805" value="5.6k"/>
-<part name="R6" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
+<part name="R9" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R5" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
+<part name="R8" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R4" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
+<part name="R10" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R3" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
+<part name="R11" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R6" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
 <part name="GND7" library="supply1" deviceset="GND" device=""/>
 <part name="P+2" library="supply1" deviceset="+5V" device=""/>
 <part name="P+1" library="supply1" deviceset="+5V" device=""/>
@@ -7164,11 +7164,11 @@ Standard 5-pin 0.1" header. Use with straight break away headers (SKU : PRT-0011
 </instance>
 <instance part="R7" gate="G$1" x="119.38" y="-33.02" smashed="yes">
 <attribute name="NAME" x="117.094" y="-31.7754" size="1.778" layer="95"/>
-<attribute name="VALUE" x="115.57" y="-36.322" size="1.778" layer="96"/>
+<attribute name="VALUE" x="117.602" y="-36.322" size="1.778" layer="96"/>
 </instance>
 <instance part="R2" gate="G$1" x="101.6" y="-33.02" smashed="yes">
-<attribute name="NAME" x="105.41" y="-35.3314" size="1.778" layer="95"/>
-<attribute name="VALUE" x="97.79" y="-36.322" size="1.778" layer="96"/>
+<attribute name="NAME" x="100.076" y="-31.5214" size="1.778" layer="95"/>
+<attribute name="VALUE" x="99.568" y="-36.322" size="1.778" layer="96"/>
 </instance>
 <instance part="+3V32" gate="G$1" x="93.98" y="-33.02" smashed="yes" rot="R90">
 <attribute name="VALUE" x="96.52" y="-30.48" size="1.778" layer="96" rot="R180"/>

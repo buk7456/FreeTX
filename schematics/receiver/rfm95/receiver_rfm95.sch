@@ -10649,19 +10649,19 @@ Standard 11-pin 0.1" header. Use with straight break away headers (SKU : PRT-001
 <part name="P+3" library="supply1" deviceset="+5V" device=""/>
 <part name="P+9" library="supply1" deviceset="+5V" device=""/>
 <part name="P+4" library="supply1" deviceset="+5V" device=""/>
-<part name="R9" library="rcl" deviceset="R-US_" device="R0805" value="5.6k"/>
-<part name="R10" library="rcl" deviceset="R-US_" device="R0805" value="5.6k"/>
-<part name="R11" library="rcl" deviceset="R-US_" device="R0805" value="5.6k"/>
-<part name="R12" library="rcl" deviceset="R-US_" device="R0805" value="5.6k"/>
-<part name="R8" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
-<part name="R6" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
-<part name="R5" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
-<part name="R4" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
+<part name="R9" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R10" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R11" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R12" library="rcl" deviceset="R-US_" device="R0805" value="560"/>
+<part name="R8" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
+<part name="R6" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
+<part name="R5" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
+<part name="R4" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
 <part name="GND8" library="supply1" deviceset="GND" device=""/>
 <part name="P+8" library="supply1" deviceset="+5V" device=""/>
 <part name="P+7" library="supply1" deviceset="+5V" device=""/>
 <part name="Q2" library="transistor-npn" deviceset="BC817*" device="SMD" technology="-16" value=""/>
-<part name="R7" library="rcl" deviceset="R-US_" device="R0805" value="5.6k"/>
+<part name="R7" library="rcl" deviceset="R-US_" device="R0805" value="1k"/>
 <part name="R2" library="rcl" deviceset="R-US_" device="R0805" value="10k"/>
 <part name="+3V32" library="supply1" deviceset="+3V3" device=""/>
 <part name="P+6" library="supply1" deviceset="+5V" device=""/>
@@ -10900,11 +10900,11 @@ max 17.2V</text>
 </instance>
 <instance part="R7" gate="G$1" x="93.98" y="-35.56" smashed="yes">
 <attribute name="NAME" x="91.694" y="-34.3154" size="1.778" layer="95"/>
-<attribute name="VALUE" x="90.17" y="-38.862" size="1.778" layer="96"/>
+<attribute name="VALUE" x="91.44" y="-38.608" size="1.778" layer="96"/>
 </instance>
 <instance part="R2" gate="G$1" x="76.2" y="-35.56" smashed="yes">
-<attribute name="NAME" x="80.01" y="-37.8714" size="1.778" layer="95"/>
-<attribute name="VALUE" x="72.39" y="-38.862" size="1.778" layer="96"/>
+<attribute name="NAME" x="74.168" y="-34.0614" size="1.778" layer="95"/>
+<attribute name="VALUE" x="73.406" y="-38.608" size="1.778" layer="96"/>
 </instance>
 <instance part="+3V32" gate="G$1" x="66.04" y="-35.56" smashed="yes" rot="R90">
 <attribute name="VALUE" x="71.12" y="-38.1" size="1.778" layer="96" rot="R180"/>
