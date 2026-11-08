@@ -87,8 +87,8 @@ void LCDST7920::drawVLine(uint8_t x, uint8_t y, uint8_t h, uint8_t color)
   if(y >= LCDHEIGHT) 
   {
     //Handle the uint8_t wrapping around.
-    //For example the y position passed to the function could have been negative. In this case 
-    //we draw the portion visible, instead of instead of just returning from the function.
+    //For example the y position passed to the function could be negative. In this case 
+    //we draw the portion visible, instead of just returning from the function.
     uint8_t p = (255 - y) + 1;
     if(p >= h || p >= 64)
       return;
@@ -130,8 +130,8 @@ void LCDST7920::drawHLine(uint8_t x, uint8_t y, uint8_t w, uint8_t color)
   if(x >= LCDWIDTH)
   {
     //Handle the uint8_t wrapping around.
-    //For example the x position passed to the function could have been negative. In this case
-    //we draw the portion visible, instead of instead of just returning from the function.
+    //For example the x position passed to the function could be negative. In this case
+    //we draw the portion visible, instead of just returning from the function.
     uint8_t p = (255 - x) + 1;
     if(p >= w || p >= 64)
       return;
