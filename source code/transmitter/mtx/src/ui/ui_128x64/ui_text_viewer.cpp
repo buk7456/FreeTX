@@ -143,6 +143,12 @@ void ui_handler_text_viewer()
         }
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

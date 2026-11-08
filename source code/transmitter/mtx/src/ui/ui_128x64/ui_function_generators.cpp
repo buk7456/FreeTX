@@ -414,6 +414,12 @@ void ui_handler_function_generators()
         }
       }
       break;
+
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

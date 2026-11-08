@@ -228,6 +228,12 @@ void ui_handler_timers()
           changeToScreen(SCREEN_TIMERS);
       }
       break;
+
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

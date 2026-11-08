@@ -1126,6 +1126,12 @@ void ui_handler_mixer()
         }
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

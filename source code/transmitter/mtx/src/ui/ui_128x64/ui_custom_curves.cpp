@@ -389,6 +389,12 @@ void ui_handler_custom_curves()
         }
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

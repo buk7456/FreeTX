@@ -71,6 +71,12 @@ void ui_handler_flight_modes()
           changeToScreen(SCREEN_EXTRAS_MENU);
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

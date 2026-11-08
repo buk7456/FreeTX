@@ -276,6 +276,12 @@ void ui_handler_outputs()
           changeToScreen(SCREEN_OUTPUTS);
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

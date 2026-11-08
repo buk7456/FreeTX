@@ -236,6 +236,12 @@ void ui_handler_custom_notifications()
           changeToScreen(SCREEN_NOTIFICATION_SETUP);
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

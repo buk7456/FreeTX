@@ -478,6 +478,12 @@ void ui_handler_inputs()
           changeToScreen(SCREEN_MAIN_MENU);
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

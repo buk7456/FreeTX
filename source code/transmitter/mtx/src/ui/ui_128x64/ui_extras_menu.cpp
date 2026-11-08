@@ -47,6 +47,12 @@ void ui_handler_extras_menu()
         }
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

@@ -455,6 +455,12 @@ void ui_handler_receiver()
         }
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 
