@@ -906,6 +906,12 @@ void ui_handler_home()
           changeToScreen(SCREEN_WIDGET_SETUP);
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

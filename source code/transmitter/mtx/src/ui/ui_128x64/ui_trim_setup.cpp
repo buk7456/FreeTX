@@ -75,6 +75,12 @@ void ui_handler_trim_setup()
           changeToScreen(SCREEN_EXTRAS_MENU);
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

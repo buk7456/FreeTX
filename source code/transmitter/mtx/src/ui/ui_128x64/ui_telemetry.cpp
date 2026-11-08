@@ -1076,6 +1076,12 @@ void ui_handler_telemetry()
         }
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

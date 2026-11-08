@@ -95,6 +95,12 @@ void ui_handler_safety_checks()
           changeToScreen(SCREEN_EXTRAS_MENU);
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

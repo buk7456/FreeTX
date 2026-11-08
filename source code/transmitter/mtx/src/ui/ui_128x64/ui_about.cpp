@@ -6,7 +6,7 @@ void ui_handler_about()
 {
   switch(theScreen)
   {
-      case SCREEN_ABOUT:
+    case SCREEN_ABOUT:
       {
         drawHeader_Menu(mainMenu[MAIN_MENU_ABOUT]);
         
@@ -59,7 +59,7 @@ void ui_handler_about()
       }
       break;
       
-      case SCREEN_EASTER_EGG:
+    case SCREEN_EASTER_EGG:
       {
         //------ Simple flappy bird game -------
         
@@ -379,6 +379,12 @@ void ui_handler_about()
           game = NULL; //set the pointer to NULL to avoid dangling pointer issues
           changeToScreen(SCREEN_ABOUT);
         }
+      }
+      break;
+
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
       }
       break;
   }

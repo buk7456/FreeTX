@@ -2185,6 +2185,12 @@ void ui_handler_system_settings()
         }
       } 
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

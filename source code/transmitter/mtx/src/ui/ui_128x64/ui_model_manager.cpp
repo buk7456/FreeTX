@@ -691,6 +691,12 @@ void ui_handler_model_manager()
           changeToScreen(SCREEN_MODEL);
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 

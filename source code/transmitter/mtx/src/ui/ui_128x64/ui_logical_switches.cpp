@@ -514,6 +514,12 @@ void ui_handler_logical_switches()
         }
       }
       break;
+    
+    default:
+      {
+        changeToScreen(SCREEN_HOME);
+      }
+      break;
   }
 }
 
