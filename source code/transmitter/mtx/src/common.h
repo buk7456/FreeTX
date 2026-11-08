@@ -78,7 +78,6 @@ extern int16_t knobIn[NUM_KNOBS];
 extern bool isCalibratingControls;
 
 enum calibration_stage_e {
-  //calibration stages
   CALIBRATE_INIT,
   CALIBRATE_MOVE,
   CALIBRATE_DEADBAND
@@ -92,7 +91,6 @@ enum calibration_stage_e {
 extern uint8_t swState[NUM_PHYSICAL_SWITCHES];
 
 enum switch_state_e {  
-  //Switch states
   SWUPPERPOS = 0, 
   SWLOWERPOS = 1, 
   SWMIDPOS   = 2
@@ -321,7 +319,6 @@ typedef struct {
 } stick_axis_params_t;
 
 enum stick_axis_type_e {
-  //stick axis types
   STICK_AXIS_SELF_CENTERING,
   STICK_AXIS_NON_CENTERING,
   STICK_AXIS_ABSENT,
@@ -332,7 +329,6 @@ enum stick_axis_type_e {
 typedef stick_axis_params_t knob_params_t;
 
 enum knob_type_e {
-  //type of knob
   KNOB_CENTER_DETENT,
   KNOB_NO_CENTER_DETENT,
   KNOB_ABSENT,
