@@ -192,8 +192,14 @@ extern uint8_t  activeFmdIdx;
 
 //----------------- Receiver related ----------------------
 
-extern uint8_t  transmitterPacketRate;
-extern uint8_t  receiverPacketRate;
+typedef struct {
+  uint8_t  transmitterPacketRate;
+  uint8_t  receiverPacketRate;
+  uint8_t  transmitterID;
+  uint8_t  receiverID;
+} rf_link_statistics_t;
+
+extern rf_link_statistics_t RFLinkStatistics;
 
 extern bool     isRequestingBind;
 extern uint8_t  bindStatusCode;  //1 on success, 2 on fail
