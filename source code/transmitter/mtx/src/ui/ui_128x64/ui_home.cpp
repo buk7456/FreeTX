@@ -166,7 +166,7 @@ void ui_handler_home()
             //skip sensors that are not set to show on home
             if(!Model.Telemetry[i].showOnHome)
               continue;
-            //skip "no data" sensors
+            //skip "No data" sensors
             if(telemetryReceivedValue[i] == TELEMETRY_NO_DATA) 
               continue;
             //skip special telemetry

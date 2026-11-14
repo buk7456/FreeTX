@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "mathHelpers.h"
+#include "prng.h"
 #include "mixer.h"
 
 int32_t applySlow(int32_t currVal, int32_t targetVal, int32_t range, int32_t multiplier, uint32_t riseTime, uint32_t fallTime);
@@ -1642,7 +1643,7 @@ int16_t generateWaveform(uint8_t idx, int32_t _currTime)
         if(timeInstance < (period/2) && isExpired[idx])
         {
           isExpired[idx] = false;
-          lastResult[idx] = random(-500, 500);
+          lastResult[idx] = myRandom(-500, 500);
         }
         if(timeInstance >= (period/2))
           isExpired[idx] = true;

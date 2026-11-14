@@ -6,6 +6,7 @@
 #include "../config.h"
 #include "common.h"
 #include "crc.h"
+#include "prng.h"
 #include "eestore.h"
 #include "rfComm.h"
 
@@ -243,14 +244,14 @@ void bind()
     if(isMainReceiver)
     {
      //--- generate random Sys.transmitterID and Sys.fhss_schema
-      randomSeed(millis()); //Seed PRNG
-      Sys.transmitterID = random(0x01, 0x7F); //generate random ID
+      myRandomSeed(millis()); //Seed PRNG
+      Sys.transmitterID = myRandom(0x01, 0x7F); //generate random ID
       memset(Sys.fhss_schema, 0xFF, sizeof(Sys.fhss_schema)); //clear schema
       //generate random unique hopping sequence
       uint8_t idx = 0;
       while (idx < NUM_HOP_CHANNELS)
       {
-        uint8_t genVal = random(NUM_FREQ);
+        uint8_t genVal = myRandom(NUM_FREQ - 1);
         bool unique = true;
         for(uint8_t k = 0; k < (NUM_HOP_CHANNELS); k++)
         {

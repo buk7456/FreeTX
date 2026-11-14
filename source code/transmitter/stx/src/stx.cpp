@@ -24,7 +24,7 @@ enum {
   MESSAGE_TYPE_BIND_STATUS_CODE = 0x10,
   MESSAGE_TYPE_RECEIVER_CONFIG = 0x11,
   MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE = 0x12,
-  MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE = 0x13,
+  MESSAGE_TYPE_RF_LINK_STATISTICS = 0x13,
   MESSAGE_TYPE_TELEMETRY_GENERAL = 0x14,
   MESSAGE_TYPE_TELEMETRY_GNSS = 0x15,
 };
@@ -211,7 +211,7 @@ void sendSerialData()
     if(millis() > rfLinkTelemetryMessageDispatchTime)
     {
       hasPendingRFLinkMessage = false;
-      messageType = MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE;
+      messageType = MESSAGE_TYPE_RF_LINK_STATISTICS;
     }
   }
 
@@ -295,13 +295,15 @@ void sendSerialData()
       }
       break;
 
-    case MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE:
+    case MESSAGE_TYPE_RF_LINK_STATISTICS:
       {
-        buffer[4] = 2; //data length
+        buffer[4] = 4; //data length
         buffer[5] = transmitterPacketRate;
         if(millis() - generalTelemetryLastReceiveTime > 3000)
           receiverPacketRate = 0;
         buffer[6] = receiverPacketRate;
+        buffer[7] = Sys.transmitterID;
+        buffer[8] = Sys.receiverID;
       }
       break;
   }
