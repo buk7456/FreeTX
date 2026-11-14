@@ -1705,9 +1705,9 @@ void ui_handler_system_settings()
           ITEM_PACKET_RATE,
           ITEM_UP_TIME,
           ITEM_LOOP_NUM,
-          ITEM_FIXED_LOOP_TIME,
           ITEM_INACTIVITY_TIME,
           ITEM_FREE_RAM,
+          ITEM_TX_RX_ID,
           
           ITEM_COUNT
         };
@@ -1735,9 +1735,9 @@ void ui_handler_system_settings()
               {
                 display.print(F("Pkt rate:"));
                 display.setCursor(66, ypos);
-                display.print(transmitterPacketRate);
+                display.print(RFLinkStatistics.transmitterPacketRate);
                 display.print(F(", "));
-                display.print(receiverPacketRate);
+                display.print(RFLinkStatistics.receiverPacketRate);
               }
               break;
             
@@ -1774,14 +1774,24 @@ void ui_handler_system_settings()
                 display.print(thisLoopNum);
               }
               break;
-            
-            case ITEM_FIXED_LOOP_TIME:
+
+            case ITEM_TX_RX_ID:
               {
-                display.print(F("Fxd loop:"));
+                display.print(F("TX, RX ID:"));
                 display.setCursor(66, ypos);
-                display.print(Sys.fixedLoopTime);
-                display.setCursor(display.getCursorX() + 3, ypos);
-                display.print(F("ms"));
+                if(RFLinkStatistics.transmitterID == 0)
+                  display.print(F("No data"));
+                else
+                {
+                  display.print(F("0x"));
+                  if(RFLinkStatistics.transmitterID < 16)
+                    display.print(F("0"));
+                  display.print(RFLinkStatistics.transmitterID, HEX);
+                  display.print(F(", 0x"));
+                  if(RFLinkStatistics.receiverID < 16)
+                    display.print(F("0"));
+                  display.print(RFLinkStatistics.receiverID, HEX);
+                }
               }
               break;
           }
