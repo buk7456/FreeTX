@@ -153,9 +153,9 @@ void ui_handler_about()
                 game->birdX = 24.0;
                 game->birdY = 11.0;
                 game->pipeX = 127.0;
-                game->pipeY = random(5 + PIPE_GAP, 51);
+                game->pipeY = myRandom(5 + PIPE_GAP, 51);
                 game->bgX = 0.0;
-                game->pipeVariant = random() % PIPE_VARIANT_COUNT;
+                game->pipeVariant = ((uint16_t) myRandom()) % PIPE_VARIANT_COUNT;
                 game->score = 0;
                 game->hasScored = false;
                 game->gravity = 185.0; // pixels per second per second
@@ -212,13 +212,13 @@ void ui_handler_about()
               if(game->pipeX < 0.0 - PIPE_WIDTH)
               {
                 game->pipeX = 127;
-                game->pipeVariant = random() % PIPE_VARIANT_COUNT;
+                game->pipeVariant = ((uint16_t) myRandom()) % PIPE_VARIANT_COUNT;
                 if(game->pipeVariant == PIPE_VARIANT_C)
-                  game->pipeY = random(5 + PIPE_GAP, 51);
+                  game->pipeY = myRandom(5 + PIPE_GAP, 51);
                 if(game->pipeVariant == PIPE_VARIANT_B)
-                  game->pipeY = random(5 + PIPE_GAP, 62);
+                  game->pipeY = myRandom(5 + PIPE_GAP, 62);
                 if(game->pipeVariant == PIPE_VARIANT_A)
-                  game->pipeY = random(PIPE_GAP, 51);
+                  game->pipeY = myRandom(PIPE_GAP, 51);
               }
               
               //--- Calculate background position.
