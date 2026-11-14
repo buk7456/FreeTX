@@ -6,6 +6,7 @@
 #include "crc.h"
 #include "inputs.h"
 #include "mathHelpers.h"
+#include "prng.h"
 #include "mixer.h"
 #include "ee/eestore.h"
 #include "sd/sdStore.h"
@@ -29,7 +30,7 @@ enum {
   MESSAGE_TYPE_BIND_STATUS_CODE = 0x10,
   MESSAGE_TYPE_RECEIVER_CONFIG = 0x11,
   MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE = 0x12,
-  MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE = 0x13,
+  MESSAGE_TYPE_RF_LINK_STATISTICS = 0x13,
   MESSAGE_TYPE_TELEMETRY_GENERAL = 0x14,
   MESSAGE_TYPE_TELEMETRY_GNSS = 0x15,
 };
@@ -138,7 +139,7 @@ void setup()
   restoreCounterRegisters();
   
   //Other initialisations
-  randomSeed(batteryVoltsNow);
+  myRandomSeed(batteryVoltsNow);
   reinitialiseMixerCalculations();
   loopStartTime = micros();
 }
@@ -479,13 +480,15 @@ void doSerialCommunication()
       }
       break;
 
-    case MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE:
+    case MESSAGE_TYPE_RF_LINK_STATISTICS:
       {
-        transmitterPacketRate = buffer[5];
-        receiverPacketRate = buffer[6];
+        RFLinkStatistics.transmitterPacketRate = buffer[5];
+        RFLinkStatistics.receiverPacketRate = buffer[6];
+        RFLinkStatistics.transmitterID = buffer[7];
+        RFLinkStatistics.receiverID = buffer[8];
         
         //Calculate the Link Quality indicator
-        int16_t lqi = divRoundClosest(((int16_t) receiverPacketRate * 100), transmitterPacketRate);
+        int16_t lqi = divRoundClosest(((int16_t) RFLinkStatistics.receiverPacketRate * 100), RFLinkStatistics.transmitterPacketRate);
         if(lqi > 100) lqi = 100;
         else if(lqi == 0) lqi = TELEMETRY_NO_DATA;
         //check against configured sensor IDs and write
@@ -667,8 +670,8 @@ void handleTelemetry()
   //-- reset RF link statistics if RF is disabled
   if(!Sys.rfEnabled)
   {
-    transmitterPacketRate = 0;
-    receiverPacketRate = 0;
+    RFLinkStatistics.transmitterPacketRate = 0;
+    RFLinkStatistics.receiverPacketRate = 0;
   }
 
   //reset gnss specific data
