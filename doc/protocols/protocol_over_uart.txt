@@ -35,7 +35,7 @@ enum {
   MESSAGE_TYPE_BIND_STATUS_CODE = 0x10,
   MESSAGE_TYPE_RECEIVER_CONFIG = 0x11,
   MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE = 0x12,
-  MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE = 0x13,
+  MESSAGE_TYPE_RF_LINK_STATISTICS = 0x13,
   MESSAGE_TYPE_TELEMETRY_GENERAL = 0x14,
   MESSAGE_TYPE_TELEMETRY_GNSS = 0x15,
 };
@@ -100,13 +100,15 @@ MESSAGE_TYPE_RECEIVER_CONFIG_STATUS_CODE:
     2   Write failed.
 
 
-MESSAGE_TYPE_TELEMETRY_RF_LINK_PACKET_RATE:
+MESSAGE_TYPE_RF_LINK_STATISTICS:
 
-  Data is 2 bytes as follows:
+  Data is 4 bytes as follows:
     byte 0    Transmitter packet rate, 
               i.e. how many RC packets are being sent out by transmitter every second.
     byte 1    Receiver packet rate, 
               i.e. how many valid RC packets are being seen by the receiver every second.
+    byte 2    Transmitter ID.
+    byte 3    Receiver ID.
 
 
 MESSAGE_TYPE_TELEMETRY_GENERAL:
