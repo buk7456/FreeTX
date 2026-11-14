@@ -6,6 +6,7 @@
 #include "../config.h"
 #include "common.h"
 #include "crc.h"
+#include "prng.h"
 #include "eestore.h"
 #include "GNSS.h"
 #include "rfComm.h"
@@ -407,8 +408,8 @@ void bind()
   memset(transmitPayloadBuffer, 0, sizeof(transmitPayloadBuffer));
   if(Sys.isMainReceiver) //generate receiverID
   {
-    randomSeed(micros());
-    Sys.receiverID = random(0x01, 0x7F);
+    myRandomSeed(micros());
+    Sys.receiverID = myRandom(0x01, 0x7F);
   }
   transmitPayloadBuffer[0] = Sys.receiverID;
   transmitPayloadLength = 1;
