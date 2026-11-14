@@ -9,6 +9,7 @@
 #include "../../crc.h"
 #include "../../inputs.h"
 #include "../../mathHelpers.h"
+#include "../../prng.h"
 #include "../../mixer.h"
 #include "../../mtx.h"
 #include "../../templates.h"
