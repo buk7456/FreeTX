@@ -131,8 +131,7 @@ bool     backlightIsOn = false;
 
 uint32_t inputsLastMovedTime = 0; 
 
-uint8_t  transmitterPacketRate = 0;
-uint8_t  receiverPacketRate = 0;
+rf_link_statistics_t RFLinkStatistics;
 
 bool     isRequestingBind = false;
 uint8_t  bindStatusCode = 0;  
