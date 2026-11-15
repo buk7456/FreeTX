@@ -134,7 +134,7 @@ extern uint8_t  heldButton;    //triggered when button is held down long enough
 
 #define KEY_REPEAT_INTERVAL_MIN      100
 #define KEY_REPEAT_INTERVAL_MAX      240
-#define KEY_REPEAT_INTERVAL_DEFAULT  160
+#define KEY_REPEAT_INTERVAL_DEFAULT  140
 
 //----------------- Transmitter Battery -------------------
 
