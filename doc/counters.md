@@ -17,15 +17,15 @@ A counter stores and shows the number of times a particular event has occurred, 
 In advanced mode, the counter behaves as an up/down counter using separate "up" and "down" clocks for increment and decrement respectively.
 
 ## Usage examples
-[1. Using a 3 position momentary switch to sequentially select among values](#section_id_select_among_values_with_momentary_switch)  
-[2. Using a 3 position momentary switch to continuously adjust a value](#section_id_continuously_adjust_value_with_momentary_switch)  
+[1. Using a 3-position momentary switch to sequentially select among values](#section_id_select_among_values_with_momentary_switch)  
+[2. Using a 3-position momentary switch to continuously adjust a value](#section_id_continuously_adjust_value_with_momentary_switch)  
 
 <a id="section_id_select_among_values_with_momentary_switch"></a>
-### Example 1: Using a 3 position momentary switch to sequentially select among values
+### Example 1: Using a 3-position momentary switch to sequentially select among values
 This example demonstrates use of the counter directly inside the mixer.  
 When the momentary switch is pushed in the downward direction, the counter value increments. Similarly, pushing the momentary switch in the opposite direction decrements the counter value.  
 In the counter screen context menu, change the counter type to advanced.  
-Assuming SwG is our 3 position momentary switch, set up the counter as follows.
+Assuming SwG is our 3-position momentary switch, set up the counter as follows.
 
 ```txt
 Counter1
@@ -46,7 +46,7 @@ Then in the Mixer,
 The mixer automatically maps the counter's value in proportion to the counter's modulus. For example if the modulus is 4, then mapping is {(0,-100), (1,-33), (2,33), (3,100)}.
 
 <a id="section_id_continuously_adjust_value_with_momentary_switch"></a>
-### Example 2: Using a 3 position momentary switch to continuously adjust a value
+### Example 2: Using a 3-position momentary switch to continuously adjust a value
 When the switch is pushed in one direction, the counter continuously increments until the switch is released. Similarly, the counter continuously decrements
 when the switch is pushed in the opposite direction.  
 For this, we set up some logical switches, like so.
