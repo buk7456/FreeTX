@@ -78,7 +78,7 @@ The System menu provides comprehensive configuration options so you can tailor t
 - **Numeric battery voltage:** Replaces the graphical battery gauge with the actual voltage readout on the home screen.
 - **Welcome message:** Turns on/off the "Welcome" message when starting up the handset. 
 - **Splash screen:** Whether to show the user's custom splash screen during boot.  
-To make a custom splash screen, create a monochrome bitmap image with 128x64 px resolution and save it as "SPLASH.BMP" inside the "IMAGES" folder on the SD card.
+To make a custom splash screen, create a monochrome bitmap image with 128x64 pixel resolution and save it as "SPLASH.BMP" inside the "IMAGES" folder on the SD card.
 
 <a id="section_id_miscellaneous"></a>
 
@@ -158,7 +158,7 @@ Properly calibrated knobs always read between -100 to 100 when moved fully. If t
 
 ## Switches
 
-This screen allows the user to specify the type of switches they have installed. Supported types are 2 position, 3 position, and their momentary variants. A frequent question is "How about push buttons?". Well, they are actually 2 position momentary switches.
+This screen allows the user to specify the type of switches they have installed. Supported types are 2-position, 3-position, and their momentary variants. A frequent question is "How about push buttons?". Well, they are actually 2-position momentary switches.
 
 <p align="left">
 <img src="images/screenshots/system_switches.png"/>
