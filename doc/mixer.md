@@ -112,10 +112,10 @@ For fixed-wing aircraft, assuming aileron servo in Ch1, elevator servo in Ch2, t
 Technically, no mixing is being done here. This example merely demonstrates using the mixer to assign the inputs to the output channels.  
 For rotorcraft, this would be 
 ```txt
-1. Ch1  Add  Roll (Weight 100)
+1. Ch1  Add  Roll  (Weight 100)
 2. Ch2  Add  Pitch (Weight 100)
-3. Ch3  Add  Thr (Weight 100)
-4. Ch4  Add  Yaw (Weight 100)
+3. Ch3  Add  Thr   (Weight 100)
+4. Ch4  Add  Yaw   (Weight 100)
 ```
 
 <a id="section_id_elevon"></a>
