@@ -1,6 +1,6 @@
 # Home screen
 
-The home screen is the default screen shown when operating the transmitter. It displays basic information such as the active model name, trims, status icons, transmitter battery, active flight mode, and up to four custom widgets.
+The home screen is the default screen shown when operating the transmitter. It displays basic information such as the active model's name, trims, status icons, transmitter battery, active flight mode, and up to four custom widgets.
 
 <p align="left">
 <img src="images/screenshots/home_screen.png"/>
